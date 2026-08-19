@@ -1,12 +1,17 @@
 //! Virtual-resolution UI for the Phase 0 first-evening client.
 
 use crate::data::{ActionDef, GameData};
-use crate::state::{tile_color, CropState, GameSession, TileKind};
+use crate::network::{ConnectionState, RemotePlayer};
+use crate::state::{tile_color, CropState, TileKind, WorldState};
 use macroquad::prelude::*;
 use macroquad_toolkit::grid::TilePos;
 use macroquad_toolkit::prelude::*;
 use macroquad_toolkit::ui::draw_ui_text_ex;
 use macroquad_toolkit::ui::{RectExt, VirtualUi};
+use tarrowyn_protocol::ChatMessage;
+
+#[path = "ui_online.rs"]
+mod ui_online;
 
 pub const LOGICAL_WIDTH: f32 = 1280.0;
 pub const LOGICAL_HEIGHT: f32 = 720.0;
@@ -21,18 +26,37 @@ const GOLD: Color = Color::new(0.90, 0.69, 0.30, 1.0);
 #[derive(Debug, Clone, PartialEq)]
 pub enum UiAction {
     NewEvening,
+    UseOnline,
+    UseOffline,
+    Reconnect,
     Save,
     Load,
     DeleteSave,
     Move(i32, i32),
     MoveTo(TilePos),
     Interact(String),
+    SendChat,
+    QuickChat(String),
     Zoom(f32),
 }
 
 pub struct UiContext<'a> {
     pub data: &'a GameData,
-    pub session: &'a GameSession,
+    pub world: &'a WorldState,
+    pub player_position: TilePos,
+    pub day: u32,
+    pub clock_minutes: u32,
+    pub night: bool,
+    pub stats: &'a str,
+    pub own_account_id: Option<&'a str>,
+    pub remote_players: &'a [RemotePlayer],
+    pub chat: &'a [ChatMessage],
+    pub chat_draft: &'a str,
+    pub server_tick: u64,
+    pub connection: ConnectionState,
+    pub status_message: &'a str,
+    pub identity_name: Option<&'a str>,
+    pub offline: bool,
     pub save_exists: bool,
     pub save_slots: &'a [String],
     pub loaded_assets: usize,
@@ -72,23 +96,27 @@ fn draw_header(ctx: &UiContext<'_>) {
         TextStyle::new(28.0, CREAM).params(),
     );
     draw_ui_text_ex(
-        "A quiet beginning • Phase 0 client foundation",
+        if ctx.offline {
+            "A local first-evening fixture • never shared with the server"
+        } else {
+            "The shared road • server-owned world projection"
+        },
         rect.x + 20.0,
         rect.y + 51.0,
         TextStyle::new(13.0, dark::TEXT_DIM).params(),
     );
 
-    let time = format_clock(ctx.session.clock_minutes(&ctx.data.config));
+    let time = format_clock(ctx.clock_minutes);
     draw_badge(
         Rect::new(rect.right() - 326.0, rect.y + 18.0, 105.0, 28.0),
-        &format!("Day {}", ctx.session.day),
+        &format!("Day {}", ctx.day),
         Color::new(0.16, 0.24, 0.25, 1.0),
         CREAM,
     );
     draw_badge(
         Rect::new(rect.right() - 211.0, rect.y + 18.0, 94.0, 28.0),
         &time,
-        if ctx.session.is_night(&ctx.data.config) {
+        if ctx.night {
             Color::new(0.13, 0.16, 0.28, 1.0)
         } else {
             Color::new(0.28, 0.24, 0.14, 1.0)
@@ -97,9 +125,14 @@ fn draw_header(ctx: &UiContext<'_>) {
     );
     draw_badge(
         Rect::new(rect.right() - 105.0, rect.y + 18.0, 87.0, 28.0),
-        "LOCAL",
-        Color::new(0.24, 0.18, 0.16, 1.0),
-        GOLD,
+        ctx.connection.label(),
+        match ctx.connection {
+            ConnectionState::Online => Color::new(0.16, 0.28, 0.22, 1.0),
+            ConnectionState::Connecting => Color::new(0.20, 0.22, 0.18, 1.0),
+            ConnectionState::Degraded => Color::new(0.30, 0.22, 0.14, 1.0),
+            ConnectionState::Offline => Color::new(0.24, 0.18, 0.16, 1.0),
+        },
+        if ctx.offline { GOLD } else { MINT },
     );
 }
 
@@ -124,8 +157,14 @@ fn draw_world_panel(ctx: &UiContext<'_>, mouse: Vec2) -> Rect {
     draw_text_right(
         &format!(
             "{} ready plots  •  {} reachable tiles  •  zoom {:.1}x",
-            ctx.session.crops_ready(),
-            ctx.session.world.reachable.len(),
+            ctx.world
+                .crops
+                .data()
+                .iter()
+                .filter_map(|crop| *crop)
+                .filter(CropState::mature)
+                .count(),
+            ctx.world.reachable.len(),
             ctx.camera_zoom
         ),
         panel.right() - 18.0,
@@ -145,7 +184,7 @@ fn draw_map(ctx: &UiContext<'_>, rect: Rect) {
         Color::new(0.04, 0.09, 0.10, 1.0),
     );
 
-    for (pos, tile) in ctx.session.world.tiles.iter_with_pos() {
+    for (pos, tile) in ctx.world.tiles.iter_with_pos() {
         let tile_rect = view.tile_rect(pos);
         if !rect.overlaps(&tile_rect) {
             continue;
@@ -161,12 +200,12 @@ fn draw_map(ctx: &UiContext<'_>, rect: Rect) {
             Color::new(0.05, 0.11, 0.11, 0.25),
         );
         draw_tile_detail(*tile, tile_rect);
-        if let Some(Some(crop)) = ctx.session.world.crops.get(pos) {
+        if let Some(Some(crop)) = ctx.world.crops.get(pos) {
             draw_crop(crop, tile_rect);
         }
     }
 
-    if ctx.session.is_night(&ctx.data.config) {
+    if ctx.night {
         draw_rectangle(
             rect.x,
             rect.y,
@@ -194,13 +233,13 @@ fn draw_map(ctx: &UiContext<'_>, rect: Rect) {
         "WHISPERWOOD",
         Color::new(0.45, 0.78, 0.58, 1.0),
     );
-    draw_character(&view, ctx.session.player.position, CREAM, true);
-    draw_character(
-        &view,
-        TilePos::new(10, 6),
-        Color::new(0.56, 0.72, 0.91, 1.0),
-        false,
-    );
+    draw_character(&view, ctx.player_position, CREAM, true);
+    for (index, player) in ctx.remote_players.iter().enumerate() {
+        if ctx.own_account_id == Some(player.account_id.as_str()) {
+            continue;
+        }
+        draw_remote_character(&view, player, index, ctx.server_tick);
+    }
 }
 
 fn draw_tile_detail(tile: TileKind, rect: Rect) {
@@ -330,11 +369,44 @@ fn draw_character(view: &MapView, tile: TilePos, color: Color, player: bool) {
     }
 }
 
+fn draw_remote_character(view: &MapView, player: &RemotePlayer, index: usize, server_tick: u64) {
+    let stale = player.stale(server_tick);
+    let palette = [
+        Color::new(0.56, 0.72, 0.91, 1.0),
+        Color::new(0.88, 0.60, 0.76, 1.0),
+        Color::new(0.69, 0.82, 0.50, 1.0),
+    ];
+    let color = if stale {
+        Color::new(0.42, 0.45, 0.46, 0.72)
+    } else {
+        palette[index % palette.len()]
+    };
+    draw_character(view, player.position, color, false);
+    let center = view.tile_rect(player.position).center();
+    draw_text_centered_in_box(
+        &format!(
+            "{}{}",
+            player.display_name,
+            if stale { " (stale)" } else { "" }
+        ),
+        center.x - 58.0,
+        center.y - 31.0,
+        116.0,
+        13.0,
+        10.0,
+        if stale { dark::TEXT_DIM } else { color },
+    );
+}
+
 fn draw_sidebar(ctx: &UiContext<'_>, mouse: Vec2, actions: &mut Vec<UiAction>) {
     let panel = Rect::new(864.0, 96.0, 396.0, 510.0);
     draw_surface_with_title(
         panel,
-        Some("Your evening"),
+        Some(if ctx.offline {
+            "Your evening"
+        } else {
+            "The shared road"
+        }),
         &SurfaceStyle::new(PANEL)
             .with_border(1.0, LINE)
             .with_header(42.0, Color::new(0.09, 0.14, 0.15, 1.0))
@@ -343,6 +415,19 @@ fn draw_sidebar(ctx: &UiContext<'_>, mouse: Vec2, actions: &mut Vec<UiAction>) {
     );
 
     let content = panel.inset(16.0);
+    if ctx.offline {
+        draw_offline_sidebar(ctx, content, mouse, actions);
+    } else {
+        ui_online::draw_sidebar(ctx, content, mouse, actions);
+    }
+}
+
+fn draw_offline_sidebar(
+    ctx: &UiContext<'_>,
+    content: Rect,
+    mouse: Vec2,
+    actions: &mut Vec<UiAction>,
+) {
     draw_stats(ctx, Rect::new(content.x, content.y + 34.0, content.w, 56.0));
 
     draw_ui_text_ex(
@@ -408,24 +493,25 @@ fn draw_sidebar(ctx: &UiContext<'_>, mouse: Vec2, actions: &mut Vec<UiAction>) {
     ) {
         actions.push(UiAction::DeleteSave);
     }
+    if virtual_button(
+        Rect::new(content.x, 596.0, content.w, 22.0),
+        "Reconnect online",
+        true,
+        ButtonTone::Primary,
+        mouse,
+    ) {
+        actions.push(UiAction::UseOnline);
+    }
 }
 
 fn draw_stats(ctx: &UiContext<'_>, rect: Rect) {
-    let inventory = ctx.session.format_inventory();
     draw_surface(
         rect,
         &SurfaceStyle::new(Color::new(0.10, 0.14, 0.15, 1.0))
             .with_border(1.0, Color::new(0.32, 0.48, 0.50, 0.45)),
     );
     draw_text_block(
-        &format!(
-            "Gold  {}     Skill  {}     Reputation  {}\n{}  Total crops {}",
-            ctx.session.player.gold,
-            ctx.session.player.skill,
-            ctx.session.player.reputation,
-            inventory,
-            ctx.session.player.inventory.total_crops()
-        ),
+        ctx.stats,
         rect.x + 12.0,
         rect.y + 17.0,
         rect.w - 24.0,
@@ -540,13 +626,17 @@ fn draw_footer(ctx: &UiContext<'_>) {
             .with_border(1.0, Color::new(0.32, 0.48, 0.50, 0.6)),
     );
     draw_ui_text_ex(
-        "LOCAL CHRONICLE",
+        if ctx.offline {
+            "OFFLINE DEVELOPMENT FIXTURE"
+        } else {
+            "SERVER CHRONICLE"
+        },
         rect.x + 16.0,
         rect.y + 22.0,
         TextStyle::new(12.0, MINT).params(),
     );
     draw_text_block(
-        ctx.session.last_activity(),
+        ctx.status_message,
         rect.x + 16.0,
         rect.y + 38.0,
         540.0,
@@ -556,18 +646,27 @@ fn draw_footer(ctx: &UiContext<'_>) {
         CREAM,
     );
     draw_ui_text_ex(
-        "PHASE 0 SEAM",
+        if ctx.offline {
+            "LOCAL ONLY"
+        } else {
+            "AUTHORITATIVE ROAD"
+        },
         rect.x + 600.0,
         rect.y + 22.0,
         TextStyle::new(12.0, GOLD).params(),
     );
     draw_text_block(
         &format!(
-            "Local session now • server authority next\n{} crops • {} assets • {} saved slot(s) ({})",
+            "{}\n{} players • {} crop types • {} assets • {} saved slot(s)",
+            if ctx.offline {
+                "No online state is mixed into this fixture"
+            } else {
+                "Movement, clock, presence, and chat come from the server"
+            },
+            ctx.remote_players.len(),
             ctx.data.crops.len(),
             ctx.loaded_assets,
-            ctx.save_slots.len(),
-            ctx.data.config.save_slot
+            ctx.save_slots.len()
         ),
         rect.x + 600.0,
         rect.y + 38.0,
@@ -597,10 +696,10 @@ struct MapView {
 
 impl MapView {
     fn new(ctx: &UiContext<'_>, rect: Rect) -> Self {
-        let world = &ctx.session.world.tiles;
+        let world = &ctx.world.tiles;
         let base = (rect.w / world.width as f32).min(rect.h / world.height as f32);
         let tile_size = (base * ctx.camera_zoom).max(12.0);
-        let focus = ctx.session.player.position;
+        let focus = ctx.player_position;
         let origin = rect.center()
             - vec2(
                 (focus.x as f32 + 0.5) * tile_size,

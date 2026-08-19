@@ -1,10 +1,11 @@
-//! The Years of Tarrowyn — Phase 0 client entry point.
+//! The Years of Tarrowyn — Phase 1 client entry point.
 
 use macroquad::prelude::*;
 use macroquad_toolkit::capture;
 
 mod data;
 mod game;
+mod network;
 mod state;
 mod ui;
 
@@ -13,7 +14,7 @@ use game::Game;
 fn window_conf() -> Conf {
     capture::capture_window_conf(
         "TARROWYN",
-        "The Years of Tarrowyn — Phase 0",
+        "The Years of Tarrowyn — Phase 1",
         ui::LOGICAL_WIDTH as i32,
         ui::LOGICAL_HEIGHT as i32,
     )
