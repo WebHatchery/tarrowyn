@@ -2,6 +2,8 @@ use crate::config::ServerConfig;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 use std::fs;
+#[cfg(windows)]
+use std::os::windows::ffi::OsStrExt;
 use std::path::Path;
 use std::sync::Mutex;
 use tarrowyn_protocol::{
@@ -13,6 +15,8 @@ use tarrowyn_protocol::{
     TradeResponse, TradeStatus, TradesResponse, WorldClock, WorldEvent, WorldSnapshot, WorldTile,
     MAX_CHAT_MESSAGE_LENGTH, MAX_TRADE_ITEMS, PROTOCOL_VERSION,
 };
+#[cfg(windows)]
+use windows_sys::Win32::Storage::FileSystem::{MoveFileExW, MOVEFILE_REPLACE_EXISTING};
 
 const STORAGE_VERSION: u32 = 1;
 const MAX_EVENTS: usize = 2048;
@@ -481,7 +485,48 @@ impl WorldRepository {
         if let Some(parent) = path.parent() {
             let _ = fs::create_dir_all(parent);
         }
-        let _ = fs::write(path, data);
+        let temporary_path = path.with_extension(format!(
+            "{}-{}",
+            path.extension()
+                .and_then(|extension| extension.to_str())
+                .unwrap_or("state"),
+            std::process::id()
+        ));
+        if fs::write(&temporary_path, data).is_ok() && replace_file(&temporary_path, path).is_err()
+        {
+            let _ = fs::remove_file(temporary_path);
+        }
+    }
+}
+
+#[cfg(not(windows))]
+fn replace_file(temporary_path: &Path, path: &Path) -> std::io::Result<()> {
+    fs::rename(temporary_path, path)
+}
+
+#[cfg(windows)]
+fn replace_file(temporary_path: &Path, path: &Path) -> std::io::Result<()> {
+    let temporary_path: Vec<u16> = temporary_path
+        .as_os_str()
+        .encode_wide()
+        .chain(std::iter::once(0))
+        .collect();
+    let path: Vec<u16> = path
+        .as_os_str()
+        .encode_wide()
+        .chain(std::iter::once(0))
+        .collect();
+    let replaced = unsafe {
+        MoveFileExW(
+            temporary_path.as_ptr(),
+            path.as_ptr(),
+            MOVEFILE_REPLACE_EXISTING,
+        )
+    };
+    if replaced == 0 {
+        Err(std::io::Error::last_os_error())
+    } else {
+        Ok(())
     }
 }
 

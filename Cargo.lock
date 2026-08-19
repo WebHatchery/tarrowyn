@@ -1233,6 +1233,7 @@ dependencies = [
  "serde_json",
  "tarrowyn-protocol",
  "tiny_http",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]

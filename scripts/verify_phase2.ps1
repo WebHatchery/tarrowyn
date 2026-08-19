@@ -18,6 +18,31 @@ function Start-Phase2Server {
         -PassThru
 }
 
+function Get-DescendantProcessIds([int]$parentId) {
+    $children = @(Get-CimInstance Win32_Process -Filter "ParentProcessId = $parentId")
+    foreach ($child in $children) {
+        Get-DescendantProcessIds $child.ProcessId
+        $child.ProcessId
+    }
+}
+
+function Stop-Phase2Server([System.Diagnostics.Process]$process) {
+    if ($null -eq $process) { return }
+    $processIds = @(Get-DescendantProcessIds $process.Id) + $process.Id
+    foreach ($processId in $processIds) {
+        Stop-Process -Id $processId -Force -ErrorAction SilentlyContinue
+    }
+    for ($attempt = 0; $attempt -lt 60; $attempt++) {
+        try {
+            $null = Invoke-RestMethod -Method Get -Uri "http://127.0.0.1:8787/health"
+            Start-Sleep -Milliseconds 100
+        } catch {
+            return
+        }
+    }
+    throw "Phase 2 acceptance failed: previous server did not stop"
+}
+
 function Wait-Healthy {
     for ($attempt = 0; $attempt -lt 60; $attempt++) {
         try {
@@ -91,7 +116,7 @@ try {
     Assert-True (@($completedTrade.data.trades | Where-Object { $_.trade_id -eq $tradeId -and $_.status -eq "accepted" }).Count -eq 1) "completed trade was not visible"
     $beforeRestartTick = $state.meta.server_tick
 
-    Stop-Process -Id $server.Id -Force
+    Stop-Phase2Server $server
     $server = Start-Phase2Server
     Wait-Healthy
     $resumed = Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:8787/v1/session/guest" -ContentType "application/json" -Body (@{ client_key = "phase2-trader"; reset = $false } | ConvertTo-Json -Compress)
@@ -101,7 +126,7 @@ try {
     Assert-True ($afterRestart.meta.server_tick -ge $beforeRestartTick) "world clock did not survive restart"
     Write-Host "Phase 2 acceptance passed: persistent farming, idempotent exchange, tavern feed, and restart recovery." -ForegroundColor Green
 } finally {
-    if ($null -ne $server -and -not $server.HasExited) { Stop-Process -Id $server.Id -Force }
+    if ($null -ne $server -and -not $server.HasExited) { Stop-Phase2Server $server }
     Remove-Item Env:TARROWYN_STATE_PATH -ErrorAction SilentlyContinue
     Remove-Item Env:TARROWYN_MOVEMENT_COOLDOWN_TICKS -ErrorAction SilentlyContinue
     Remove-Item Env:TARROWYN_TICK_MS -ErrorAction SilentlyContinue
