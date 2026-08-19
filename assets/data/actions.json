@@ -1,0 +1,26 @@
+[
+  {
+    "id": "plant",
+    "name": "Plant a crop",
+    "description": "Plant the next seed in a shared field plot.",
+    "kind": "plant"
+  },
+  {
+    "id": "tend",
+    "name": "Tend the fields",
+    "description": "Care for a nearby crop and move it toward harvest.",
+    "kind": "tend"
+  },
+  {
+    "id": "harvest",
+    "name": "Harvest a crop",
+    "description": "Gather a mature crop and add it to your satchel.",
+    "kind": "harvest"
+  },
+  {
+    "id": "listen",
+    "name": "Listen at the tavern",
+    "description": "Hear a local rumour and build a little trust.",
+    "kind": "listen"
+  }
+]

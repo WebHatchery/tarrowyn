@@ -1,0 +1,23 @@
+{
+  "title": "The Years of Tarrowyn",
+  "wasm": "years_of_tarrowyn",
+  "roost_slug": "rust_tarrowyn",
+  "status": { "text": "Phase 0", "class": "in-development" },
+  "canvas_rendering": "pixelated",
+  "about": [
+    "A first-evening 2D client foundation for a slow-burn fantasy MMORPG. Walk the settlement, tend shared fields, listen at the tavern, and carry a persistent local session into the next phase."
+  ],
+  "controls": [
+    { "key": "Tap arrows", "desc": "Walk one tile" },
+    { "key": "Tap a map tile", "desc": "Walk toward a destination" },
+    { "key": "WASD / Arrows", "desc": "Keyboard movement supplement" },
+    { "key": "F5 / F9", "desc": "Save / load the local Phase 0 session" }
+  ],
+  "details": [
+    { "label": "Milestone", "value": "Phase 0: first evening" },
+    { "label": "Genre", "value": "Cozy 2D MMORPG foundation" },
+    { "label": "Engine", "value": "Macroquad + Toolkit" },
+    { "label": "Server", "value": "Reserved for Phase 1" },
+    { "label": "Platform", "value": "Browser, Windows" }
+  ]
+}

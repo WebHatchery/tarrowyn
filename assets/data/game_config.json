@@ -1,0 +1,11 @@
+{
+  "game_name": "years_of_tarrowyn",
+  "display_name": "The Years of Tarrowyn",
+  "save_slot": "phase_0",
+  "version": "0.1.0",
+  "world_width": 18,
+  "world_height": 11,
+  "day_length_seconds": 180.0,
+  "starting_gold": 12,
+  "starting_skill": 1
+}

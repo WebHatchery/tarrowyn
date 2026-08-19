@@ -1,0 +1,17 @@
+[
+  {
+    "id": "wheat",
+    "name": "Wheat",
+    "description": "A dependable grain for the settlement's kitchens."
+  },
+  {
+    "id": "turnip",
+    "name": "Turnip",
+    "description": "A sturdy root crop that tolerates a quiet season."
+  },
+  {
+    "id": "moonberry",
+    "name": "Moonberry",
+    "description": "A bright berry that ripens under the evening sky."
+  }
+]
