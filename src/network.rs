@@ -7,13 +7,16 @@ use macroquad_toolkit::net::{HttpClient, Pending};
 use serde::Serialize;
 use std::collections::VecDeque;
 use tarrowyn_protocol::{
-    ApiResponse, ChatMessage, ChatRequest, EventsResponse, GuestSessionRequest,
-    GuestSessionResponse, MovementIntent, MovementResponse, PlayerPresence, WorldClock, WorldEvent,
-    WorldSnapshot, MAX_CHAT_MESSAGE_LENGTH,
+    ApiResponse, ChatMessage, ChatRequest, EventsResponse, FarmingAction, FarmingRequest,
+    GuestSessionRequest, GuestSessionResponse, MovementIntent, MovementResponse, PlayerPresence,
+    PlayerProjection, StateSnapshot, TavernFeedResponse, TradeOffer, TradeRequest, TradeResponse,
+    TradesResponse, WorldClock, WorldEvent, WorldSnapshot, MAX_CHAT_MESSAGE_LENGTH,
 };
 
 const REQUEST_TIMEOUT_SECONDS: f32 = 6.0;
 const STALE_TICKS: u64 = 20;
+
+mod trade_client;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ConnectionState {
@@ -67,6 +70,9 @@ pub struct WorldProjection {
     pub day_length_seconds: f32,
     pub server_tick: u64,
     pub cursor: u64,
+    pub player: Option<PlayerProjection>,
+    pub feed: TavernFeedResponse,
+    pub trades: Vec<TradeOffer>,
 }
 
 impl WorldProjection {
@@ -81,6 +87,14 @@ impl WorldProjection {
             day_length_seconds: config.day_length_seconds,
             server_tick: 0,
             cursor: 0,
+            player: None,
+            feed: TavernFeedResponse {
+                notices: Vec::new(),
+                rumours: Vec::new(),
+                chat: Vec::new(),
+                cursor: 0,
+            },
+            trades: Vec::new(),
         }
     }
 
@@ -111,6 +125,7 @@ impl WorldProjection {
             crops: FlatGrid::new(snapshot.width as usize, snapshot.height as usize, None),
             reachable: Default::default(),
         };
+        self.apply_plots(&snapshot.plots);
         self.apply_clock(snapshot.clock);
         self.server_tick = server_tick;
         self.cursor = snapshot.cursor;
@@ -124,6 +139,13 @@ impl WorldProjection {
         }
     }
 
+    fn apply_state(&mut self, snapshot: StateSnapshot, server_tick: u64) {
+        self.apply_snapshot(snapshot.world, &snapshot.player.account_id, server_tick);
+        self.player = Some(snapshot.player);
+        self.feed = snapshot.feed;
+        self.chat = self.feed.chat.clone();
+    }
+
     fn apply_events(&mut self, response: EventsResponse, own_account: &str, server_tick: u64) {
         self.server_tick = self.server_tick.max(server_tick);
         self.apply_clock(response.clock);
@@ -133,6 +155,14 @@ impl WorldProjection {
                 WorldEvent::Presence(presence) => self.apply_presence(presence, own_account),
                 WorldEvent::Clock(clock) => self.apply_clock(clock),
                 WorldEvent::Chat(message) => self.push_chat(message),
+                WorldEvent::Farming(plot) => self.apply_plot(plot),
+                WorldEvent::Trade(_) => {}
+                WorldEvent::TavernNotice(notice) => {
+                    self.feed.notices.push(notice);
+                    if self.feed.notices.len() > 8 {
+                        self.feed.notices.remove(0);
+                    }
+                }
             }
         }
         self.cursor = self.cursor.max(response.cursor);
@@ -160,6 +190,26 @@ impl WorldProjection {
         self.day_length_seconds = clock.day_length_seconds;
     }
 
+    fn apply_plots(&mut self, plots: &[tarrowyn_protocol::FarmPlot]) {
+        for plot in plots {
+            self.apply_plot(*plot);
+        }
+    }
+
+    fn apply_plot(&mut self, plot: tarrowyn_protocol::FarmPlot) {
+        let crop = plot.crop.map(|crop| crate::state::CropState {
+            kind: match crop.kind {
+                tarrowyn_protocol::CropKind::Wheat => crate::state::CropKind::Wheat,
+                tarrowyn_protocol::CropKind::Turnip => crate::state::CropKind::Turnip,
+                tarrowyn_protocol::CropKind::Moonberry => crate::state::CropKind::Moonberry,
+            },
+            stage: crop.stage,
+        });
+        self.world
+            .crops
+            .set(TilePos::new(plot.position.x, plot.position.y), crop);
+    }
+
     fn push_chat(&mut self, message: ChatMessage) {
         if self
             .chat
@@ -185,6 +235,10 @@ struct PendingChat {
     pending: Pending<ApiResponse<tarrowyn_protocol::ChatResponse>>,
 }
 
+struct PendingFarming {
+    pending: Pending<ApiResponse<tarrowyn_protocol::FarmingResponse>>,
+}
+
 pub struct OnlineClient {
     api: HttpClient,
     pub projection: WorldProjection,
@@ -194,14 +248,27 @@ pub struct OnlineClient {
     pub account: Option<GuestSessionResponse>,
     pending_guest: Option<Pending<ApiResponse<GuestSessionResponse>>>,
     pending_world: Option<Pending<ApiResponse<WorldSnapshot>>>,
+    pending_state: Option<Pending<ApiResponse<StateSnapshot>>>,
     pending_events: Option<Pending<ApiResponse<EventsResponse>>>,
     pending_movement: Option<PendingMovement>,
     pending_chat: Option<PendingChat>,
+    pending_farming: Option<PendingFarming>,
+    pending_trades: Option<Pending<ApiResponse<TradesResponse>>>,
+    pending_trade: Option<Pending<ApiResponse<TradeResponse>>>,
     movement_queue: VecDeque<MovementIntent>,
     chat_queue: VecDeque<ChatRequest>,
+    farming_queue: VecDeque<FarmingRequest>,
+    trade_queue: VecDeque<TradeRequest>,
     next_request_id: u64,
     retry_cooldown: f32,
+    retry_count: u8,
+    max_retry_count: u8,
+    state_refresh: f32,
     had_world: bool,
+    pub pending_request_type: Option<String>,
+    pub pending_request_id: Option<String>,
+    pub action_awaiting_confirmation: bool,
+    pub trades: Vec<TradeOffer>,
 }
 
 impl OnlineClient {
@@ -218,14 +285,27 @@ impl OnlineClient {
             account: None,
             pending_guest: None,
             pending_world: None,
+            pending_state: None,
             pending_events: None,
             pending_movement: None,
             pending_chat: None,
+            pending_farming: None,
+            pending_trades: None,
+            pending_trade: None,
             movement_queue: VecDeque::new(),
             chat_queue: VecDeque::new(),
+            farming_queue: VecDeque::new(),
+            trade_queue: VecDeque::new(),
             next_request_id: 1,
             retry_cooldown: 0.0,
+            retry_count: 0,
+            max_retry_count: 3,
+            state_refresh: 0.0,
             had_world: false,
+            pending_request_type: None,
+            pending_request_id: None,
+            action_awaiting_confirmation: false,
+            trades: Vec::new(),
         };
         client.begin_guest(false);
         client
@@ -233,13 +313,18 @@ impl OnlineClient {
 
     pub fn update(&mut self, dt: f32) -> Vec<NetworkNotice> {
         self.retry_cooldown = (self.retry_cooldown - dt.max(0.0)).max(0.0);
+        self.state_refresh = (self.state_refresh - dt.max(0.0)).max(0.0);
         let mut notices = Vec::new();
         self.poll_guest(dt, &mut notices);
         self.poll_world(dt, &mut notices);
+        self.poll_state(dt, &mut notices);
         self.poll_events(dt, &mut notices);
         self.poll_movement(dt, &mut notices);
         self.poll_chat(dt, &mut notices);
+        self.poll_farming(dt, &mut notices);
+        self.poll_trade_requests(dt, &mut notices);
         self.dispatch_requests();
+        self.dispatch_trade_requests();
         notices
     }
 
@@ -278,16 +363,63 @@ impl OnlineClient {
         });
     }
 
+    pub fn queue_farming(&mut self, action: FarmingAction) {
+        if self.state != ConnectionState::Online {
+            return;
+        }
+        let Some(target) = self
+            .projection
+            .world
+            .tiles
+            .iter_with_pos()
+            .filter(|(pos, tile)| {
+                **tile == TileKind::Field
+                    && pos.manhattan_distance(&self.projection.player_position) <= 1
+            })
+            .map(|(pos, _)| pos)
+            .next()
+        else {
+            return;
+        };
+        let request_id = self.next_request_id("farm");
+        self.pending_request_type = Some(format!("farming::{action:?}"));
+        self.pending_request_id = Some(request_id.clone());
+        self.action_awaiting_confirmation = true;
+        self.status_message = "Command sent; waiting for the settlement ledger…".to_owned();
+        self.farming_queue.push_back(FarmingRequest {
+            request_id,
+            action,
+            position: tarrowyn_protocol::Position {
+                x: target.x,
+                y: target.y,
+            },
+        });
+    }
+
+    pub fn refresh_tavern(&mut self) {
+        if self.state == ConnectionState::Online {
+            self.state_refresh = 0.0;
+        }
+    }
+
     pub fn reconnect(&mut self) -> bool {
         if self.retry_cooldown > 0.0 {
             return false;
         }
         self.pending_world = None;
+        self.pending_state = None;
         self.pending_events = None;
         self.pending_movement = None;
         self.pending_chat = None;
+        self.pending_farming = None;
+        self.pending_trades = None;
+        self.pending_trade = None;
         self.movement_queue.clear();
         self.chat_queue.clear();
+        self.farming_queue.clear();
+        self.trade_queue.clear();
+        self.retry_count = 0;
+        self.action_awaiting_confirmation = false;
         self.begin_guest(false);
         true
     }
@@ -318,7 +450,34 @@ impl OnlineClient {
                     .set_bearer_token(Some(&response.data.account_token));
                 self.account = Some(response.data);
                 self.status_message = "Guest identity found; loading the shared road…".to_owned();
-                self.pending_world = Some(self.api.get("/v1/world"));
+                self.pending_state = Some(self.api.get("/v1/state"));
+            }
+            Err(error) => self.connection_failed(error, notices),
+        }
+    }
+
+    fn poll_state(&mut self, dt: f32, notices: &mut Vec<NetworkNotice>) {
+        let result = self
+            .pending_state
+            .as_mut()
+            .and_then(|pending| pending.poll_timed(dt, REQUEST_TIMEOUT_SECONDS));
+        let Some(result) = result else { return };
+        self.pending_state = None;
+        match result {
+            Ok(response) => {
+                let first_state = !self.had_world;
+                self.projection
+                    .apply_state(response.data, response.meta.server_tick);
+                self.had_world = true;
+                self.state = ConnectionState::Online;
+                self.retry_count = 0;
+                self.status_message = "The persistent settlement is open.".to_owned();
+                self.state_refresh = 1.0;
+                if first_state {
+                    notices.push(NetworkNotice::Success(
+                        "The settlement ledger is current.".to_owned(),
+                    ));
+                }
             }
             Err(error) => self.connection_failed(error, notices),
         }
@@ -400,6 +559,33 @@ impl OnlineClient {
         }
     }
 
+    fn poll_farming(&mut self, dt: f32, notices: &mut Vec<NetworkNotice>) {
+        let result = self
+            .pending_farming
+            .as_mut()
+            .and_then(|pending| pending.pending.poll_timed(dt, REQUEST_TIMEOUT_SECONDS));
+        let Some(result) = result else { return };
+        self.pending_farming = None;
+        self.action_awaiting_confirmation = false;
+        match result {
+            Ok(response) => {
+                self.pending_request_type = None;
+                self.pending_request_id = None;
+                self.state_refresh = 0.0;
+                if response.data.accepted {
+                    notices.push(NetworkNotice::Success(
+                        "The server accepted the farm action.".to_owned(),
+                    ));
+                } else {
+                    notices.push(NetworkNotice::Warning(response.data.reason.unwrap_or_else(
+                        || "The server rejected that farm action.".to_owned(),
+                    )));
+                }
+            }
+            Err(error) => self.connection_failed(error, notices),
+        }
+    }
+
     fn poll_chat(&mut self, dt: f32, notices: &mut Vec<NetworkNotice>) {
         let result = self
             .pending_chat
@@ -433,6 +619,9 @@ impl OnlineClient {
         if self.state != ConnectionState::Online {
             return;
         }
+        if self.pending_state.is_none() && self.state_refresh <= 0.0 {
+            self.pending_state = Some(self.api.get("/v1/state"));
+        }
         if self.pending_events.is_none() {
             self.pending_events = Some(
                 self.api
@@ -451,6 +640,15 @@ impl OnlineClient {
                 self.pending_chat = Some(PendingChat { pending });
             }
         }
+        if self.pending_farming.is_none() {
+            if let Some(request) = self.farming_queue.pop_front() {
+                self.pending_request_type = Some(format!("farming::{:?}", request.action));
+                self.pending_request_id = Some(request.request_id.clone());
+                self.pending_farming = Some(PendingFarming {
+                    pending: self.api.post_json("/v1/farming/actions", &request),
+                });
+            }
+        }
     }
 
     fn connection_failed(&mut self, error: String, notices: &mut Vec<NetworkNotice>) {
@@ -464,12 +662,21 @@ impl OnlineClient {
         } else {
             "The development server is unavailable.".to_owned()
         };
+        self.retry_count = self.retry_count.saturating_add(1);
         self.retry_cooldown = 2.0;
         self.movement_queue.clear();
         self.chat_queue.clear();
+        self.farming_queue.clear();
+        self.action_awaiting_confirmation = false;
+        let retry_message = if self.retry_count >= self.max_retry_count {
+            "Retry limit reached; use Reconnect when the server is ready."
+        } else {
+            "Reconnect is available below."
+        };
         notices.push(NetworkNotice::Danger(format!(
-            "{} Reconnect is available below.",
-            short_error(&error)
+            "{} {}",
+            short_error(&error),
+            retry_message
         )));
     }
 

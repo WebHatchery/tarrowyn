@@ -11,6 +11,11 @@ pub struct ServerConfig {
     pub session_ttl_seconds: u32,
     pub movement_cooldown_ticks: u64,
     pub chat_max_length: usize,
+    pub starting_gold: u32,
+    pub starting_seeds: u32,
+    pub crop_stage_seconds: f32,
+    pub trade_expiry_ticks: u64,
+    pub persistence_path: Option<String>,
 }
 
 impl Default for ServerConfig {
@@ -25,6 +30,11 @@ impl Default for ServerConfig {
             session_ttl_seconds: 30,
             movement_cooldown_ticks: 1,
             chat_max_length: 160,
+            starting_gold: 12,
+            starting_seeds: 6,
+            crop_stage_seconds: 30.0,
+            trade_expiry_ticks: 240,
+            persistence_path: None,
         }
     }
 }
@@ -55,6 +65,15 @@ impl ServerConfig {
             ),
             chat_max_length: env_u64("TARROWYN_CHAT_MAX_LENGTH", defaults.chat_max_length as u64)
                 as usize,
+            starting_gold: env_u64("TARROWYN_STARTING_GOLD", defaults.starting_gold as u64) as u32,
+            starting_seeds: env_u64("TARROWYN_STARTING_SEEDS", defaults.starting_seeds as u64)
+                as u32,
+            crop_stage_seconds: env_f32("TARROWYN_CROP_STAGE_SECONDS", defaults.crop_stage_seconds),
+            trade_expiry_ticks: env_u64("TARROWYN_TRADE_EXPIRY_TICKS", defaults.trade_expiry_ticks),
+            persistence_path: env_string_optional(
+                "TARROWYN_STATE_PATH",
+                Some("dist/tarrowyn-server-state.json".to_owned()),
+            ),
         }
     }
 
@@ -69,6 +88,14 @@ fn env_string(name: &str, default: String) -> String {
         .ok()
         .filter(|value| !value.is_empty())
         .unwrap_or(default)
+}
+
+fn env_string_optional(name: &str, default: Option<String>) -> Option<String> {
+    std::env::var(name)
+        .ok()
+        .map(|value| value.trim().to_owned())
+        .filter(|value| !value.is_empty())
+        .or(default)
 }
 
 fn env_u64(name: &str, default: u64) -> u64 {

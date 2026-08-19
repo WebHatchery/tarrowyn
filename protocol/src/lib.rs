@@ -2,8 +2,9 @@
 
 use serde::{Deserialize, Serialize};
 
-pub const PROTOCOL_VERSION: &str = "1";
+pub const PROTOCOL_VERSION: &str = "2";
 pub const MAX_CHAT_MESSAGE_LENGTH: usize = 160;
+pub const MAX_TRADE_ITEMS: u32 = 99;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ApiMeta {
@@ -69,7 +70,7 @@ pub struct GuestSessionResponse {
     pub expires_in_seconds: u32,
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Position {
     pub x: i32,
     pub y: i32,
@@ -121,6 +122,85 @@ pub struct WorldSnapshot {
     pub tiles: Vec<WorldTile>,
     pub clock: WorldClock,
     pub players: Vec<PlayerPresence>,
+    #[serde(default)]
+    pub plots: Vec<FarmPlot>,
+    #[serde(default)]
+    pub tavern_position: Position,
+    pub cursor: u64,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum CropKind {
+    Wheat,
+    Turnip,
+    Moonberry,
+}
+
+impl CropKind {
+    pub fn value(self) -> u32 {
+        match self {
+            Self::Wheat => 3,
+            Self::Turnip => 4,
+            Self::Moonberry => 6,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
+pub struct Inventory {
+    pub wheat: u32,
+    pub turnips: u32,
+    pub moonberries: u32,
+    pub seeds: u32,
+}
+
+impl Inventory {
+    pub fn total_items(self) -> u32 {
+        self.wheat + self.turnips + self.moonberries + self.seeds
+    }
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub struct CropState {
+    pub kind: CropKind,
+    pub stage: u8,
+    pub quality: u8,
+    pub planted_tick: u64,
+    pub last_tended_tick: Option<u64>,
+}
+
+impl CropState {
+    pub const MATURE_STAGE: u8 = 3;
+
+    pub fn mature(self) -> bool {
+        self.stage >= Self::MATURE_STAGE
+    }
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub struct FarmPlot {
+    pub position: Position,
+    pub crop: Option<CropState>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct PlayerProjection {
+    pub account_id: String,
+    pub character_id: String,
+    pub display_name: String,
+    pub position: Position,
+    pub gold: u32,
+    pub skill: u32,
+    pub reputation: u32,
+    pub inventory: Inventory,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct StateSnapshot {
+    pub world: WorldSnapshot,
+    pub player: PlayerProjection,
+    pub feed: TavernFeedResponse,
     pub cursor: u64,
 }
 
@@ -167,12 +247,136 @@ pub struct ChatResponse {
     pub reason: Option<String>,
 }
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum FarmingAction {
+    Plant,
+    Tend,
+    Harvest,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct FarmingRequest {
+    pub request_id: String,
+    pub action: FarmingAction,
+    pub position: Position,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct FarmingResponse {
+    pub request_id: String,
+    pub accepted: bool,
+    pub action: FarmingAction,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub plot: Option<FarmPlot>,
+    pub player: PlayerProjection,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reason: Option<String>,
+}
+
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
+pub struct TradeBundle {
+    pub wheat: u32,
+    pub turnips: u32,
+    pub moonberries: u32,
+    pub seeds: u32,
+    pub gold: u32,
+}
+
+impl TradeBundle {
+    pub fn item_count(self) -> u32 {
+        self.wheat + self.turnips + self.moonberries + self.seeds
+    }
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum TradeStatus {
+    Pending,
+    Accepted,
+    Cancelled,
+    Expired,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct TradeOffer {
+    pub trade_id: String,
+    pub creator_account_id: String,
+    pub creator_name: String,
+    pub recipient_account_id: String,
+    pub recipient_name: String,
+    pub offer: TradeBundle,
+    pub request: TradeBundle,
+    pub status: TradeStatus,
+    pub created_tick: u64,
+    pub expires_tick: u64,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum TradeAction {
+    Create,
+    Review,
+    Accept,
+    Cancel,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct TradeRequest {
+    pub request_id: String,
+    pub action: TradeAction,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub trade_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub recipient_account_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub offer: Option<TradeBundle>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub request: Option<TradeBundle>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct TradeResponse {
+    pub request_id: String,
+    pub accepted: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub trade: Option<TradeOffer>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reason: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct TradesResponse {
+    pub trades: Vec<TradeOffer>,
+    pub cursor: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct TavernNotice {
+    pub notice_id: u64,
+    pub kind: String,
+    pub text: String,
+    pub created_tick: u64,
+    pub cursor: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct TavernFeedResponse {
+    pub notices: Vec<TavernNotice>,
+    pub rumours: Vec<String>,
+    pub chat: Vec<ChatMessage>,
+    pub cursor: u64,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(tag = "kind", content = "value")]
 pub enum WorldEvent {
     Presence(PlayerPresence),
     Clock(WorldClock),
     Chat(ChatMessage),
+    Farming(FarmPlot),
+    Trade(TradeOffer),
+    TavernNotice(TavernNotice),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]

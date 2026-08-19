@@ -39,27 +39,58 @@ pub(super) fn draw_sidebar(
     draw_move_pad(content.x + 77.0, content.y + 126.0, mouse, actions);
 
     draw_ui_text_ex(
+        "Shared fields",
+        content.x,
+        content.y + 218.0,
+        TextStyle::new(16.0, CREAM).params(),
+    );
+    for (index, (id, label)) in [
+        ("plant", "Plant"),
+        ("tend", "Tend"),
+        ("harvest", "Harvest"),
+        ("trade", "Trade seed"),
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        if virtual_button(
+            Rect::new(
+                content.x + index as f32 * 88.0,
+                content.y + 226.0,
+                82.0,
+                27.0,
+            ),
+            label,
+            ctx.connection == ConnectionState::Online && !ctx.offline,
+            ButtonTone::Positive,
+            mouse,
+        ) {
+            actions.push(UiAction::Interact(id.to_owned()));
+        }
+    }
+
+    draw_ui_text_ex(
         "Settlement chat",
         content.x,
-        content.y + 235.0,
+        content.y + 267.0,
         TextStyle::new(16.0, CREAM).params(),
     );
     draw_surface(
-        Rect::new(content.x, content.y + 246.0, content.w, 72.0),
+        Rect::new(content.x, content.y + 278.0, content.w, 58.0),
         &SurfaceStyle::new(Color::new(0.075, 0.105, 0.115, 1.0))
             .with_border(1.0, Color::new(0.32, 0.48, 0.50, 0.45)),
     );
-    for (index, message) in ctx.chat.iter().rev().take(3).enumerate() {
+    for (index, message) in ctx.chat.iter().rev().take(2).enumerate() {
         draw_ui_text_ex(
             &format!("{}: {}", message.display_name, message.text),
             content.x + 8.0,
-            content.y + 262.0 + index as f32 * 19.0,
+            content.y + 294.0 + index as f32 * 18.0,
             TextStyle::new(11.0, if index == 0 { CREAM } else { dark::TEXT_DIM }).params(),
         );
     }
 
     draw_surface(
-        Rect::new(content.x, content.y + 328.0, content.w - 78.0, 30.0),
+        Rect::new(content.x, content.y + 341.0, content.w - 78.0, 30.0),
         &SurfaceStyle::new(Color::new(0.10, 0.14, 0.15, 1.0))
             .with_border(1.0, Color::new(0.32, 0.48, 0.50, 0.45)),
     );
@@ -70,7 +101,7 @@ pub(super) fn draw_sidebar(
             ctx.chat_draft
         },
         content.x + 9.0,
-        content.y + 348.0,
+        content.y + 361.0,
         TextStyle::new(
             11.0,
             if ctx.chat_draft.is_empty() {
@@ -82,7 +113,7 @@ pub(super) fn draw_sidebar(
         .params(),
     );
     if virtual_button(
-        Rect::new(content.right() - 70.0, content.y + 328.0, 70.0, 30.0),
+        Rect::new(content.right() - 70.0, content.y + 341.0, 70.0, 30.0),
         "Send",
         !ctx.chat_draft.trim().is_empty() && ctx.connection == ConnectionState::Online,
         ButtonTone::Positive,
@@ -91,18 +122,14 @@ pub(super) fn draw_sidebar(
         actions.push(UiAction::SendChat);
     }
 
-    for (index, phrase) in [
-        "Hello from the road",
-        "Meet at the Hearth",
-        "I found the path",
-    ]
-    .iter()
-    .enumerate()
+    for (index, phrase) in ["Hello from the road", "Meet at the Hearth"]
+        .iter()
+        .enumerate()
     {
         if virtual_button(
             Rect::new(
                 content.x,
-                content.y + 366.0 + index as f32 * 29.0,
+                content.y + 379.0 + index as f32 * 29.0,
                 content.w,
                 24.0,
             ),
@@ -116,7 +143,7 @@ pub(super) fn draw_sidebar(
     }
 
     if virtual_button(
-        Rect::new(content.x, content.y + 430.0, content.w, 25.0),
+        Rect::new(content.x, content.y + 438.0, content.w, 25.0),
         "Reconnect",
         ctx.connection != ConnectionState::Online,
         ButtonTone::Primary,
@@ -125,7 +152,7 @@ pub(super) fn draw_sidebar(
         actions.push(UiAction::Reconnect);
     }
     if virtual_button(
-        Rect::new(content.x, content.y + 459.0, content.w, 25.0),
+        Rect::new(content.x, content.y + 467.0, content.w, 25.0),
         "Use offline fixture",
         true,
         ButtonTone::Secondary,
@@ -136,7 +163,7 @@ pub(super) fn draw_sidebar(
     draw_text_block(
         ctx.status_message,
         content.x,
-        content.y + 487.0,
+        content.y + 495.0,
         content.w,
         28.0,
         11.0,

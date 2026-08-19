@@ -1,6 +1,9 @@
 use super::*;
 use crate::config::ServerConfig;
-use tarrowyn_protocol::{ChatRequest, GuestSessionRequest, MovementIntent, Position, TileKind};
+use tarrowyn_protocol::{
+    ChatRequest, FarmingAction, FarmingRequest, GuestSessionRequest, MovementIntent, Position,
+    TileKind, TradeAction, TradeBundle, TradeRequest, TradeStatus,
+};
 
 fn repo() -> WorldRepository {
     WorldRepository::new(ServerConfig {
@@ -168,4 +171,193 @@ fn movement_rate_limit_chat_bound_and_session_expiry_are_server_rules() {
         repo.tick();
     }
     assert!(repo.world(&session.account_token).is_err());
+}
+
+#[test]
+fn farming_grows_on_the_shared_clock_and_retries_are_idempotent() {
+    let repo = WorldRepository::new(ServerConfig {
+        movement_cooldown_ticks: 0,
+        world_seconds_per_tick: 10.0,
+        crop_stage_seconds: 10.0,
+        ..ServerConfig::default()
+    });
+    let session = guest(&repo, "farmer");
+    for (index, (dx, dy)) in [(-1, 0), (-1, 0), (-1, 0), (-1, 0), (0, -1)]
+        .into_iter()
+        .enumerate()
+    {
+        repo.movement(
+            &session.account_token,
+            MovementIntent {
+                request_id: format!("farm-step-{index}"),
+                dx,
+                dy,
+            },
+        )
+        .unwrap();
+    }
+    let request = FarmingRequest {
+        request_id: "plant-once".to_owned(),
+        action: FarmingAction::Plant,
+        position: Position { x: 4, y: 4 },
+    };
+    let planted = repo
+        .farming(&session.account_token, request.clone())
+        .unwrap()
+        .data;
+    let retry = repo.farming(&session.account_token, request).unwrap().data;
+    assert!(planted.accepted);
+    assert_eq!(retry, planted);
+    for _ in 0..3 {
+        repo.tick();
+    }
+    let grown = repo.world(&session.account_token).unwrap().data;
+    assert_eq!(
+        grown
+            .plots
+            .iter()
+            .find(|plot| plot.position == Position { x: 4, y: 4 })
+            .unwrap()
+            .crop
+            .unwrap()
+            .stage,
+        3
+    );
+    let harvested = repo
+        .farming(
+            &session.account_token,
+            FarmingRequest {
+                request_id: "harvest-once".to_owned(),
+                action: FarmingAction::Harvest,
+                position: Position { x: 4, y: 4 },
+            },
+        )
+        .unwrap()
+        .data;
+    assert!(harvested.accepted);
+    let inventory = repo
+        .inventory(&session.account_token)
+        .unwrap()
+        .data
+        .inventory;
+    assert_eq!(
+        inventory.wheat + inventory.turnips + inventory.moonberries,
+        1
+    );
+}
+
+#[test]
+fn trade_review_and_accept_exchange_goods_once() {
+    let repo = WorldRepository::new(ServerConfig::default());
+    let one = guest(&repo, "trader-one");
+    let two = guest(&repo, "trader-two");
+    let create = TradeRequest {
+        request_id: "offer-seed".to_owned(),
+        action: TradeAction::Create,
+        trade_id: None,
+        recipient_account_id: Some(two.account_id.clone()),
+        offer: Some(TradeBundle {
+            seeds: 1,
+            ..TradeBundle::default()
+        }),
+        request: Some(TradeBundle {
+            gold: 2,
+            ..TradeBundle::default()
+        }),
+    };
+    let created = repo.trade(&one.account_token, create.clone()).unwrap().data;
+    assert!(created.accepted);
+    assert_eq!(
+        repo.trade(&one.account_token, create).unwrap().data,
+        created
+    );
+    let trade_id = created.trade.as_ref().unwrap().trade_id.clone();
+    let reviewed = repo
+        .trade(
+            &two.account_token,
+            TradeRequest {
+                request_id: "review-offer".to_owned(),
+                action: TradeAction::Review,
+                trade_id: Some(trade_id.clone()),
+                recipient_account_id: None,
+                offer: None,
+                request: None,
+            },
+        )
+        .unwrap()
+        .data;
+    assert!(reviewed.accepted);
+    let accept = TradeRequest {
+        request_id: "accept-offer".to_owned(),
+        action: TradeAction::Accept,
+        trade_id: Some(trade_id),
+        recipient_account_id: None,
+        offer: None,
+        request: None,
+    };
+    assert!(
+        repo.trade(&two.account_token, accept.clone())
+            .unwrap()
+            .data
+            .accepted
+    );
+    assert_eq!(
+        repo.trade(&two.account_token, accept)
+            .unwrap()
+            .data
+            .trade
+            .unwrap()
+            .status,
+        TradeStatus::Accepted
+    );
+    let one_inventory = repo.inventory(&one.account_token).unwrap().data;
+    let two_inventory = repo.inventory(&two.account_token).unwrap().data;
+    assert_eq!(one_inventory.inventory.seeds, 5);
+    assert_eq!(
+        one_inventory.gold,
+        ServerConfig::default().starting_gold + 2
+    );
+    assert_eq!(
+        two_inventory.inventory.seeds,
+        ServerConfig::default().starting_seeds + 1
+    );
+    assert_eq!(
+        two_inventory.gold,
+        ServerConfig::default().starting_gold - 2
+    );
+}
+
+#[test]
+fn repository_restart_restores_clock_identity_and_tavern_history() {
+    let path = std::env::temp_dir().join(format!("tarrowyn-phase2-{}.json", std::process::id()));
+    let path_string = path.to_string_lossy().into_owned();
+    let config = ServerConfig {
+        persistence_path: Some(path_string.clone()),
+        ..ServerConfig::default()
+    };
+    let first = WorldRepository::new(config.clone());
+    let session = guest(&first, "returning-player");
+    first.tick();
+    first
+        .chat(
+            &session.account_token,
+            ChatRequest {
+                request_id: "restart-chat".to_owned(),
+                channel: "tavern".to_owned(),
+                text: "I will return.".to_owned(),
+            },
+        )
+        .unwrap();
+    let tick = first.server_tick();
+    drop(first);
+    let second = WorldRepository::new(config);
+    let resumed = guest(&second, "returning-player");
+    assert_eq!(resumed.character_id, session.character_id);
+    assert_eq!(second.server_tick(), tick);
+    let feed = second.tavern_feed(&resumed.account_token).unwrap().data;
+    assert!(feed
+        .chat
+        .iter()
+        .any(|message| message.text == "I will return."));
+    let _ = std::fs::remove_file(path);
 }

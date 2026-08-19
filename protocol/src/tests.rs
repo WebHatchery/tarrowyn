@@ -34,3 +34,30 @@ fn chat_contract_preserves_bounded_message_fields() {
     assert_eq!(round_trip, request);
     assert_eq!(MAX_CHAT_MESSAGE_LENGTH, 160);
 }
+
+#[test]
+fn phase_two_farming_and_trade_requests_round_trip_with_stable_tags() {
+    let farming = FarmingRequest {
+        request_id: "farm-1".to_owned(),
+        action: FarmingAction::Plant,
+        position: Position { x: 4, y: 4 },
+    };
+    let trade = TradeRequest {
+        request_id: "trade-1".to_owned(),
+        action: TradeAction::Create,
+        trade_id: None,
+        recipient_account_id: Some("dev-account-2".to_owned()),
+        offer: Some(TradeBundle {
+            seeds: 1,
+            ..TradeBundle::default()
+        }),
+        request: Some(TradeBundle {
+            gold: 2,
+            ..TradeBundle::default()
+        }),
+    };
+    let encoded = serde_json::to_string(&(farming, trade)).unwrap();
+    assert!(encoded.contains("\"action\":\"plant\""));
+    assert!(encoded.contains("\"action\":\"create\""));
+    assert_eq!(PROTOCOL_VERSION, "2");
+}

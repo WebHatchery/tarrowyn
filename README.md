@@ -1,11 +1,10 @@
-# The Years of Tarrowyn — Phase 1
+# The Years of Tarrowyn — Phase 2
 
-The first multiplayer slice is now a small authoritative client/server build.
-The native development server owns guest identity, the shared collision map,
-movement validation, presence, chat ordering, session expiry, and the
-accelerated world clock. The Macroquad client renders that projection and
-retains the Phase 0 first-evening fixture as an explicitly labelled offline
-mode.
+The shared settlement is now a small persistent authoritative client/server
+build. The native development server owns guest identity, characters, the
+accelerated clock, farming plots, inventory, trades, presence, and tavern
+history. The Macroquad client renders accepted projections and retains the
+Phase 0 first-evening fixture as an explicitly labelled offline mode.
 
 ## Run the shared road locally
 
@@ -23,10 +22,12 @@ cargo run -p years_of_tarrowyn
 ```
 
 The client never performs a blocking HTTP call on the render thread. Guest,
-world, event, movement, and chat requests are retained as toolkit
-`Pending<T>` values and polled once per frame. A timeout moves the client to a
-readable degraded/offline state; the visible `Reconnect` action is subject to
-an application-owned cooldown.
+state, event, movement, chat, farming, and trade requests are retained as
+toolkit `Pending<T>` values and polled once per frame. A timeout moves the
+client to a readable degraded/offline state; the visible `Reconnect` action is
+subject to an application-owned cooldown and retry limit. Inventory, gold,
+crop growth, and completed trades only change after an accepted server
+projection.
 
 For the local first-evening fixture, use a separate terminal or the visible
 `Use offline fixture` action:
@@ -55,19 +56,30 @@ and confirms the world clock advances independently of request count:
 .\scripts\verify_three_clients.ps1
 ```
 
+Run the Phase 2 farming, trading, tavern, and restart acceptance pass with:
+
+```powershell
+.\scripts\verify_phase2.ps1
+```
+
 ## Architecture decisions
 
-Phase 1 uses `tiny_http` for the native server process and an in-memory
-`WorldRepository` behind the HTTP handlers. The repository boundary is
-intentional: Phase 1 proves the wire and authority model without pretending
-that guest development data is durable. Phase 2 can add SQLite persistence
-behind the same repository boundary.
+The server uses `tiny_http` for the native process and a mutex-protected
+`WorldRepository` behind the HTTP handlers. The repository writes a versioned
+JSON state document to `TARROWYN_STATE_PATH` (default
+`dist/tarrowyn-server-state.json`) after authoritative mutations and clock
+ticks. Sessions and bearer tokens are intentionally ephemeral; the guest
+client key resolves the durable account and character again after a restart.
+The storage version is part of the document so future migrations can be added
+without changing the protocol boundary.
 
-The shared `protocol/` crate is versioned at protocol `1`. Every successful or
+The shared `protocol/` crate is versioned at protocol `2`. Every successful or
 error response carries protocol version and server tick metadata; cursor-based
 event responses additionally carry the event cursor. See
 [`docs/PHASE_1_RUNBOOK.md`](docs/PHASE_1_RUNBOOK.md) for reset, configuration,
-fixture, and capture details.
+fixture, and capture details, and [`docs/PHASE_2_RUNBOOK.md`](docs/PHASE_2_RUNBOOK.md)
+for persistence and acceptance details. Phase 2 adds `/v1/state`,
+`/v1/farming/actions`, `/v1/inventory`, `/v1/trades`, and `/v1/tavern/feed`.
 
 ## Release validation
 

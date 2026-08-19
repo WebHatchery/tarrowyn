@@ -5,7 +5,8 @@ use std::io::Read;
 use std::sync::Arc;
 use std::thread;
 use tarrowyn_protocol::{
-    ApiErrorResponse, ApiMeta, ApiResponse, ChatRequest, MovementIntent, PROTOCOL_VERSION,
+    ApiErrorResponse, ApiMeta, ApiResponse, ChatRequest, FarmingRequest, MovementIntent,
+    TradeRequest, PROTOCOL_VERSION,
 };
 use tiny_http::{Header, Method, Request, Response, Server, StatusCode};
 
@@ -46,6 +47,12 @@ fn handle_request(mut request: Request, repository: Arc<WorldRepository>) {
         (Method::Get, "/v1/world") => {
             authenticated(&request, &repository, |token| repository.world(token))
         }
+        (Method::Get, "/v1/state") => {
+            authenticated(&request, &repository, |token| repository.state(token))
+        }
+        (Method::Get, "/v1/inventory") => {
+            authenticated(&request, &repository, |token| repository.inventory(token))
+        }
         (Method::Post, "/v1/movement") => match read_json::<MovementIntent>(&mut request) {
             Ok(body) => authenticated(&request, &repository, |token| {
                 repository.movement(token, body)
@@ -64,6 +71,22 @@ fn handle_request(mut request: Request, repository: Arc<WorldRepository>) {
             Ok(body) => authenticated(&request, &repository, |token| repository.chat(token, body)),
             Err(error) => error_response(400, "invalid_json", error, repository.health().meta),
         },
+        (Method::Post, "/v1/farming/actions") => match read_json::<FarmingRequest>(&mut request) {
+            Ok(body) => authenticated(&request, &repository, |token| {
+                repository.farming(token, body)
+            }),
+            Err(error) => error_response(400, "invalid_json", error, repository.health().meta),
+        },
+        (Method::Get, "/v1/trades") => {
+            authenticated(&request, &repository, |token| repository.trades(token))
+        }
+        (Method::Post, "/v1/trades") => match read_json::<TradeRequest>(&mut request) {
+            Ok(body) => authenticated(&request, &repository, |token| repository.trade(token, body)),
+            Err(error) => error_response(400, "invalid_json", error, repository.health().meta),
+        },
+        (Method::Get, "/v1/tavern/feed") => {
+            authenticated(&request, &repository, |token| repository.tavern_feed(token))
+        }
         _ => error_response(
             404,
             "not_found",

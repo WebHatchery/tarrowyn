@@ -1,5 +1,8 @@
 # Phase 2 — The Persistent Settlement
 
+> Implementation status: complete for the documented vertical slice. The
+> release proof is recorded in [`PHASE_2_RUNBOOK.md`](PHASE_2_RUNBOOK.md).
+
 ## Purpose
 
 Make the shared settlement worth returning to. Phase 2 adds the smallest

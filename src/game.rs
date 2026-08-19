@@ -17,6 +17,7 @@ use macroquad_toolkit::persistence::{
     slot_exists,
 };
 use macroquad_toolkit::prelude::{begin_virtual_ui_frame, dark, end_virtual_ui_frame};
+use tarrowyn_protocol::{FarmingAction, TradeAction, TradeBundle, TradeRequest};
 
 enum ClientMode {
     Online(Box<OnlineClient>),
@@ -144,6 +145,28 @@ impl Game {
                     .account
                     .as_ref()
                     .map(|account| account.account_id.as_str());
+                let stats = client
+                    .projection
+                    .player
+                    .as_ref()
+                    .map(|player| {
+                        format!(
+                            "Gold {}  Skill {}  Reputation {}\nWheat {}  Turnips {}  Moonberries {}  Seeds {}",
+                            player.gold,
+                            player.skill,
+                            player.reputation,
+                            player.inventory.wheat,
+                            player.inventory.turnips,
+                            player.inventory.moonberries,
+                            player.inventory.seeds
+                        )
+                    })
+                    .unwrap_or_else(|| "Waiting for the persistent player ledger…".to_owned());
+                let stats = if let Some(trade) = client.projection.trades.first() {
+                    format!("{stats}\nTrade {}: {:?}", trade.trade_id, trade.status)
+                } else {
+                    stats
+                };
                 ui::draw_game_ui(UiContext {
                     data: &self.data,
                     world: &client.projection.world,
@@ -151,7 +174,7 @@ impl Game {
                     day: client.projection.day,
                     clock_minutes: client.projection.clock_minutes(),
                     night: client.projection.is_night(),
-                    stats: "Server-owned progression will arrive with the settlement phase.",
+                    stats: &stats,
                     own_account_id,
                     remote_players: &client.projection.players,
                     chat: &client.projection.chat,
@@ -369,9 +392,47 @@ impl Game {
     }
 
     fn interact(&mut self, id: &str) {
+        if let ClientMode::Online(client) = &mut self.mode {
+            match id {
+                "plant" => client.queue_farming(FarmingAction::Plant),
+                "tend" => client.queue_farming(FarmingAction::Tend),
+                "harvest" => client.queue_farming(FarmingAction::Harvest),
+                "listen" => client.refresh_tavern(),
+                "trade" => {
+                    let own = client
+                        .account
+                        .as_ref()
+                        .map(|account| account.account_id.as_str());
+                    if let Some(target) = client
+                        .projection
+                        .players
+                        .iter()
+                        .find(|player| Some(player.account_id.as_str()) != own)
+                    {
+                        client.queue_trade(TradeRequest {
+                            request_id: String::new(),
+                            action: TradeAction::Create,
+                            trade_id: None,
+                            recipient_account_id: Some(target.account_id.clone()),
+                            offer: Some(TradeBundle {
+                                seeds: 1,
+                                ..TradeBundle::default()
+                            }),
+                            request: Some(TradeBundle {
+                                gold: 2,
+                                ..TradeBundle::default()
+                            }),
+                        });
+                    } else {
+                        self.notifications
+                            .warning("Another player must be present before offering a seed.");
+                    }
+                }
+                _ => self.notifications.warning(format!("Unknown action: {id}")),
+            }
+            return;
+        }
         let ClientMode::Offline(session) = &mut self.mode else {
-            self.notifications
-                .warning("Interactions are disabled while viewing the server projection.");
             return;
         };
         let Some(action) = self.data.actions.get(id) else {
