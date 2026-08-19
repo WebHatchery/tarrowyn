@@ -234,8 +234,55 @@ pub(super) fn draw_sidebar(
         actions.push(UiAction::Interact("local-fight".to_owned()));
     }
 
+    for (index, (id, label)) in [
+        ("travel", "Travel"),
+        ("recover-travel", "Recover"),
+        ("market-region", "Market"),
+        ("region-event", "Event"),
+    ]
+    .iter()
+    .enumerate()
+    {
+        if virtual_button(
+            Rect::new(
+                content.x + index as f32 * 88.0,
+                content.y + 496.0,
+                82.0,
+                25.0,
+            ),
+            label,
+            ctx.connection == ConnectionState::Online,
+            ButtonTone::Primary,
+            mouse,
+        ) {
+            actions.push(UiAction::Interact((*id).to_owned()));
+        }
+    }
+    for (index, (id, label)) in [
+        ("account", "Account"),
+        ("logout", "Logout"),
+        ("report", "Report"),
+    ]
+    .iter()
+    .enumerate()
+    {
+        if virtual_button(
+            Rect::new(
+                content.x + index as f32 * 88.0,
+                content.y + 525.0,
+                82.0,
+                25.0,
+            ),
+            label,
+            ctx.connection == ConnectionState::Online,
+            ButtonTone::Secondary,
+            mouse,
+        ) {
+            actions.push(UiAction::Interact((*id).to_owned()));
+        }
+    }
     if virtual_button(
-        Rect::new(content.x, content.y + 496.0, content.w, 25.0),
+        Rect::new(content.x, content.y + 554.0, content.w, 25.0),
         "Reconnect",
         ctx.connection != ConnectionState::Online,
         ButtonTone::Primary,
@@ -244,7 +291,7 @@ pub(super) fn draw_sidebar(
         actions.push(UiAction::Reconnect);
     }
     if virtual_button(
-        Rect::new(content.x, content.y + 525.0, content.w, 25.0),
+        Rect::new(content.x, content.y + 583.0, content.w, 25.0),
         "Use offline fixture",
         true,
         ButtonTone::Secondary,
@@ -254,9 +301,10 @@ pub(super) fn draw_sidebar(
     }
     draw_text_block(
         &format!(
-            "{}\n{}\n{}",
+            "{}\n{}\n{}\n{}",
             ctx.status_message,
             ctx.phase4_summary,
+            ctx.phase5_summary,
             ctx.chronicle
                 .last()
                 .map(|entry| entry.title.as_str())
@@ -267,7 +315,7 @@ pub(super) fn draw_sidebar(
                 .unwrap_or("The frontier registry is listening.")
         ),
         content.x,
-        content.y + 554.0,
+        content.y + 612.0,
         content.w,
         28.0,
         11.0,

@@ -1,0 +1,7 @@
+{
+  "settlements": [
+    {"id": "hearth-settlement", "location": "hearth", "abundant": ["wheat", "seeds"], "scarce": ["timber", "bandages"]},
+    {"id": "whisperwood-settlement", "location": "whisperwood-outpost", "abundant": ["timber", "iron salvage"], "scarce": ["seeds", "stone"]},
+    {"id": "saltmere-settlement", "location": "saltmere", "abundant": ["stone", "bandages"], "scarce": ["wheat", "tools"]}
+  ]
+}

@@ -81,9 +81,16 @@ playthrough are recorded in [`PHASE_4_DESIGN.md`](PHASE_4_DESIGN.md),
 [`PHASE_4_RUNBOOK.md`](PHASE_4_RUNBOOK.md), and
 [`PHASE_4_PLAYTHROUGH.md`](PHASE_4_PLAYTHROUGH.md).
 
-Phase 5 and Phase 6 remain planning documents. The intended dependency is sequential: Phase 4
-proves that one settlement can govern and sustain itself, Phase 5 proves that
-the settlement model works across a region, and Phase 6 hardens that regional
-world for real players and long-term operation.
+Phases 5 and 6 are implemented release-candidate slices. Phase 4 proves that
+one settlement can govern and sustain itself, Phase 5 proves that the settlement
+model works across a region, and Phase 6 hardens that regional world for real
+players and long-term operation. The implementation records are
+[`PHASE_5_DESIGN.md`](PHASE_5_DESIGN.md),
+[`PHASE_5_RUNBOOK.md`](PHASE_5_RUNBOOK.md),
+[`PHASE_5_PLAYTHROUGH.md`](PHASE_5_PLAYTHROUGH.md),
+[`PHASE_6_DESIGN.md`](PHASE_6_DESIGN.md),
+[`PHASE_6_RUNBOOK.md`](PHASE_6_RUNBOOK.md),
+[`PHASE_6_TEST_REPORT.md`](PHASE_6_TEST_REPORT.md), and
+[`PRODUCTION_READINESS_REVIEW.md`](PRODUCTION_READINESS_REVIEW.md).
 
 - [The Years of Tarrowyn GDD](../The_Years_of_Tarrowyn_GDD.md)

@@ -1,3 +1,4 @@
+use super::phase5::Phase5Client;
 use super::{NetworkNotice, OnlineClient, REQUEST_TIMEOUT_SECONDS};
 use macroquad_toolkit::net::{HttpClient, Pending};
 use std::collections::VecDeque;
@@ -42,6 +43,7 @@ pub(super) struct Phase4Client {
     knowledge: Option<KnowledgeResponse>,
     combat: Option<LocalCombatState>,
     own_account_id: Option<String>,
+    regional: Phase5Client,
 }
 
 impl Phase4Client {
@@ -61,11 +63,13 @@ impl Phase4Client {
             knowledge: None,
             combat: None,
             own_account_id: None,
+            regional: Phase5Client::new(),
         }
     }
 
     pub(super) fn set_account(&mut self, account_id: Option<&str>) {
         self.own_account_id = account_id.map(str::to_owned);
+        self.regional.set_account(account_id);
     }
 
     pub(super) fn update(
@@ -145,6 +149,7 @@ impl Phase4Client {
             }
         }
         self.dispatch(api);
+        self.regional.update(dt, api, online, notices);
     }
 
     fn dispatch(&mut self, api: &mut HttpClient) {
@@ -442,6 +447,7 @@ impl Phase4Client {
         self.pending_combat = None;
         self.pending_command = None;
         self.commands.clear();
+        self.regional.clear();
     }
 
     pub(super) fn summary(&self) -> String {
@@ -485,6 +491,14 @@ impl Phase4Client {
             })
             .unwrap_or_else(|| "Knowledge loading".to_owned());
         format!("{offices} • {registry}\n{orders} • {knowledge} • Households visible")
+    }
+
+    pub(super) fn queue_region_cycle(&mut self, id: &str) {
+        self.regional.queue_cycle(id);
+    }
+
+    pub(super) fn region_summary(&self) -> String {
+        self.regional.summary()
     }
 }
 

@@ -1,0 +1,22 @@
+# Phase 5 regional playthrough report
+
+The deterministic regional fixture was exercised with one guest character.
+The character travelled from The Hearth to Whisperwood Watch, manually
+interrupted the journey, recovered it, and arrived once. The same character
+then created a two-seed order for Saltmere, travelled over the watch trail,
+and settled the order at the destination. The market response changed from
+`Open` to `Fulfilled`, the character received the useful good and carrier
+payment, and the order remained idempotent when its request was repeated.
+
+The settlements expose different conditions, vacancies, demands, resources,
+and chronicle projections. The regional event fixture moved from signal to
+escalation, accepted a ferry-marker intervention, and resolved with recorded
+effects on route safety, prices, and settlement confidence. The Maren household
+changed from considering to travelling or arrived as the bounded household
+interval advanced. `/v1/law` returned the protected no-PvP boundary.
+
+The server tests cover travel interruption/recovery, market settlement,
+regional event cursor recovery, household history, OIDC-style guest linking,
+session refresh, and revocation. The browser-facing touch pass uses the
+visible Travel, Recover, Market, Event, Account, Logout, Report, and Reconnect
+controls; no keyboard command is required.

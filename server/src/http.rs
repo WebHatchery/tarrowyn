@@ -5,16 +5,19 @@ use std::io::Read;
 use std::sync::Arc;
 use std::thread;
 use tarrowyn_protocol::{
-    ApiErrorResponse, ApiMeta, ApiResponse, ChatRequest, ClaimLifecycleRequest, ClaimRequest,
-    CombatRequest, ContractRequest, ExpeditionRequest, FarmingRequest, GovernanceAction,
-    GovernanceRequest, KnowledgeAction, KnowledgeRequest, LocalCombatRequest, MovementIntent,
-    ProfessionRequest, RecoveryRequest, TradeRequest, PROTOCOL_VERSION,
+    ApiErrorResponse, ApiMeta, ApiResponse, AuthLinkRequest, AuthRefreshRequest, AuthRevokeRequest,
+    ChatRequest, ClaimLifecycleRequest, ClaimRequest, CombatRequest, ContractRequest,
+    ExpeditionRequest, FarmingRequest, GovernanceAction, GovernanceRequest, KnowledgeAction,
+    KnowledgeRequest, LocalCombatRequest, MarketOrderRequest, ModerationReportRequest,
+    MovementIntent, ProfessionRequest, RecoveryRequest, RegionalEventRequest, RouteRequest,
+    SupportRepairRequest, TradeRequest, TravelRequest, PROTOCOL_VERSION,
 };
 use tiny_http::{Header, Method, Request, Response, Server, StatusCode};
 
 type JsonResponse = Response<std::io::Cursor<Vec<u8>>>;
 
 pub fn serve(config: crate::config::ServerConfig) -> Result<(), String> {
+    crate::content::validate().map_err(|error| format!("content validation failed: {error}"))?;
     let server = Server::http(&config.bind_addr).map_err(|error| error.to_string())?;
     let repository = Arc::new(WorldRepository::new(config.clone()));
     let ticker_repository = Arc::clone(&repository);
@@ -44,10 +47,42 @@ fn handle_request(mut request: Request, repository: Arc<WorldRepository>) {
     let query = query.to_owned();
     let result = match (request.method(), path.as_str()) {
         (Method::Get, "/health") => json_response(StatusCode(200), repository.health()),
+        (Method::Get, "/v1/ops/health") => json_response(StatusCode(200), repository.ops_health()),
         (Method::Post, "/v1/session/guest") => match read_json_or_default(&mut request) {
             Ok(body) => json_response(StatusCode(200), repository.guest_session(body)),
             Err(error) => error_response(400, "invalid_json", error, repository.health().meta),
         },
+        (Method::Post, "/v1/auth/link") => match read_json::<AuthLinkRequest>(&mut request) {
+            Ok(body) => authenticated(&request, &repository, |token| {
+                repository.auth_link(token, body)
+            }),
+            Err(error) => error_response(400, "invalid_json", error, repository.health().meta),
+        },
+        (Method::Post, "/v1/auth/refresh") => match read_json::<AuthRefreshRequest>(&mut request) {
+            Ok(body) => match repository.auth_refresh(body) {
+                Ok(response) => json_response(StatusCode(200), response),
+                Err(error) => json_response(
+                    StatusCode(error.status),
+                    ApiErrorResponse {
+                        meta: repository.health().meta,
+                        error: error.error,
+                    },
+                ),
+            },
+            Err(error) => error_response(400, "invalid_json", error, repository.health().meta),
+        },
+        (Method::Post, "/v1/auth/revoke") => match read_json::<AuthRevokeRequest>(&mut request) {
+            Ok(body) => authenticated(&request, &repository, |token| {
+                repository.auth_revoke(token, body)
+            }),
+            Err(error) => error_response(400, "invalid_json", error, repository.health().meta),
+        },
+        (Method::Get, "/v1/account") => {
+            authenticated(&request, &repository, |token| repository.account(token))
+        }
+        (Method::Get, "/v1/ops/metrics") => {
+            authenticated(&request, &repository, |token| repository.ops_metrics(token))
+        }
         (Method::Get, "/v1/world") => {
             authenticated(&request, &repository, |token| repository.world(token))
         }
@@ -71,10 +106,72 @@ fn handle_request(mut request: Request, repository: Arc<WorldRepository>) {
                 repository.events(token, since)
             })
         }
+        (Method::Get, "/v1/region") => {
+            authenticated(&request, &repository, |token| repository.region(token))
+        }
+        (Method::Get, "/v1/settlements") => {
+            authenticated(&request, &repository, |token| repository.settlements(token))
+        }
+        (Method::Get, "/v1/routes") => {
+            authenticated(&request, &repository, |token| repository.routes(token))
+        }
+        (Method::Post, "/v1/routes") => match read_json::<RouteRequest>(&mut request) {
+            Ok(body) => authenticated(&request, &repository, |token| {
+                repository.route_action(token, body)
+            }),
+            Err(error) => error_response(400, "invalid_json", error, repository.health().meta),
+        },
+        (Method::Post, "/v1/travel") => match read_json::<TravelRequest>(&mut request) {
+            Ok(body) => authenticated(&request, &repository, |token| {
+                repository.travel(token, body)
+            }),
+            Err(error) => error_response(400, "invalid_json", error, repository.health().meta),
+        },
+        (Method::Get, "/v1/market/orders") => {
+            authenticated(&request, &repository, |token| repository.market(token))
+        }
+        (Method::Post, "/v1/market/orders") => {
+            match read_json::<MarketOrderRequest>(&mut request) {
+                Ok(body) => authenticated(&request, &repository, |token| {
+                    repository.market_order(token, body)
+                }),
+                Err(error) => error_response(400, "invalid_json", error, repository.health().meta),
+            }
+        }
+        (Method::Get, "/v1/events/region") => {
+            let since = query_value(&query, "since")
+                .and_then(|value| value.parse().ok())
+                .unwrap_or(0);
+            authenticated(&request, &repository, |token| {
+                repository.events_region(token, since)
+            })
+        }
+        (Method::Post, "/v1/events/region") => {
+            match read_json::<RegionalEventRequest>(&mut request) {
+                Ok(body) => authenticated(&request, &repository, |token| {
+                    repository.event_action(token, body)
+                }),
+                Err(error) => error_response(400, "invalid_json", error, repository.health().meta),
+            }
+        }
+        (Method::Get, "/v1/households/region") => authenticated(&request, &repository, |token| {
+            repository.households_region(token)
+        }),
+        (Method::Get, "/v1/law") => authenticated(&request, &repository, |token| {
+            repository.law_boundary(token)
+        }),
         (Method::Post, "/v1/chat") => match read_json::<ChatRequest>(&mut request) {
             Ok(body) => authenticated(&request, &repository, |token| repository.chat(token, body)),
             Err(error) => error_response(400, "invalid_json", error, repository.health().meta),
         },
+        (Method::Post, "/v1/moderation/report") => {
+            match read_json::<ModerationReportRequest>(&mut request) {
+                Ok(body) => authenticated(&request, &repository, |token| {
+                    repository.moderation_report(token, body)
+                }),
+                Err(error) => error_response(400, "invalid_json", error, repository.health().meta),
+            }
+        }
         (Method::Post, "/v1/farming/actions") => match read_json::<FarmingRequest>(&mut request) {
             Ok(body) => authenticated(&request, &repository, |token| {
                 repository.farming(token, body)
@@ -237,6 +334,23 @@ fn handle_request(mut request: Request, repository: Arc<WorldRepository>) {
             }),
             Err(error) => error_response(400, "invalid_json", error, repository.health().meta),
         },
+        (Method::Post, "/v1/support/repair") => {
+            match read_json::<SupportRepairRequest>(&mut request) {
+                Ok(body) => authenticated(&request, &repository, |token| {
+                    repository.support_repair(token, body)
+                }),
+                Err(error) => error_response(400, "invalid_json", error, repository.health().meta),
+            }
+        }
+        (Method::Get, "/v1/chronicle/search") => {
+            let since = query_value(&query, "since")
+                .and_then(|value| value.parse().ok())
+                .unwrap_or(0);
+            let search = query_value(&query, "q").unwrap_or("");
+            authenticated(&request, &repository, |token| {
+                repository.chronicle_search(token, search, since)
+            })
+        }
         _ => error_response(
             404,
             "not_found",

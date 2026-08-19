@@ -19,6 +19,7 @@ const STALE_TICKS: u64 = 20;
 
 mod frontier;
 mod phase4;
+mod phase5;
 mod requests;
 mod trade_client;
 

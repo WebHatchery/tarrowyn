@@ -290,6 +290,8 @@ pub(super) fn phase4_tick(state: &mut RepositoryState, config: &ServerConfig) {
     governance::tick(state, config);
     claims::tick(state, config);
     households::tick(state, config);
+    super::phase5::phase5_tick(state, config);
+    super::phase6::phase6_tick(state, config);
 }
 
 pub(super) fn default_capability(profession: tarrowyn_protocol::ProfessionKind) -> Capability {

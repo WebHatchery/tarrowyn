@@ -65,6 +65,7 @@ pub struct UiContext<'a> {
     pub chronicle: &'a [ChronicleEntry],
     pub opportunities: &'a [OpportunitySignal],
     pub phase4_summary: &'a str,
+    pub phase5_summary: &'a str,
     pub knocked_out: bool,
     pub ui: &'a VirtualUi,
 }

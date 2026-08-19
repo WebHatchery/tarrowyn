@@ -1,0 +1,5 @@
+{
+  "schema_version": 1,
+  "required_manifests": ["region.json", "settlements.json", "events.json", "items.json"],
+  "compatibility": "IDs are append-only after publication; removals require a migration record."
+}

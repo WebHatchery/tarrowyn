@@ -59,7 +59,7 @@ fn phase_two_farming_and_trade_requests_round_trip_with_stable_tags() {
     let encoded = serde_json::to_string(&(farming, trade)).unwrap();
     assert!(encoded.contains("\"action\":\"plant\""));
     assert!(encoded.contains("\"action\":\"create\""));
-    assert_eq!(PROTOCOL_VERSION, "4");
+    assert_eq!(PROTOCOL_VERSION, "6");
 }
 
 #[test]

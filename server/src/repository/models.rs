@@ -61,6 +61,10 @@ pub(super) struct StoredState {
     pub(super) phase3: Phase3State,
     #[serde(default)]
     pub(super) phase4: super::phase4::Phase4State,
+    #[serde(default)]
+    pub(super) phase5: super::phase5::Phase5State,
+    #[serde(default)]
+    pub(super) phase6: super::phase6::Phase6State,
 }
 
 #[derive(Debug)]
@@ -82,6 +86,8 @@ pub(super) struct RepositoryState {
     pub(super) trades: HashMap<String, TradeOffer>,
     pub(super) phase3: Phase3State,
     pub(super) phase4: super::phase4::Phase4State,
+    pub(super) phase5: super::phase5::Phase5State,
+    pub(super) phase6: super::phase6::Phase6State,
 }
 
 impl RepositoryState {
@@ -108,6 +114,8 @@ impl RepositoryState {
             trades: HashMap::new(),
             phase3: super::phase3::fresh(),
             phase4: super::phase4::fresh(config),
+            phase5: super::phase5::fresh(config),
+            phase6: super::phase6::fresh(config),
         }
     }
 
@@ -138,6 +146,8 @@ impl RepositoryState {
             trades: stored.trades,
             phase3: stored.phase3,
             phase4: stored.phase4,
+            phase5: stored.phase5,
+            phase6: stored.phase6,
         }
     }
 
@@ -160,6 +170,8 @@ impl RepositoryState {
             trades: self.trades.clone(),
             phase3: self.phase3.clone(),
             phase4: self.phase4.clone(),
+            phase5: self.phase5.clone(),
+            phase6: self.phase6.clone(),
         }
     }
 }

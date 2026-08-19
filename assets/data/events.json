@@ -1,0 +1,10 @@
+{
+  "events": [
+    {
+      "id": "river-thaw",
+      "kind": "seasonal_supply",
+      "stages": ["signal", "escalation", "intervention", "resolution", "aftermath"],
+      "affected_systems": ["travel", "farming", "prices", "households", "chronicle"]
+    }
+  ]
+}

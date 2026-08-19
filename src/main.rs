@@ -1,4 +1,4 @@
-//! The Years of Tarrowyn — Phase 3 client entry point.
+//! The Years of Tarrowyn — Phase 6 release-candidate client entry point.
 
 use macroquad::prelude::*;
 use macroquad_toolkit::capture;
@@ -14,7 +14,7 @@ use game::Game;
 fn window_conf() -> Conf {
     capture::capture_window_conf(
         "TARROWYN",
-        "The Years of Tarrowyn — Phase 3",
+        "The Years of Tarrowyn — Phase 6",
         ui::LOGICAL_WIDTH as i32,
         ui::LOGICAL_HEIGHT as i32,
     )

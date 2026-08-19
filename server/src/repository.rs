@@ -1,8 +1,6 @@
 use crate::config::ServerConfig;
 use std::collections::{HashMap, VecDeque};
 use std::fs;
-#[cfg(windows)]
-use std::os::windows::ffi::OsStrExt;
 use std::path::Path;
 use std::sync::Mutex;
 use tarrowyn_protocol::{
@@ -14,10 +12,8 @@ use tarrowyn_protocol::{
     TradeResponse, TradeStatus, TradesResponse, WeaponKind, WorldClock, WorldEvent, WorldSnapshot,
     WorldTile, MAX_CHAT_MESSAGE_LENGTH, MAX_TRADE_ITEMS, PROTOCOL_VERSION,
 };
-#[cfg(windows)]
-use windows_sys::Win32::Storage::FileSystem::{MoveFileExW, MOVEFILE_REPLACE_EXISTING};
 
-const STORAGE_VERSION: u32 = 3;
+const STORAGE_VERSION: u32 = 6;
 const MAX_EVENTS: usize = 2048;
 const MAX_CHAT_HISTORY: usize = 64;
 const MAX_NOTICES: usize = 32;
@@ -25,12 +21,16 @@ const MAX_TRADES: usize = 128;
 
 mod farming;
 mod models;
+mod persistence;
 mod phase3;
 mod phase3_frontier;
 mod phase4;
+mod phase5;
+mod phase6;
 mod trades;
 
-use models::{Identity, RepositoryState, Session, StoredState};
+use models::{Identity, RepositoryState, Session};
+use persistence::{load_state, replace_file};
 
 #[derive(Debug, Clone)]
 pub struct RepositoryError {
@@ -520,43 +520,6 @@ impl WorldRepository {
     }
 }
 
-#[cfg(not(windows))]
-fn replace_file(temporary_path: &Path, path: &Path) -> std::io::Result<()> {
-    fs::rename(temporary_path, path)
-}
-
-#[cfg(windows)]
-fn replace_file(temporary_path: &Path, path: &Path) -> std::io::Result<()> {
-    let temporary_path: Vec<u16> = temporary_path
-        .as_os_str()
-        .encode_wide()
-        .chain(std::iter::once(0))
-        .collect();
-    let path: Vec<u16> = path
-        .as_os_str()
-        .encode_wide()
-        .chain(std::iter::once(0))
-        .collect();
-    let replaced = unsafe {
-        MoveFileExW(
-            temporary_path.as_ptr(),
-            path.as_ptr(),
-            MOVEFILE_REPLACE_EXISTING,
-        )
-    };
-    if replaced == 0 {
-        Err(std::io::Error::last_os_error())
-    } else {
-        Ok(())
-    }
-}
-
-fn load_state(config: &ServerConfig) -> Option<RepositoryState> {
-    let bytes = fs::read(config.persistence_path.as_deref()?).ok()?;
-    let stored: StoredState = serde_json::from_slice(&bytes).ok()?;
-    Some(RepositoryState::from_stored(stored, config))
-}
-
 fn authenticate(
     state: &mut RepositoryState,
     token: &str,
@@ -565,7 +528,15 @@ fn authenticate(
     let Some(session) = state.sessions.get(token) else {
         return Err(RepositoryError::unauthorized());
     };
-    if state.tick.saturating_sub(session.last_seen_tick) > config.session_ttl_ticks() {
+    let expired = state
+        .phase6
+        .sessions
+        .get(token)
+        .map(|production| production.revoked || production.expires_at_tick <= state.tick)
+        .unwrap_or_else(|| {
+            state.tick.saturating_sub(session.last_seen_tick) > config.session_ttl_ticks()
+        });
+    if expired {
         state.sessions.remove(token);
         return Err(RepositoryError::unauthorized());
     }
@@ -587,8 +558,15 @@ fn expire_sessions(state: &mut RepositoryState, config: &ServerConfig) {
     let expired: Vec<String> = state
         .sessions
         .iter()
-        .filter(|(_, session)| {
-            state.tick.saturating_sub(session.last_seen_tick) > config.session_ttl_ticks()
+        .filter(|(token, session)| {
+            state
+                .phase6
+                .sessions
+                .get(*token)
+                .map(|production| production.revoked || production.expires_at_tick <= state.tick)
+                .unwrap_or_else(|| {
+                    state.tick.saturating_sub(session.last_seen_tick) > config.session_ttl_ticks()
+                })
         })
         .map(|(token, _)| token.clone())
         .collect();

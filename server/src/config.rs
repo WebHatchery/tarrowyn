@@ -25,6 +25,11 @@ pub struct ServerConfig {
     pub expedition_min_materials: u32,
     pub expedition_min_safety: u32,
     pub persistence_path: Option<String>,
+    pub backup_path: Option<String>,
+    pub backup_interval_ticks: u64,
+    pub production_session_ttl_seconds: u32,
+    pub refresh_ttl_seconds: u32,
+    pub maintenance_message: Option<String>,
 }
 
 impl Default for ServerConfig {
@@ -53,6 +58,11 @@ impl Default for ServerConfig {
             expedition_min_materials: 8,
             expedition_min_safety: 3,
             persistence_path: None,
+            backup_path: Some("dist/tarrowyn-server-state.json.backup".to_owned()),
+            backup_interval_ticks: 120,
+            production_session_ttl_seconds: 900,
+            refresh_ttl_seconds: 2_592_000,
+            maintenance_message: None,
         }
     }
 }
@@ -128,12 +138,36 @@ impl ServerConfig {
                 "TARROWYN_STATE_PATH",
                 Some("dist/tarrowyn-server-state.json".to_owned()),
             ),
+            backup_path: env_string_optional("TARROWYN_BACKUP_PATH", defaults.backup_path),
+            backup_interval_ticks: env_u64(
+                "TARROWYN_BACKUP_INTERVAL_TICKS",
+                defaults.backup_interval_ticks,
+            ),
+            production_session_ttl_seconds: env_u32(
+                "TARROWYN_PRODUCTION_SESSION_TTL_SECONDS",
+                defaults.production_session_ttl_seconds,
+            ),
+            refresh_ttl_seconds: env_u32(
+                "TARROWYN_REFRESH_TTL_SECONDS",
+                defaults.refresh_ttl_seconds,
+            ),
+            maintenance_message: env_string_optional("TARROWYN_MAINTENANCE_MESSAGE", None),
         }
     }
 
     pub fn session_ttl_ticks(&self) -> u64 {
         let tick_seconds = self.tick_interval.as_secs_f32().max(0.001);
         ((self.session_ttl_seconds as f32 / tick_seconds).ceil() as u64).max(1)
+    }
+
+    pub fn production_session_ttl_ticks(&self) -> u64 {
+        let tick_seconds = self.tick_interval.as_secs_f32().max(0.001);
+        ((self.production_session_ttl_seconds as f32 / tick_seconds).ceil() as u64).max(1)
+    }
+
+    pub fn refresh_ttl_ticks(&self) -> u64 {
+        let tick_seconds = self.tick_interval.as_secs_f32().max(0.001);
+        ((self.refresh_ttl_seconds as f32 / tick_seconds).ceil() as u64).max(1)
     }
 }
 

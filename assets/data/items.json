@@ -1,0 +1,9 @@
+{
+  "items": [
+    {"id": "wheat", "kind": "food", "sink": "settlement demand"},
+    {"id": "seeds", "kind": "farming", "sink": "planting"},
+    {"id": "timber", "kind": "material", "sink": "route repair"},
+    {"id": "stone", "kind": "material", "sink": "bridge maintenance"},
+    {"id": "bandages", "kind": "service", "sink": "household recovery"}
+  ]
+}

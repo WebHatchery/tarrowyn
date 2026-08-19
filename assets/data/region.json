@@ -1,0 +1,19 @@
+{
+  "region_id": "hearthlands",
+  "calendar": {
+    "day_seconds": 180,
+    "season_days": 14,
+    "year_days": 56,
+    "seasons": ["thaw", "greenrise", "harvest", "deepwinter"]
+  },
+  "locations": [
+    {"id": "hearth", "role": "settlement", "resources": ["wheat", "seeds"]},
+    {"id": "whisperwood-outpost", "role": "frontier", "resources": ["timber", "iron salvage"]},
+    {"id": "saltmere", "role": "settlement", "resources": ["stone", "bandages"]}
+  ],
+  "routes": [
+    {"id": "north-pack-road", "transport": "caravan", "origin": "hearth", "destination": "whisperwood-outpost"},
+    {"id": "saltmere-ferry", "transport": "boat", "origin": "hearth", "destination": "saltmere"},
+    {"id": "watch-trail", "transport": "pack route", "origin": "whisperwood-outpost", "destination": "saltmere"}
+  ]
+}
