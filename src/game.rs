@@ -162,7 +162,14 @@ impl Game {
                         )
                     })
                     .unwrap_or_else(|| "Waiting for the persistent player ledger…".to_owned());
-                let stats = if let Some(trade) = client.projection.trades.first() {
+                let stats = if client
+                    .projection
+                    .player
+                    .as_ref()
+                    .is_some_and(|player| player.knocked_out)
+                {
+                    format!("{stats}\nKNOCKED OUT • choose Recover below")
+                } else if let Some(trade) = client.projection.trades.first() {
                     format!("{stats}\nTrade {}: {:?}", trade.trade_id, trade.status)
                 } else {
                     stats
@@ -188,6 +195,14 @@ impl Game {
                     save_slots: &self.save_slots,
                     loaded_assets: self.assets.len(),
                     camera_zoom: self.camera.zoom,
+                    wilderness: client.projection.wilderness.as_ref(),
+                    chronicle: &client.projection.chronicle,
+                    opportunities: &client.projection.opportunities,
+                    knocked_out: client
+                        .projection
+                        .player
+                        .as_ref()
+                        .is_some_and(|player| player.knocked_out),
                     ui: &virtual_ui,
                 })
             }
@@ -222,6 +237,10 @@ impl Game {
                     save_slots: &self.save_slots,
                     loaded_assets: self.assets.len(),
                     camera_zoom: self.camera.zoom,
+                    wilderness: None,
+                    chronicle: &[],
+                    opportunities: &[],
+                    knocked_out: false,
                     ui: &virtual_ui,
                 })
             }
@@ -428,6 +447,15 @@ impl Game {
                             .warning("Another player must be present before offering a seed.");
                     }
                 }
+                "contract" => client.queue_contract_cycle(),
+                "strike" => client.queue_combat(
+                    tarrowyn_protocol::CombatAction::Strike,
+                    tarrowyn_protocol::WeaponKind::IronSword,
+                ),
+                "recover" => client.queue_recovery(tarrowyn_protocol::RecoveryChoice::AskRescuer),
+                "claim" => client.queue_claim_cycle(),
+                "expedition" => client.queue_expedition_cycle(),
+                "chronicle" => client.refresh_tavern(),
                 _ => self.notifications.warning(format!("Unknown action: {id}")),
             }
             return;

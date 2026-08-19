@@ -7,16 +7,20 @@ use macroquad_toolkit::net::{HttpClient, Pending};
 use serde::Serialize;
 use std::collections::VecDeque;
 use tarrowyn_protocol::{
-    ApiResponse, ChatMessage, ChatRequest, EventsResponse, FarmingAction, FarmingRequest,
-    GuestSessionRequest, GuestSessionResponse, MovementIntent, MovementResponse, PlayerPresence,
+    ApiResponse, ChatMessage, ChatRequest, ChronicleEntry, EventsResponse, Expedition,
+    FarmingAction, FarmingRequest, FrontierEvent, GuestSessionRequest, GuestSessionResponse,
+    LandClaim, MovementIntent, MovementResponse, OpportunitySignal, PlayerPresence,
     PlayerProjection, StateSnapshot, TavernFeedResponse, TradeOffer, TradeRequest, TradeResponse,
-    TradesResponse, WorldClock, WorldEvent, WorldSnapshot, MAX_CHAT_MESSAGE_LENGTH,
+    TradesResponse, WildernessZone, WorldClock, WorldEvent, WorldSnapshot, MAX_CHAT_MESSAGE_LENGTH,
 };
 
 const REQUEST_TIMEOUT_SECONDS: f32 = 6.0;
 const STALE_TICKS: u64 = 20;
 
+mod frontier;
 mod trade_client;
+
+use frontier::FrontierClient;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ConnectionState {
@@ -73,6 +77,12 @@ pub struct WorldProjection {
     pub player: Option<PlayerProjection>,
     pub feed: TavernFeedResponse,
     pub trades: Vec<TradeOffer>,
+    pub wilderness: Option<WildernessZone>,
+    pub chronicle: Vec<ChronicleEntry>,
+    pub opportunities: Vec<OpportunitySignal>,
+    pub claim: Option<LandClaim>,
+    pub outpost: Option<macroquad_toolkit::grid::TilePos>,
+    pub expedition: Option<Expedition>,
 }
 
 impl WorldProjection {
@@ -95,6 +105,12 @@ impl WorldProjection {
                 cursor: 0,
             },
             trades: Vec::new(),
+            wilderness: None,
+            chronicle: Vec::new(),
+            opportunities: Vec::new(),
+            claim: None,
+            outpost: None,
+            expedition: None,
         }
     }
 
@@ -130,6 +146,12 @@ impl WorldProjection {
         self.server_tick = server_tick;
         self.cursor = snapshot.cursor;
         self.players = snapshot.players.into_iter().map(remote_player).collect();
+        self.wilderness = snapshot.wilderness;
+        self.outpost = snapshot
+            .outpost
+            .map(|position| TilePos::new(position.x, position.y));
+        self.claim = snapshot.claim;
+        self.expedition = snapshot.expedition;
         if let Some(player) = self
             .players
             .iter()
@@ -163,6 +185,35 @@ impl WorldProjection {
                         self.feed.notices.remove(0);
                     }
                 }
+                WorldEvent::Chronicle(entry) => {
+                    if !self
+                        .chronicle
+                        .iter()
+                        .any(|existing| existing.event_id == entry.event_id)
+                    {
+                        self.chronicle.push(entry);
+                        self.chronicle.sort_by_key(|entry| entry.cursor);
+                        self.chronicle.truncate(12);
+                    }
+                }
+                WorldEvent::Frontier(event) => match event {
+                    FrontierEvent::Threat(zone) => self.wilderness = Some(zone),
+                    FrontierEvent::Opportunity(opportunity) => {
+                        self.opportunities
+                            .retain(|existing| existing.household_id != opportunity.household_id);
+                        self.opportunities.push(opportunity);
+                    }
+                    FrontierEvent::Claim(claim) => self.claim = Some(claim),
+                    FrontierEvent::Expedition(expedition) => {
+                        self.expedition = Some(expedition.clone());
+                        self.outpost = (expedition.status
+                            == tarrowyn_protocol::ExpeditionStatus::Succeeded)
+                            .then_some(TilePos::new(
+                                expedition.outpost_position.x,
+                                expedition.outpost_position.y,
+                            ));
+                    }
+                },
             }
         }
         self.cursor = self.cursor.max(response.cursor);
@@ -269,6 +320,7 @@ pub struct OnlineClient {
     pub pending_request_id: Option<String>,
     pub action_awaiting_confirmation: bool,
     pub trades: Vec<TradeOffer>,
+    frontier: FrontierClient,
 }
 
 impl OnlineClient {
@@ -306,6 +358,7 @@ impl OnlineClient {
             pending_request_id: None,
             action_awaiting_confirmation: false,
             trades: Vec::new(),
+            frontier: FrontierClient::new(),
         };
         client.begin_guest(false);
         client
@@ -323,8 +376,19 @@ impl OnlineClient {
         self.poll_chat(dt, &mut notices);
         self.poll_farming(dt, &mut notices);
         self.poll_trade_requests(dt, &mut notices);
+        self.frontier.update(
+            &mut self.projection,
+            dt,
+            self.state == ConnectionState::Online,
+            &mut notices,
+        );
         self.dispatch_requests();
         self.dispatch_trade_requests();
+        self.frontier.dispatch(
+            &mut self.api,
+            self.state == ConnectionState::Online,
+            self.projection.cursor,
+        );
         notices
     }
 
@@ -414,6 +478,7 @@ impl OnlineClient {
         self.pending_farming = None;
         self.pending_trades = None;
         self.pending_trade = None;
+        self.frontier.clear();
         self.movement_queue.clear();
         self.chat_queue.clear();
         self.farming_queue.clear();

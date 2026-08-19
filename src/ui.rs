@@ -8,7 +8,7 @@ use macroquad_toolkit::grid::TilePos;
 use macroquad_toolkit::prelude::*;
 use macroquad_toolkit::ui::draw_ui_text_ex;
 use macroquad_toolkit::ui::{RectExt, VirtualUi};
-use tarrowyn_protocol::ChatMessage;
+use tarrowyn_protocol::{ChatMessage, ChronicleEntry, OpportunitySignal, WildernessZone};
 
 #[path = "ui_online.rs"]
 mod ui_online;
@@ -61,6 +61,10 @@ pub struct UiContext<'a> {
     pub save_slots: &'a [String],
     pub loaded_assets: usize,
     pub camera_zoom: f32,
+    pub wilderness: Option<&'a WildernessZone>,
+    pub chronicle: &'a [ChronicleEntry],
+    pub opportunities: &'a [OpportunitySignal],
+    pub knocked_out: bool,
     pub ui: &'a VirtualUi,
 }
 

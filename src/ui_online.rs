@@ -70,7 +70,11 @@ pub(super) fn draw_sidebar(
     }
 
     draw_ui_text_ex(
-        "Settlement chat",
+        if ctx.wilderness.is_some() {
+            "Settlement chat • frontier signals"
+        } else {
+            "Settlement chat"
+        },
         content.x,
         content.y + 267.0,
         TextStyle::new(16.0, CREAM).params(),
@@ -122,24 +126,57 @@ pub(super) fn draw_sidebar(
         actions.push(UiAction::SendChat);
     }
 
-    for (index, phrase) in ["Hello from the road", "Meet at the Hearth"]
-        .iter()
-        .enumerate()
+    for (index, (id, label)) in [
+        ("contract", "Contract"),
+        ("strike", "Strike"),
+        ("recover", "Recover"),
+        ("claim", "Claim"),
+    ]
+    .iter()
+    .enumerate()
     {
         if virtual_button(
             Rect::new(
-                content.x,
-                content.y + 379.0 + index as f32 * 29.0,
-                content.w,
+                content.x + index as f32 * 88.0,
+                content.y + 379.0,
+                82.0,
                 24.0,
             ),
-            phrase,
-            ctx.connection == ConnectionState::Online,
+            label,
+            ctx.connection == ConnectionState::Online && (!ctx.knocked_out || *id == "recover"),
             ButtonTone::Secondary,
             mouse,
         ) {
-            actions.push(UiAction::QuickChat((*phrase).to_owned()));
+            actions.push(UiAction::Interact((*id).to_owned()));
         }
+    }
+
+    if virtual_button(
+        Rect::new(content.x, content.y + 408.0, 122.0, 24.0),
+        "Pioneer",
+        ctx.connection == ConnectionState::Online && !ctx.knocked_out,
+        ButtonTone::Primary,
+        mouse,
+    ) {
+        actions.push(UiAction::Interact("expedition".to_owned()));
+    }
+    if virtual_button(
+        Rect::new(content.x + 130.0, content.y + 408.0, 122.0, 24.0),
+        "Chronicle",
+        ctx.connection == ConnectionState::Online,
+        ButtonTone::Secondary,
+        mouse,
+    ) {
+        actions.push(UiAction::Interact("chronicle".to_owned()));
+    }
+    if virtual_button(
+        Rect::new(content.x + 260.0, content.y + 408.0, 122.0, 24.0),
+        "Say hello",
+        ctx.connection == ConnectionState::Online,
+        ButtonTone::Secondary,
+        mouse,
+    ) {
+        actions.push(UiAction::QuickChat("Meet at the Hearth".to_owned()));
     }
 
     if virtual_button(
@@ -161,7 +198,18 @@ pub(super) fn draw_sidebar(
         actions.push(UiAction::UseOffline);
     }
     draw_text_block(
-        ctx.status_message,
+        &format!(
+            "{}\n{}",
+            ctx.status_message,
+            ctx.chronicle
+                .last()
+                .map(|entry| entry.title.as_str())
+                .or_else(|| ctx
+                    .opportunities
+                    .first()
+                    .map(|opportunity| opportunity.clue.as_str()))
+                .unwrap_or("The frontier registry is listening.")
+        ),
         content.x,
         content.y + 495.0,
         content.w,

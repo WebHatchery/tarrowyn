@@ -168,7 +168,8 @@ impl WorldRepository {
             CropKind::Turnip => identity.inventory.turnips += 1,
             CropKind::Moonberry => identity.inventory.moonberries += 1,
         }
-        identity.gold += crop.kind.value() + crop.quality as u32;
+        let base_value = crop.kind.value() + crop.quality as u32;
+        identity.gold += super::phase3::harvest_price_bonus(&state.phase3, base_value);
         identity.skill += 1;
         state.plots[plot_index].crop = None;
         (true, None)

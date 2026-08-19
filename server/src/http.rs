@@ -5,7 +5,8 @@ use std::io::Read;
 use std::sync::Arc;
 use std::thread;
 use tarrowyn_protocol::{
-    ApiErrorResponse, ApiMeta, ApiResponse, ChatRequest, FarmingRequest, MovementIntent,
+    ApiErrorResponse, ApiMeta, ApiResponse, ChatRequest, ClaimRequest, CombatRequest,
+    ContractRequest, ExpeditionRequest, FarmingRequest, MovementIntent, RecoveryRequest,
     TradeRequest, PROTOCOL_VERSION,
 };
 use tiny_http::{Header, Method, Request, Response, Server, StatusCode};
@@ -38,7 +39,9 @@ fn handle_request(mut request: Request, repository: Arc<WorldRepository>) {
         return;
     }
     let (path, query) = split_url(request.url());
-    let result = match (request.method(), path) {
+    let path = path.to_owned();
+    let query = query.to_owned();
+    let result = match (request.method(), path.as_str()) {
         (Method::Get, "/health") => json_response(StatusCode(200), repository.health()),
         (Method::Post, "/v1/session/guest") => match read_json_or_default(&mut request) {
             Ok(body) => json_response(StatusCode(200), repository.guest_session(body)),
@@ -60,7 +63,7 @@ fn handle_request(mut request: Request, repository: Arc<WorldRepository>) {
             Err(error) => error_response(400, "invalid_json", error, repository.health().meta),
         },
         (Method::Get, "/v1/events") => {
-            let since = query_value(query, "since")
+            let since = query_value(&query, "since")
                 .and_then(|value| value.parse().ok())
                 .unwrap_or(0);
             authenticated(&request, &repository, |token| {
@@ -87,6 +90,65 @@ fn handle_request(mut request: Request, repository: Arc<WorldRepository>) {
         (Method::Get, "/v1/tavern/feed") => {
             authenticated(&request, &repository, |token| repository.tavern_feed(token))
         }
+        (Method::Get, "/v1/contracts") => {
+            authenticated(&request, &repository, |token| repository.contracts(token))
+        }
+        (Method::Post, "/v1/contracts/brambleback-watch") => {
+            match read_json::<ContractRequest>(&mut request) {
+                Ok(body) => authenticated(&request, &repository, |token| {
+                    repository.contract(token, body)
+                }),
+                Err(error) => error_response(400, "invalid_json", error, repository.health().meta),
+            }
+        }
+        (Method::Post, path) if path.starts_with("/v1/contracts/") => {
+            match read_json::<ContractRequest>(&mut request) {
+                Ok(mut body) => {
+                    if body.contract_id.trim().is_empty() {
+                        body.contract_id = path.trim_start_matches("/v1/contracts/").to_owned();
+                    }
+                    authenticated(&request, &repository, |token| {
+                        repository.contract(token, body)
+                    })
+                }
+                Err(error) => error_response(400, "invalid_json", error, repository.health().meta),
+            }
+        }
+        (Method::Post, "/v1/combat/actions") => match read_json::<CombatRequest>(&mut request) {
+            Ok(body) => authenticated(&request, &repository, |token| {
+                repository.combat(token, body)
+            }),
+            Err(error) => error_response(400, "invalid_json", error, repository.health().meta),
+        },
+        (Method::Post, "/v1/recovery") => match read_json::<RecoveryRequest>(&mut request) {
+            Ok(body) => authenticated(&request, &repository, |token| {
+                repository.recovery(token, body)
+            }),
+            Err(error) => error_response(400, "invalid_json", error, repository.health().meta),
+        },
+        (Method::Get, "/v1/settlement/chronicle") => {
+            let since = query_value(&query, "since")
+                .and_then(|value| value.parse().ok())
+                .unwrap_or(0);
+            authenticated(&request, &repository, |token| {
+                repository.chronicle(token, since)
+            })
+        }
+        (Method::Get, "/v1/settlement/opportunities") => {
+            authenticated(&request, &repository, |token| {
+                repository.opportunities(token)
+            })
+        }
+        (Method::Post, "/v1/claims") => match read_json::<ClaimRequest>(&mut request) {
+            Ok(body) => authenticated(&request, &repository, |token| repository.claim(token, body)),
+            Err(error) => error_response(400, "invalid_json", error, repository.health().meta),
+        },
+        (Method::Post, "/v1/expeditions") => match read_json::<ExpeditionRequest>(&mut request) {
+            Ok(body) => authenticated(&request, &repository, |token| {
+                repository.expedition(token, body)
+            }),
+            Err(error) => error_response(400, "invalid_json", error, repository.health().meta),
+        },
         _ => error_response(
             404,
             "not_found",

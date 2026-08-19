@@ -1,8 +1,10 @@
 use super::*;
 use crate::config::ServerConfig;
 use tarrowyn_protocol::{
-    ChatRequest, FarmingAction, FarmingRequest, GuestSessionRequest, MovementIntent, Position,
-    TileKind, TradeAction, TradeBundle, TradeRequest, TradeStatus,
+    ChatRequest, ClaimAction, ClaimRequest, CombatAction, CombatRequest, ContractAction,
+    ContractRequest, ExpeditionAction, ExpeditionRequest, ExpeditionRole, FarmingAction,
+    FarmingRequest, GuestSessionRequest, MovementIntent, Position, TileKind, TradeAction,
+    TradeBundle, TradeRequest, TradeStatus, WeaponKind, WorldEvent,
 };
 
 fn repo() -> WorldRepository {
@@ -360,4 +362,243 @@ fn repository_restart_restores_clock_identity_and_tavern_history() {
         .iter()
         .any(|message| message.text == "I will return."));
     let _ = std::fs::remove_file(path);
+}
+
+#[test]
+fn phase_three_contract_combat_recovery_and_chronicle_are_authoritative() {
+    let repo = WorldRepository::new(ServerConfig {
+        movement_cooldown_ticks: 0,
+        ..ServerConfig::default()
+    });
+    let session = guest(&repo, "frontier-player");
+    let accept = repo
+        .contract(
+            &session.account_token,
+            ContractRequest {
+                request_id: "contract-accept".to_owned(),
+                action: ContractAction::Accept,
+                contract_id: "brambleback-watch".to_owned(),
+            },
+        )
+        .unwrap()
+        .data;
+    assert!(accept.accepted);
+    for (index, (dx, dy)) in [(1, 0), (1, 0), (1, 0), (1, 0), (0, -1), (0, -1)]
+        .into_iter()
+        .enumerate()
+    {
+        assert!(
+            repo.movement(
+                &session.account_token,
+                MovementIntent {
+                    request_id: format!("frontier-step-{index}"),
+                    dx,
+                    dy,
+                },
+            )
+            .unwrap()
+            .data
+            .accepted
+        );
+    }
+    for index in 0..3 {
+        assert!(
+            repo.contract(
+                &session.account_token,
+                ContractRequest {
+                    request_id: format!("contract-progress-{index}"),
+                    action: ContractAction::Progress,
+                    contract_id: "brambleback-watch".to_owned(),
+                },
+            )
+            .unwrap()
+            .data
+            .accepted
+        );
+    }
+    let report = repo
+        .contract(
+            &session.account_token,
+            ContractRequest {
+                request_id: "contract-report".to_owned(),
+                action: ContractAction::Report,
+                contract_id: "brambleback-watch".to_owned(),
+            },
+        )
+        .unwrap()
+        .data;
+    assert!(report.accepted);
+
+    let knockout = repo
+        .combat(
+            &session.account_token,
+            CombatRequest {
+                request_id: "club-strike".to_owned(),
+                action: CombatAction::Strike,
+                weapon: WeaponKind::ImprovisedClub,
+            },
+        )
+        .unwrap()
+        .data;
+    assert_eq!(
+        knockout.outcome,
+        Some(tarrowyn_protocol::CombatOutcome::KnockedOut)
+    );
+    assert!(knockout.player.knocked_out);
+    let recovery = repo
+        .recovery(
+            &session.account_token,
+            tarrowyn_protocol::RecoveryRequest {
+                request_id: "rescued".to_owned(),
+                choice: tarrowyn_protocol::RecoveryChoice::AskRescuer,
+            },
+        )
+        .unwrap()
+        .data;
+    assert!(recovery.accepted);
+    assert!(!recovery.player.knocked_out);
+    let chronicle = repo.chronicle(&session.account_token, 0).unwrap().data;
+    assert!(chronicle
+        .entries
+        .iter()
+        .any(|entry| entry.kind == "knockout"));
+    assert!(repo
+        .events(&session.account_token, 0)
+        .unwrap()
+        .data
+        .events
+        .iter()
+        .any(|event| matches!(event.event, WorldEvent::Chronicle(_))));
+}
+
+#[test]
+fn phase_three_claim_and_expedition_survive_as_durable_world_state() {
+    let repo = WorldRepository::new(ServerConfig {
+        movement_cooldown_ticks: 0,
+        claim_reclaim_ticks: 2,
+        ..ServerConfig::default()
+    });
+    let one = guest(&repo, "pioneer-one");
+    let two = guest(&repo, "pioneer-two");
+    let three = guest(&repo, "pioneer-three");
+    assert!(
+        repo.claim(
+            &one.account_token,
+            ClaimRequest {
+                request_id: "claim".to_owned(),
+                action: ClaimAction::Request,
+            },
+        )
+        .unwrap()
+        .data
+        .accepted
+    );
+    let announce = repo
+        .expedition(
+            &one.account_token,
+            ExpeditionRequest {
+                request_id: "announce".to_owned(),
+                action: ExpeditionAction::Announce,
+                expedition_id: None,
+                role: Some(ExpeditionRole::Scout),
+                food: 0,
+                tools: 0,
+                materials: 0,
+                safety: 0,
+                outpost_name: Some("Test Rest".to_owned()),
+            },
+        )
+        .unwrap()
+        .data;
+    assert!(announce.accepted);
+    for (session, role, id) in [
+        (&two, ExpeditionRole::Farmer, "join-farmer"),
+        (&three, ExpeditionRole::Builder, "join-builder"),
+    ] {
+        assert!(
+            repo.expedition(
+                &session.account_token,
+                ExpeditionRequest {
+                    request_id: id.to_owned(),
+                    action: ExpeditionAction::Join,
+                    expedition_id: Some("pioneer-1".to_owned()),
+                    role: Some(role),
+                    food: 0,
+                    tools: 0,
+                    materials: 0,
+                    safety: 0,
+                    outpost_name: None,
+                },
+            )
+            .unwrap()
+            .data
+            .accepted
+        );
+    }
+    assert!(
+        repo.expedition(
+            &one.account_token,
+            ExpeditionRequest {
+                request_id: "supply".to_owned(),
+                action: ExpeditionAction::Supply,
+                expedition_id: Some("pioneer-1".to_owned()),
+                role: None,
+                food: 6,
+                tools: 3,
+                materials: 8,
+                safety: 3,
+                outpost_name: None,
+            },
+        )
+        .unwrap()
+        .data
+        .accepted
+    );
+    assert!(
+        repo.expedition(
+            &one.account_token,
+            ExpeditionRequest {
+                request_id: "launch".to_owned(),
+                action: ExpeditionAction::Launch,
+                expedition_id: Some("pioneer-1".to_owned()),
+                role: None,
+                food: 0,
+                tools: 0,
+                materials: 0,
+                safety: 0,
+                outpost_name: None,
+            },
+        )
+        .unwrap()
+        .data
+        .accepted
+    );
+    let resolved = repo
+        .expedition(
+            &one.account_token,
+            ExpeditionRequest {
+                request_id: "resolve".to_owned(),
+                action: ExpeditionAction::Resolve,
+                expedition_id: Some("pioneer-1".to_owned()),
+                role: None,
+                food: 0,
+                tools: 0,
+                materials: 0,
+                safety: 0,
+                outpost_name: None,
+            },
+        )
+        .unwrap()
+        .data;
+    assert!(resolved.accepted);
+    assert_eq!(
+        resolved.expedition.unwrap().status,
+        tarrowyn_protocol::ExpeditionStatus::Succeeded
+    );
+    assert!(repo
+        .world(&two.account_token)
+        .unwrap()
+        .data
+        .outpost
+        .is_some());
 }

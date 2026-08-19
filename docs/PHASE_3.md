@@ -1,5 +1,8 @@
 # Phase 3 — The Living Frontier
 
+> Implementation status: complete for the documented vertical slice. The
+> release proof is recorded in [`PHASE_3_RUNBOOK.md`](PHASE_3_RUNBOOK.md).
+
 ## Purpose
 
 Add the first systems that make Tarrowyn feel like a society with consequences

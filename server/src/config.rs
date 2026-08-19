@@ -15,6 +15,11 @@ pub struct ServerConfig {
     pub starting_seeds: u32,
     pub crop_stage_seconds: f32,
     pub trade_expiry_ticks: u64,
+    pub claim_reclaim_ticks: u64,
+    pub expedition_min_food: u32,
+    pub expedition_min_tools: u32,
+    pub expedition_min_materials: u32,
+    pub expedition_min_safety: u32,
     pub persistence_path: Option<String>,
 }
 
@@ -34,6 +39,11 @@ impl Default for ServerConfig {
             starting_seeds: 6,
             crop_stage_seconds: 30.0,
             trade_expiry_ticks: 240,
+            claim_reclaim_ticks: 480,
+            expedition_min_food: 6,
+            expedition_min_tools: 3,
+            expedition_min_materials: 8,
+            expedition_min_safety: 3,
             persistence_path: None,
         }
     }
@@ -70,6 +80,26 @@ impl ServerConfig {
                 as u32,
             crop_stage_seconds: env_f32("TARROWYN_CROP_STAGE_SECONDS", defaults.crop_stage_seconds),
             trade_expiry_ticks: env_u64("TARROWYN_TRADE_EXPIRY_TICKS", defaults.trade_expiry_ticks),
+            claim_reclaim_ticks: env_u64(
+                "TARROWYN_CLAIM_RECLAIM_TICKS",
+                defaults.claim_reclaim_ticks,
+            ),
+            expedition_min_food: env_u32(
+                "TARROWYN_EXPEDITION_MIN_FOOD",
+                defaults.expedition_min_food,
+            ),
+            expedition_min_tools: env_u32(
+                "TARROWYN_EXPEDITION_MIN_TOOLS",
+                defaults.expedition_min_tools,
+            ),
+            expedition_min_materials: env_u32(
+                "TARROWYN_EXPEDITION_MIN_MATERIALS",
+                defaults.expedition_min_materials,
+            ),
+            expedition_min_safety: env_u32(
+                "TARROWYN_EXPEDITION_MIN_SAFETY",
+                defaults.expedition_min_safety,
+            ),
             persistence_path: env_string_optional(
                 "TARROWYN_STATE_PATH",
                 Some("dist/tarrowyn-server-state.json".to_owned()),

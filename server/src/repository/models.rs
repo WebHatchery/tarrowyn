@@ -1,4 +1,6 @@
+use super::phase3::Phase3State;
 use super::*;
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub(super) struct Identity {
@@ -17,6 +19,14 @@ pub(super) struct Identity {
     pub(super) farming_results: HashMap<String, FarmingResponse>,
     #[serde(default)]
     pub(super) trade_results: HashMap<String, TradeResponse>,
+    #[serde(default = "default_weapon")]
+    pub(super) weapon: WeaponKind,
+    #[serde(default)]
+    pub(super) knocked_out: bool,
+    #[serde(default)]
+    pub(super) injuries: u8,
+    #[serde(default)]
+    pub(super) recovery_cost: u32,
 }
 
 #[derive(Debug, Clone)]
@@ -47,6 +57,8 @@ pub(super) struct StoredState {
     pub(super) chat_history: VecDeque<ChatMessage>,
     pub(super) notices: VecDeque<TavernNotice>,
     pub(super) trades: HashMap<String, TradeOffer>,
+    #[serde(default)]
+    pub(super) phase3: Phase3State,
 }
 
 #[derive(Debug)]
@@ -66,6 +78,7 @@ pub(super) struct RepositoryState {
     pub(super) chat_history: VecDeque<ChatMessage>,
     pub(super) notices: VecDeque<TavernNotice>,
     pub(super) trades: HashMap<String, TradeOffer>,
+    pub(super) phase3: Phase3State,
 }
 
 impl RepositoryState {
@@ -90,6 +103,7 @@ impl RepositoryState {
             chat_history: VecDeque::new(),
             notices: VecDeque::new(),
             trades: HashMap::new(),
+            phase3: super::phase3::fresh(),
         }
     }
 
@@ -118,6 +132,7 @@ impl RepositoryState {
             chat_history: trim_queue(stored.chat_history, MAX_CHAT_HISTORY),
             notices: trim_queue(stored.notices, MAX_NOTICES),
             trades: stored.trades,
+            phase3: stored.phase3,
         }
     }
 
@@ -138,6 +153,11 @@ impl RepositoryState {
             chat_history: self.chat_history.clone(),
             notices: self.notices.clone(),
             trades: self.trades.clone(),
+            phase3: self.phase3.clone(),
         }
     }
+}
+
+fn default_weapon() -> WeaponKind {
+    WeaponKind::IronSword
 }

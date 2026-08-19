@@ -59,5 +59,29 @@ fn phase_two_farming_and_trade_requests_round_trip_with_stable_tags() {
     let encoded = serde_json::to_string(&(farming, trade)).unwrap();
     assert!(encoded.contains("\"action\":\"plant\""));
     assert!(encoded.contains("\"action\":\"create\""));
-    assert_eq!(PROTOCOL_VERSION, "2");
+    assert_eq!(PROTOCOL_VERSION, "3");
+}
+
+#[test]
+fn phase_three_frontier_commands_round_trip_with_stable_wire_names() {
+    let combat = CombatRequest {
+        request_id: "combat-1".to_owned(),
+        action: CombatAction::Strike,
+        weapon: WeaponKind::ImprovisedClub,
+    };
+    let expedition = ExpeditionRequest {
+        request_id: "expedition-1".to_owned(),
+        action: ExpeditionAction::Supply,
+        expedition_id: Some("pioneer-1".to_owned()),
+        role: Some(ExpeditionRole::Builder),
+        food: 6,
+        tools: 3,
+        materials: 8,
+        safety: 3,
+        outpost_name: Some("Lantern Rest".to_owned()),
+    };
+    let encoded = serde_json::to_string(&(combat, expedition)).unwrap();
+    assert!(encoded.contains("\"weapon\":\"improvised_club\""));
+    assert!(encoded.contains("\"action\":\"supply\""));
+    assert!(encoded.contains("\"role\":\"builder\""));
 }

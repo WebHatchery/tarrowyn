@@ -1,5 +1,4 @@
 use crate::config::ServerConfig;
-use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 use std::fs;
 #[cfg(windows)]
@@ -12,13 +11,13 @@ use tarrowyn_protocol::{
     GuestSessionRequest, GuestSessionResponse, HealthResponse, Inventory, MovementIntent,
     MovementResponse, PlayerPresence, PlayerProjection, Position, StateSnapshot,
     TavernFeedResponse, TavernNotice, TileKind, TradeAction, TradeBundle, TradeOffer, TradeRequest,
-    TradeResponse, TradeStatus, TradesResponse, WorldClock, WorldEvent, WorldSnapshot, WorldTile,
-    MAX_CHAT_MESSAGE_LENGTH, MAX_TRADE_ITEMS, PROTOCOL_VERSION,
+    TradeResponse, TradeStatus, TradesResponse, WeaponKind, WorldClock, WorldEvent, WorldSnapshot,
+    WorldTile, MAX_CHAT_MESSAGE_LENGTH, MAX_TRADE_ITEMS, PROTOCOL_VERSION,
 };
 #[cfg(windows)]
 use windows_sys::Win32::Storage::FileSystem::{MoveFileExW, MOVEFILE_REPLACE_EXISTING};
 
-const STORAGE_VERSION: u32 = 1;
+const STORAGE_VERSION: u32 = 2;
 const MAX_EVENTS: usize = 2048;
 const MAX_CHAT_HISTORY: usize = 64;
 const MAX_NOTICES: usize = 32;
@@ -26,6 +25,8 @@ const MAX_TRADES: usize = 128;
 
 mod farming;
 mod models;
+mod phase3;
+mod phase3_frontier;
 mod trades;
 
 use models::{Identity, RepositoryState, Session, StoredState};
@@ -118,6 +119,10 @@ impl WorldRepository {
                     last_seen_tick: 0,
                     farming_results: HashMap::new(),
                     trade_results: HashMap::new(),
+                    weapon: WeaponKind::IronSword,
+                    knocked_out: false,
+                    injuries: 0,
+                    recovery_cost: 0,
                 },
             );
         }
@@ -268,6 +273,19 @@ impl WorldRepository {
                 || next.y >= self.config.world_height as i32
             {
                 response.reason = Some("The settlement edge blocks that step.".to_owned());
+            } else if state
+                .identities
+                .get(&key)
+                .expect("identity exists")
+                .knocked_out
+            {
+                response.reason =
+                    Some("You are knocked out; choose a recovery prompt first.".to_owned());
+            } else if phase3::movement_blocked(&state.phase3, next) {
+                response.reason = Some(
+                    "The Brambleback has closed the north road; the tavern has posted a contract."
+                        .to_owned(),
+                );
             } else if !tile_at(next, self.config.world_width, self.config.world_height)
                 .is_walkable()
             {
@@ -461,6 +479,7 @@ impl WorldRepository {
         }
         grow_plots(&mut state, &self.config);
         trades::expire_trades(&mut state);
+        phase3::tick(&mut state, &self.config);
         let clock = state.clock.clone();
         push_event(&mut state, WorldEvent::Clock(clock));
         expire_sessions(&mut state, &self.config);
@@ -616,6 +635,10 @@ fn player_projection(identity: &Identity) -> PlayerProjection {
         skill: identity.skill,
         reputation: identity.reputation,
         inventory: identity.inventory,
+        weapon: identity.weapon,
+        knocked_out: identity.knocked_out,
+        injuries: identity.injuries,
+        recovery_cost: identity.recovery_cost,
     }
 }
 fn snapshot(
@@ -632,15 +655,16 @@ fn snapshot(
         plots: state.plots.clone(),
         tavern_position: Position { x: 8, y: 5 },
         cursor: state.cursor,
+        wilderness: Some(state.phase3.zone.clone()),
+        outpost: state.phase3.outpost,
+        claim: state.phase3.claim.clone(),
+        expedition: state.phase3.expedition.clone(),
     }
 }
 fn feed(state: &RepositoryState) -> TavernFeedResponse {
     TavernFeedResponse {
         notices: state.notices.iter().cloned().collect(),
-        rumours: vec![
-            "Lanterns move beyond Whisperwood when the moon is high.".to_owned(),
-            "A good harvest is worth more when the Hearth knows who grew it.".to_owned(),
-        ],
+        rumours: phase3::rumours(&state.phase3),
         chat: state.chat_history.iter().cloned().collect(),
         cursor: state.cursor,
     }
@@ -769,9 +793,6 @@ fn trim_queue<T>(mut queue: VecDeque<T>, max: usize) -> VecDeque<T> {
     trim_back(&mut queue, max);
     queue
 }
-
-#[allow(dead_code)]
-fn _assert_serializable<T: Serialize>() {}
 
 #[cfg(test)]
 mod tests;

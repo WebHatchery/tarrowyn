@@ -66,4 +66,8 @@ failure path.
 - [Phase 1 — The Shared Road](PHASE_1.md)
 - [Phase 2 — The Persistent Settlement](PHASE_2.md)
 - [Phase 3 — The Living Frontier](PHASE_3.md)
+
+The Phase 3 live acceptance and restart instructions are in
+[`PHASE_3_RUNBOOK.md`](PHASE_3_RUNBOOK.md).
+
 - [The Years of Tarrowyn GDD](../The_Years_of_Tarrowyn_GDD.md)

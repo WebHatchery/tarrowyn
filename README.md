@@ -2,8 +2,9 @@
 
 The shared settlement is now a small persistent authoritative client/server
 build. The native development server owns guest identity, characters, the
-accelerated clock, farming plots, inventory, trades, presence, and tavern
-history. The Macroquad client renders accepted projections and retains the
+accelerated clock, farming plots, inventory, trades, presence, tavern history,
+frontier threats, contracts, household opportunities, claims, and a pioneer
+outpost. The Macroquad client renders accepted projections and retains the
 Phase 0 first-evening fixture as an explicitly labelled offline mode.
 
 ## Run the shared road locally
@@ -22,7 +23,7 @@ cargo run -p years_of_tarrowyn
 ```
 
 The client never performs a blocking HTTP call on the render thread. Guest,
-state, event, movement, chat, farming, and trade requests are retained as
+state, event, movement, chat, farming, trade, and frontier requests are retained as
 toolkit `Pending<T>` values and polled once per frame. A timeout moves the
 client to a readable degraded/offline state; the visible `Reconnect` action is
 subject to an application-owned cooldown and retry limit. Inventory, gold,
@@ -62,6 +63,13 @@ Run the Phase 2 farming, trading, tavern, and restart acceptance pass with:
 .\scripts\verify_phase2.ps1
 ```
 
+Run the Phase 3 threat, contract, recovery, chronicle, claim, expedition, and
+10-client polling acceptance pass with:
+
+```powershell
+.\scripts\verify_phase3.ps1
+```
+
 ## Architecture decisions
 
 The server uses `tiny_http` for the native process and a mutex-protected
@@ -73,13 +81,15 @@ client key resolves the durable account and character again after a restart.
 The storage version is part of the document so future migrations can be added
 without changing the protocol boundary.
 
-The shared `protocol/` crate is versioned at protocol `2`. Every successful or
+The shared `protocol/` crate is versioned at protocol `3`. Every successful or
 error response carries protocol version and server tick metadata; cursor-based
 event responses additionally carry the event cursor. See
 [`docs/PHASE_1_RUNBOOK.md`](docs/PHASE_1_RUNBOOK.md) for reset, configuration,
-fixture, and capture details, and [`docs/PHASE_2_RUNBOOK.md`](docs/PHASE_2_RUNBOOK.md)
-for persistence and acceptance details. Phase 2 adds `/v1/state`,
-`/v1/farming/actions`, `/v1/inventory`, `/v1/trades`, and `/v1/tavern/feed`.
+fixture, and capture details, [`docs/PHASE_2_RUNBOOK.md`](docs/PHASE_2_RUNBOOK.md)
+for persistence and acceptance details, and [`docs/PHASE_3_RUNBOOK.md`](docs/PHASE_3_RUNBOOK.md)
+for the frontier acceptance. Phase 3 adds `/v1/contracts`,
+`/v1/combat/actions`, `/v1/recovery`, `/v1/settlement/chronicle`,
+`/v1/settlement/opportunities`, `/v1/claims`, and `/v1/expeditions`.
 
 ## Release validation
 

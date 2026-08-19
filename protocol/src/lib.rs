@@ -2,7 +2,10 @@
 
 use serde::{Deserialize, Serialize};
 
-pub const PROTOCOL_VERSION: &str = "2";
+mod phase3;
+pub use phase3::*;
+
+pub const PROTOCOL_VERSION: &str = "3";
 pub const MAX_CHAT_MESSAGE_LENGTH: usize = 160;
 pub const MAX_TRADE_ITEMS: u32 = 99;
 
@@ -76,6 +79,12 @@ pub struct Position {
     pub y: i32,
 }
 
+impl Position {
+    pub fn manhattan_distance(self, other: Self) -> u32 {
+        self.x.abs_diff(other.x) + self.y.abs_diff(other.y)
+    }
+}
+
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 pub enum TileKind {
     Meadow,
@@ -127,6 +136,14 @@ pub struct WorldSnapshot {
     #[serde(default)]
     pub tavern_position: Position,
     pub cursor: u64,
+    #[serde(default)]
+    pub wilderness: Option<WildernessZone>,
+    #[serde(default)]
+    pub outpost: Option<Position>,
+    #[serde(default)]
+    pub claim: Option<LandClaim>,
+    #[serde(default)]
+    pub expedition: Option<Expedition>,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
@@ -194,6 +211,14 @@ pub struct PlayerProjection {
     pub skill: u32,
     pub reputation: u32,
     pub inventory: Inventory,
+    #[serde(default = "default_weapon")]
+    pub weapon: WeaponKind,
+    #[serde(default)]
+    pub knocked_out: bool,
+    #[serde(default)]
+    pub injuries: u8,
+    #[serde(default)]
+    pub recovery_cost: u32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -377,6 +402,17 @@ pub enum WorldEvent {
     Farming(FarmPlot),
     Trade(TradeOffer),
     TavernNotice(TavernNotice),
+    Chronicle(ChronicleEntry),
+    Frontier(FrontierEvent),
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[serde(tag = "kind", content = "value")]
+pub enum FrontierEvent {
+    Threat(WildernessZone),
+    Opportunity(OpportunitySignal),
+    Claim(LandClaim),
+    Expedition(Expedition),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -390,6 +426,10 @@ pub struct EventsResponse {
     pub cursor: u64,
     pub clock: WorldClock,
     pub events: Vec<EventRecord>,
+}
+
+fn default_weapon() -> WeaponKind {
+    WeaponKind::IronSword
 }
 
 #[cfg(test)]
