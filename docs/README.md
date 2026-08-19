@@ -12,6 +12,9 @@ steps toward it.
 | [1](PHASE_1.md) | The Shared Road | Multiple clients connect to one authoritative server and see the same small world. |
 | [2](PHASE_2.md) | The Persistent Settlement | Farming, inventory, trading, chat, and the accelerated clock survive server restarts and create mutual demand. |
 | [3](PHASE_3.md) | The Living Frontier | Threats, contracts, NPC opportunity, settlement history, and a first pioneer outpost turn the shared map into a society. |
+| [4](PHASE_4.md) | The Enduring Society | One settlement has durable institutions, deeper professions, accountable land, and households that can sustain community life. |
+| [5](PHASE_5.md) | The Roads Between | Several settlements are connected by travel, trade, migration, infrastructure, and world events that cross regional boundaries. |
+| [6](PHASE_6.md) | The Lasting Realm | The game is production-ready, operationally recoverable, secure for real accounts, and able to support long-term world history. |
 
 ## Phase boundaries
 
@@ -66,8 +69,18 @@ failure path.
 - [Phase 1 — The Shared Road](PHASE_1.md)
 - [Phase 2 — The Persistent Settlement](PHASE_2.md)
 - [Phase 3 — The Living Frontier](PHASE_3.md)
+- [Phase 4 — The Enduring Society](PHASE_4.md)
+- [Phase 5 — The Roads Between](PHASE_5.md)
+- [Phase 6 — The Lasting Realm](PHASE_6.md)
 
 The Phase 3 live acceptance and restart instructions are in
 [`PHASE_3_RUNBOOK.md`](PHASE_3_RUNBOOK.md).
+
+Phases 4–6 are planning documents. Their runbooks should be added when each
+phase enters implementation, after the open design decisions listed in the
+phase have been resolved. The intended dependency is sequential: Phase 4
+proves that one settlement can govern and sustain itself, Phase 5 proves that
+the settlement model works across a region, and Phase 6 hardens that regional
+world for real players and long-term operation.
 
 - [The Years of Tarrowyn GDD](../The_Years_of_Tarrowyn_GDD.md)
