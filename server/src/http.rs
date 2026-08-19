@@ -5,9 +5,10 @@ use std::io::Read;
 use std::sync::Arc;
 use std::thread;
 use tarrowyn_protocol::{
-    ApiErrorResponse, ApiMeta, ApiResponse, ChatRequest, ClaimRequest, CombatRequest,
-    ContractRequest, ExpeditionRequest, FarmingRequest, MovementIntent, RecoveryRequest,
-    TradeRequest, PROTOCOL_VERSION,
+    ApiErrorResponse, ApiMeta, ApiResponse, ChatRequest, ClaimLifecycleRequest, ClaimRequest,
+    CombatRequest, ContractRequest, ExpeditionRequest, FarmingRequest, GovernanceAction,
+    GovernanceRequest, KnowledgeAction, KnowledgeRequest, LocalCombatRequest, MovementIntent,
+    ProfessionRequest, RecoveryRequest, TradeRequest, PROTOCOL_VERSION,
 };
 use tiny_http::{Header, Method, Request, Response, Server, StatusCode};
 
@@ -139,8 +140,95 @@ fn handle_request(mut request: Request, repository: Arc<WorldRepository>) {
                 repository.opportunities(token)
             })
         }
+        (Method::Get, "/v1/settlement/governance") => {
+            let request_id = format!(
+                "inspect-governance-{}",
+                repository.health().meta.server_tick
+            );
+            let repository_for_request = Arc::clone(&repository);
+            authenticated(&request, &repository, move |token| {
+                repository_for_request.governance(
+                    token,
+                    GovernanceRequest {
+                        request_id,
+                        action: GovernanceAction::Inspect,
+                        office_id: None,
+                        proposal_id: None,
+                        public_action: None,
+                        target: None,
+                        cost: None,
+                    },
+                )
+            })
+        }
+        (Method::Post, "/v1/settlement/governance") => {
+            match read_json::<GovernanceRequest>(&mut request) {
+                Ok(body) => authenticated(&request, &repository, |token| {
+                    repository.governance(token, body)
+                }),
+                Err(error) => error_response(400, "invalid_json", error, repository.health().meta),
+            }
+        }
+        (Method::Get, "/v1/infrastructure") => authenticated(&request, &repository, |token| {
+            repository.infrastructure(token)
+        }),
+        (Method::Get, "/v1/claims") => {
+            authenticated(&request, &repository, |token| repository.claims(token))
+        }
+        (Method::Post, "/v1/claims/lifecycle") => {
+            match read_json::<ClaimLifecycleRequest>(&mut request) {
+                Ok(body) => authenticated(&request, &repository, |token| {
+                    repository.claim_lifecycle(token, body)
+                }),
+                Err(error) => error_response(400, "invalid_json", error, repository.health().meta),
+            }
+        }
         (Method::Post, "/v1/claims") => match read_json::<ClaimRequest>(&mut request) {
             Ok(body) => authenticated(&request, &repository, |token| repository.claim(token, body)),
+            Err(error) => error_response(400, "invalid_json", error, repository.health().meta),
+        },
+        (Method::Get, "/v1/professions") => {
+            authenticated(&request, &repository, |token| repository.professions(token))
+        }
+        (Method::Post, "/v1/professions/orders") => {
+            match read_json::<ProfessionRequest>(&mut request) {
+                Ok(body) => authenticated(&request, &repository, |token| {
+                    repository.profession_order(token, body)
+                }),
+                Err(error) => error_response(400, "invalid_json", error, repository.health().meta),
+            }
+        }
+        (Method::Get, "/v1/knowledge") => {
+            let request_id = format!("inspect-knowledge-{}", repository.health().meta.server_tick);
+            let repository_for_request = Arc::clone(&repository);
+            authenticated(&request, &repository, move |token| {
+                repository_for_request.knowledge(
+                    token,
+                    KnowledgeRequest {
+                        request_id,
+                        action: KnowledgeAction::Inspect,
+                        knowledge_id: None,
+                        target_account_id: None,
+                    },
+                )
+            })
+        }
+        (Method::Post, "/v1/knowledge") => match read_json::<KnowledgeRequest>(&mut request) {
+            Ok(body) => authenticated(&request, &repository, |token| {
+                repository.knowledge(token, body)
+            }),
+            Err(error) => error_response(400, "invalid_json", error, repository.health().meta),
+        },
+        (Method::Get, "/v1/households") => {
+            authenticated(&request, &repository, |token| repository.households(token))
+        }
+        (Method::Get, "/v1/combat/local") => authenticated(&request, &repository, |token| {
+            repository.combat_status(token)
+        }),
+        (Method::Post, "/v1/combat/local") => match read_json::<LocalCombatRequest>(&mut request) {
+            Ok(body) => authenticated(&request, &repository, |token| {
+                repository.local_combat(token, body)
+            }),
             Err(error) => error_response(400, "invalid_json", error, repository.health().meta),
         },
         (Method::Post, "/v1/expeditions") => match read_json::<ExpeditionRequest>(&mut request) {

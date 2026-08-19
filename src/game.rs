@@ -198,6 +198,7 @@ impl Game {
                     wilderness: client.projection.wilderness.as_ref(),
                     chronicle: &client.projection.chronicle,
                     opportunities: &client.projection.opportunities,
+                    phase4_summary: &client.phase4_summary(),
                     knocked_out: client
                         .projection
                         .player
@@ -240,6 +241,7 @@ impl Game {
                     wilderness: None,
                     chronicle: &[],
                     opportunities: &[],
+                    phase4_summary: "Phase 4 ledgers are available only on the shared road.",
                     knocked_out: false,
                     ui: &virtual_ui,
                 })
@@ -456,6 +458,9 @@ impl Game {
                 "claim" => client.queue_claim_cycle(),
                 "expedition" => client.queue_expedition_cycle(),
                 "chronicle" => client.refresh_tavern(),
+                "town-hall" | "registry" | "order" | "knowledge" | "households" | "local-fight" => {
+                    client.queue_phase4(id)
+                }
                 _ => self.notifications.warning(format!("Unknown action: {id}")),
             }
             return;

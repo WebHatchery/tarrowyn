@@ -64,6 +64,7 @@ pub struct UiContext<'a> {
     pub wilderness: Option<&'a WildernessZone>,
     pub chronicle: &'a [ChronicleEntry],
     pub opportunities: &'a [OpportunitySignal],
+    pub phase4_summary: &'a str,
     pub knocked_out: bool,
     pub ui: &'a VirtualUi,
 }

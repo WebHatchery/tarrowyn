@@ -59,6 +59,8 @@ pub(super) struct StoredState {
     pub(super) trades: HashMap<String, TradeOffer>,
     #[serde(default)]
     pub(super) phase3: Phase3State,
+    #[serde(default)]
+    pub(super) phase4: super::phase4::Phase4State,
 }
 
 #[derive(Debug)]
@@ -79,6 +81,7 @@ pub(super) struct RepositoryState {
     pub(super) notices: VecDeque<TavernNotice>,
     pub(super) trades: HashMap<String, TradeOffer>,
     pub(super) phase3: Phase3State,
+    pub(super) phase4: super::phase4::Phase4State,
 }
 
 impl RepositoryState {
@@ -104,6 +107,7 @@ impl RepositoryState {
             notices: VecDeque::new(),
             trades: HashMap::new(),
             phase3: super::phase3::fresh(),
+            phase4: super::phase4::fresh(config),
         }
     }
 
@@ -133,6 +137,7 @@ impl RepositoryState {
             notices: trim_queue(stored.notices, MAX_NOTICES),
             trades: stored.trades,
             phase3: stored.phase3,
+            phase4: stored.phase4,
         }
     }
 
@@ -154,6 +159,7 @@ impl RepositoryState {
             notices: self.notices.clone(),
             trades: self.trades.clone(),
             phase3: self.phase3.clone(),
+            phase4: self.phase4.clone(),
         }
     }
 }

@@ -76,9 +76,12 @@ failure path.
 The Phase 3 live acceptance and restart instructions are in
 [`PHASE_3_RUNBOOK.md`](PHASE_3_RUNBOOK.md).
 
-Phases 4–6 are planning documents. Their runbooks should be added when each
-phase enters implementation, after the open design decisions listed in the
-phase have been resolved. The intended dependency is sequential: Phase 4
+Phase 4 implementation decisions, endpoint fixtures, and the settlement
+playthrough are recorded in [`PHASE_4_DESIGN.md`](PHASE_4_DESIGN.md),
+[`PHASE_4_RUNBOOK.md`](PHASE_4_RUNBOOK.md), and
+[`PHASE_4_PLAYTHROUGH.md`](PHASE_4_PLAYTHROUGH.md).
+
+Phase 5 and Phase 6 remain planning documents. The intended dependency is sequential: Phase 4
 proves that one settlement can govern and sustain itself, Phase 5 proves that
 the settlement model works across a region, and Phase 6 hardens that regional
 world for real players and long-term operation.

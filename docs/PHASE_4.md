@@ -1,5 +1,10 @@
 # Phase 4 — The Enduring Society
 
+> Implementation status: complete for the bounded first-settlement scope. The
+> design lock, runbook, and two-character playthrough are recorded in
+> [`PHASE_4_DESIGN.md`](PHASE_4_DESIGN.md), [`PHASE_4_RUNBOOK.md`](PHASE_4_RUNBOOK.md),
+> and [`PHASE_4_PLAYTHROUGH.md`](PHASE_4_PLAYTHROUGH.md).
+
 ## Purpose
 
 Phase 4 turns the Phase 3 settlement and outpost into a durable local society.
@@ -102,12 +107,13 @@ Suggested additions include:
 |---|---|
 | `GET /v1/settlement/governance` | Read offices, vacancies, proposals, permissions, and recent decisions. |
 | `POST /v1/settlement/governance` | Propose, vote on, approve, or complete a bounded public action. |
-| `GET /v1/claims` / `POST /v1/claims` | Inspect and advance the complete lease lifecycle. |
 | `GET /v1/infrastructure` | Read public structures, condition, upkeep, and repair needs. |
+| `GET /v1/claims` / `POST /v1/claims/lifecycle` | Inspect and advance the complete lease lifecycle. |
 | `GET /v1/professions` / `POST /v1/professions/orders` | Read capabilities and create or fulfil one meaningful service order. |
 | `GET /v1/knowledge` / `POST /v1/knowledge` | Discover, record, teach, or apply a knowledge item according to the design lock. |
 | `GET /v1/households` | Read visible household services, demand clues, and local-life changes. |
 | `POST /v1/combat/actions` | Continue the authoritative combat and recovery contract from Phase 3. |
+| `GET /v1/combat/local` / `POST /v1/combat/local` | Continue the bounded multi-turn local encounter. |
 
 The client needs visible town-hall, registry, claim, order, knowledge, and
 recovery controls. A player must be able to inspect a lease, understand a
@@ -146,5 +152,5 @@ than being smuggled into ordinary defeat or household ageing.
 - Storage migrations and repository fixtures for every new durable rule.
 - A human settlement playthrough report covering a new player and an
   established player.
-- A future `PHASE_4_RUNBOOK.md` with server start, migration, governance
-  fixtures, recovery checks, and visual touch-control verification.
+- A `PHASE_4_RUNBOOK.md` with server start, migration, governance fixtures,
+  recovery checks, and visual touch-control verification.

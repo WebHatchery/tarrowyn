@@ -17,7 +17,7 @@ use tarrowyn_protocol::{
 #[cfg(windows)]
 use windows_sys::Win32::Storage::FileSystem::{MoveFileExW, MOVEFILE_REPLACE_EXISTING};
 
-const STORAGE_VERSION: u32 = 2;
+const STORAGE_VERSION: u32 = 3;
 const MAX_EVENTS: usize = 2048;
 const MAX_CHAT_HISTORY: usize = 64;
 const MAX_NOTICES: usize = 32;
@@ -27,6 +27,7 @@ mod farming;
 mod models;
 mod phase3;
 mod phase3_frontier;
+mod phase4;
 mod trades;
 
 use models::{Identity, RepositoryState, Session, StoredState};
@@ -480,6 +481,7 @@ impl WorldRepository {
         grow_plots(&mut state, &self.config);
         trades::expire_trades(&mut state);
         phase3::tick(&mut state, &self.config);
+        phase4::phase4_tick(&mut state, &self.config);
         let clock = state.clock.clone();
         push_event(&mut state, WorldEvent::Clock(clock));
         expire_sessions(&mut state, &self.config);

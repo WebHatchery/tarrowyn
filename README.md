@@ -81,7 +81,7 @@ client key resolves the durable account and character again after a restart.
 The storage version is part of the document so future migrations can be added
 without changing the protocol boundary.
 
-The shared `protocol/` crate is versioned at protocol `3`. Every successful or
+The shared `protocol/` crate is versioned at protocol `4`. Every successful or
 error response carries protocol version and server tick metadata; cursor-based
 event responses additionally carry the event cursor. See
 [`docs/PHASE_1_RUNBOOK.md`](docs/PHASE_1_RUNBOOK.md) for reset, configuration,
@@ -89,7 +89,10 @@ fixture, and capture details, [`docs/PHASE_2_RUNBOOK.md`](docs/PHASE_2_RUNBOOK.m
 for persistence and acceptance details, and [`docs/PHASE_3_RUNBOOK.md`](docs/PHASE_3_RUNBOOK.md)
 for the frontier acceptance. Phase 3 adds `/v1/contracts`,
 `/v1/combat/actions`, `/v1/recovery`, `/v1/settlement/chronicle`,
-`/v1/settlement/opportunities`, `/v1/claims`, and `/v1/expeditions`.
+`/v1/settlement/opportunities`, `/v1/claims`, and `/v1/expeditions`. Phase 4
+adds authoritative governance, infrastructure, claim lifecycle, profession
+orders, knowledge, household, and local-combat endpoints; see
+[`docs/PHASE_4_RUNBOOK.md`](docs/PHASE_4_RUNBOOK.md).
 
 ## Release validation
 

@@ -4,8 +4,10 @@ use serde::{Deserialize, Serialize};
 
 mod phase3;
 pub use phase3::*;
+mod phase4;
+pub use phase4::*;
 
-pub const PROTOCOL_VERSION: &str = "3";
+pub const PROTOCOL_VERSION: &str = "4";
 pub const MAX_CHAT_MESSAGE_LENGTH: usize = 160;
 pub const MAX_TRADE_ITEMS: u32 = 99;
 

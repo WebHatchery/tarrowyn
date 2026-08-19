@@ -180,7 +180,62 @@ pub(super) fn draw_sidebar(
     }
 
     if virtual_button(
-        Rect::new(content.x, content.y + 438.0, content.w, 25.0),
+        Rect::new(content.x, content.y + 438.0, 122.0, 24.0),
+        "Town hall",
+        ctx.connection == ConnectionState::Online,
+        ButtonTone::Primary,
+        mouse,
+    ) {
+        actions.push(UiAction::Interact("town-hall".to_owned()));
+    }
+    if virtual_button(
+        Rect::new(content.x + 130.0, content.y + 438.0, 122.0, 24.0),
+        "Registry",
+        ctx.connection == ConnectionState::Online,
+        ButtonTone::Secondary,
+        mouse,
+    ) {
+        actions.push(UiAction::Interact("registry".to_owned()));
+    }
+    if virtual_button(
+        Rect::new(content.x + 260.0, content.y + 438.0, 122.0, 24.0),
+        "Order",
+        ctx.connection == ConnectionState::Online,
+        ButtonTone::Secondary,
+        mouse,
+    ) {
+        actions.push(UiAction::Interact("order".to_owned()));
+    }
+    if virtual_button(
+        Rect::new(content.x, content.y + 467.0, 122.0, 24.0),
+        "Knowledge",
+        ctx.connection == ConnectionState::Online,
+        ButtonTone::Secondary,
+        mouse,
+    ) {
+        actions.push(UiAction::Interact("knowledge".to_owned()));
+    }
+    if virtual_button(
+        Rect::new(content.x + 130.0, content.y + 467.0, 122.0, 24.0),
+        "Households",
+        ctx.connection == ConnectionState::Online,
+        ButtonTone::Secondary,
+        mouse,
+    ) {
+        actions.push(UiAction::Interact("households".to_owned()));
+    }
+    if virtual_button(
+        Rect::new(content.x + 260.0, content.y + 467.0, 122.0, 24.0),
+        "Local fight",
+        ctx.connection == ConnectionState::Online && !ctx.knocked_out,
+        ButtonTone::Secondary,
+        mouse,
+    ) {
+        actions.push(UiAction::Interact("local-fight".to_owned()));
+    }
+
+    if virtual_button(
+        Rect::new(content.x, content.y + 496.0, content.w, 25.0),
         "Reconnect",
         ctx.connection != ConnectionState::Online,
         ButtonTone::Primary,
@@ -189,7 +244,7 @@ pub(super) fn draw_sidebar(
         actions.push(UiAction::Reconnect);
     }
     if virtual_button(
-        Rect::new(content.x, content.y + 467.0, content.w, 25.0),
+        Rect::new(content.x, content.y + 525.0, content.w, 25.0),
         "Use offline fixture",
         true,
         ButtonTone::Secondary,
@@ -199,8 +254,9 @@ pub(super) fn draw_sidebar(
     }
     draw_text_block(
         &format!(
-            "{}\n{}",
+            "{}\n{}\n{}",
             ctx.status_message,
+            ctx.phase4_summary,
             ctx.chronicle
                 .last()
                 .map(|entry| entry.title.as_str())
@@ -211,7 +267,7 @@ pub(super) fn draw_sidebar(
                 .unwrap_or("The frontier registry is listening.")
         ),
         content.x,
-        content.y + 495.0,
+        content.y + 554.0,
         content.w,
         28.0,
         11.0,

@@ -9,18 +9,22 @@ use std::collections::VecDeque;
 use tarrowyn_protocol::{
     ApiResponse, ChatMessage, ChatRequest, ChronicleEntry, EventsResponse, Expedition,
     FarmingAction, FarmingRequest, FrontierEvent, GuestSessionRequest, GuestSessionResponse,
-    LandClaim, MovementIntent, MovementResponse, OpportunitySignal, PlayerPresence,
-    PlayerProjection, StateSnapshot, TavernFeedResponse, TradeOffer, TradeRequest, TradeResponse,
-    TradesResponse, WildernessZone, WorldClock, WorldEvent, WorldSnapshot, MAX_CHAT_MESSAGE_LENGTH,
+    LandClaim, MovementIntent, OpportunitySignal, PlayerPresence, PlayerProjection, StateSnapshot,
+    TavernFeedResponse, TradeOffer, TradeRequest, TradeResponse, TradesResponse, WildernessZone,
+    WorldClock, WorldEvent, WorldSnapshot, MAX_CHAT_MESSAGE_LENGTH,
 };
 
 const REQUEST_TIMEOUT_SECONDS: f32 = 6.0;
 const STALE_TICKS: u64 = 20;
 
 mod frontier;
+mod phase4;
+mod requests;
 mod trade_client;
 
 use frontier::FrontierClient;
+use phase4::Phase4Client;
+use requests::{PendingChat, PendingFarming, PendingMovement};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ConnectionState {
@@ -278,18 +282,6 @@ impl WorldProjection {
     }
 }
 
-struct PendingMovement {
-    pending: Pending<ApiResponse<MovementResponse>>,
-}
-
-struct PendingChat {
-    pending: Pending<ApiResponse<tarrowyn_protocol::ChatResponse>>,
-}
-
-struct PendingFarming {
-    pending: Pending<ApiResponse<tarrowyn_protocol::FarmingResponse>>,
-}
-
 pub struct OnlineClient {
     api: HttpClient,
     pub projection: WorldProjection,
@@ -321,6 +313,7 @@ pub struct OnlineClient {
     pub action_awaiting_confirmation: bool,
     pub trades: Vec<TradeOffer>,
     frontier: FrontierClient,
+    phase4: Phase4Client,
 }
 
 impl OnlineClient {
@@ -359,6 +352,7 @@ impl OnlineClient {
             action_awaiting_confirmation: false,
             trades: Vec::new(),
             frontier: FrontierClient::new(),
+            phase4: Phase4Client::new(),
         };
         client.begin_guest(false);
         client
@@ -379,6 +373,17 @@ impl OnlineClient {
         self.frontier.update(
             &mut self.projection,
             dt,
+            self.state == ConnectionState::Online,
+            &mut notices,
+        );
+        self.phase4.set_account(
+            self.account
+                .as_ref()
+                .map(|account| account.account_id.as_str()),
+        );
+        self.phase4.update(
+            dt,
+            &mut self.api,
             self.state == ConnectionState::Online,
             &mut notices,
         );
@@ -479,6 +484,7 @@ impl OnlineClient {
         self.pending_trades = None;
         self.pending_trade = None;
         self.frontier.clear();
+        self.phase4.clear();
         self.movement_queue.clear();
         self.chat_queue.clear();
         self.farming_queue.clear();
