@@ -54,12 +54,78 @@ function Post-Json([string]$path, [hashtable]$body, [hashtable]$headers) {
         -Headers $headers -ContentType "application/json" -Body ($body | ConvertTo-Json -Compress)
 }
 
+function Invoke-ConcurrentSoak([int]$clientCount, [int]$rounds) {
+    $soakSessions = @()
+    for ($index = 0; $index -lt $clientCount; $index++) {
+        $soakSessions += Invoke-RestMethod -Method Post `
+            -Uri "http://127.0.0.1:8787/v1/session/guest" `
+            -ContentType "application/json" `
+            -Body (@{ client_key = "phase3-soak-$index"; reset = $true } | ConvertTo-Json -Compress)
+    }
+
+    $jobScript = {
+        param([string]$token, [int]$clientIndex, [int]$expectedClients, [int]$roundCount)
+        $headers = @{ Authorization = "Bearer $token" }
+        try {
+            for ($round = 0; $round -lt $roundCount; $round++) {
+                $state = Invoke-RestMethod -Method Get -Uri "http://127.0.0.1:8787/v1/state" -Headers $headers
+                if ($state.data.world.players.Count -lt $expectedClients) {
+                    throw "only $($state.data.world.players.Count) of $expectedClients players were visible"
+                }
+
+                $events = Invoke-RestMethod -Method Get `
+                    -Uri "http://127.0.0.1:8787/v1/events?since=0" -Headers $headers
+                $move = Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:8787/v1/movement" `
+                    -Headers $headers -ContentType "application/json" `
+                    -Body (@{ request_id = "phase3-soak-$clientIndex-move-$round"; dx = 1; dy = 0 } | ConvertTo-Json -Compress)
+                $chat = Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:8787/v1/chat" `
+                    -Headers $headers -ContentType "application/json" `
+                    -Body (@{ request_id = "phase3-soak-$clientIndex-chat-$round"; channel = "settlement"; text = "soak $clientIndex/$round" } | ConvertTo-Json -Compress)
+
+                if ($null -eq $events.data.cursor -or $null -eq $move.data.accepted -or $null -eq $chat.data.accepted) {
+                    throw "one or more shared-road responses were incomplete"
+                }
+            }
+            [pscustomobject]@{ passed = $true; client = $clientIndex }
+        } catch {
+            [pscustomobject]@{ passed = $false; client = $clientIndex; error = $_.Exception.Message }
+        }
+    }
+
+    $jobs = @()
+    try {
+        for ($index = 0; $index -lt $clientCount; $index++) {
+            $jobs += Start-Job -ScriptBlock $jobScript -ArgumentList @(
+                $soakSessions[$index].data.account_token,
+                $index,
+                $clientCount,
+                $rounds
+            )
+        }
+        $completed = Wait-Job -Job $jobs -Timeout 60
+        Assert-True (@($completed).Count -eq $clientCount) "concurrent soak did not finish within 60 seconds"
+        $results = @($jobs | Receive-Job)
+        Assert-True ($results.Count -eq $clientCount) "concurrent soak returned an incomplete result set"
+        $failures = @($results | Where-Object { -not $_.passed })
+        Assert-True ($failures.Count -eq 0) ("concurrent soak client failed: " + (($failures | ForEach-Object { $_.error }) -join "; "))
+
+        Start-Sleep -Milliseconds 150
+        $health = Invoke-RestMethod -Method Get -Uri "http://127.0.0.1:8787/health"
+        Assert-True ($health.meta.server_tick -gt 0) "server clock stopped during concurrent soak"
+    } finally {
+        foreach ($job in $jobs) {
+            Remove-Job -Job $job -Force -ErrorAction SilentlyContinue
+        }
+    }
+}
+
 try {
     Remove-Item -LiteralPath $statePath -Force -ErrorAction SilentlyContinue
     $env:TARROWYN_STATE_PATH = $statePath
     $env:TARROWYN_MOVEMENT_COOLDOWN_TICKS = "0"
     $env:TARROWYN_TICK_MS = "50"
     $env:TARROWYN_CLAIM_RECLAIM_TICKS = "20"
+    $env:TARROWYN_SESSION_TTL_SECONDS = "120"
 
     $server = Start-Phase3Server
     Wait-Healthy
@@ -130,21 +196,14 @@ try {
     $resumedChronicle = Invoke-RestMethod -Method Get -Uri "http://127.0.0.1:8787/v1/settlement/chronicle?since=0" -Headers $resumedHeader
     Assert-True (@($resumedChronicle.data.entries | Where-Object { $_.kind -eq "outpost founded" }).Count -eq 1) "the outpost chronicle was lost during restart"
 
-    $soakHeaders = @()
-    for ($index = 0; $index -lt 10; $index++) {
-        $session = Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:8787/v1/session/guest" -ContentType "application/json" -Body (@{ client_key = "phase3-soak-$index"; reset = $true } | ConvertTo-Json -Compress)
-        $soakHeaders += @{ Authorization = "Bearer $($session.data.account_token)" }
-    }
-    foreach ($header in $soakHeaders) {
-        $null = Invoke-RestMethod -Method Get -Uri "http://127.0.0.1:8787/v1/state" -Headers $header
-        $null = Invoke-RestMethod -Method Get -Uri "http://127.0.0.1:8787/v1/events?since=0" -Headers $header
-    }
-    Write-Host "Phase 3 acceptance passed: threat ripple, contract, knockout recovery, household signal, chronicle, renewable claim, expedition outpost, cursor catch-up, restartable state, and 10-client polling." -ForegroundColor Green
+    Invoke-ConcurrentSoak 20 3
+    Write-Host "Phase 3 acceptance passed: threat ripple, contract, knockout recovery, household signal, chronicle, renewable claim, expedition outpost, cursor catch-up, restartable state, and concurrent 20-client polling." -ForegroundColor Green
 } finally {
     if ($null -ne $server -and -not $server.HasExited) { Stop-Phase3Server $server }
     Remove-Item Env:TARROWYN_STATE_PATH -ErrorAction SilentlyContinue
     Remove-Item Env:TARROWYN_MOVEMENT_COOLDOWN_TICKS -ErrorAction SilentlyContinue
     Remove-Item Env:TARROWYN_TICK_MS -ErrorAction SilentlyContinue
     Remove-Item Env:TARROWYN_CLAIM_RECLAIM_TICKS -ErrorAction SilentlyContinue
+    Remove-Item Env:TARROWYN_SESSION_TTL_SECONDS -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath $statePath -Force -ErrorAction SilentlyContinue
 }

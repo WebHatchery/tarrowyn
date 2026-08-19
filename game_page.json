@@ -2,10 +2,10 @@
   "title": "The Years of Tarrowyn",
   "wasm": "years_of_tarrowyn",
   "roost_slug": "rust_tarrowyn",
-  "status": { "text": "Phase 1", "class": "in-development" },
+  "status": { "text": "Phase 3", "class": "in-development" },
   "canvas_rendering": "pixelated",
   "about": [
-    "The first shared-road multiplayer slice for a slow-burn fantasy MMORPG. Join a server-owned settlement, see other guests move, exchange short messages, and recover clearly when the development server goes quiet."
+    "A playable shared-road settlement for a slow-burn fantasy MMORPG. Farm, trade, follow frontier contracts, recover from danger, read the settlement chronicle, and help establish the first outpost in a server-owned world."
   ],
   "controls": [
     { "key": "Tap arrows", "desc": "Walk one tile" },
@@ -16,7 +16,7 @@
     { "key": "F5 / F9", "desc": "Save / load the separate offline fixture" }
   ],
   "details": [
-    { "label": "Milestone", "value": "Phase 1: the shared road" },
+    { "label": "Milestone", "value": "Phase 3: the living frontier" },
     { "label": "Genre", "value": "Cozy 2D MMORPG foundation" },
     { "label": "Engine", "value": "Macroquad + Toolkit" },
     { "label": "Server", "value": "Rust + tiny_http development authority" },

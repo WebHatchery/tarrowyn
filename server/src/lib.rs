@@ -1,10 +1,9 @@
 //! The local authoritative Tarrowyn server.
 //!
-//! Phase 1 deliberately keeps persistence behind [`WorldRepository`]. The
-//! selected development backend is an in-memory repository: it makes three-
-//! client fixtures deterministic and keeps restart persistence out of the
-//! first wire-and-authority proof. Phase 2 can replace this implementation
-//! with SQLite without changing the protocol or HTTP handlers.
+//! The development backend is a versioned JSON repository behind
+//! [`WorldRepository`]. It keeps the Phase 1–3 wire-and-authority fixtures
+//! deterministic while preserving the protocol and HTTP boundaries for a
+//! future production database.
 
 mod config;
 mod http;

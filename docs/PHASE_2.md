@@ -2,6 +2,10 @@
 
 > Implementation status: complete for the documented vertical slice. The
 > release proof is recorded in [`PHASE_2_RUNBOOK.md`](PHASE_2_RUNBOOK.md).
+>
+> Current validation focus: deterministic tests and automated HTTP acceptance.
+> The human 60–90 minute settlement session is deferred until the client is
+> more playable.
 
 ## Purpose
 
@@ -117,6 +121,8 @@ interdependence and persistence without building a spreadsheet-sized economy.
 
 ## Exit artifact
 
-Record a server restart test, a three-client farming/trade session, a protocol
-compatibility note, and storage migration instructions. Add a small load test
-for at least 10 connected development clients before beginning Phase 3.
+The current automated gate is `cargo test --workspace`, the Phase 2 HTTP
+acceptance script, the protocol compatibility tests, migration coverage, and
+the concurrent development-client soak included in the Phase 3 acceptance
+script. The human three-client farming/trade session is intentionally deferred
+until the client is more playable.

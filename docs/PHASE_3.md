@@ -2,6 +2,10 @@
 
 > Implementation status: complete for the documented vertical slice. The
 > release proof is recorded in [`PHASE_3_RUNBOOK.md`](PHASE_3_RUNBOOK.md).
+>
+> Current validation focus: deterministic fixtures, automated HTTP acceptance,
+> and concurrent client polling. Community playthrough recording is deferred
+> until the client is more playable.
 
 ## Purpose
 
@@ -111,7 +115,10 @@ stories before it expands the number of systems that can create them.
 
 ## Exit artifact
 
-Deliver a recorded community-event playthrough, a 10–20-client soak report,
-event-cursor/reconnect tests, an NPC decision fixture, an expedition recovery
-fixture, and a design review of which open GDD questions must be locked before
-production-scale content work.
+The current automated gate is `cargo test --workspace`, the Phase 1–3 HTTP
+acceptance scripts, client connection-state fixtures, event-cursor/reconnect
+tests, NPC decision and lease-reclamation fixtures, expedition persistence
+fixtures, and the concurrent 20-client polling check. Community playthrough
+recording and a human soak report are intentionally deferred until the client
+is more playable. Production-scale content still requires a design review of
+the open GDD questions.

@@ -1,4 +1,4 @@
-# The Years of Tarrowyn — Phase 2
+# The Years of Tarrowyn — Phase 3
 
 The shared settlement is now a small persistent authoritative client/server
 build. The native development server owns guest identity, characters, the
@@ -64,7 +64,7 @@ Run the Phase 2 farming, trading, tavern, and restart acceptance pass with:
 ```
 
 Run the Phase 3 threat, contract, recovery, chronicle, claim, expedition, and
-10-client polling acceptance pass with:
+concurrent 20-client polling acceptance pass with:
 
 ```powershell
 .\scripts\verify_phase3.ps1

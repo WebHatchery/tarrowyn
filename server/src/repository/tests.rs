@@ -1,10 +1,10 @@
 use super::*;
 use crate::config::ServerConfig;
 use tarrowyn_protocol::{
-    ChatRequest, ClaimAction, ClaimRequest, CombatAction, CombatRequest, ContractAction,
-    ContractRequest, ExpeditionAction, ExpeditionRequest, ExpeditionRole, FarmingAction,
-    FarmingRequest, GuestSessionRequest, MovementIntent, Position, TileKind, TradeAction,
-    TradeBundle, TradeRequest, TradeStatus, WeaponKind, WorldEvent,
+    ChatRequest, ClaimAction, ClaimRequest, ClaimStatus, CombatAction, CombatRequest,
+    ContractAction, ContractRequest, ExpeditionAction, ExpeditionRequest, ExpeditionRole,
+    FarmingAction, FarmingRequest, GuestSessionRequest, HouseholdStatus, MovementIntent, Position,
+    TileKind, TradeAction, TradeBundle, TradeRequest, TradeStatus, WeaponKind, WorldEvent,
 };
 
 fn repo() -> WorldRepository {
@@ -429,6 +429,12 @@ fn phase_three_contract_combat_recovery_and_chronicle_are_authoritative() {
         .data;
     assert!(report.accepted);
 
+    let seeds_before = repo
+        .inventory(&session.account_token)
+        .unwrap()
+        .data
+        .inventory
+        .seeds;
     let knockout = repo
         .combat(
             &session.account_token,
@@ -445,6 +451,27 @@ fn phase_three_contract_combat_recovery_and_chronicle_are_authoritative() {
         Some(tarrowyn_protocol::CombatOutcome::KnockedOut)
     );
     assert!(knockout.player.knocked_out);
+    assert_eq!(
+        repo.inventory(&session.account_token)
+            .unwrap()
+            .data
+            .inventory
+            .seeds,
+        seeds_before - 1
+    );
+    assert_eq!(
+        repo.combat(
+            &session.account_token,
+            CombatRequest {
+                request_id: "club-strike".to_owned(),
+                action: CombatAction::Strike,
+                weapon: WeaponKind::ImprovisedClub,
+            },
+        )
+        .unwrap()
+        .data,
+        knockout
+    );
     let recovery = repo
         .recovery(
             &session.account_token,
@@ -469,6 +496,59 @@ fn phase_three_contract_combat_recovery_and_chronicle_are_authoritative() {
         .events
         .iter()
         .any(|event| matches!(event.event, WorldEvent::Chronicle(_))));
+}
+
+#[test]
+fn phase_three_household_and_claim_lifecycles_emit_recovery_events() {
+    let repo = WorldRepository::new(ServerConfig {
+        claim_reclaim_ticks: 2,
+        session_ttl_seconds: 100,
+        ..ServerConfig::default()
+    });
+    let session = guest(&repo, "frontier-lifecycle");
+    let claim = repo
+        .claim(
+            &session.account_token,
+            ClaimRequest {
+                request_id: "lifecycle-claim".to_owned(),
+                action: ClaimAction::Request,
+            },
+        )
+        .unwrap()
+        .data;
+    assert!(claim.accepted);
+
+    for _ in 0..17 {
+        repo.tick();
+    }
+
+    let opportunities = repo.opportunities(&session.account_token).unwrap().data;
+    assert_eq!(
+        opportunities.opportunities[0].status,
+        HouseholdStatus::Departed
+    );
+    let inspected = repo
+        .claim(
+            &session.account_token,
+            ClaimRequest {
+                request_id: "lifecycle-inspect".to_owned(),
+                action: ClaimAction::Inspect,
+            },
+        )
+        .unwrap()
+        .data;
+    assert_eq!(inspected.claim.unwrap().status, ClaimStatus::Reclaimed);
+
+    let chronicle = repo.chronicle(&session.account_token, 0).unwrap().data;
+    let kinds: Vec<&str> = chronicle
+        .entries
+        .iter()
+        .map(|entry| entry.kind.as_str())
+        .collect();
+    assert!(kinds.contains(&"arrival candidate"));
+    assert!(kinds.contains(&"household arrival"));
+    assert!(kinds.contains(&"household departure"));
+    assert!(kinds.contains(&"claim reclaimed"));
 }
 
 #[test]
@@ -601,4 +681,42 @@ fn phase_three_claim_and_expedition_survive_as_durable_world_state() {
         .data
         .outpost
         .is_some());
+}
+
+#[test]
+fn phase_two_state_without_frontier_fields_loads_safe_phase_three_defaults() {
+    let path = std::env::temp_dir().join(format!(
+        "tarrowyn-phase2-migration-{}.json",
+        std::process::id()
+    ));
+    let path_string = path.to_string_lossy().into_owned();
+    let config = ServerConfig {
+        persistence_path: Some(path_string.clone()),
+        ..ServerConfig::default()
+    };
+    let first = WorldRepository::new(config.clone());
+    let original = guest(&first, "legacy-settlement");
+    first.tick();
+    drop(first);
+
+    let bytes = std::fs::read(&path).unwrap();
+    let mut document: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+    document["storage_version"] = serde_json::json!(1);
+    document.as_object_mut().unwrap().remove("phase3");
+    std::fs::write(&path, serde_json::to_vec_pretty(&document).unwrap()).unwrap();
+
+    let migrated = WorldRepository::new(config);
+    let resumed = guest(&migrated, "legacy-settlement");
+    assert_eq!(resumed.character_id, original.character_id);
+    let world = migrated.world(&resumed.account_token).unwrap().data;
+    assert!(world.wilderness.unwrap().threat_active);
+    assert!(migrated
+        .opportunities(&resumed.account_token)
+        .unwrap()
+        .data
+        .opportunities
+        .iter()
+        .any(|opportunity| opportunity.status == HouseholdStatus::Travelling));
+
+    let _ = std::fs::remove_file(path);
 }

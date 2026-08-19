@@ -54,7 +54,8 @@ The script creates three named roles, reads a contract, walks a scout to the
 wilderness, reports progress, demonstrates an inferior-weapon knockout and
 rescuer recovery, checks that another player can read the chronicle and the
 household signal, establishes a claim, resolves a three-role pioneer group,
-reconnects at the accepted event cursor, and polls ten simultaneous clients.
+reconnects at the accepted event cursor, and runs three rounds of concurrent
+state, event, movement, and chat polling for twenty clients.
 
 The repository tests additionally cover the same domain rules without a live
 process, including durable claim/expedition state and request replay.
