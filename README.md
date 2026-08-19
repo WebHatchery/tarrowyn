@@ -35,6 +35,7 @@ toolkit data-loader boundary.
 
 ## Source of truth
 
-The design direction is in `The_Years_of_Tarrowyn_GDD.md`. The Phase 0 scope
-and the handoff to the first multiplayer milestone are recorded in
-`docs/PHASE_0.md`.
+The design direction is in `The_Years_of_Tarrowyn_GDD.md`. The complete
+milestone roadmap is in [`docs/README.md`](docs/README.md), beginning with the
+Phase 0 scope in [`docs/PHASE_0.md`](docs/PHASE_0.md) and continuing through the
+first three multiplayer milestones.

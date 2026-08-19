@@ -34,7 +34,8 @@ The next milestone should introduce a workspace-level server crate and a small
 protocol for login, player presence, movement acknowledgement, chat, and a
 server-owned clock. The existing `GameSession` fields provide the first client
 projection to map onto that protocol, while the UI actions already return
-intent-like events rather than mutating state directly.
+intent-like events rather than mutating state directly. See the full roadmap in
+[`docs/README.md`](README.md) and [Phase 1](PHASE_1.md).
 
 The GDD’s smallest multiplayer slice remains the product target: multiple
 clients in one tiny settlement, movement, collision, social presence, chat,
