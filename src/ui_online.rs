@@ -154,6 +154,7 @@ pub(super) fn draw_sidebar(
     }
 
     for (index, (id, label, tone)) in [
+        ("spell", "Spell", ButtonTone::Secondary),
         ("expedition", "Pioneer", ButtonTone::Primary),
         ("chronicle", "Chronicle", ButtonTone::Secondary),
         ("say-hello", "Hello", ButtonTone::Secondary),
@@ -165,9 +166,9 @@ pub(super) fn draw_sidebar(
     {
         if virtual_button(
             Rect::new(
-                content.x + index as f32 * 73.0,
+                content.x + index as f32 * 61.0,
                 content.y + 408.0,
-                69.0,
+                56.0,
                 24.0,
             ),
             label,

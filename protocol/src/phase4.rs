@@ -485,6 +485,7 @@ pub enum LocalCombatAction {
     Guard,
     UseItem,
     Reposition,
+    CastSpell,
     Retreat,
 }
 
@@ -513,6 +514,8 @@ pub struct LocalCombatState {
     pub recovery_cost: u32,
     #[serde(default)]
     pub reposition_ready: bool,
+    #[serde(default)]
+    pub spell_ready: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]

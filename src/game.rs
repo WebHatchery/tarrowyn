@@ -471,7 +471,7 @@ impl Game {
                 "chronicle" => client.refresh_tavern(),
                 "practice" => client.queue_phase4("practice"),
                 "town-hall" | "tax-rate" | "registry" | "order" | "knowledge" | "households"
-                | "local-fight" | "technique" | "guard" | "item" | "reposition" => {
+                | "local-fight" | "technique" | "guard" | "item" | "reposition" | "spell" => {
                     client.queue_phase4(id)
                 }
                 "crafting-timing" => client.queue_crafting_timing(),

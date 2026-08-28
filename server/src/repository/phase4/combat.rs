@@ -165,7 +165,9 @@ impl super::super::WorldRepository {
                             .to_owned();
                 }
             }
-            LocalCombatAction::Strike | LocalCombatAction::Technique => {
+            LocalCombatAction::Strike
+            | LocalCombatAction::Technique
+            | LocalCombatAction::CastSpell => {
                 if combat.status != LocalCombatStatus::Engaged {
                     response.reason =
                         Some("Prepare the local encounter before striking.".to_owned());
@@ -174,15 +176,23 @@ impl super::super::WorldRepository {
                         "The opening for that weapon technique has passed; choose STRIKE or GUARD."
                             .to_owned(),
                     );
+                } else if request.action == LocalCombatAction::CastSpell && !combat.spell_ready {
+                    response.reason = Some(
+                        "The wind spark has already been spent in this encounter; choose STRIKE or RETREAT."
+                            .to_owned(),
+                    );
                 } else {
                     combat.weapon = request.weapon;
                     combat.turn = combat.turn.saturating_add(1);
                     let repositioned = combat.reposition_ready;
                     combat.reposition_ready = false;
-                    let damage = if request.action == LocalCombatAction::Technique {
-                        technique_damage(request.weapon)
-                    } else {
-                        request.weapon.damage().clamp(1, 2)
+                    let damage = match request.action {
+                        LocalCombatAction::Technique => technique_damage(request.weapon),
+                        LocalCombatAction::CastSpell => {
+                            combat.spell_ready = false;
+                            2
+                        }
+                        _ => request.weapon.damage().clamp(1, 2),
                     };
                     combat.enemy_health = combat.enemy_health.saturating_sub(damage);
                     if combat.enemy_health == 0 {
@@ -193,16 +203,19 @@ impl super::super::WorldRepository {
                         let identity = state.identities.get_mut(&key).expect("identity exists");
                         identity.gold = identity.gold.saturating_add(3);
                         identity.skill = identity.skill.saturating_add(1);
-                        super::super::skills::record_practice(
-                            &mut state,
-                            &key,
-                            request.weapon.skill_id(),
-                        );
-                        super::super::skills::record_weapon_defeat(
-                            &mut state,
-                            &key,
-                            request.weapon,
-                        );
+                        let skill_id = if request.action == LocalCombatAction::CastSpell {
+                            "wind-magic"
+                        } else {
+                            request.weapon.skill_id()
+                        };
+                        super::super::skills::record_practice(&mut state, &key, skill_id);
+                        if request.action != LocalCombatAction::CastSpell {
+                            super::super::skills::record_weapon_defeat(
+                                &mut state,
+                                &key,
+                                request.weapon,
+                            );
+                        }
                         record(
                             &mut state,
                             "combat victory",
@@ -244,6 +257,11 @@ impl super::super::WorldRepository {
                             "Your {} technique opens the threat's guard. Choose STRIKE, GUARD, or RETREAT.",
                             request.weapon.label()
                         );
+                    } else if request.action == LocalCombatAction::CastSpell {
+                        response.accepted = true;
+                        response.prompt =
+                            "The wind spark tears across the clearing. Choose STRIKE, GUARD, or RETREAT."
+                                .to_owned();
                     } else {
                         response.accepted = true;
                         response.prompt = format!(
@@ -253,6 +271,12 @@ impl super::super::WorldRepository {
                     }
                 }
             }
+        }
+        if response.accepted
+            && request.action == LocalCombatAction::CastSpell
+            && combat.status != LocalCombatStatus::Victorious
+        {
+            super::super::skills::record_practice(&mut state, &key, "wind-magic");
         }
         state.phase4.combat.insert(key.clone(), combat.clone());
         response.combat = combat;
@@ -284,6 +308,7 @@ fn default_combat() -> LocalCombatState {
             .to_owned(),
         recovery_cost: 4,
         reposition_ready: false,
+        spell_ready: true,
     }
 }
 

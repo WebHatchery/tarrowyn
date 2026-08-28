@@ -25,8 +25,8 @@ are recorded in the audit stream. The no-PvP law boundary is still active.
 
 ## Persistence, backups, and repair
 
-Storage version 11 adds the persisted reposition opening alongside field-tool
-condition and real-time lease timestamps
+Storage version 12 adds the persisted reposition opening and wind spark
+alongside field-tool condition and real-time lease timestamps
 and public tax receipts,
 the regional state,
 production session/audit records, and
