@@ -2,9 +2,22 @@
   "events": [
     {
       "id": "river-thaw",
+      "title": "The river thaw carries a warning",
       "kind": "seasonal_supply",
       "stages": ["signal", "escalation", "intervention", "resolution", "aftermath"],
-      "affected_systems": ["travel", "farming", "prices", "households", "chronicle"]
+      "affected_systems": ["travel", "farming", "prices", "households", "chronicle"],
+      "effects": [
+        "north-road risk rises",
+        "farming supply arrives late",
+        "regional prices shift",
+        "households reconsider safe work"
+      ],
+      "cause": "The first thaw breaks a ferry marker and washes frontier stores toward the lowlands.",
+      "intervention_options": [
+        "repair ferry markers",
+        "escort the grain caravan",
+        "open the frontier storehouse"
+      ]
     }
   ]
 }

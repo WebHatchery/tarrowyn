@@ -192,30 +192,21 @@ pub(super) fn seed_event(
             Some("A regional event is already being resolved.".to_owned()),
         );
     }
+    let template =
+        crate::content::regional_event_template(state.phase5.next_event_id.saturating_sub(1));
     let event = RegionalEvent {
         event_id: format!("regional-event-{}", state.phase5.next_event_id),
-        title: "The river thaw carries a warning".to_owned(),
-        kind: "seasonal_supply".to_owned(),
+        title: template.title,
+        kind: template.kind,
         stage: RegionalEventStage::Signal,
         affected_location_ids: vec![
             "hearth".to_owned(),
             "whisperwood-outpost".to_owned(),
             "saltmere".to_owned(),
         ],
-        effects: vec![
-            "north-road risk rises".to_owned(),
-            "farming supply arrives late".to_owned(),
-            "regional prices shift".to_owned(),
-            "households reconsider safe work".to_owned(),
-        ],
-        cause:
-            "The first thaw breaks a ferry marker and washes frontier stores toward the lowlands."
-                .to_owned(),
-        intervention_options: vec![
-            "repair ferry markers".to_owned(),
-            "escort the grain caravan".to_owned(),
-            "open the frontier storehouse".to_owned(),
-        ],
+        effects: template.effects,
+        cause: template.cause,
+        intervention_options: template.intervention_options,
         chosen_intervention: None,
         outcome: None,
         started_tick: state.tick,

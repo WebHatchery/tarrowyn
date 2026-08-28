@@ -88,9 +88,11 @@ JSON, while server startup parses typed action, crop, item, event, settlement,
 region, calendar, and game-config records and rejects duplicate IDs, incomplete
 records, unknown route or settlement locations, invalid event stages, and a
 day-length mismatch. The validator protects future content additions; wiring
-the crop manifest into server planting now follows that validated order. Wiring
-the remaining manifests into their live simulation consumers remains content
-expansion work rather than an implicit promise of the current fixtures.
+the crop manifest into server planting now follows that validated order, and
+regional event seeding now consumes the validated event narrative by manifest
+order. Wiring the remaining manifests into their live simulation consumers
+remains content expansion work rather than an implicit promise of the current
+fixtures.
 
 ## Hosting and observability
 

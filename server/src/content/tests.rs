@@ -29,3 +29,14 @@ fn server_crop_rotation_follows_the_validated_manifest() {
         tarrowyn_protocol::CropKind::Wheat
     );
 }
+
+#[test]
+fn server_event_seed_template_follows_the_validated_manifest() {
+    let event = super::regional_event_template(0);
+    assert_eq!(event.id, "river-thaw");
+    assert_eq!(event.kind, "seasonal_supply");
+    assert_eq!(event.title, "The river thaw carries a warning");
+    assert_eq!(event.effects.len(), 4);
+    assert_eq!(event.intervention_options[0], "repair ferry markers");
+    assert_eq!(super::regional_event_template(1).id, "river-thaw");
+}

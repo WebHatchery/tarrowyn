@@ -53,6 +53,8 @@ struct CropManifest {
 
 const CROPS_JSON: &str = include_str!("../../assets/data/crops.json");
 static CROP_CATALOG: OnceLock<Vec<CropManifest>> = OnceLock::new();
+const EVENTS_JSON: &str = include_str!("../../assets/data/events.json");
+static EVENT_CATALOG: OnceLock<Vec<EventManifest>> = OnceLock::new();
 
 #[derive(Debug, Deserialize)]
 struct ItemsManifest {
@@ -74,9 +76,23 @@ struct EventsManifest {
 #[derive(Debug, Deserialize)]
 struct EventManifest {
     id: String,
+    title: String,
     kind: String,
     stages: Vec<String>,
     affected_systems: Vec<String>,
+    effects: Vec<String>,
+    cause: String,
+    intervention_options: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct EventTemplate {
+    pub(crate) id: String,
+    pub(crate) title: String,
+    pub(crate) kind: String,
+    pub(crate) effects: Vec<String>,
+    pub(crate) cause: String,
+    pub(crate) intervention_options: Vec<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -175,6 +191,26 @@ pub(crate) fn crop_kind_for_seed(seed_index: u32) -> CropKind {
         "turnip" => CropKind::Turnip,
         "moonberry" => CropKind::Moonberry,
         _ => panic!("validated crop catalog contains an unsupported crop ID"),
+    }
+}
+
+pub(crate) fn regional_event_template(event_index: u64) -> EventTemplate {
+    let events = EVENT_CATALOG.get_or_init(|| {
+        let events: EventsManifest =
+            serde_json::from_str(EVENTS_JSON).expect("events content JSON must be valid");
+        validate_events(&events).expect("events content must satisfy its schema");
+        events.events
+    });
+    let event = events
+        .get(event_index as usize % events.len())
+        .expect("validated event catalog must not be empty");
+    EventTemplate {
+        id: event.id.clone(),
+        title: event.title.clone(),
+        kind: event.kind.clone(),
+        effects: event.effects.clone(),
+        cause: event.cause.clone(),
+        intervention_options: event.intervention_options.clone(),
     }
 }
 
@@ -278,9 +314,18 @@ fn validate_events(events: &EventsManifest) -> Result<(), String> {
     )?;
     if events.events.is_empty()
         || events.events.iter().any(|event| {
-            event.kind.trim().is_empty()
+            event.title.trim().is_empty()
+                || event.kind.trim().is_empty()
                 || event.stages.is_empty()
                 || event.affected_systems.is_empty()
+                || event.effects.is_empty()
+                || event.cause.trim().is_empty()
+                || event.intervention_options.is_empty()
+                || event.effects.iter().any(|effect| effect.trim().is_empty())
+                || event
+                    .intervention_options
+                    .iter()
+                    .any(|option| option.trim().is_empty())
                 || event.stages.iter().any(|stage| {
                     !matches!(
                         stage.as_str(),

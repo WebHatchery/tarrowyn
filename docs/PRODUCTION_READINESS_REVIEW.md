@@ -31,8 +31,9 @@ cannot observe a client after its connection disappears.
 After launch, content operations should add new routes, crops, contracts,
 events, households, and settlement opportunities through the validated JSON
 pipeline. The current validator protects the canonical manifests and their
-identifiers, and server planting consumes the validated crop order. Each new
-live simulation consumer still needs its own fixture and compatibility test
-before that content is treated as runtime-authoritative.
+identifiers, and server planting plus regional event seeding consume validated
+crop/event content. Each new live simulation consumer still needs its own
+fixture and compatibility test before that content is treated as
+runtime-authoritative.
 New content must preserve newcomer access, fallback services, and searchable
 chronicle history.
