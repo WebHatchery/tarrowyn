@@ -107,6 +107,10 @@ while retaining history; both operations remain replay-safe and audited.
 The failed-shipment repair fixture also proves that `ReconcileTrade` restores
 the owner's escrow, closes the failed order, records the regional repair, and
 returns the same response on a replay without paying the escrow twice.
+The stuck-travel repair fixture proves that `ClearStuckTravel` uses the
+journey's recorded origin instead of a hard-coded settlement, preserves the
+journey's cargo/reward boundary, records the repair, and rejects an already
+cleared journey.
 The provider secret and TLS termination remain deployment concerns and are not
 stored in the repository.
 

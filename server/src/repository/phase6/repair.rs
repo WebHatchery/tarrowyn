@@ -52,7 +52,9 @@ impl WorldRepository {
             .find(|(_, identity)| identity.account_id == target_account)
             .map(|(key, _)| key.clone());
         let (accepted, summary, reason) = match request.action {
-            SupportRepairAction::ClearStuckTravel => clear_stuck_travel(&mut state, target_key),
+            SupportRepairAction::ClearStuckTravel => {
+                super::super::phase5::clear_stuck_travel(&mut state, target_key)
+            }
             SupportRepairAction::NormalizeInventory => normalize_inventory(&mut state, target_key),
             SupportRepairAction::ReconcileTrade => super::super::phase5::reconcile_market_order(
                 &mut state,
@@ -91,28 +93,6 @@ impl WorldRepository {
             data: response,
         })
     }
-}
-
-fn clear_stuck_travel(
-    state: &mut RepositoryState,
-    target_key: Option<String>,
-) -> (bool, String, Option<String>) {
-    let Some(target_key) = target_key else {
-        return (
-            false,
-            String::new(),
-            Some("The target account is not present.".to_owned()),
-        );
-    };
-    state.phase5.travel.remove(&target_key);
-    if let Some(identity) = state.identities.get_mut(&target_key) {
-        identity.position = crate::content::region_location_profile("hearth").position;
-    }
-    (
-        true,
-        "Stuck travel cleared at the origin with cargo and rewards preserved.".to_owned(),
-        None,
-    )
 }
 
 fn normalize_inventory(

@@ -11,6 +11,7 @@ use tarrowyn_protocol::{
 };
 
 mod long_session;
+mod support_travel;
 
 #[test]
 fn backup_replaces_the_snapshot_as_one_complete_json_file() {
