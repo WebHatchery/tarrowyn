@@ -124,6 +124,11 @@ warning: 500 requests in 8,689.34 ms at 50 clients, and 1,000 requests in
 16,715.97 ms at 100 clients. Both crossed the current 32-open-order alert
 boundary; they demonstrate functional recovery under a monitored warning, not a
 supported several-hundred-player capacity.
+An additional 250-client single-round boundary probe also completed the same
+checks with the warning allowlisted: 2,500 requests in 82,299.85 ms, with 1,000
+accepted and 250 deterministic rejections. The long wall time is evidence that
+the current one-worker snapshot bridge has not met the GDD's several-hundred
+concurrent-player direction; the supported release target remains 24 clients.
 The standalone `scripts/phase6_failure_drill.ps1` also passed on the same date:
 it loaded the generated JSON backup into an isolated temporary server, confirmed
 readiness and a fresh backup, ran the regional Phase 5 tests, and left the active

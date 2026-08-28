@@ -36,6 +36,11 @@ relational design.
 Boundary probes also completed the same recovery path at 50 and 100 clients when
 the expected `market_backlog` alert was explicitly allowed; these runs are
 evidence for monitored operation, not for the several-hundred-player goal.
+The 250-client boundary probe also completed the recovery path with the same
+allowlist, but took 82,299.85 ms for 2,500 requests. That result is retained as
+capacity evidence against promoting the one-worker snapshot bridge to the
+GDD's several-hundred-player direction; the supported release target remains
+24 clients.
 The standalone JSON restore-on-a-copy drill also passed: it loaded the generated
 backup, confirmed readiness and a replacement backup, ran the regional Phase 5
 tests, and preserved the active state file.
