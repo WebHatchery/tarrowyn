@@ -493,7 +493,12 @@ DB_PASSWORD=
 
 The blank username and password in documentation are placeholders, not defaults. Credentials must never be committed, bundled with the client, printed in player-visible errors, or copied into browser artifacts. Production supplies the same settings through its secret-management environment rather than a committed file.
 
-The existing versioned JSON repository remains a development and migration source until the MySQL repository is implemented and passes migration, concurrency, backup, restore, and rollback validation. Selecting MySQL does not by itself make the current backend production-ready.
+The existing versioned JSON repository remains a deterministic development and
+restore companion. The MySQL bridge is implemented for shared preview and the
+selected production path, but public release still requires the target
+environment to pass migration, concurrent-write, backup, restore, failover,
+and rollback validation. Selecting MySQL does not by itself make the current
+deployment production-ready.
 
 ### Regional Chronicle
 
@@ -506,9 +511,24 @@ keep the player-facing feed small. Account deletion anonymises matching names
 in recent entries, archived entries, and retained event records while leaving
 the public event's historical shape intact.
 
-### Deliberately Unselected Technology
+### Selected Technology and Deployment Boundaries
 
-Networking library, rendering framework, protocol, deployment target, authentication provider, and hosting architecture are not yet locked. These should be chosen to suit the smallest slice rather than assumed by the design.
+The release candidate selects Rust for both the authoritative server and the
+2D client, Macroquad with the shared `macroquad-toolkit` for client runtime,
+rendering, grid, data-loading, and frame-polled HTTP support, and a versioned
+JSON protocol for server-owned requests and responses. The browser target is
+WebGL and the development desktop target is native Windows; both use the same
+authoritative server contract. MySQL is the durable shared-world backend,
+while the versioned JSON repository remains available for deterministic local
+fixtures and restore-on-a-copy drills.
+
+Production identity is an OIDC gateway boundary. The checked-in link fixture
+proves the character-preserving session and revocation contract, but the real
+provider, TLS termination, secret rotation, hosting topology, database
+failover, rollback, and any multi-worker regional decomposition remain
+deployment-owned gates rather than client assumptions. The current server
+enforces one MySQL world authority at a time until that later topology is
+designed and tested.
 
 ## 18. Smallest Multiplayer Slice
 
