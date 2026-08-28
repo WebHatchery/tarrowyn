@@ -2,7 +2,7 @@
 
 ## Game Design Document
 
-**Version:** 0.1 - Concept Foundation  
+**Version:** 0.2 - Classless Skill Discovery
 **Status:** Working design  
 **Platform/technology baseline:** 2D multiplayer client + authoritative server, developed in Rust
 
@@ -15,7 +15,8 @@
 | Working title | Locked for project | The Years of Tarrowyn |
 | Genre | Locked | Cozy slow-burn 2D MMORPG / persistent fantasy society |
 | Technology | Locked | Rust; separate authoritative server and client from the first slice |
-| Progression | Direction locked | Skill/credential based, horizontal, no conventional global level |
+| Progression | Direction locked | Classless, horizontal skill mastery with hidden skill mergers; no conventional global level |
+| Skill teaching | Direction locked | Players can form schools, share discoveries, and unlock direct teaching through teaching expertise |
 | World time | Direction locked | Roughly 3 real hours per in-game day; exact non-even duration TBD |
 | Normal defeat | Direction locked | Knockout with item/goods risk; no routine permanent character death |
 | Settlements | Direction locked | Organic growth and decline, potentially homestead to kingdom |
@@ -29,7 +30,7 @@
 
 ### High Concept
 
-The Years of Tarrowyn is a cozy, slow-burn 2D MMORPG about living in a persistent medieval fantasy society rather than racing through a conventional MMO progression ladder.
+The Years of Tarrowyn is a cozy, slow-burn, traditional 2D MMORPG about living in a persistent medieval fantasy society rather than racing through a conventional MMO progression ladder. It retains the familiar pleasures of inhabiting a shared world, fighting, gathering, crafting, trading, exploring, and building a reputation, but replaces fixed classes and a conventional level ladder with an open-ended skill system.
 
 Players may become farmers, craftspeople, traders, explorers, adventurers, community leaders, or drift between several callings. The world is intended to move on a long timescale: a remote homestead could eventually become a town or kingdom, while a once-busy settlement could decline and be abandoned if its community disappears.
 
@@ -50,6 +51,10 @@ Progress is measured across days, weeks, months, and eventually years. Large goa
 ### Veterans Become Broader, Not Infinitely Stronger
 
 Older characters accumulate skills, techniques, knowledge, relationships, property, reputation, and access. Raw combat power should remain compressed enough that new and veteran characters can still adventure together.
+
+### Discovery Replaces Class Choice
+
+Characters never choose a permanent class. They become distinctive through the skills they practise, the combinations they uncover, the experiences they accumulate, and the people from whom they learn. The system should reward experimentation and shared knowledge without requiring every player to follow a published optimal build.
 
 ### Professions Matter to Other Players
 
@@ -105,15 +110,65 @@ Seasons and years are intended to matter eventually, particularly for farming, l
 
 ## 5. Progression
 
-### No Conventional Character Level
+### No Classes or Conventional Character Level
 
-The game should avoid a single global level as the main measure of worth. Skills and credentials provide progression instead.
+The game has no class system and should avoid a single global level as the main measure of worth. A character is not a warrior, mage, or farmer because a creation-screen choice says so; the character becomes capable through practised skills, mastered techniques, credentials, discoveries, and relationships.
+
+Players may freely move between combat, magic, gathering, farming, crafting, social, exploratory, and civic skills. Earlier choices can create identity and opportunity costs, but should not permanently lock a character out of another path.
 
 ### Skill Progression
 
 Skills should unlock capabilities, techniques, specialisations, efficiency, quality, and breadth rather than only increasing numerical power.
 
 A numerical 1-100 skill treadmill should not simply recreate character levels under a different name. Skill mastery should increasingly depend on practice, teachers, discoveries, tools, demonstrations, and meaningful milestones.
+
+Individual skills begin with concrete activities or bodies of knowledge, such as Sword Fighting, Spear Fighting, Axe Fighting, Wind Magic, Water Magic, Electricity Magic, Crop Tending, Animal Husbandry, or Teaching. Mastery means demonstrated experience with that skill, not merely spending a generic point currency.
+
+### Hidden Skill Mergers
+
+Compatible skills can merge into broader, hybrid, or advanced skills. For example, mastering Sword Fighting, Spear Fighting, and Axe Fighting might reveal Weapon Fighting. Wind Magic plus Water Magic might reveal Storm Magic, while a more powerful storm discipline might also require Electricity Magic.
+
+These examples express the system's shape, not guaranteed launch recipes. A merger may require any combination of:
+
+- possession or mastery of prerequisite skills;
+- a particular amount or kind of practice, such as defeating 100 enemies or harvesting 1,000 crops;
+- performing the relevant skills in the same encounter, place, weather, season, or sequence;
+- a discovery, mentor, text, rare event, tool, material, reputation, or community achievement;
+- a server milestone or content release that makes the merger available in the world.
+
+A merged skill is a new capability rather than a replacement for its ingredients. The source skills retain their identity and uses. Mergers may themselves become ingredients in later mergers, allowing the content library to expand without adding classes or raising a global level cap.
+
+### Discovery and Secrecy
+
+The game does not publish a complete recipe list. Players should discover combinations through experimentation, observation, rumours, records, mentorship, and play. Requirements may be partly signposted so discovery feels mysterious but not arbitrary: a character can sense that two practices resonate, hear an NPC theory, or see progress described in natural language without receiving the entire formula.
+
+The server evaluates unlocks authoritatively and records the qualifying history needed by each character. Progress counters may be hidden, approximate, or revealed through suitable knowledge skills; the design should avoid turning every mystery into a visible checklist.
+
+Discovery belongs to the persistent world. Some valid-looking combinations may not exist yet. New content can add a merger later, at which point the server should evaluate existing character history where practical. A veteran who already satisfied durable requirements should not need to repeat years of play merely because the recipe was added later.
+
+Unknown combinations must fail gracefully. Experimenting should still exercise and improve the component skills where appropriate, rather than consuming rare resources solely to return an opaque failure message.
+
+### Balance and Combinatorial Control
+
+The merger system should be data-driven and expandable, but not generate every mathematical combination automatically. Designers add intentional mergers with a clear fantasy, gameplay role, prerequisite logic, and balance budget. This keeps discoveries meaningful and prevents the number of shallow skills from exploding.
+
+Advanced skills primarily add new options, synergies, mastery expression, and social value. They should not stack into unchecked numerical power. Prerequisite breadth, situational strengths, equipment needs, preparation, counters, and diminishing returns keep specialised veterans valuable without making newer players irrelevant.
+
+### Player Schools and Teaching
+
+Players can form schools devoted to a fighting tradition, magical discipline, craft, profession, philosophy, or unusual combination of skills. A school is a social institution rather than a class-selection interface. It can maintain membership, teachers, a physical hall or meeting place, lessons, records, reputation, and its own decision about which discoveries are public, reserved, traded, or taught only after a trial.
+
+At the basic level, players teach by sharing clues, demonstrating techniques, practising together, and helping a learner satisfy the normal merger requirements. Learning Teaching and developing it to a high level can unlock formal instruction. A qualified teacher may then teach certain advanced skills directly, bypassing some discovery steps, but not necessarily all mastery, experience, tool, moral, or world-state requirements.
+
+Direct teaching should require meaningful participation from both teacher and student and may take time, suitable facilities, materials, demonstrations, or repeated lessons. It must not become an instant menu transaction or a universal shortcut. Each skill definition specifies whether it is directly teachable, which requirements teaching can substitute for, and the minimum Teaching mastery and subject mastery required.
+
+Schools turn player knowledge into social and economic content. Renowned schools may recruit apprentices, charge tuition, exchange secrets, publish manuals, compete over doctrine, split into rival traditions, or become part of a settlement's identity. A school's greatest advantage is organised knowledge and trusted instruction, not exclusive permanent ownership of a skill.
+
+### Content Expansion Contract
+
+Skill content should be represented as server-owned definitions containing stable identifiers, prerequisites, qualifying counters or events, unlock rules, teaching rules, player-facing hints, and version information. Adding a merger must not require changing character classes or invalidating existing builds.
+
+The game may preserve a character's private discovery date, teacher or school lineage, and first-discovery context. World-first or school-first discoveries can become chronicle events when appropriate, but should not reveal the recipe automatically unless the discoverer chooses to share it.
 
 ### Adventurer Ranks
 
@@ -344,9 +399,9 @@ Players may discover agricultural practices, monster behaviours, recipes, routes
 
 ### Teaching and Records
 
-Knowledge can potentially be taught, written into books, kept in journals, traded, stored in guilds, or collected in libraries.
+Knowledge can be taught, written into books, kept in journals, traded, stored in guilds or schools, and collected in libraries. Records may contain anything from a vague clue to a complete method, depending on the author's knowledge and Teaching ability.
 
-The exact secrecy and discoverability model is open. The goal is for expertise to feel like lived experience.
+Skills and recipes are not automatically public merely because one player discovers them. The discoverer chooses whether to explain, demonstrate, sell, record, or conceal what they know, subject to the possibility that others discover it independently. The goal is for expertise to feel like lived experience and for knowledge communities to become part of server history.
 
 ### Reputation
 
@@ -466,6 +521,18 @@ Risk: population loss makes a town feel punished rather than historically dynami
 
 Countermeasure: decline is gradual, signposted, reversible, and creates vacancies, cheaper property, rebuilding goals, travelling services, and opportunities for new settlers.
 
+### Skill Discovery Becomes a Solved Build Guide
+
+Risk: external guides and data mining turn hidden mergers into a mandatory optimal path, undermining experimentation and player schools.
+
+Countermeasure: make many skills situational rather than strictly superior, support several routes to comparable capabilities, keep server-only conditions out of the client data, add new mergers over time, and let discoveries gain value from teachers, local history, reputation, and social context rather than secrecy alone. The game should remain enjoyable after a recipe becomes widely known.
+
+### Teaching Becomes Power Levelling
+
+Risk: direct instruction lets established schools instantly manufacture advanced characters or exclude everyone outside their network.
+
+Countermeasure: teaching substitutes only for explicitly allowed discovery steps. Learners still contribute time, practice, participation, and any non-teachable requirements; independent discovery always remains possible.
+
 ## 20. Open Design Questions
 
 ### Still Unresolved
@@ -475,7 +542,8 @@ Countermeasure: decline is gradual, signposted, reversible, and creates vacancie
 - Combat model and degree of action versus tactical play.
 - PvP, criminal behaviour, theft between players, and law enforcement.
 - World topology, shard structure, instancing, and maximum intended server population.
-- Exact skill trees, profession specialisation, teaching, and knowledge transfer rules.
+- Launch skill catalogue, exact hidden merger recipes, mastery thresholds, and how strongly hints expose partial progress.
+- School governance, lesson pacing, tuition safeguards, recipe ownership norms, and which requirements direct teaching may bypass.
 - Crafting interaction and how much player execution affects quality.
 - Government structure, elections, taxes, offices, and local authority.
 - Land lease length, renewal, inheritance, abandonment, and reclamation.

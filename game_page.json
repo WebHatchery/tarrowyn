@@ -5,7 +5,7 @@
   "status": { "text": "Phase 3", "class": "in-development" },
   "canvas_rendering": "pixelated",
   "about": [
-    "A playable shared-road settlement for a slow-burn fantasy MMORPG. Farm, trade, follow frontier contracts, recover from danger, read the settlement chronicle, and help establish the first outpost in a server-owned world."
+    "Build the first frontier outpost one day at a time. Farm, trade, take contracts, recover from danger, and leave your mark on a living shared world."
   ],
   "controls": [
     { "key": "Tap arrows", "desc": "Walk one tile" },
