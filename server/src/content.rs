@@ -2,6 +2,8 @@
 
 use serde::Deserialize;
 use std::collections::HashSet;
+use std::sync::OnceLock;
+use tarrowyn_protocol::CropKind;
 
 const REQUIRED_MANIFESTS: &[&str] = &[
     "game_config.json",
@@ -48,6 +50,9 @@ struct CropManifest {
     name: String,
     description: String,
 }
+
+const CROPS_JSON: &str = include_str!("../../assets/data/crops.json");
+static CROP_CATALOG: OnceLock<Vec<CropManifest>> = OnceLock::new();
 
 #[derive(Debug, Deserialize)]
 struct ItemsManifest {
@@ -155,6 +160,24 @@ pub fn validate() -> Result<(), String> {
     Ok(())
 }
 
+pub(crate) fn crop_kind_for_seed(seed_index: u32) -> CropKind {
+    let crops = CROP_CATALOG.get_or_init(|| {
+        let crops: Vec<CropManifest> =
+            serde_json::from_str(CROPS_JSON).expect("crops content JSON must be valid");
+        validate_crops(&crops).expect("crops content must satisfy its schema");
+        crops
+    });
+    let crop = crops
+        .get(seed_index as usize % crops.len())
+        .expect("validated crop catalog must not be empty");
+    match crop.id.as_str() {
+        "wheat" => CropKind::Wheat,
+        "turnip" => CropKind::Turnip,
+        "moonberry" => CropKind::Moonberry,
+        _ => panic!("validated crop catalog contains an unsupported crop ID"),
+    }
+}
+
 fn validate_schema(schema: &ContentSchemaManifest) -> Result<(), String> {
     if schema.schema_version == 0 || schema.compatibility.trim().is_empty() {
         return Err("content schema needs a positive version and compatibility rule".to_owned());
@@ -229,6 +252,17 @@ fn validate_crops(crops: &[CropManifest]) -> Result<(), String> {
             .any(|crop| crop.name.trim().is_empty() || crop.description.trim().is_empty())
     {
         return Err("crops need IDs, names, and descriptions".to_owned());
+    }
+    for required in ["wheat", "turnip", "moonberry"] {
+        if !crops.iter().any(|crop| crop.id == required) {
+            return Err(format!("crops are missing the launch crop {required}"));
+        }
+    }
+    if crops
+        .iter()
+        .any(|crop| !matches!(crop.id.as_str(), "wheat" | "turnip" | "moonberry"))
+    {
+        return Err("crops contain an ID without a protocol crop kind".to_owned());
     }
     Ok(())
 }

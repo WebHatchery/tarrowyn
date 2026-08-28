@@ -19,6 +19,8 @@ without limit.
 The release validator also parses the canonical action, crop, item, event,
 settlement, region, calendar, and game-config manifests with typed schemas and
 cross-reference checks; duplicate IDs and incompatible records fail startup.
+The server crop-rotation regression confirms planting follows the validated
+crop manifest rather than a separate hard-coded order.
 The Phase 5 fixture verifies that travel, market, event, household, identity,
 refresh, and revocation state survive the authoritative repository boundary.
 The selected MySQL bridge now has a checked-in migration, startup pool/migration

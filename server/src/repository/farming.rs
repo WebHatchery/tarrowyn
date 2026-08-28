@@ -160,11 +160,7 @@ impl WorldRepository {
                 Some("That field plot is already occupied.".to_owned()),
             );
         }
-        let kind = match identity.seeds_planted % 3 {
-            0 => CropKind::Wheat,
-            1 => CropKind::Turnip,
-            _ => CropKind::Moonberry,
-        };
+        let kind = crate::content::crop_kind_for_seed(identity.seeds_planted);
         identity.inventory.seeds -= 1;
         identity.seeds_planted += 1;
         state.plots[plot_index].crop = Some(CropState {
