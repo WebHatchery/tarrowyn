@@ -29,6 +29,9 @@ external alert routing. Preview connection settings belong in the ignored
 Those are explicit remaining risks, not hidden behind the game client. Client
 connection-failure alerting remains deployment/client-owned because the server
 cannot observe a client after its connection disappears.
+Boundary probes also completed the same recovery path at 50 and 100 clients when
+the expected `market_backlog` alert was explicitly allowed; these runs are
+evidence for monitored operation, not for the several-hundred-player goal.
 The standalone JSON restore-on-a-copy drill also passed: it loaded the generated
 backup, confirmed readiness and a replacement backup, ran the regional Phase 5
 tests, and preserved the active state file.

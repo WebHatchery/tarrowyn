@@ -54,7 +54,11 @@ It measures the mixed-load wall time, checks scheduled
 backup and operator metrics, waits for server-owned travel arrival, restarts the
 worker, and verifies the travelled location. The script removes its temporary
 state, backup, and process environment on completion. Pass `-ClientCount` or
-`-Rounds` to extend the fixture; the client target remains at least 24.
+`-Rounds` to extend the fixture; the client target remains at least 24. The
+default run rejects every operational alert. For an exploratory boundary run
+that intentionally exceeds the 32-open-order warning threshold, pass
+`-AllowedAlertFlags market_backlog`; any alert not explicitly allowed still
+fails the drill.
 
 ## Deploy, rollback, and maintenance
 

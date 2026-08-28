@@ -111,9 +111,12 @@ recovery. The result is evidence for the bounded 24-client regional target, not
 for multi-worker production concurrency or several-hundred-player capacity.
 Each round also includes a deliberate invalid movement probe so the rejection
 metric is deterministic rather than dependent on timing contention. Exploratory
-50- and 100-client single-round runs completed their mixed requests but raised
-the expected `market_backlog` alert once open orders exceeded the current
-32-order alert boundary; they do not establish a supported larger capacity.
+50- and 100-client single-round runs completed the full backup, arrival, metrics,
+restart, and recovery path when explicitly allowing the expected `market_backlog`
+warning: 500 requests in 8,689.34 ms at 50 clients, and 1,000 requests in
+16,715.97 ms at 100 clients. Both crossed the current 32-open-order alert
+boundary; they demonstrate functional recovery under a monitored warning, not a
+supported several-hundred-player capacity.
 The standalone `scripts/phase6_failure_drill.ps1` also passed on the same date:
 it loaded the generated JSON backup into an isolated temporary server, confirmed
 readiness and a fresh backup, ran the regional Phase 5 tests, and left the active

@@ -1,7 +1,8 @@
 param(
     [int]$ClientCount = 24,
     [int]$Rounds = 3,
-    [string]$ServerAddress = "127.0.0.1:8799"
+    [string]$ServerAddress = "127.0.0.1:8799",
+    [string[]]$AllowedAlertFlags = @()
 )
 
 $ErrorActionPreference = "Stop"
@@ -254,7 +255,8 @@ try {
     Assert-True ($metrics.data.completed_commands -gt 0) "completed command metrics did not advance"
     Assert-True ($metrics.data.rejected_commands -gt 0) "rejected command metrics did not advance"
     $alertFlags = @($metrics.data.alert_flags)
-    Assert-True ($alertFlags.Count -eq 0) ("the mixed load raised unexpected alerts: " + ($alertFlags -join ", "))
+    $unexpectedAlertFlags = @($alertFlags | Where-Object { $AllowedAlertFlags -notcontains $_ })
+    Assert-True ($unexpectedAlertFlags.Count -eq 0) ("the mixed load raised unexpected alerts: " + ($unexpectedAlertFlags -join ", "))
 
     Stop-Phase6Server $server
     $server = $null
@@ -267,8 +269,9 @@ try {
     Assert-True ($resumedRegion.data.travel.status -eq "arrived") "travel status was lost during restart"
     Assert-True ($restartHealth.data.ready -and $restartHealth.data.persistence_error -eq $null) "restart readiness reported a persistence failure"
 
-    Write-Host ("Phase 6 load test passed: {0} clients, {1} rounds, {2} requests, {3} accepted, {4} rejected, {5} ms mixed-load wall time; event, market, travel, tick, backup, metrics, and restart checks passed." -f `
-        $ClientCount, $Rounds, $load.requests, $load.accepted, $load.rejected, $load.elapsed_ms) -ForegroundColor Green
+    $alertSummary = if ($alertFlags.Count -eq 0) { "no operational alerts" } else { "allowed alerts: $($alertFlags -join ', ')" }
+    Write-Host ("Phase 6 load test passed: {0} clients, {1} rounds, {2} requests, {3} accepted, {4} rejected, {5} ms mixed-load wall time; event, market, travel, tick, backup, metrics, and restart checks passed ({6})." -f `
+        $ClientCount, $Rounds, $load.requests, $load.accepted, $load.rejected, $load.elapsed_ms, $alertSummary) -ForegroundColor Green
 } finally {
     if ($null -ne $server -and -not $server.HasExited) { Stop-Phase6Server $server }
     foreach ($name in $environmentNames) {

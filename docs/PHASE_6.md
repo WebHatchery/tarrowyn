@@ -84,8 +84,10 @@ Current measurement note: the isolated harness passes the supported 24-client
 regional target with a 250 ms tick, backup, travel arrival, metrics, and restart
 recovery. Exploratory 50- and 100-client single-round runs complete their mixed
 requests but raise the configured `market_backlog` alert after open orders pass
-32. The several-hundred-player zone goal therefore remains an explicit scale
-and topology gate, not an implied property of the current one-worker preview.
+32; when that one alert is explicitly allowed, both runs complete backup,
+arrival, metrics, restart, and recovery checks. The several-hundred-player zone
+goal therefore remains an explicit scale and topology gate, not an implied
+property of the current one-worker preview.
 
 ### Long-term world and content operations
 
