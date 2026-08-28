@@ -46,6 +46,18 @@ function Get-DescendantProcessIds([int]$parentId) {
     }
 }
 
+function Get-ServerWorkingSetBytes([System.Diagnostics.Process]$process) {
+    if ($null -eq $process) { return 0 }
+    $processIds = @($process.Id) + @(Get-DescendantProcessIds $process.Id) | Select-Object -Unique
+    $workingSet = [int64]0
+    foreach ($processId in $processIds) {
+        try {
+            $workingSet += [int64](Get-Process -Id $processId -ErrorAction Stop).WorkingSet64
+        } catch { }
+    }
+    return $workingSet
+}
+
 function Stop-Phase6Server([System.Diagnostics.Process]$process) {
     if ($null -eq $process) { return }
     $processIds = @(Get-DescendantProcessIds $process.Id) + $process.Id
@@ -268,6 +280,8 @@ try {
     Assert-True (Test-Path -LiteralPath $backupPath) "the scheduled backup was not written"
     $backup = Get-Content -Raw -LiteralPath $backupPath | ConvertFrom-Json
     Assert-True ($backup.storage_version -ge 20) "the load backup has an old storage version"
+    $serverWorkingSetBytes = Get-ServerWorkingSetBytes $server
+    Assert-True ($serverWorkingSetBytes -gt 0) "the load server working set could not be measured"
 
     $metrics = Invoke-RestMethod -Method Get -Uri "http://$ServerAddress/v1/ops/metrics" -Headers $headers
     Assert-True ($metrics.data.server_tick -gt 0) "the operational tick metric did not advance"
@@ -277,10 +291,13 @@ try {
     $unexpectedAlertFlags = @($alertFlags | Where-Object { $AllowedAlertFlags -notcontains $_ })
     Assert-True ($unexpectedAlertFlags.Count -eq 0) ("the mixed load raised unexpected alerts: " + ($unexpectedAlertFlags -join ", "))
 
+    $restartTimer = [System.Diagnostics.Stopwatch]::StartNew()
     Stop-Phase6Server $server
     $server = $null
     $server = Start-Phase6Server
     $restartHealth = Wait-Healthy
+    $restartTimer.Stop()
+    $restartRecoveryMs = [math]::Round($restartTimer.Elapsed.TotalMilliseconds, 2)
     $resumed = New-GuestSession "phase6-load-$runId-0" $false
     $resumedHeaders = @{ Authorization = "Bearer $($resumed.data.account_token)" }
     $resumedRegion = Invoke-RestMethod -Method Get -Uri "http://$ServerAddress/v1/region" -Headers $resumedHeaders
@@ -289,8 +306,9 @@ try {
     Assert-True ($restartHealth.data.ready -and $restartHealth.data.persistence_error -eq $null) "restart readiness reported a persistence failure"
 
     $alertSummary = if ($alertFlags.Count -eq 0) { "no operational alerts" } else { "allowed alerts: $($alertFlags -join ', ')" }
-    Write-Host ("Phase 6 load test passed: {0} clients, {1} rounds, {2} requests, {3} accepted, {4} rejected, {5} ms mixed-load wall time; event, market, travel, tick, backup, metrics, and restart checks passed ({6})." -f `
-        $ClientCount, $Rounds, $load.requests, $load.accepted, $load.rejected, $load.elapsed_ms, $alertSummary) -ForegroundColor Green
+    $workingSetMb = [math]::Round($serverWorkingSetBytes / 1MB, 2)
+    Write-Host ("Phase 6 load test passed: {0} clients, {1} rounds, {2} requests, {3} accepted, {4} rejected, {5} ms mixed-load wall time, {6} MB server working set, {7} ms restart recovery; event, market, travel, tick, backup, metrics, support-view, and restart checks passed ({8})." -f `
+        $ClientCount, $Rounds, $load.requests, $load.accepted, $load.rejected, $load.elapsed_ms, $workingSetMb, $restartRecoveryMs, $alertSummary) -ForegroundColor Green
 } finally {
     if ($null -ne $server -and -not $server.HasExited) { Stop-Phase6Server $server }
     foreach ($name in $environmentNames) {

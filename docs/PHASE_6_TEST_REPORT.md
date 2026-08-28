@@ -134,6 +134,10 @@ checks with the warning allowlisted: 2,500 requests in 82,299.85 ms, with 1,000
 accepted and 250 deterministic rejections. The long wall time is evidence that
 the current one-worker snapshot bridge has not met the GDD's several-hundred
 concurrent-player direction; the supported release target remains 24 clients.
+The latest 24-client baseline also recorded 57.02 MB of server working set
+after load and 2,741.30 ms from worker stop through restart readiness. These
+are repeatable local evidence fields, not production memory or recovery SLOs;
+the target deployment must establish those limits on its own hardware.
 The standalone `scripts/phase6_failure_drill.ps1` also passed on the same date:
 it loaded the generated JSON backup into an isolated temporary server, confirmed
 readiness and a fresh backup, ran the regional Phase 5 tests, and left the active

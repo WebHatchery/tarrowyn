@@ -43,6 +43,10 @@ allowlist, but took 82,299.85 ms for 2,500 requests. That result is retained as
 capacity evidence against promoting the one-worker snapshot bridge to the
 GDD's several-hundred-player direction; the supported release target remains
 24 clients.
+The latest 24-client baseline additionally recorded 57.02 MB of server working
+set after load and 2,741.30 ms from worker stop through restart readiness. These
+local measurements inform the target-environment gate but are not production
+memory or recovery SLOs.
 The standalone JSON restore-on-a-copy drill also passed: it loaded the generated
 backup, confirmed readiness and a replacement backup, ran the regional Phase 5
 tests, and preserved the active state file.
