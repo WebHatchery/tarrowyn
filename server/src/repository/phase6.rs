@@ -474,7 +474,7 @@ impl WorldRepository {
     }
 }
 
-pub(super) fn phase6_tick(state: &mut RepositoryState, config: &ServerConfig) {
+pub(super) fn phase6_tick(state: &mut RepositoryState, config: &ServerConfig) -> Option<bool> {
     trim_replay_cache(&mut state.phase6.auth_link_results);
     trim_replay_cache(&mut state.phase6.auth_refresh_results);
     trim_replay_cache(&mut state.phase6.auth_revoke_results);
@@ -492,7 +492,9 @@ pub(super) fn phase6_tick(state: &mut RepositoryState, config: &ServerConfig) {
     }
     state.phase6.audits.truncate(MAX_REPLAY_CACHE);
     if config.backup_interval_ticks > 0 && state.tick.is_multiple_of(config.backup_interval_ticks) {
-        backup::write(state, config);
+        Some(backup::write(state, config))
+    } else {
+        None
     }
 }
 

@@ -4,13 +4,13 @@ use crate::config::ServerConfig;
 use std::fs;
 use std::path::Path;
 
-pub(super) fn write(state: &mut RepositoryState, config: &ServerConfig) {
+pub(super) fn write(state: &mut RepositoryState, config: &ServerConfig) -> bool {
     let Some(path) = config
         .backup_path
         .as_deref()
         .or(config.persistence_path.as_deref())
     else {
-        return;
+        return true;
     };
     let backup_path = if config.backup_path.is_some() {
         path.to_owned()
@@ -18,12 +18,14 @@ pub(super) fn write(state: &mut RepositoryState, config: &ServerConfig) {
         format!("{path}.backup")
     };
     let Ok(data) = serde_json::to_vec_pretty(&state.to_stored()) else {
-        return;
+        eprintln!("Tarrowyn backup write failed: the snapshot could not be encoded");
+        return false;
     };
     let path = Path::new(&backup_path);
     if let Some(parent) = path.parent() {
         if fs::create_dir_all(parent).is_err() {
-            return;
+            eprintln!("Tarrowyn backup write failed: could not create the backup directory");
+            return false;
         }
     }
     let temporary_path = path.with_extension(format!(
@@ -36,7 +38,10 @@ pub(super) fn write(state: &mut RepositoryState, config: &ServerConfig) {
     if fs::write(&temporary_path, data).is_ok() && replace_file(&temporary_path, path).is_ok() {
         state.phase6.last_backup_tick = Some(state.tick);
         state.phase6.last_backup_path = Some(backup_path);
+        true
     } else {
         let _ = fs::remove_file(temporary_path);
+        eprintln!("Tarrowyn backup write failed: could not replace the backup snapshot");
+        false
     }
 }

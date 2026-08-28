@@ -3,7 +3,7 @@
 The lasting-realm gate is substantially represented in the release candidate:
 the regional authority is cursorable and recoverable; account linking,
 expiration, refresh, revocation, moderation reporting, support audit, health,
-metrics, backups, content validation, and touch recovery are present; and the
+metrics, backup-failure visibility, content validation, and touch recovery are present; and the
 calendar, topology, law, privacy, legacy, and operational decisions are
 written down.
 

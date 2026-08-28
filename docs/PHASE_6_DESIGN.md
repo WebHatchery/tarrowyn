@@ -49,8 +49,9 @@ the existing protocol and repository rules intact while the schema is being
 proven against a live environment.
 The server writes a scheduled backup to the configured backup path and reports
 the last successful tick through `/v1/ops/health`. A failed authoritative write
-degrades operator readiness and adds a safe persistence alert; raw storage
-errors remain in server logs rather than crossing the API boundary. Restore
+or scheduled backup degrades operator readiness and adds a safe persistence or
+backup alert; raw storage errors remain in server logs rather than crossing the
+API boundary. A later successful backup clears the backup failure state. Restore
 drills validate the backup as JSON before serving it as a named state path; a
 restore is never an in-place destructive command. Both JSON and MySQL refuse a
 snapshot from a newer server version, preventing an older rollback binary from

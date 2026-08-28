@@ -13,8 +13,12 @@ impl WorldRepository {
             .persistence_failed
             .lock()
             .expect("persistence status lock poisoned");
+        let backup_failed = *self
+            .backup_failed
+            .lock()
+            .expect("backup status lock poisoned");
         let integrity_ok = integrity_ok(&state);
-        let ready = integrity_ok && !persistence_failed;
+        let ready = integrity_ok && !persistence_failed && !backup_failed;
         ApiResponse {
             meta: meta(state.tick, None, Some(state.cursor)),
             data: OpsHealthResponse {
@@ -31,6 +35,10 @@ impl WorldRepository {
                 integrity_ok,
                 persistence_error: persistence_failed.then(|| {
                     "The latest authoritative persistence write failed; inspect server logs before admitting traffic."
+                        .to_owned()
+                }),
+                backup_error: backup_failed.then(|| {
+                    "The latest scheduled backup failed; inspect server logs before admitting traffic."
                         .to_owned()
                 }),
                 maintenance_message: self.config.maintenance_message.clone(),
@@ -61,6 +69,10 @@ impl WorldRepository {
             .persistence_failed
             .lock()
             .expect("persistence status lock poisoned");
+        let backup_failed = *self
+            .backup_failed
+            .lock()
+            .expect("backup status lock poisoned");
         Ok(ApiResponse {
             meta: meta(state.tick, None, Some(state.cursor)),
             data: OpsMetricsResponse {
@@ -98,7 +110,7 @@ impl WorldRepository {
                 rejected_commands: state.phase6.rejected_commands,
                 completed_commands: state.phase6.completed_commands,
                 average_tick_ms: self.config.tick_interval.as_millis() as u32,
-                alert_flags: alert_flags(&state, persistence_failed),
+                alert_flags: alert_flags(&state, persistence_failed, backup_failed),
             },
         })
     }
@@ -160,10 +172,17 @@ fn integrity_ok(state: &RepositoryState) -> bool {
             .all(|settlement| settlement.food <= 100 && settlement.safety <= 100)
 }
 
-fn alert_flags(state: &RepositoryState, persistence_failed: bool) -> Vec<String> {
+fn alert_flags(
+    state: &RepositoryState,
+    persistence_failed: bool,
+    backup_failed: bool,
+) -> Vec<String> {
     let mut flags = Vec::new();
     if persistence_failed {
         flags.push("persistence_write_failed".to_owned());
+    }
+    if backup_failed {
+        flags.push("backup_write_failed".to_owned());
     }
     if !integrity_ok(state) {
         flags.push("integrity_check_failed".to_owned());

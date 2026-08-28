@@ -135,6 +135,7 @@ pub struct OpsHealthResponse {
     pub last_backup_path: Option<String>,
     pub integrity_ok: bool,
     pub persistence_error: Option<String>,
+    pub backup_error: Option<String>,
     pub maintenance_message: Option<String>,
 }
 

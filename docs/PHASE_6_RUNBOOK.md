@@ -57,8 +57,8 @@ state, backup, and process environment on completion. Pass `-ClientCount` or
 
 ## Deploy, rollback, and maintenance
 
-1. Check `/v1/ops/health`, the last backup tick, and `persistence_error`; do not
-   admit traffic while readiness is degraded.
+1. Check `/v1/ops/health`, the last backup tick, `persistence_error`, and
+   `backup_error`; do not admit traffic while readiness is degraded.
 2. Announce a maintenance window through the client status message.
 3. Stop the worker only after the current persistence write completes.
 4. Deploy the immutable release artifact and run the readiness check. For a

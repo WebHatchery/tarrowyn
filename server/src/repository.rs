@@ -27,6 +27,7 @@ mod phase3_frontier;
 mod phase4;
 mod phase5;
 mod phase6;
+mod session;
 mod skills;
 mod trades;
 mod world;
@@ -34,6 +35,7 @@ pub(crate) use skills::validate_catalog as validate_skill_catalog;
 
 use models::{Identity, RepositoryState, Session};
 use persistence::PersistenceBackend;
+use session::{authenticate, expire_sessions, presence, sorted_presences};
 
 #[derive(Debug, Clone)]
 pub struct RepositoryError {
@@ -61,6 +63,7 @@ pub struct WorldRepository {
     storage: PersistenceBackend,
     state: Mutex<RepositoryState>,
     persistence_failed: Mutex<bool>,
+    backup_failed: Mutex<bool>,
 }
 
 impl WorldRepository {
@@ -77,6 +80,7 @@ impl WorldRepository {
             storage,
             state: Mutex::new(state),
             persistence_failed: Mutex::new(false),
+            backup_failed: Mutex::new(false),
         };
         let mut state = repository
             .state
@@ -551,7 +555,12 @@ impl WorldRepository {
         world::grow_plots(&mut state, &self.config);
         trades::expire_trades(&mut state);
         phase3::tick(&mut state, &self.config);
-        phase4::phase4_tick(&mut state, &self.config);
+        if let Some(backup_ok) = phase4::phase4_tick(&mut state, &self.config) {
+            *self
+                .backup_failed
+                .lock()
+                .expect("backup status lock poisoned") = !backup_ok;
+        }
         let clock = state.clock.clone();
         push_event(&mut state, WorldEvent::Clock(clock));
         expire_sessions(&mut state, &self.config);
@@ -593,91 +602,6 @@ pub(super) fn record_command_outcome(state: &mut RepositoryState, accepted: bool
     *counter = counter.saturating_add(1);
 }
 
-fn authenticate(
-    state: &mut RepositoryState,
-    token: &str,
-    config: &ServerConfig,
-) -> Result<String, RepositoryError> {
-    let Some(session) = state.sessions.get(token) else {
-        return Err(RepositoryError::unauthorized());
-    };
-    let expired = state
-        .phase6
-        .sessions
-        .get(token)
-        .map(|production| production.revoked || production.expires_at_tick <= state.tick)
-        .unwrap_or_else(|| {
-            state.tick.saturating_sub(session.last_seen_tick) > config.session_ttl_ticks()
-        });
-    if expired {
-        state.sessions.remove(token);
-        return Err(RepositoryError::unauthorized());
-    }
-    let key = session.identity_key.clone();
-    state
-        .identities
-        .get_mut(&key)
-        .expect("identity exists")
-        .last_seen_tick = state.tick;
-    state
-        .sessions
-        .get_mut(token)
-        .expect("session exists")
-        .last_seen_tick = state.tick;
-    Ok(key)
-}
-
-fn expire_sessions(state: &mut RepositoryState, config: &ServerConfig) {
-    let expired: Vec<String> = state
-        .sessions
-        .iter()
-        .filter(|(token, session)| {
-            state
-                .phase6
-                .sessions
-                .get(*token)
-                .map(|production| production.revoked || production.expires_at_tick <= state.tick)
-                .unwrap_or_else(|| {
-                    state.tick.saturating_sub(session.last_seen_tick) > config.session_ttl_ticks()
-                })
-        })
-        .map(|(token, _)| token.clone())
-        .collect();
-    for token in expired {
-        if let Some(session) = state.sessions.remove(&token) {
-            if let Some(identity) = state.identities.get(&session.identity_key) {
-                let event = WorldEvent::Presence(presence(identity, state.tick, false));
-                push_event(state, event);
-            }
-        }
-    }
-}
-
-fn sorted_presences(state: &RepositoryState) -> Vec<PlayerPresence> {
-    let mut players: Vec<_> = state
-        .sessions
-        .values()
-        .filter_map(|session| {
-            state
-                .identities
-                .get(&session.identity_key)
-                .map(|identity| presence(identity, session.last_seen_tick, true))
-        })
-        .collect();
-    players.sort_by(|left, right| left.character_id.cmp(&right.character_id));
-    players
-}
-
-fn presence(identity: &Identity, last_seen_tick: u64, online: bool) -> PlayerPresence {
-    PlayerPresence {
-        account_id: identity.account_id.clone(),
-        character_id: identity.character_id.clone(),
-        display_name: identity.display_name.clone(),
-        position: identity.position,
-        last_seen_tick,
-        online,
-    }
-}
 pub(super) fn player_projection(state: &RepositoryState, key: &str) -> PlayerProjection {
     let identity = state.identities.get(key).expect("identity exists");
     let (adventurer_rank, adventurer_credentials) = adventurer::profile(state, key);
