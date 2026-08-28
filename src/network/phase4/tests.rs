@@ -95,6 +95,30 @@ fn guard_button_queues_an_explicit_local_defense() {
 }
 
 #[test]
+fn technique_button_queues_an_explicit_opening() {
+    let mut client = Phase4Client::new();
+    client.combat = Some(LocalCombatState {
+        encounter_id: "whisperwood-local-1".to_owned(),
+        enemy_name: "Brambleback scout".to_owned(),
+        enemy_health: 3,
+        player_health: 2,
+        turn: 0,
+        status: tarrowyn_protocol::LocalCombatStatus::Engaged,
+        weapon: WeaponKind::IronSword,
+        injury_limit: 3,
+        stored_property_safe: true,
+        carried_risk: "A seed may be risked.".to_owned(),
+        recovery_cost: 4,
+    });
+    client.queue_cycle("technique", "technique-1".to_owned());
+    let Some(Phase4Command::Combat(request)) = client.commands.pop_front() else {
+        panic!("technique should queue a local combat request");
+    };
+    assert_eq!(request.action, LocalCombatAction::Technique);
+    assert_eq!(request.weapon, WeaponKind::IronSword);
+}
+
+#[test]
 fn school_button_joins_an_open_lesson_for_the_learner() {
     let mut client = Phase4Client::new();
     client.own_account_id = Some("learner-1".to_owned());

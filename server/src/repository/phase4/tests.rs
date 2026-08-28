@@ -489,6 +489,7 @@ fn local_combat_has_readable_recovery_and_safe_storage_rules() {
         .unwrap()
         .data;
     assert!(prepared.accepted);
+    assert!(prepared.prompt.contains("TECHNIQUE"));
     let guarded = repo
         .local_combat(
             &session.account_token,
@@ -531,6 +532,65 @@ fn local_combat_has_readable_recovery_and_safe_storage_rules() {
         tarrowyn_protocol::LocalCombatStatus::Victorious
     );
     assert!(second.combat.stored_property_safe);
+}
+
+#[test]
+fn local_combat_accepts_one_opening_weapon_technique() {
+    let repo = WorldRepository::new(ServerConfig {
+        movement_cooldown_ticks: 0,
+        ..ServerConfig::default()
+    });
+    let session = guest(&repo, "phase4-technique");
+    for (index, (dx, dy)) in [(1, 0), (1, 0), (0, -1), (0, -1)].into_iter().enumerate() {
+        repo.movement(
+            &session.account_token,
+            tarrowyn_protocol::MovementIntent {
+                request_id: format!("technique-move-{index}"),
+                dx,
+                dy,
+            },
+        )
+        .unwrap();
+    }
+    repo.local_combat(
+        &session.account_token,
+        LocalCombatRequest {
+            request_id: "technique-prepare".to_owned(),
+            action: LocalCombatAction::Prepare,
+            weapon: WeaponKind::IronSword,
+        },
+    )
+    .unwrap();
+    let technique = repo
+        .local_combat(
+            &session.account_token,
+            LocalCombatRequest {
+                request_id: "technique-opening".to_owned(),
+                action: LocalCombatAction::Technique,
+                weapon: WeaponKind::IronSword,
+            },
+        )
+        .unwrap()
+        .data;
+    assert!(technique.accepted);
+    assert_eq!(technique.combat.enemy_health, 1);
+    assert_eq!(technique.combat.turn, 1);
+    assert!(technique.prompt.contains("technique"));
+
+    let repeated = repo
+        .local_combat(
+            &session.account_token,
+            LocalCombatRequest {
+                request_id: "technique-repeated".to_owned(),
+                action: LocalCombatAction::Technique,
+                weapon: WeaponKind::IronSword,
+            },
+        )
+        .unwrap()
+        .data;
+    assert!(!repeated.accepted);
+    assert_eq!(repeated.combat.turn, 1);
+    assert!(repeated.reason.unwrap().contains("opening"));
 }
 
 #[test]

@@ -129,6 +129,7 @@ pub(super) fn draw_sidebar(
     for (index, (id, label)) in [
         ("contract", "Contract"),
         ("strike", "Strike"),
+        ("technique", "Technique"),
         ("recover", "Recover"),
         ("claim", "Claim"),
     ]
@@ -137,9 +138,9 @@ pub(super) fn draw_sidebar(
     {
         if virtual_button(
             Rect::new(
-                content.x + index as f32 * 88.0,
+                content.x + index as f32 * 73.0,
                 content.y + 379.0,
-                82.0,
+                69.0,
                 24.0,
             ),
             label,

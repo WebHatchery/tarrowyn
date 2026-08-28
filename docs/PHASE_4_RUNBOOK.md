@@ -84,8 +84,9 @@ In the online client, use only visible controls:
    second client to verify that a taught item appears after transfer.
 5. Tap `Households` and read the service clue before changing road or service
    conditions.
-6. Walk near Whisperwood, tap `Local fight`, and use the visible button to
-   prepare and strike. Tap the existing `Recover` control after a knockout.
+6. Walk near Whisperwood, tap `Local fight`, and use the visible buttons to
+   prepare, try the first-exchange `Technique`, then strike or guard. Tap the
+   existing `Recover` control after a knockout.
 
 `Reconnect` is the recovery path for timeouts and rejected commands; no step in
 this checklist requires a physical keyboard.

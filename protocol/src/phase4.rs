@@ -481,6 +481,7 @@ pub struct HouseholdsResponse {
 pub enum LocalCombatAction {
     Prepare,
     Strike,
+    Technique,
     Guard,
     Retreat,
 }

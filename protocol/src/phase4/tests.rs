@@ -30,6 +30,9 @@ fn phase_four_wire_types_keep_actions_and_costs_explicit() {
     let tax_json = serde_json::to_string(&tax_request).unwrap();
     assert!(tax_json.contains("set_tax_rate"));
     assert!(tax_json.contains("tax_rate_percent"));
+
+    let technique_json = serde_json::to_string(&LocalCombatAction::Technique).unwrap();
+    assert_eq!(technique_json, "\"technique\"");
 }
 
 #[test]

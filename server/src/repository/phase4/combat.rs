@@ -79,7 +79,7 @@ impl super::super::WorldRepository {
                     combat.weapon = request.weapon;
                     response.accepted = true;
                     response.prompt = format!(
-                        "The encounter is ready with the {}. Tap STRIKE or RETREAT.",
+                        "The encounter is ready with the {}. Tap TECHNIQUE, STRIKE, GUARD, or RETREAT.",
                         request.weapon.label()
                     );
                 } else {
@@ -87,7 +87,7 @@ impl super::super::WorldRepository {
                     combat.weapon = request.weapon;
                     response.accepted = true;
                     response.prompt = format!(
-                        "The local threat is watching your {}. Tap STRIKE or RETREAT.",
+                        "The local threat is watching your {}. Tap TECHNIQUE, STRIKE, GUARD, or RETREAT.",
                         request.weapon.label()
                     );
                 }
@@ -123,14 +123,23 @@ impl super::super::WorldRepository {
                             .to_owned();
                 }
             }
-            LocalCombatAction::Strike => {
+            LocalCombatAction::Strike | LocalCombatAction::Technique => {
                 if combat.status != LocalCombatStatus::Engaged {
                     response.reason =
                         Some("Prepare the local encounter before striking.".to_owned());
+                } else if request.action == LocalCombatAction::Technique && combat.turn > 0 {
+                    response.reason = Some(
+                        "The opening for that weapon technique has passed; choose STRIKE or GUARD."
+                            .to_owned(),
+                    );
                 } else {
                     combat.weapon = request.weapon;
                     combat.turn = combat.turn.saturating_add(1);
-                    let damage = request.weapon.damage().clamp(1, 2);
+                    let damage = if request.action == LocalCombatAction::Technique {
+                        technique_damage(request.weapon)
+                    } else {
+                        request.weapon.damage().clamp(1, 2)
+                    };
                     combat.enemy_health = combat.enemy_health.saturating_sub(damage);
                     if combat.enemy_health == 0 {
                         combat.status = LocalCombatStatus::Victorious;
@@ -183,6 +192,12 @@ impl super::super::WorldRepository {
                             response.accepted = true;
                             response.prompt = "The threat answered. Your bounded injury is visible; STRIKE again or RETREAT.".to_owned();
                         }
+                    } else if request.action == LocalCombatAction::Technique {
+                        response.accepted = true;
+                        response.prompt = format!(
+                            "Your {} technique opens the threat's guard. Choose STRIKE, GUARD, or RETREAT.",
+                            request.weapon.label()
+                        );
                     } else {
                         response.accepted = true;
                         response.prompt = format!(
@@ -222,5 +237,13 @@ fn default_combat() -> LocalCombatState {
         carried_risk: "At most one carried seed is risked on knockout; the choice is shown first."
             .to_owned(),
         recovery_cost: 4,
+    }
+}
+
+fn technique_damage(weapon: WeaponKind) -> u8 {
+    match weapon {
+        WeaponKind::Spear | WeaponKind::Axe => 3,
+        WeaponKind::IronSword | WeaponKind::Bow => 2,
+        WeaponKind::Shield | WeaponKind::ImprovisedClub => 1,
     }
 }

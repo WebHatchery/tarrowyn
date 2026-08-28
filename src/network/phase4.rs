@@ -237,6 +237,7 @@ impl Phase4Client {
             "order" => self.queue_order(request_id),
             "knowledge" => self.queue_knowledge(request_id),
             "local-fight" => self.queue_combat(request_id),
+            "technique" => self.queue_combat_action(request_id, LocalCombatAction::Technique),
             "guard" => self.queue_combat_action(request_id, LocalCombatAction::Guard),
             "practice" => {
                 self.queue_skill_practice(request_id);
