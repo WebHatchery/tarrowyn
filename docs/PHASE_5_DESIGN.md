@@ -16,6 +16,10 @@ for the small regional fixture. A player retains the origin location while a
 travel record is `Travelling` or `Interrupted`; only the server tick may move
 the character to the destination. A reconnect reads the same durable travel
 record and event cursor. Repeating a request ID returns the original response.
+The client advances the regional event stream from the returned cursor and
+merges changed event records by stable event ID, so a stage transition does
+not erase earlier regional history. If a restore moves the cursor backward,
+the regional stream drops its cache and restarts from cursor zero.
 
 The three routes are a threatened north pack road, an operational Saltmere
 ferry, and a delayed frontier watch trail. Repair, escort, and improvement are

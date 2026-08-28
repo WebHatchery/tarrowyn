@@ -11,6 +11,7 @@ use tarrowyn_protocol::{
     SkillResponse, SkillStatus, SkillsResponse, WeaponKind,
 };
 
+mod recovery;
 mod summary;
 
 enum Phase4Command {

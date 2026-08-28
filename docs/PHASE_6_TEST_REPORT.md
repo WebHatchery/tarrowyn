@@ -157,7 +157,8 @@ The shared client recovery tests also cover the restore-era `cursor_ahead`
 boundary. Structured API errors remain identifiable through the shared native
 and browser HTTP paths; the client clears stale cursor-derived projections and
 schedules a fresh authoritative state/history load without dropping to the
-generic disconnected state.
+generic disconnected state. Regional event tests also pin cursor advancement,
+stable-ID stage merging, and cache reset after a restore.
 
 ## Long-session gate and remaining risks
 

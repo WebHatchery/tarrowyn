@@ -129,13 +129,7 @@ impl Phase5Client {
             notices,
             "market telemetry",
         );
-        poll(
-            &mut self.pending_events,
-            dt,
-            |response| self.events = Some(response.data),
-            notices,
-            "regional events",
-        );
+        self.poll_events(dt, notices);
         poll(
             &mut self.pending_law,
             dt,
@@ -193,7 +187,12 @@ impl Phase5Client {
                 self.pending_market = Some(api.get("/v1/market/orders"));
             }
             if self.pending_events.is_none() {
-                self.pending_events = Some(api.get("/v1/events/region?since=0"));
+                let cursor = self
+                    .events
+                    .as_ref()
+                    .map(|events| events.cursor)
+                    .unwrap_or(0);
+                self.pending_events = Some(api.get(&format!("/v1/events/region?since={cursor}")));
             }
             if self.pending_law.is_none() {
                 self.pending_law = Some(api.get("/v1/law"));
@@ -510,6 +509,7 @@ impl Phase5Client {
         self.pending_refresh = None;
         self.pending_command = None;
         self.commands.clear();
+        self.events = None;
         self.account = None;
         self.linked_account = None;
         self.refreshed_session = None;
@@ -518,6 +518,12 @@ impl Phase5Client {
         self.deletion_armed = false;
         self.refresh_timer = 0.0;
         self.auth_refresh_timer = f32::MAX;
+    }
+
+    pub(super) fn reset_event_cursor(&mut self) {
+        self.pending_events = None;
+        self.events = None;
+        self.refresh_timer = 0.0;
     }
 
     pub(super) fn take_linked_account(
@@ -688,6 +694,53 @@ fn poll<T, F>(
             ))),
         }
     }
+}
+
+impl Phase5Client {
+    fn poll_events(&mut self, dt: f32, notices: &mut Vec<NetworkNotice>) {
+        let result = self
+            .pending_events
+            .as_mut()
+            .and_then(|pending| pending.poll_timed(dt, REQUEST_TIMEOUT_SECONDS));
+        let Some(result) = result else { return };
+        self.pending_events = None;
+        match result {
+            Ok(response) => merge_regional_events(&mut self.events, response.data),
+            Err(error) if super::cursor::is_cursor_ahead_error(&error) => {
+                self.reset_event_cursor();
+                notices.push(NetworkNotice::Warning(
+                    "The regional history was restored; reloading its latest events.".to_owned(),
+                ));
+            }
+            Err(error) => notices.push(NetworkNotice::Warning(format!(
+                "The regional events could not be refreshed: {}",
+                short_error(&error)
+            ))),
+        }
+    }
+}
+
+fn merge_regional_events(
+    current: &mut Option<RegionalEventsResponse>,
+    incoming: RegionalEventsResponse,
+) {
+    let Some(current) = current else {
+        *current = Some(incoming);
+        return;
+    };
+    current.cursor = incoming.cursor;
+    for event in incoming.events {
+        if let Some(existing) = current
+            .events
+            .iter_mut()
+            .find(|existing| existing.event_id == event.event_id)
+        {
+            *existing = event;
+        } else {
+            current.events.push(event);
+        }
+    }
+    current.events.sort_by_key(|event| event.cursor);
 }
 
 fn phase5_notice(

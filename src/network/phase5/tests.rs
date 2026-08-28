@@ -92,6 +92,83 @@ fn account_deletion_response_selects_its_own_command_variant() {
     assert!(matches!(response, Phase5CommandResponse::Delete(_)));
 }
 
+#[test]
+fn regional_event_cursor_merges_updates_without_dropping_known_events() {
+    let mut current = Some(RegionalEventsResponse {
+        events: vec![regional_event(
+            "event-1",
+            tarrowyn_protocol::RegionalEventStage::Signal,
+            4,
+        )],
+        cursor: 4,
+    });
+    merge_regional_events(
+        &mut current,
+        RegionalEventsResponse {
+            events: vec![
+                regional_event(
+                    "event-1",
+                    tarrowyn_protocol::RegionalEventStage::Escalation,
+                    7,
+                ),
+                regional_event("event-2", tarrowyn_protocol::RegionalEventStage::Signal, 8),
+            ],
+            cursor: 8,
+        },
+    );
+
+    let current = current.expect("regional events should remain cached");
+    assert_eq!(current.cursor, 8);
+    assert_eq!(current.events.len(), 2);
+    assert_eq!(current.events[0].event_id, "event-1");
+    assert_eq!(
+        current.events[0].stage,
+        tarrowyn_protocol::RegionalEventStage::Escalation
+    );
+    assert_eq!(current.events[1].event_id, "event-2");
+}
+
+#[test]
+fn regional_cursor_reset_discards_stale_events_and_restarts_refresh() {
+    let mut client = Phase5Client::new();
+    client.events = Some(RegionalEventsResponse {
+        events: vec![regional_event(
+            "event-1",
+            tarrowyn_protocol::RegionalEventStage::Aftermath,
+            9,
+        )],
+        cursor: 9,
+    });
+    client.refresh_timer = 3.0;
+
+    client.reset_event_cursor();
+
+    assert!(client.events.is_none());
+    assert_eq!(client.refresh_timer, 0.0);
+}
+
+fn regional_event(
+    event_id: &str,
+    stage: tarrowyn_protocol::RegionalEventStage,
+    cursor: u64,
+) -> tarrowyn_protocol::RegionalEvent {
+    tarrowyn_protocol::RegionalEvent {
+        event_id: event_id.to_owned(),
+        title: "The thaw road".to_owned(),
+        kind: "weather".to_owned(),
+        stage,
+        affected_location_ids: vec!["hearth".to_owned()],
+        effects: vec!["supply".to_owned()],
+        cause: "A hard thaw".to_owned(),
+        intervention_options: vec!["repair ferry markers".to_owned()],
+        chosen_intervention: None,
+        outcome: None,
+        started_tick: 1,
+        updated_tick: 2,
+        cursor,
+    }
+}
+
 fn account_response(guest_fixture: bool) -> tarrowyn_protocol::AccountResponse {
     let account_id = if guest_fixture {
         "guest-1"

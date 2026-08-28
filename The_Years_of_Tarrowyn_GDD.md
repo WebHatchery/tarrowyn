@@ -504,7 +504,9 @@ The client treats a restore-invalidated event cursor as a recoverable boundary:
 the shared toolkit preserves the server error code, and the client discards
 stale cursor-derived projections before reloading authoritative state and
 history from cursor zero. A restore must never turn cached history into a new
-reward.
+reward. The regional event view follows the same cursor contract, merging
+stage updates by stable event ID and restarting from cursor zero when a restore
+invalidates its cached regional cursor.
 
 ### Regional Chronicle
 

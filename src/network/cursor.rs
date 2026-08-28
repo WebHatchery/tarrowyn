@@ -15,6 +15,7 @@ pub(super) fn recover_from_restore(client: &mut OnlineClient, notices: &mut Vec<
     client.pending_trades = None;
     client.trades.clear();
     client.state_refresh = 0.0;
+    client.phase4.recover_regional_cursor();
     client.frontier.clear();
     client.status_message =
         "The shared road was restored; reloading the latest history…".to_owned();
