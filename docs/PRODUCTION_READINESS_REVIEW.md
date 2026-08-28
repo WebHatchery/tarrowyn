@@ -45,7 +45,8 @@ launch wilderness threat consume validated contract/threat content, while
 route topology, season labels, and location roles/resources consume validated
 region content, including location presentation and route tuning. Opportunity
 and regional household projections consume validated household content.
-Infrastructure projections consume validated infrastructure content. Each live
+Infrastructure projections consume validated infrastructure content, and the
+field-tool repair order consumes validated recipe content. Each live
 simulation consumer, including the fixed Bellweather household, has its own
 fixture and compatibility test before future content is treated as
 runtime-authoritative. General NPC family simulation remains a documented GDD

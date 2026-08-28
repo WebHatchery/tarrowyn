@@ -12,6 +12,7 @@
     "households.json",
     "infrastructure.json",
     "npc_households.json",
+    "recipes.json",
     "settlements.json",
     "skills.json"
   ],

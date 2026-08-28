@@ -1,0 +1,14 @@
+{
+  "recipes": [
+    {
+      "id": "field-tool-repair",
+      "name": "Field tool repair",
+      "profession": "carpenter",
+      "service": "Repair a field tool",
+      "materials": {"wood": 1, "iron": 1, "cloth": 0, "bandages": 0, "tools": 0},
+      "tools_required": 1,
+      "reward_gold": 5,
+      "benefit": "The requesting farmer receives a reliable tool and a visible quality improvement."
+    }
+  ]
+}

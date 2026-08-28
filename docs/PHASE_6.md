@@ -87,6 +87,11 @@ drills; the JSON backend remains the deterministic default for local fixtures.
 - Add a data-driven content pipeline for crops, items, contracts, threats,
   recipes, households, settlements, and events with schema validation and
   compatibility checks.
+
+Current implementation note: the checked-in pipeline now validates and serves
+typed crop, item, contract, threat, recipe, household, settlement, infrastructure,
+NPC-household, event, region, calendar, and farm-plot content. The remaining
+content work is expansion and pacing validation, not a missing launch manifest.
 - Define how chronicle history is retained, summarised, archived, searched,
   and displayed after years of events without making old player achievements
   disappear.

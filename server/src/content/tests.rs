@@ -185,3 +185,17 @@ fn fixed_npc_households_follow_the_validated_manifest() {
     assert_eq!(household.service_quality, 72);
     assert_eq!(household.demand, 60);
 }
+
+#[test]
+fn recipes_follow_the_validated_manifest() {
+    let recipe = super::recipe_template("field-tool-repair");
+    assert_eq!(recipe.name, "Field tool repair");
+    assert_eq!(
+        recipe.profession,
+        tarrowyn_protocol::ProfessionKind::Carpenter
+    );
+    assert_eq!(recipe.materials.wood, 1);
+    assert_eq!(recipe.materials.iron, 1);
+    assert_eq!(recipe.tools_required, 1);
+    assert_eq!(recipe.reward_gold, 5);
+}

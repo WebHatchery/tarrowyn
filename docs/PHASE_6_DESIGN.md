@@ -85,7 +85,7 @@ provider subjects, or other secrets.
 The checked-in content contract is validated twice at release boundaries: the
 PowerShell gate requires the canonical manifest set to be present and valid
 JSON, while server startup parses typed action, crop, item, event, settlement,
-region, household, infrastructure, NPC-household, calendar, and game-config
+region, household, infrastructure, NPC-household, recipe, calendar, and game-config
 records and rejects duplicate IDs, incomplete
 records, unknown route or settlement locations, invalid event stages, and a
 day-length mismatch. The validator protects future content additions; wiring
@@ -97,7 +97,9 @@ now covers every traded commodity. Regional season labels now also follow the
 calendar sequence and season length; the configured real-time day length still
 belongs to the server deployment boundary. Route transport, endpoint topology,
 location roles, resources, names, services, positions, route tuning, and the
-shared farm-plot positions now follow the validated region manifest. The repeatable Brambleback
+shared farm-plot positions now follow the validated region manifest. The launch
+field-tool repair order now consumes a typed recipe manifest for its material,
+tool, reward, and benefit values. The repeatable Brambleback
 contract now consumes a typed contract manifest for its narrative, target,
 required progress, and reward curve. The launch wilderness threat now consumes
 a typed threat manifest for its identity, monster, position, health, risk

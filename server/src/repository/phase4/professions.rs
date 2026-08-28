@@ -85,37 +85,34 @@ impl super::super::WorldRepository {
                 }
             }
             ProfessionAction::CreateOrder => {
-                let profession = request.profession.unwrap_or(ProfessionKind::Carpenter);
+                let recipe = crate::content::recipe_template("field-tool-repair");
+                let profession = request.profession.unwrap_or(recipe.profession);
                 let stock = state
                     .phase4
                     .materials
                     .get_mut(&key)
                     .expect("materials exist");
-                let required = MaterialStock {
-                    wood: 1,
-                    iron: 1,
-                    ..MaterialStock::default()
-                };
-                if !has_materials(*stock, required) || stock.tools < 1 {
+                let required = recipe.materials;
+                if !has_materials(*stock, required) || stock.tools < recipe.tools_required {
                     response.reason = Some(
                         "This order shows its wood, iron, and tool requirements before creation."
                             .to_owned(),
                     );
                 } else {
                     subtract_materials(stock, required);
-                    stock.tools -= 1;
+                    stock.tools -= recipe.tools_required;
                     let order = ServiceOrder {
                         order_id: format!("service-order-{}", state.phase4.next_order_id),
                         requester_account_id: account_id(&state, &key),
                         requester_name: account_name(&state, &key),
                         provider_account_id: None,
                         provider_name: None,
-                        service: request.service.unwrap_or_else(|| "Repair a field tool".to_owned()),
+                        service: request.service.unwrap_or_else(|| recipe.service.clone()),
                         required_profession: profession,
                         materials: required,
-                        tools_required: 1,
-                        reward_gold: 5,
-                        benefit: "The requesting farmer receives a reliable tool and a visible quality improvement.".to_owned(),
+                        tools_required: recipe.tools_required,
+                        reward_gold: recipe.reward_gold,
+                        benefit: recipe.benefit,
                         status: ServiceOrderStatus::Open,
                         quality: 0,
                         created_tick: state.tick,
