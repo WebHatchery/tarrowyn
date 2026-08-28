@@ -9,6 +9,7 @@ use tarrowyn_protocol::{
 };
 
 mod persistence;
+mod telemetry;
 
 fn repo() -> WorldRepository {
     WorldRepository::new(ServerConfig {

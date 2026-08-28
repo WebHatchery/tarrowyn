@@ -165,6 +165,10 @@ impl WorldRepository {
             .backup_failed
             .lock()
             .expect("backup status lock poisoned");
+        let telemetry = self
+            .tick_telemetry
+            .lock()
+            .expect("tick telemetry lock poisoned");
         Ok(ApiResponse {
             meta: meta(state.tick, None, Some(state.cursor)),
             data: OpsMetricsResponse {
@@ -201,8 +205,15 @@ impl WorldRepository {
                     .count() as u32,
                 rejected_commands: state.phase6.rejected_commands,
                 completed_commands: state.phase6.completed_commands,
-                average_tick_ms: self.config.tick_interval.as_millis() as u32,
-                alert_flags: alert_flags(&state, persistence_failed, backup_failed),
+                average_tick_ms: telemetry.average_tick_ms,
+                last_tick_ms: telemetry.last_tick_ms,
+                tick_drift_count: telemetry.tick_drift_count,
+                alert_flags: alert_flags(
+                    &state,
+                    persistence_failed,
+                    backup_failed,
+                    telemetry.last_tick_drift,
+                ),
             },
         })
     }
@@ -268,6 +279,7 @@ fn alert_flags(
     state: &RepositoryState,
     persistence_failed: bool,
     backup_failed: bool,
+    tick_drift: bool,
 ) -> Vec<String> {
     let mut flags = Vec::new();
     if persistence_failed {
@@ -275,6 +287,9 @@ fn alert_flags(
     }
     if backup_failed {
         flags.push("backup_write_failed".to_owned());
+    }
+    if tick_drift {
+        flags.push("tick_drift".to_owned());
     }
     if !integrity_ok(state) {
         flags.push("integrity_check_failed".to_owned());
@@ -299,5 +314,30 @@ fn alert_flags(
     {
         flags.push("travel_recovery_backlog".to_owned());
     }
+    if state
+        .phase5
+        .events
+        .iter()
+        .filter(|event| {
+            !matches!(
+                event.stage,
+                tarrowyn_protocol::RegionalEventStage::Aftermath
+            )
+        })
+        .count()
+        > 128
+    {
+        flags.push("regional_event_backlog".to_owned());
+    }
+    if state.phase5.market_orders.iter().any(|order| {
+        order.quantity == 0
+            || order.unit_price == 0
+            || order.total_price != order.unit_price.saturating_mul(order.quantity)
+    }) {
+        flags.push("economy_anomaly".to_owned());
+    }
     flags
 }
+
+#[cfg(test)]
+mod tests;

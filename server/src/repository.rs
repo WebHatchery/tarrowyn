@@ -1,6 +1,7 @@
 use crate::config::ServerConfig;
 use std::collections::{HashMap, VecDeque};
 use std::sync::Mutex;
+use std::time::{Duration, Instant};
 use tarrowyn_protocol::{
     ApiError, ApiMeta, ApiResponse, ChatMessage, ChatRequest, ChatResponse, EventRecord,
     EventsResponse, FarmingRequest, FarmingResponse, GuestSessionRequest, GuestSessionResponse,
@@ -64,6 +65,15 @@ pub struct WorldRepository {
     state: Mutex<RepositoryState>,
     persistence_failed: Mutex<bool>,
     backup_failed: Mutex<bool>,
+    tick_telemetry: Mutex<TickTelemetry>,
+}
+
+#[derive(Debug, Default)]
+struct TickTelemetry {
+    average_tick_ms: u32,
+    last_tick_ms: u32,
+    tick_drift_count: u64,
+    last_tick_drift: bool,
 }
 
 impl WorldRepository {
@@ -81,6 +91,7 @@ impl WorldRepository {
             state: Mutex::new(state),
             persistence_failed: Mutex::new(false),
             backup_failed: Mutex::new(false),
+            tick_telemetry: Mutex::new(TickTelemetry::default()),
         };
         let mut state = repository
             .state
@@ -541,6 +552,7 @@ impl WorldRepository {
     }
 
     pub fn tick(&self) {
+        let started = Instant::now();
         let mut state = self.state.lock().expect("world repository lock poisoned");
         state.tick += 1;
         let previous_day = state.clock.day;
@@ -565,6 +577,8 @@ impl WorldRepository {
         push_event(&mut state, WorldEvent::Clock(clock));
         expire_sessions(&mut state, &self.config);
         self.persist(&state);
+        drop(state);
+        self.record_tick_duration(started.elapsed());
     }
 
     pub fn server_tick(&self) -> u64 {
@@ -589,6 +603,33 @@ impl WorldRepository {
                     .lock()
                     .expect("persistence status lock poisoned") = true;
             }
+        }
+    }
+
+    fn record_tick_duration(&self, elapsed: Duration) {
+        let elapsed_ms = elapsed.as_millis().min(u128::from(u32::MAX)) as u32;
+        let budget_ms = self
+            .config
+            .tick_interval
+            .as_millis()
+            .max(1)
+            .min(u128::from(u32::MAX)) as u32;
+        let mut telemetry = self
+            .tick_telemetry
+            .lock()
+            .expect("tick telemetry lock poisoned");
+        telemetry.last_tick_ms = elapsed_ms;
+        telemetry.average_tick_ms = if telemetry.average_tick_ms == 0 {
+            elapsed_ms
+        } else {
+            (u64::from(telemetry.average_tick_ms)
+                .saturating_mul(7)
+                .saturating_add(u64::from(elapsed_ms))
+                / 8) as u32
+        };
+        telemetry.last_tick_drift = elapsed_ms > budget_ms;
+        if telemetry.last_tick_drift {
+            telemetry.tick_drift_count = telemetry.tick_drift_count.saturating_add(1);
         }
     }
 }

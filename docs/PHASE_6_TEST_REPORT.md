@@ -54,13 +54,15 @@ The accepted regional target is 24 connected clients, 50 open orders, and a
 250 ms tick. The repository's bounded projections and event cursors avoid
 broadcasting every regional entity to every client. The release scripts
 exercise concurrent fixture requests, backup parsing, persistence- and
-backup-failure readiness, and restore-on-a-copy. Node-failure and clock-restart behavior are reconciled by
+backup-failure readiness, restore-on-a-copy, measured tick telemetry, and
+operational alert boundaries for tick drift, regional backlog, and economy
+invariants. Node-failure and clock-restart behavior are reconciled by
 the durable travel/order/event cursors; a duplicate request returns its cached
 result instead of paying twice.
 
 On 2026-08-29, `scripts/phase6_load_test.ps1` passed its isolated regional drill
-with 24 clients and three rounds: 552 HTTP requests completed in 4,465.24 ms of
-mixed-load wall time, with 104 accepted and 88 rejected command outcomes. The
+with 24 clients and three rounds: 552 HTTP requests completed in 4,528.75 ms of
+mixed-load wall time, with 102 accepted and 90 rejected command outcomes. The
 run exercised state, events, movement, chat, markets, travel, the autonomous
 tick, scheduled backup, operator metrics, server-owned arrival, and restart
 recovery. The result is evidence for the bounded 24-client regional target, not

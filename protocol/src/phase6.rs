@@ -177,6 +177,8 @@ pub struct OpsMetricsResponse {
     pub rejected_commands: u64,
     pub completed_commands: u64,
     pub average_tick_ms: u32,
+    pub last_tick_ms: u32,
+    pub tick_drift_count: u64,
     pub alert_flags: Vec<String>,
 }
 

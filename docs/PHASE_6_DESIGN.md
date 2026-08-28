@@ -90,9 +90,13 @@ separate fixture state path and must not share production data.
 `/health` remains a simple process check. `/v1/ops/health` is a readiness and
 integrity check. Authenticated `/v1/ops/metrics` reports sessions, accounts,
 regional visibility, event backlog, open orders, travel recovery load, command
-rejections, and tick latency. Alerts are raised for persistence write failures,
-integrity failures, market backlog, and interrupted-travel backlog. Slow clients
-receive bounded, cursorable projections and do not own the world tick.
+rejections, and measured tick latency through an exponentially weighted average,
+the latest duration, and a drift count. Alerts are raised for persistence write
+failures, integrity failures, market backlog, interrupted-travel backlog, tick
+drift, regional event backlog, and economy invariants that no longer reconcile.
+Client connection failures remain a deployment/client telemetry concern because a
+disconnected client cannot report through this worker. Slow clients receive
+bounded, cursorable projections and do not own the world tick.
 
 ## Scale, calendar, and legacy
 
