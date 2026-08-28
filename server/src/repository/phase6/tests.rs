@@ -259,6 +259,12 @@ fn operational_metrics_require_a_configured_support_operator() {
         .data;
     assert!(metrics.completed_commands >= 1);
     assert!(metrics.rejected_commands >= 1);
+    assert!(metrics.average_price_index_percent > 0);
+    assert!(metrics.scarce_goods_count > 0);
+    assert!(metrics.npc_fallback_households > 0);
+    assert_eq!(metrics.abandoned_claims, 0);
+    assert!(metrics.declining_settlements > 0);
+    assert!(metrics.newcomer_access);
 }
 
 #[test]

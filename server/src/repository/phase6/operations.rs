@@ -169,6 +169,64 @@ impl WorldRepository {
             .tick_telemetry
             .lock()
             .expect("tick telemetry lock poisoned");
+        let settlement_count = state.phase5.settlements.len() as u32;
+        let average_price_index_percent = if settlement_count == 0 {
+            0
+        } else {
+            state
+                .phase5
+                .settlements
+                .iter()
+                .map(|settlement| u32::from(settlement.price_index_percent))
+                .sum::<u32>()
+                .checked_div(settlement_count)
+                .unwrap_or(0)
+        };
+        let scarce_goods_count = state
+            .phase5
+            .settlements
+            .iter()
+            .flat_map(|settlement| settlement.scarce_goods.iter())
+            .collect::<std::collections::HashSet<_>>()
+            .len() as u32;
+        let npc_fallback_households = state
+            .phase4
+            .households
+            .iter()
+            .filter(|household| {
+                household.status != tarrowyn_protocol::HouseholdLifeStatus::Departed
+            })
+            .count() as u32;
+        let abandoned_claims = state
+            .phase4
+            .claims
+            .iter()
+            .filter(|claim| {
+                matches!(
+                    claim.status,
+                    tarrowyn_protocol::ClaimLifecycleStatus::Abandoned
+                        | tarrowyn_protocol::ClaimLifecycleStatus::Expired
+                )
+            })
+            .count() as u32;
+        let declining_settlements = state
+            .phase5
+            .settlements
+            .iter()
+            .filter(|settlement| {
+                matches!(
+                    settlement.condition,
+                    tarrowyn_protocol::SettlementCondition::Strained
+                        | tarrowyn_protocol::SettlementCondition::Quiet
+                )
+            })
+            .count() as u32;
+        let newcomer_access = !state.phase4.available_plots.is_empty()
+            || state
+                .phase5
+                .settlements
+                .iter()
+                .any(|settlement| !settlement.vacancies.is_empty());
         Ok(ApiResponse {
             meta: meta(state.tick, None, Some(state.cursor)),
             data: OpsMetricsResponse {
@@ -208,6 +266,12 @@ impl WorldRepository {
                 average_tick_ms: telemetry.average_tick_ms,
                 last_tick_ms: telemetry.last_tick_ms,
                 tick_drift_count: telemetry.tick_drift_count,
+                average_price_index_percent,
+                scarce_goods_count,
+                npc_fallback_households,
+                abandoned_claims,
+                declining_settlements,
+                newcomer_access,
                 alert_flags: alert_flags(
                     &state,
                     persistence_failed,

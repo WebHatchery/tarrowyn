@@ -4,13 +4,14 @@ The lasting-realm gate is substantially represented in the release candidate:
 the regional authority is cursorable and recoverable; account linking,
 expiration, refresh, revocation, moderation reporting, support audit, health,
 measured tick metrics, operational alert visibility, backup-failure visibility,
-content validation, and touch recovery are present; and the
+economy/population monitoring, content validation, and touch recovery are present;
+and the
 calendar, topology, law, privacy, legacy, and operational decisions are
 written down.
 
 The measured scope is deliberately regional: one worker, 24 concurrent-client
 target, bounded queues, and selectable JSON/MySQL persistence. The local Phase 6
-mixed-load drill passed with 24 clients, three rounds, 552 requests, and 4,528.75
+mixed-load drill passed with 24 clients, three rounds, 552 requests, and 4,479.15
 ms wall time, including backup and restart recovery. The MySQL backend applies
 an explicit migration and writes the authoritative snapshot
 and identity index transactionally. Public launch remains blocked until the

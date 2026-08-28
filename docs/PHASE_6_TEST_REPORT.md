@@ -59,13 +59,14 @@ broadcasting every regional entity to every client. The release scripts
 exercise concurrent fixture requests, backup parsing, persistence- and
 backup-failure readiness, restore-on-a-copy, measured tick telemetry, and
 operational alert boundaries for tick drift, regional backlog, and economy
-invariants. Node-failure and clock-restart behavior are reconciled by
+invariants. Operator metrics also expose price pressure, scarce goods, NPC
+fallback, abandoned claims, settlement decline, and newcomer access. Node-failure and clock-restart behavior are reconciled by
 the durable travel/order/event cursors; a duplicate request returns its cached
 result instead of paying twice.
 
 On 2026-08-29, `scripts/phase6_load_test.ps1` passed its isolated regional drill
-with 24 clients and three rounds: 552 HTTP requests completed in 4,528.75 ms of
-mixed-load wall time, with 102 accepted and 90 rejected command outcomes. The
+with 24 clients and three rounds: 552 HTTP requests completed in 4,479.15 ms of
+mixed-load wall time, with 104 accepted and 88 rejected command outcomes. The
 run exercised state, events, movement, chat, markets, travel, the autonomous
 tick, scheduled backup, operator metrics, server-owned arrival, and restart
 recovery. The result is evidence for the bounded 24-client regional target, not

@@ -61,9 +61,11 @@ state, backup, and process environment on completion. Pass `-ClientCount` or
    `backup_error`; do not admit traffic while readiness is degraded.
 2. Check authenticated `/v1/ops/metrics` for the measured average and latest
    tick durations, `tick_drift_count`, regional event backlog, and
-   `alert_flags`. Route persistence, backup, tick-drift, regional-backlog, and
-   economy-anomaly alerts to the deployment on-call. Client connection failures
-   must be reported by client/deployment telemetry.
+   `alert_flags`. Also watch average price index, scarce goods, NPC fallback
+   households, abandoned claims, declining settlements, and `newcomer_access`.
+   Route persistence, backup, tick-drift, regional-backlog, and economy-anomaly
+   alerts to the deployment on-call. Client connection failures must be reported
+   by client/deployment telemetry.
 3. Announce a maintenance window through the client status message.
 4. Stop the worker only after the current persistence write completes.
 5. Deploy the immutable release artifact and run the readiness check. For a

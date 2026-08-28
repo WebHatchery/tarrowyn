@@ -103,6 +103,9 @@ rejections, and measured tick latency through an exponentially weighted average,
 the latest duration, and a drift count. Alerts are raised for persistence write
 failures, integrity failures, market backlog, interrupted-travel backlog, tick
 drift, regional event backlog, and economy invariants that no longer reconcile.
+The same operator projection reports average regional price pressure, distinct
+scarce goods, active NPC fallback households, abandoned or expired claims,
+declining settlements, and whether a new player still has an open access path.
 Client connection failures remain a deployment/client telemetry concern because a
 disconnected client cannot report through this worker. Slow clients receive
 bounded, cursorable projections and do not own the world tick.

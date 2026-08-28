@@ -179,6 +179,12 @@ pub struct OpsMetricsResponse {
     pub average_tick_ms: u32,
     pub last_tick_ms: u32,
     pub tick_drift_count: u64,
+    pub average_price_index_percent: u32,
+    pub scarce_goods_count: u32,
+    pub npc_fallback_households: u32,
+    pub abandoned_claims: u32,
+    pub declining_settlements: u32,
+    pub newcomer_access: bool,
     pub alert_flags: Vec<String>,
 }
 
