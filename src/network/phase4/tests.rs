@@ -1,6 +1,6 @@
 use super::*;
 use tarrowyn_protocol::{
-    ProfessionAction, SkillAction, SkillStatus, SkillView, SkillsResponse, WeaponKind,
+    ProfessionAction, SkillAction, SkillLesson, SkillStatus, SkillView, SkillsResponse, WeaponKind,
 };
 
 #[test]
@@ -43,6 +43,7 @@ fn practice_button_queues_the_next_unstarted_root() {
             description: "Read water.".to_owned(),
             entry_hint: "Make a first catch.".to_owned(),
         }],
+        lessons: Vec::new(),
         cursor: 0,
     });
     client.queue_cycle("practice", "practice-1".to_owned());
@@ -66,4 +67,32 @@ fn local_fight_cycles_through_readable_weapon_families() {
         next_combat_weapon(Some(WeaponKind::Bow)),
         WeaponKind::Shield
     );
+}
+
+#[test]
+fn school_button_joins_an_open_lesson_for_the_learner() {
+    let mut client = Phase4Client::new();
+    client.own_account_id = Some("learner-1".to_owned());
+    client.skills = Some(SkillsResponse {
+        skills: Vec::new(),
+        lessons: vec![SkillLesson {
+            lesson_id: "school-lesson-1".to_owned(),
+            teacher_account_id: "teacher-1".to_owned(),
+            teacher_name: "Teacher".to_owned(),
+            learner_account_id: "learner-1".to_owned(),
+            learner_name: "Learner".to_owned(),
+            skill_id: "sword-fighting".to_owned(),
+            skill_name: "Sword Fighting".to_owned(),
+            started_tick: 4,
+            expires_tick: 24,
+        }],
+        cursor: 4,
+    });
+    assert!(client.queue_school("school-join".to_owned(), "teacher-1".to_owned()));
+    let Some(Phase4Command::Skill(request)) = client.commands.pop_front() else {
+        panic!("the learner should queue the open lesson");
+    };
+    assert_eq!(request.action, SkillAction::CompleteLesson);
+    assert_eq!(request.lesson_id.as_deref(), Some("school-lesson-1"));
+    assert_eq!(request.target_account_id.as_deref(), Some("teacher-1"));
 }

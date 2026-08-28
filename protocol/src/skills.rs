@@ -28,6 +28,9 @@ impl SkillFamily {
 #[serde(rename_all = "snake_case")]
 pub enum SkillAction {
     Practice,
+    BeginLesson,
+    CompleteLesson,
+    /// Legacy alias retained for clients that only know the original school action.
     Teach,
 }
 
@@ -35,6 +38,8 @@ pub enum SkillAction {
 pub struct SkillRequest {
     pub request_id: String,
     pub action: SkillAction,
+    #[serde(default)]
+    pub lesson_id: Option<String>,
     pub skill_id: Option<String>,
     pub target_account_id: Option<String>,
 }
@@ -62,8 +67,23 @@ pub struct SkillView {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct SkillLesson {
+    pub lesson_id: String,
+    pub teacher_account_id: String,
+    pub teacher_name: String,
+    pub learner_account_id: String,
+    pub learner_name: String,
+    pub skill_id: String,
+    pub skill_name: String,
+    pub started_tick: u64,
+    pub expires_tick: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct SkillsResponse {
     pub skills: Vec<SkillView>,
+    #[serde(default)]
+    pub lessons: Vec<SkillLesson>,
     pub cursor: u64,
 }
 
@@ -74,6 +94,8 @@ pub struct SkillResponse {
     pub skill_id: Option<String>,
     pub target_account_id: Option<String>,
     pub skills: SkillsResponse,
+    #[serde(default)]
+    pub lesson: Option<SkillLesson>,
     pub message: String,
     pub reason: Option<String>,
 }

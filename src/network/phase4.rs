@@ -461,6 +461,21 @@ impl Phase4Client {
     }
 
     pub(super) fn queue_school(&mut self, request_id: String, target_account_id: String) -> bool {
+        if let Some(lesson) = self.skills.as_ref().and_then(|skills| {
+            let own = self.own_account_id.as_deref()?;
+            skills.lessons.iter().find(|lesson| {
+                lesson.learner_account_id == own && lesson.teacher_account_id == target_account_id
+            })
+        }) {
+            self.commands.push_back(Phase4Command::Skill(SkillRequest {
+                request_id,
+                action: SkillAction::CompleteLesson,
+                lesson_id: Some(lesson.lesson_id.clone()),
+                skill_id: Some(lesson.skill_id.clone()),
+                target_account_id: Some(lesson.teacher_account_id.clone()),
+            }));
+            return true;
+        }
         let Some(skill) = self.skills.as_ref().and_then(|skills| {
             skills.skills.iter().find(|skill| {
                 skill.depth == 1 && skill.mastery >= 5 && skill.skill_id != "teaching"
@@ -470,7 +485,8 @@ impl Phase4Client {
         };
         self.commands.push_back(Phase4Command::Skill(SkillRequest {
             request_id,
-            action: SkillAction::Teach,
+            action: SkillAction::BeginLesson,
+            lesson_id: None,
             skill_id: Some(skill.skill_id.clone()),
             target_account_id: Some(target_account_id),
         }));
@@ -489,6 +505,7 @@ impl Phase4Client {
         self.commands.push_back(Phase4Command::Skill(SkillRequest {
             request_id,
             action: SkillAction::Practice,
+            lesson_id: None,
             skill_id: Some(skill.skill_id.clone()),
             target_account_id: None,
         }));

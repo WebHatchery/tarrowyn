@@ -56,6 +56,7 @@ fn a_root_can_begin_through_an_idempotent_first_practice() {
     let request = SkillRequest {
         request_id: "practice-fishing".to_owned(),
         action: SkillAction::Practice,
+        lesson_id: None,
         skill_id: Some("fishing".to_owned()),
         target_account_id: None,
     };
@@ -152,11 +153,12 @@ fn a_nearby_master_can_teach_a_root_once() {
         record_practice(&mut state, &teacher.data.client_key, "teaching");
     }
     let lesson = repository
-        .teach_skill(
+        .begin_skill_lesson(
             &teacher.data.account_token,
             SkillRequest {
                 request_id: "school-lesson".to_owned(),
-                action: SkillAction::Teach,
+                action: SkillAction::BeginLesson,
+                lesson_id: None,
                 skill_id: Some("sword-fighting".to_owned()),
                 target_account_id: Some(learner.data.account_id.clone()),
             },
@@ -164,6 +166,35 @@ fn a_nearby_master_can_teach_a_root_once() {
         .unwrap()
         .data;
     assert!(lesson.accepted);
+    let lesson_id = lesson
+        .lesson
+        .as_ref()
+        .expect("lesson should be open")
+        .lesson_id
+        .clone();
+    assert_eq!(
+        repository
+            .skills(&learner.data.account_token)
+            .unwrap()
+            .data
+            .lessons
+            .len(),
+        1
+    );
+    let learner_join = repository
+        .complete_skill_lesson(
+            &learner.data.account_token,
+            SkillRequest {
+                request_id: "school-lesson-join".to_owned(),
+                action: SkillAction::CompleteLesson,
+                lesson_id: Some(lesson_id),
+                skill_id: Some("sword-fighting".to_owned()),
+                target_account_id: Some(teacher.data.account_id.clone()),
+            },
+        )
+        .unwrap()
+        .data;
+    assert!(learner_join.accepted);
     let learner_sword = repository
         .skills(&learner.data.account_token)
         .unwrap()
@@ -175,11 +206,12 @@ fn a_nearby_master_can_teach_a_root_once() {
     assert_eq!(learner_sword.mastery, 1);
     assert!(
         !repository
-            .teach_skill(
+            .begin_skill_lesson(
                 &teacher.data.account_token,
                 SkillRequest {
                     request_id: "school-lesson-again".to_owned(),
-                    action: SkillAction::Teach,
+                    action: SkillAction::BeginLesson,
+                    lesson_id: None,
                     skill_id: Some("sword-fighting".to_owned()),
                     target_account_id: Some(learner.data.account_id.clone()),
                 },

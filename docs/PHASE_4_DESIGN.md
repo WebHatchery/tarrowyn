@@ -1,6 +1,6 @@
 # Phase 4 design lock — The Enduring Society
 
-Status: implemented in protocol version 4 and storage version 3.
+Status: implemented in protocol version 4 and storage version 7.
 
 This record closes the open choices identified before Phase 4 work. The rules
 are deliberately bounded: one settlement, a small public treasury, a few
@@ -69,11 +69,14 @@ projection.
 
 Formal school lessons use `POST /v1/skills`. A teacher must have mastered the
 subject and have Teaching mastery at least equal to its depth; the learner must
-be present beside the teacher. A root lesson starts one practice, while an
+be present beside the teacher. The teacher opens a persisted lesson and the
+learner joins it through a second visible School action; an abandoned lesson
+expires after a bounded window. A root lesson starts one practice, while an
 advanced lesson grants only the discovery and leaves mastery and all personal
 requirements to the learner. The current client offers mastered roots through
-the visible School control; the server remains the authority for future school
-membership, tuition, halls, and advanced lesson policy.
+the visible School control and surfaces open lessons in the skill projection;
+the server remains the authority for future school membership, tuition, halls,
+and advanced lesson policy.
 
 Every depth-one catalogue entry also has a dependable first-practice path. A
 visible Practice control selects the next unstarted root and sends

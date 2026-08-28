@@ -6,7 +6,7 @@ use tarrowyn_protocol::{
     Capability, ClaimLifecycleResponse, ClaimRecord, GovernanceResponse, GovernanceState,
     HouseholdRecord, InfrastructureRecord, KnowledgeItem, KnowledgeResponse, LocalCombatResponse,
     LocalCombatState, MaterialStock, OfficeKind, OfficeRecord, ProfessionProfile,
-    ProfessionResponse, ServiceOrder, SkillResponse,
+    ProfessionResponse, ServiceOrder, SkillLesson, SkillResponse,
 };
 
 mod claims;
@@ -30,6 +30,8 @@ pub(super) enum Phase4Response {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub(super) struct Phase4State {
+    #[serde(default = "default_next_lesson_id")]
+    pub(super) next_lesson_id: u64,
     pub(super) next_proposal_id: u64,
     pub(super) next_decision_id: u64,
     pub(super) next_order_id: u64,
@@ -47,6 +49,8 @@ pub(super) struct Phase4State {
     pub(super) knowledge: Vec<KnowledgeItem>,
     pub(super) known_by: HashMap<String, Vec<String>>,
     pub(super) combat: HashMap<String, LocalCombatState>,
+    #[serde(default)]
+    pub(super) lessons: Vec<SkillLesson>,
     pub(super) request_results: HashMap<String, Phase4Response>,
 }
 
@@ -58,6 +62,7 @@ impl Default for Phase4State {
 
 pub(super) fn fresh(_config: &ServerConfig) -> Phase4State {
     Phase4State {
+        next_lesson_id: 1,
         next_proposal_id: 1,
         next_decision_id: 1,
         next_order_id: 1,
@@ -187,8 +192,13 @@ pub(super) fn fresh(_config: &ServerConfig) -> Phase4State {
         }],
         known_by: HashMap::new(),
         combat: HashMap::new(),
+        lessons: Vec::new(),
         request_results: HashMap::new(),
     }
+}
+
+fn default_next_lesson_id() -> u64 {
+    1
 }
 
 fn office(id: &str, kind: OfficeKind, title: &str, authority: &str) -> OfficeRecord {
@@ -288,11 +298,19 @@ pub(super) fn record(state: &mut RepositoryState, kind: &str, title: &str, text:
 }
 
 pub(super) fn phase4_tick(state: &mut RepositoryState, config: &ServerConfig) {
+    prune_school_lessons(state);
     governance::tick(state, config);
     claims::tick(state, config);
     households::tick(state, config);
     super::phase5::phase5_tick(state, config);
     super::phase6::phase6_tick(state, config);
+}
+
+pub(super) fn prune_school_lessons(state: &mut RepositoryState) {
+    state
+        .phase4
+        .lessons
+        .retain(|lesson| lesson.expires_tick > state.tick);
 }
 
 pub(super) fn default_capability(profession: tarrowyn_protocol::ProfessionKind) -> Capability {

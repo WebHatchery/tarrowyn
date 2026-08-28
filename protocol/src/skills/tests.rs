@@ -5,6 +5,7 @@ fn school_requests_use_an_explicit_touchable_action() {
     let request = SkillRequest {
         request_id: "school-1".to_owned(),
         action: SkillAction::Teach,
+        lesson_id: None,
         skill_id: Some("sword-fighting".to_owned()),
         target_account_id: Some("guest-2".to_owned()),
     };
@@ -18,6 +19,7 @@ fn root_practice_requests_keep_the_entry_skill_explicit() {
     let request = SkillRequest {
         request_id: "practice-1".to_owned(),
         action: SkillAction::Practice,
+        lesson_id: None,
         skill_id: Some("fishing".to_owned()),
         target_account_id: None,
     };
