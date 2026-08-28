@@ -25,9 +25,10 @@ are recorded in the audit stream. The no-PvP law boundary is still active.
 
 ## Persistence, backups, and repair
 
-Storage version 14 adds the persisted Bellweather animal condition and daily
-care state alongside
-the reposition opening and wind spark, field-tool condition, and real-time lease timestamps
+Storage version 15 adds persisted auth-link and auth-refresh replay results
+alongside the persisted Bellweather animal condition and daily care state,
+the reposition opening and wind spark,
+field-tool condition, and real-time lease timestamps
 and public tax receipts,
 the regional state,
 production session/audit records, and

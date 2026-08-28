@@ -10,7 +10,7 @@ use tarrowyn_protocol::{
     WorldEvent, WorldSnapshot, MAX_CHAT_MESSAGE_LENGTH, MAX_TRADE_ITEMS, PROTOCOL_VERSION,
 };
 
-pub(super) const STORAGE_VERSION: u32 = 14;
+pub(super) const STORAGE_VERSION: u32 = 15;
 const MAX_EVENTS: usize = 2048;
 const MAX_CHAT_HISTORY: usize = 64;
 const MAX_NOTICES: usize = 32;
@@ -146,7 +146,9 @@ impl WorldRepository {
         let old_tokens: Vec<String> = state
             .sessions
             .iter()
-            .filter(|(_, session)| session.client_key == client_key)
+            .filter(|(token, session)| {
+                session.client_key == client_key && !state.phase6.sessions.contains_key(*token)
+            })
             .map(|(token, _)| token.clone())
             .collect();
         for token in old_tokens {

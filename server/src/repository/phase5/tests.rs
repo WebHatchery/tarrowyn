@@ -218,31 +218,39 @@ fn oidc_link_refresh_and_revoke_keep_character_boundary() {
         ..ServerConfig::default()
     });
     let guest = guest(&repository, "phase5-link");
+    let link_request = AuthLinkRequest {
+        request_id: "link".to_owned(),
+        provider: "webhatchery-identity-oidc".to_owned(),
+        subject: "subject-42".to_owned(),
+        display_name: Some("Linked traveller".to_owned()),
+    };
     let linked = repository
-        .auth_link(
-            &guest.account_token,
-            AuthLinkRequest {
-                request_id: "link".to_owned(),
-                provider: "webhatchery-identity-oidc".to_owned(),
-                subject: "subject-42".to_owned(),
-                display_name: Some("Linked traveller".to_owned()),
-            },
-        )
+        .auth_link(&guest.account_token, link_request.clone())
         .unwrap()
         .data;
+    let linked_retry = repository
+        .auth_link(&guest.account_token, link_request)
+        .unwrap()
+        .data;
+    assert_eq!(linked_retry, linked);
     let account = repository
         .account(&linked.session.account_token)
         .unwrap()
         .data;
     assert!(!account.guest_fixture);
     assert_eq!(account.character_id, linked.character_id);
+    let _resumed_guest = guest(&repository, "phase5-link");
+    assert!(repository.account(&linked.session.account_token).is_ok());
+    let refresh_request = AuthRefreshRequest {
+        request_id: "refresh".to_owned(),
+        refresh_token: linked.session.refresh_token.clone(),
+    };
     let refreshed = repository
-        .auth_refresh(AuthRefreshRequest {
-            request_id: "refresh".to_owned(),
-            refresh_token: linked.session.refresh_token,
-        })
+        .auth_refresh(refresh_request.clone())
         .unwrap()
         .data;
+    let refreshed_retry = repository.auth_refresh(refresh_request).unwrap().data;
+    assert_eq!(refreshed_retry, refreshed);
     assert!(repository.account(&refreshed.session.account_token).is_ok());
     let revoked = repository
         .auth_revoke(
@@ -258,4 +266,48 @@ fn oidc_link_refresh_and_revoke_keep_character_boundary() {
     assert!(repository
         .account(&refreshed.session.account_token)
         .is_err());
+}
+
+#[test]
+fn auth_replay_results_survive_repository_restart() {
+    let path =
+        std::env::temp_dir().join(format!("tarrowyn-auth-replay-{}.json", std::process::id()));
+    let path_string = path.to_string_lossy().into_owned();
+    let config = ServerConfig {
+        persistence_path: Some(path_string),
+        backup_path: None,
+        ..ServerConfig::default()
+    };
+    let first = WorldRepository::new(config.clone());
+    let first_guest = guest(&first, "phase6-auth-replay");
+    let link_request = AuthLinkRequest {
+        request_id: "restart-link".to_owned(),
+        provider: "webhatchery-identity-oidc".to_owned(),
+        subject: "restart-subject".to_owned(),
+        display_name: Some("Restart traveller".to_owned()),
+    };
+    let linked = first
+        .auth_link(&first_guest.account_token, link_request.clone())
+        .unwrap()
+        .data;
+    let refresh_request = AuthRefreshRequest {
+        request_id: "restart-refresh".to_owned(),
+        refresh_token: linked.session.refresh_token.clone(),
+    };
+    let refreshed = first.auth_refresh(refresh_request.clone()).unwrap().data;
+    drop(first);
+
+    let second = WorldRepository::new(config);
+    let resumed_guest = guest(&second, "phase6-auth-replay");
+    let linked_after_restart = second
+        .auth_link(&resumed_guest.account_token, link_request)
+        .unwrap()
+        .data;
+    let refreshed_after_restart = second.auth_refresh(refresh_request).unwrap().data;
+    assert_eq!(linked_after_restart, linked);
+    assert_eq!(refreshed_after_restart, refreshed);
+    assert!(second
+        .account(&refreshed_after_restart.session.account_token)
+        .is_ok());
+    let _ = std::fs::remove_file(path);
 }

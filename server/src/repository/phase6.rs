@@ -42,6 +42,10 @@ pub(super) struct Phase6State {
     pub(super) next_audit_id: u64,
     pub(super) accounts: HashMap<String, ProductionAccount>,
     pub(super) sessions: HashMap<String, ProductionSession>,
+    #[serde(default)]
+    pub(super) auth_link_results: HashMap<String, AuthLinkResponse>,
+    #[serde(default)]
+    pub(super) auth_refresh_results: HashMap<String, AuthRefreshResponse>,
     pub(super) audits: VecDeque<AuditRecord>,
     pub(super) reports: HashMap<String, ModerationReportResponse>,
     pub(super) request_results: HashMap<String, SupportRepairResponse>,
@@ -64,6 +68,8 @@ pub(super) fn fresh(_config: &ServerConfig) -> Phase6State {
         next_audit_id: 1,
         accounts: HashMap::new(),
         sessions: HashMap::new(),
+        auth_link_results: HashMap::new(),
+        auth_refresh_results: HashMap::new(),
         audits: VecDeque::new(),
         reports: HashMap::new(),
         request_results: HashMap::new(),
@@ -97,6 +103,13 @@ impl WorldRepository {
                 "invalid_subject",
                 "The identity provider subject is required and bounded.",
             ));
+        }
+        let cache_key = format!("{}:{}", guest_key, request.request_id);
+        if let Some(previous) = state.phase6.auth_link_results.get(&cache_key).cloned() {
+            return Ok(ApiResponse {
+                meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
+                data: previous,
+            });
         }
         let account_id = state
             .phase6
@@ -149,6 +162,19 @@ impl WorldRepository {
             "accepted",
             "A guest character was linked to the configured OIDC subject.",
         );
+        let response = AuthLinkResponse {
+            request_id: request.request_id.clone(),
+            provider: request.provider,
+            account_id,
+            character_id,
+            display_name,
+            session,
+            linked_guest: true,
+        };
+        state
+            .phase6
+            .auth_link_results
+            .insert(cache_key, response.clone());
         self.persist(&state);
         Ok(ApiResponse {
             meta: meta(
@@ -156,15 +182,7 @@ impl WorldRepository {
                 Some(request.request_id.clone()),
                 Some(state.cursor),
             ),
-            data: AuthLinkResponse {
-                request_id: request.request_id,
-                provider: request.provider,
-                account_id,
-                character_id,
-                display_name,
-                session,
-                linked_guest: true,
-            },
+            data: response,
         })
     }
 
@@ -174,6 +192,17 @@ impl WorldRepository {
     ) -> Result<ApiResponse<AuthRefreshResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
         validate_request_id(&request.request_id)?;
+        let cache_key = format!(
+            "{}:{:016x}",
+            request.request_id,
+            stable_fingerprint(&request.refresh_token)
+        );
+        if let Some(previous) = state.phase6.auth_refresh_results.get(&cache_key).cloned() {
+            return Ok(ApiResponse {
+                meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
+                data: previous,
+            });
+        }
         let Some((old_token, old_session)) = state
             .phase6
             .sessions
@@ -212,6 +241,14 @@ impl WorldRepository {
             "accepted",
             "An expiring access session was rotated.",
         );
+        let response = AuthRefreshResponse {
+            request_id: request.request_id.clone(),
+            session: access,
+        };
+        state
+            .phase6
+            .auth_refresh_results
+            .insert(cache_key, response.clone());
         self.persist(&state);
         Ok(ApiResponse {
             meta: meta(
@@ -219,10 +256,7 @@ impl WorldRepository {
                 Some(request.request_id.clone()),
                 Some(state.cursor),
             ),
-            data: AuthRefreshResponse {
-                request_id: request.request_id,
-                session: access,
-            },
+            data: response,
         })
     }
 
@@ -528,7 +562,27 @@ pub(super) fn phase6_tick(state: &mut RepositoryState, config: &ServerConfig) {
     if config.backup_interval_ticks > 0 && state.tick.is_multiple_of(config.backup_interval_ticks) {
         write_backup(state, config);
     }
+    trim_replay_cache(&mut state.phase6.auth_link_results);
+    trim_replay_cache(&mut state.phase6.auth_refresh_results);
     state.phase6.audits.truncate(512);
+}
+
+fn trim_replay_cache<T>(cache: &mut HashMap<String, T>) {
+    while cache.len() > 512 {
+        let Some(key) = cache.keys().next().cloned() else {
+            break;
+        };
+        cache.remove(&key);
+    }
+}
+
+fn stable_fingerprint(value: &str) -> u64 {
+    let mut hash = 14_695_981_039_346_656_037_u64;
+    for byte in value.as_bytes() {
+        hash ^= u64::from(*byte);
+        hash = hash.wrapping_mul(1_099_511_628_211_u64);
+    }
+    hash
 }
 
 fn validate_request_id(request_id: &str) -> Result<(), RepositoryError> {

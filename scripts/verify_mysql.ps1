@@ -131,7 +131,7 @@ function Invoke-NativeDatabaseRestore([string]$temporaryRoot, [string]$nonce) {
         $identityOutput = Invoke-MySql $mysql ($connectionArguments + "--database=$restoreDatabase" + "--execute=SELECT COUNT(*) FROM tarrowyn_identity_index")
         $version = [int](($versionOutput -join "").Trim())
         $identityCount = [int](($identityOutput -join "").Trim())
-        Assert-True ($version -ge 14) "the native restore lost the current world storage version"
+        Assert-True ($version -ge 15) "the native restore lost the current world storage version"
         Assert-True ($identityCount -ge 1) "the native restore lost the identity index"
     } finally {
         Invoke-MySql $mysql ($connectionArguments + "--execute=DROP DATABASE IF EXISTS $restoreDatabase") | Out-Null
@@ -193,7 +193,7 @@ try {
 
     $server = Start-PreviewServer
     $health = Wait-Ready
-    Assert-True ($health.data.storage_version -ge 14) "the migrated world is older than storage version 14"
+    Assert-True ($health.data.storage_version -ge 15) "the migrated world is older than storage version 15"
 
     $nonce = [guid]::NewGuid().ToString("N")
     $clientKey = "mysql-acceptance-$PID-$nonce"
@@ -222,7 +222,7 @@ try {
     }
     Assert-True (Test-Path -LiteralPath $backupPath) "the MySQL-backed server did not write its configured backup"
     $backup = Get-Content -Raw -LiteralPath $backupPath | ConvertFrom-Json
-    Assert-True ($backup.storage_version -ge 14) "the backup storage version was not current"
+    Assert-True ($backup.storage_version -ge 15) "the backup storage version was not current"
     Assert-True ($backup.phase4.animals.Count -ge 1) "the backup omitted the authored animal state"
     $characterId = $session.data.character_id
 
@@ -230,7 +230,7 @@ try {
     $server = $null
     $server = Start-PreviewServer
     $health = Wait-Ready
-    Assert-True ($health.data.storage_version -ge 14) "the restarted MySQL server reported an old storage version"
+    Assert-True ($health.data.storage_version -ge 15) "the restarted MySQL server reported an old storage version"
     $resumed = Invoke-RestMethod -Method Post -Uri "http://$ServerAddress/v1/session/guest" `
         -ContentType "application/json" -Body (@{ client_key = $clientKey; reset = $false } | ConvertTo-Json -Compress)
     Assert-True ($resumed.data.character_id -eq $characterId) "the MySQL-backed identity did not survive restart"

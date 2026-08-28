@@ -164,6 +164,26 @@ impl RepositoryState {
                     now.saturating_add(config.lease_duration_seconds.max(1));
             }
         }
+        let sessions = stored
+            .phase6
+            .sessions
+            .iter()
+            .filter(|(_, session)| !session.revoked && session.expires_at_tick > stored.tick)
+            .map(|(token, session)| {
+                (
+                    token.clone(),
+                    Session {
+                        client_key: session.identity_key.clone(),
+                        identity_key: session.identity_key.clone(),
+                        last_seen_tick: stored.tick,
+                        last_movement_tick: None,
+                        last_chat_tick: None,
+                        movement_results: HashMap::new(),
+                        chat_results: HashMap::new(),
+                    },
+                )
+            })
+            .collect();
         Self {
             tick: stored.tick,
             clock: WorldClock {
@@ -178,7 +198,7 @@ impl RepositoryState {
             next_trade: stored.next_trade.max(1),
             next_notice: stored.next_notice.max(1),
             identities: stored.identities,
-            sessions: HashMap::new(),
+            sessions,
             plots: if stored.plots.is_empty() {
                 super::world::farm_plots()
             } else {

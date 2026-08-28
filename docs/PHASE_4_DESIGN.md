@@ -1,6 +1,7 @@
 # Phase 4 design lock — The Enduring Society
 
-Status: implemented in protocol version 4 and storage version 14.
+Status: implemented in protocol version 4; its fields are part of storage
+version 15 (Phase 4 was first introduced at storage version 14).
 
 This record closes the open choices identified before Phase 4 work. The rules
 are deliberately bounded: one settlement, a small public treasury, a few
@@ -155,7 +156,7 @@ multi-turn loop.
 
 ## Persistence and migration
 
-The repository storage version is now 14. `StoredState.phase4` is serde-defaulted
+The repository storage version is now 15. `StoredState.phase4` is serde-defaulted
 so Phase 1–3 documents without the field load a fresh, safe Phase 4 society.
 Existing identities, inventory, plots, Phase 3 claims, events, and chronicle
 entries are retained, and older local-combat records default the new
