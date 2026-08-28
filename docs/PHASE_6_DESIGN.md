@@ -27,7 +27,10 @@ where required for world continuity. The online client exposes this boundary
 through a visible Delete control; it only arms and sends the bounded request
 after the account projection identifies a linked production account. The first
 tap arms the action and the second tap sends it. A scheduled deletion clears
-the client session and returns the player to the visible Reconnect path.
+the client session and returns the player to the visible Reconnect path. The
+deletion worker also removes persisted Phase 4 account-keyed and Phase 5
+identity-keyed replay payloads, so private command responses do not survive
+the private-state boundary.
 
 All mutation endpoints validate bounded request IDs and 64 KiB JSON request
 bodies, use server authorization, and retain idempotent results where retries

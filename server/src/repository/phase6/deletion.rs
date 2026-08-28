@@ -65,6 +65,14 @@ fn erase_account(state: &mut RepositoryState, request: &PendingAccountDeletion) 
         .phase3
         .request_results
         .retain(|key, _| !key.starts_with(&format!("{}:", request.identity_key)));
+    state
+        .phase4
+        .request_results
+        .retain(|key, _| !key.starts_with(&format!("phase4:{}:", request.account_id)));
+    state
+        .phase5
+        .request_results
+        .retain(|key, _| !key.starts_with(&format!("{}:", request.identity_key)));
 
     erase_private_phase4_state(state, request);
     state.trades.retain(|_, trade| {

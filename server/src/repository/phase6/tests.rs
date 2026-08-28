@@ -10,6 +10,7 @@ use tarrowyn_protocol::{
     SupportRepairRequest, TradeAction, TradeBundle, TradeRequest,
 };
 
+mod account_cleanup;
 mod long_session;
 mod service_orders;
 mod support_inventory;
