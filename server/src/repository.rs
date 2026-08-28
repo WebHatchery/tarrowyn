@@ -11,11 +11,12 @@ use tarrowyn_protocol::{
     WorldTile, MAX_CHAT_MESSAGE_LENGTH, MAX_TRADE_ITEMS, PROTOCOL_VERSION,
 };
 
-pub(super) const STORAGE_VERSION: u32 = 9;
+pub(super) const STORAGE_VERSION: u32 = 10;
 const MAX_EVENTS: usize = 2048;
 const MAX_CHAT_HISTORY: usize = 64;
 const MAX_NOTICES: usize = 32;
 const MAX_TRADES: usize = 128;
+pub(super) const FIELD_TOOL_MAX_CONDITION: u8 = 3;
 
 mod adventurer;
 mod farming;
@@ -121,6 +122,7 @@ impl WorldRepository {
                     display_name: format!("Guest {number}"),
                     position: Position { x: 8, y: 6 },
                     gold: self.config.starting_gold,
+                    field_tool_condition: FIELD_TOOL_MAX_CONDITION,
                     skill: 1,
                     reputation: 0,
                     inventory: Inventory {
@@ -609,6 +611,7 @@ pub(super) fn player_projection(state: &RepositoryState, key: &str) -> PlayerPro
         display_name: identity.display_name.clone(),
         position: identity.position,
         gold: identity.gold,
+        field_tool_condition: identity.field_tool_condition,
         skill: identity.skill,
         reputation: identity.reputation,
         adventurer_rank,

@@ -25,7 +25,8 @@ are recorded in the audit stream. The no-PvP law boundary is still active.
 
 ## Persistence, backups, and repair
 
-Storage version 9 adds real-time lease timestamps alongside public tax receipts,
+Storage version 10 adds field-tool condition alongside real-time lease timestamps
+and public tax receipts,
 the regional state,
 production session/audit records, and
 the per-character skill ledger while retaining defaults for Phase 1–6 files.

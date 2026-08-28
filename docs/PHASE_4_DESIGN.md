@@ -1,6 +1,6 @@
 # Phase 4 design lock — The Enduring Society
 
-Status: implemented in protocol version 4 and storage version 9.
+Status: implemented in protocol version 4 and storage version 10.
 
 This record closes the open choices identified before Phase 4 work. The rules
 are deliberately bounded: one settlement, a small public treasury, a few
@@ -61,6 +61,15 @@ return after the configured grace period, which gives late players a visible
 entry path. The first infrastructure records are the north road, stone bridge,
 town hall, Hearth services, and an optional public workshop. Each has condition,
 upkeep, service quality, failure state, and last-maintained tick.
+
+## Farming equipment and professions
+
+Every recognised character starts with a field tool at condition 3. Active
+tending consumes one condition and improves the crop; a worn-out tool blocks
+further tending with a readable repair instruction. The existing service-order
+loop supplies the recovery path: a completed order whose service repairs a
+field tool restores the requesting farmer's condition to 3, while the provider
+receives the normal timed-work reward.
 
 ## Professions and knowledge
 
@@ -127,7 +136,7 @@ multi-turn loop.
 
 ## Persistence and migration
 
-The repository storage version is now 9. `StoredState.phase4` is serde-defaulted
+The repository storage version is now 10. `StoredState.phase4` is serde-defaulted
 so Phase 1–3 documents without the field load a fresh, safe Phase 4 society.
 Existing identities, inventory, plots, Phase 3 claims, events, and chronicle
 entries are retained. New request caches use stable account/request keys and

@@ -214,6 +214,21 @@ impl super::super::WorldRepository {
                     let identity = state.identities.get_mut(&key).expect("identity exists");
                     identity.gold = identity.gold.saturating_add(completed_order.reward_gold);
                     identity.skill = identity.skill.saturating_add(1);
+                    if completed_order
+                        .service
+                        .to_ascii_lowercase()
+                        .contains("tool")
+                    {
+                        if let Some(requester_key) =
+                            super::key_for_account(&state, &completed_order.requester_account_id)
+                        {
+                            state
+                                .identities
+                                .get_mut(&requester_key)
+                                .expect("requester identity exists")
+                                .field_tool_condition = super::super::FIELD_TOOL_MAX_CONDITION;
+                        }
+                    }
                     state
                         .phase4
                         .credentials

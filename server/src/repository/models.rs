@@ -17,6 +17,8 @@ pub(crate) struct Identity {
     pub(super) display_name: String,
     pub(super) position: Position,
     pub(super) gold: u32,
+    #[serde(default = "default_field_tool_condition")]
+    pub(super) field_tool_condition: u8,
     pub(super) skill: u32,
     pub(super) reputation: u32,
     pub(super) inventory: Inventory,
@@ -39,6 +41,10 @@ pub(crate) struct Identity {
     pub(super) recovery_cost: u32,
     #[serde(default)]
     pub(super) skills: SkillLedger,
+}
+
+fn default_field_tool_condition() -> u8 {
+    super::FIELD_TOOL_MAX_CONDITION
 }
 
 #[derive(Debug, Clone)]

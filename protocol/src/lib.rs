@@ -216,6 +216,8 @@ pub struct PlayerProjection {
     pub display_name: String,
     pub position: Position,
     pub gold: u32,
+    #[serde(default = "default_field_tool_condition")]
+    pub field_tool_condition: u8,
     pub skill: u32,
     pub reputation: u32,
     #[serde(default)]
@@ -442,6 +444,10 @@ pub struct EventsResponse {
 
 fn default_weapon() -> WeaponKind {
     WeaponKind::IronSword
+}
+
+fn default_field_tool_condition() -> u8 {
+    3
 }
 
 #[cfg(test)]

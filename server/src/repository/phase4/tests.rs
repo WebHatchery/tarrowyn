@@ -1,4 +1,6 @@
 use super::super::{ServerConfig, WorldRepository};
+mod farming;
+
 use tarrowyn_protocol::{
     ClaimLifecycleAction, ClaimLifecycleRequest, GovernanceAction, GovernanceRequest,
     GuestSessionRequest, KnowledgeAction, KnowledgeRequest, LocalCombatAction, LocalCombatRequest,

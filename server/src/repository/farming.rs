@@ -117,6 +117,19 @@ impl WorldRepository {
         identity_key: &str,
         plot_index: usize,
     ) -> (bool, Option<String>) {
+        if state
+            .identities
+            .get(identity_key)
+            .is_some_and(|identity| identity.field_tool_condition == 0)
+        {
+            return (
+                false,
+                Some(
+                    "The field tool is worn out; commission a repair before tending again."
+                        .to_owned(),
+                ),
+            );
+        }
         let Some(mut crop) = state.plots[plot_index].crop else {
             return (false, Some("That plot is empty.".to_owned()));
         };
@@ -127,11 +140,12 @@ impl WorldRepository {
         crop.quality = crop.quality.saturating_add(1).min(3);
         crop.last_tended_tick = Some(state.tick);
         state.plots[plot_index].crop = Some(crop);
-        state
+        let identity = state
             .identities
             .get_mut(identity_key)
-            .expect("identity exists")
-            .skill += 1;
+            .expect("identity exists");
+        identity.field_tool_condition = identity.field_tool_condition.saturating_sub(1);
+        identity.skill += 1;
         (true, None)
     }
 
