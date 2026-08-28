@@ -2,7 +2,7 @@
 
 ## Game Design Document
 
-**Version:** 0.2 - Classless Skill Discovery
+**Version:** 0.3 - Traditional MMORPG Systems
 **Status:** Working design  
 **Platform/technology baseline:** 2D multiplayer client + authoritative server, developed in Rust
 
@@ -17,14 +17,16 @@
 | Technology | Locked | Rust; separate authoritative server and client from the first slice |
 | Progression | Direction locked | Classless, horizontal skill mastery with hidden skill mergers; no conventional global level |
 | Skill teaching | Direction locked | Players can form schools, share discoveries, and unlock direct teaching through teaching expertise |
-| World time | Direction locked | Roughly 3 real hours per in-game day; exact non-even duration TBD |
-| Normal defeat | Direction locked | Knockout with item/goods risk; no routine permanent character death |
+| World time | Locked | 80 real minutes per in-game day; season and year scale deferred |
+| Normal defeat | Locked | Characters cannot die; defeat is knockout with item/goods risk |
 | Settlements | Direction locked | Organic growth and decline, potentially homestead to kingdom |
-| NPCs | Direction locked | Opportunity-driven migration, households, departure, memory |
-| Land | Direction locked | Aging claims/leases rather than permanent first-come ownership |
+| NPCs | Launch locked | Fixed NPCs; family simulation, aging, migration, and career changes deferred |
+| Land | Locked | Renewable three-real-month leases rather than permanent first-come ownership |
 | Frontier | Direction locked | Player-led pioneer expeditions and new settlements |
-| Combat details | Open | Not yet selected |
-| Generational succession | Open | Possible rare/opt-in legacy system, not normal defeat |
+| Combat | Direction locked | Real-time action-bar combat; melee attacks and spells are explicit skill uses |
+| PvP | Launch locked | No launch PvP; criminal play is a future option only if it cannot spoil non-participants' play |
+| Zone population | Direction locked | Several hundred concurrent players per zone instance |
+| Crafting | Direction locked | Short timing minigames influence quality |
 
 ## 1. Executive Summary
 
@@ -94,9 +96,7 @@ A 60-90 minute session should produce at least one memorable result even when it
 
 ### Accelerated Day
 
-The target is roughly three real hours per in-game day. The exact duration is not locked.
-
-The final duration should preferably not divide evenly into 24 real-world hours. This prevents a player who logs in at the same real time every day from always seeing the same phase of the in-game day.
+One in-game day lasts exactly 80 real minutes. Because 80 minutes does not divide evenly into 24 hours, a player who logs in at the same real-world time each day encounters a different part of Tarrowyn's day instead of being trapped in the same daylight or night-time window.
 
 ### Time-of-Day Design
 
@@ -106,7 +106,7 @@ Time should rarely hard-lock essential systems. If a blacksmith is unavailable o
 
 ### Long-Term Calendar
 
-Seasons and years are intended to matter eventually, particularly for farming, land leases, migration, settlement history, and long-term personal goals. Their exact real-time duration is still open.
+Seasons and years are intended to matter eventually, particularly for farming, settlement history, and long-term personal goals. Their exact number of in-game days remains deferred until crop cadence and access can be tested. Land leases use real time and are not shortened by the accelerated calendar.
 
 ## 5. Progression
 
@@ -124,9 +124,44 @@ A numerical 1-100 skill treadmill should not simply recreate character levels un
 
 Individual skills begin with concrete activities or bodies of knowledge, such as Sword Fighting, Spear Fighting, Axe Fighting, Wind Magic, Water Magic, Electricity Magic, Crop Tending, Animal Husbandry, or Teaching. Mastery means demonstrated experience with that skill, not merely spending a generic point currency.
 
+### Skill Depth
+
+Every skill has a depth from one to five. Depth describes how many layers of understanding are combined in the skill, not the character's numeric proficiency with it:
+
+- depth one: a root discipline that can be learned directly;
+- depth two: an initial merger or advanced specialisation;
+- depth three and four: increasingly specialised mergers built from established disciplines;
+- depth five: a rare capstone art combining several mature branches.
+
+A depth-five skill is not automatically five times stronger than a root skill. Depth measures complexity, prerequisite breadth, and teaching difficulty. A deep skill should usually be narrower, more demanding, or more situational as it becomes more capable.
+
+### Launch Root Skill Catalogue
+
+The initial full-game catalogue should establish these depth-one families. The smallest prototype may expose only a representative subset, but every listed root has a direct entry path and does not depend on guessing a hidden merger.
+
+- Combat: Unarmed Fighting, Sword Fighting, Axe Fighting, Spear Fighting, Bow Fighting, and Shield Use.
+- Magic: Wind Magic, Water Magic, Electricity Magic, Fire Magic, Earth Magic, and Restoration Magic.
+- Gathering and wilderness: Foraging, Forestry, Mining, Fishing, Hunting, Survival, and Navigation.
+- Farming: Crop Tending and Animal Husbandry.
+- Production: Carpentry, Smithing, Tailoring, Cooking, Alchemy, Masonry, and General Crafting.
+- Social and civic: Trade, Teaching, and Leadership.
+
+Roots are learned through an obvious first action, introductory trainer, tool, worksite, book, attunement, or short quest. The entry method should fit the fiction but must not strand a player behind an undisclosed combination.
+
+Carpentry is therefore a root skill. A player can learn it by receiving or improvising basic carpentry tools and completing an introductory project at a woodworking bench, with an NPC lesson or beginner manual as dependable alternatives. Axe Fighting concerns combat and is not a Carpentry prerequisite; Forestry supplies timber, while Carpentry turns prepared timber into structures, fittings, tools, and furniture. Future skills such as Timbercraft may merge Forestry, Carpentry, and relevant axe experience without blocking entry to ordinary Carpentry.
+
+### Initial Advanced Discoveries
+
+The first internal merger catalogue should include at least two depth-two discoveries:
+
+- Weapon Fighting requires mastery of Sword Fighting, Spear Fighting, and Axe Fighting plus 100 qualifying enemy defeats across those weapon families, with at least 20 defeats credited to each. It improves switching, stance transfer, and reading unfamiliar melee weapons rather than multiplying damage.
+- Storm Magic requires mastery of Wind Magic, Water Magic, and Electricity Magic plus 25 successful three-element interactions performed during severe weather. It grants deliberate storm techniques with substantial preparation and resource demands.
+
+These recipes are internal design truth, not automatically player-facing documentation. Additional advanced skills are added when gameplay creates a useful role for them; the launch catalogue does not need speculative mergers merely to fill a tree.
+
 ### Hidden Skill Mergers
 
-Compatible skills can merge into broader, hybrid, or advanced skills. For example, mastering Sword Fighting, Spear Fighting, and Axe Fighting might reveal Weapon Fighting. Wind Magic plus Water Magic might reveal Storm Magic, while a more powerful storm discipline might also require Electricity Magic.
+Compatible skills can merge into broader, hybrid, or advanced skills. The initial examples are Weapon Fighting from three mastered melee-weapon disciplines and Storm Magic from mastered Wind, Water, and Electricity Magic. Future mergers may use fewer, more, or already-merged ingredients.
 
 These examples express the system's shape, not guaranteed launch recipes. A merger may require any combination of:
 
@@ -141,6 +176,8 @@ A merged skill is a new capability rather than a replacement for its ingredients
 ### Discovery and Secrecy
 
 The game does not publish a complete recipe list. Players should discover combinations through experimentation, observation, rumours, records, mentorship, and play. Requirements may be partly signposted so discovery feels mysterious but not arbitrary: a character can sense that two practices resonate, hear an NPC theory, or see progress described in natural language without receiving the entire formula.
+
+Hints use three broad stages: no special hint before the character has relevant experience; a vague sense of resonance once a meaningful prerequisite is mastered; and a statement that further experience or circumstances are required once the known disciplines align. Hidden activity thresholds are not shown as exact numbers by default.
 
 The server evaluates unlocks authoritatively and records the qualifying history needed by each character. Progress counters may be hidden, approximate, or revealed through suitable knowledge skills; the design should avoid turning every mystery into a visible checklist.
 
@@ -160,7 +197,9 @@ Players can form schools devoted to a fighting tradition, magical discipline, cr
 
 At the basic level, players teach by sharing clues, demonstrating techniques, practising together, and helping a learner satisfy the normal merger requirements. Learning Teaching and developing it to a high level can unlock formal instruction. A qualified teacher may then teach certain advanced skills directly, bypassing some discovery steps, but not necessarily all mastery, experience, tool, moral, or world-state requirements.
 
-Direct teaching should require meaningful participation from both teacher and student and may take time, suitable facilities, materials, demonstrations, or repeated lessons. It must not become an instant menu transaction or a universal shortcut. Each skill definition specifies whether it is directly teachable, which requirements teaching can substitute for, and the minimum Teaching mastery and subject mastery required.
+Direct teaching should require meaningful participation from both teacher and student and may take time, suitable facilities, materials, demonstrations, or repeated lessons. It must not become an instant menu transaction or a universal shortcut. Each skill definition specifies whether it is directly teachable and which requirements teaching can substitute for.
+
+The default rule is that a teacher must have mastered the subject and have Teaching mastery at least equal to the subject's depth. Lesson duration and required demonstrations then scale with skill complexity and the teacher's proficiency above that minimum. A character with depth-one Teaching cannot directly teach a depth-five merged skill even if they possess that skill. Learners must still meet any requirements marked personal or non-teachable.
 
 Schools turn player knowledge into social and economic content. Renowned schools may recruit apprentices, charge tuition, exchange secrets, publish manuals, compete over doctrine, split into rival traditions, or become part of a settlement's identity. A school's greatest advantage is organised knowledge and trusted instruction, not exclusive permanent ownership of a skill.
 
@@ -211,6 +250,8 @@ Crafted equipment and tools should be valuable enough that losing or replacing t
 
 Crafting depends on material supply, local industry, orders, expertise, tools, and possibly learned techniques.
 
+Most crafting actions include a short timing minigame, usually asking the player to tap a visible control while a moving indicator crosses a target area. Materials, tools, recipe knowledge, and skill establish the possible quality range; execution nudges the result within that range. The minigame should reward attention without making latency, motor precision, or one missed tap destroy valuable materials. Accessibility options can widen targets or offer a slower equivalent interaction.
+
 ### Adventuring
 
 Adventuring is a profession within society rather than the default path every player must follow.
@@ -220,6 +261,8 @@ Adventurers take contracts, investigate threats, explore, escort, recover resour
 ### Cross-System Example
 
 A wyvern settles near a farming region. Wildlife is displaced into fields, crop losses increase, food prices rise, hunters find more work, the tavern posts contracts, blacksmiths receive demand for suitable equipment, and adventurers eventually investigate the source. The event becomes economic and social content as well as combat content.
+
+This kind of player-driven threat is a far-future direction, not a current implementation concern. When the core world is mature enough, major threats should arise from or respond to accumulated player activity and should be resolved primarily through player preparation and action. Procedural event generation rules should not be designed until the ordinary combat, economy, profession, and settlement loops provide the necessary causes and consequences.
 
 ## 7. Economy and Item Value
 
@@ -233,6 +276,8 @@ A farmer losing a good hoe should be inconvenienced and may need to borrow, impr
 
 Persistent economies need consumption. Food, potions, seeds, building materials, workshop inputs, maintenance materials, expedition supplies, festivals, and NPC settlement demand can remove goods from circulation.
 
+Immortal characters do not require sleep, food, or drink to remain alive and playable. Beds, meals, and drinks may provide comfort, temporary benefits, social rituals, role-play, crafting demand, or recovery options, but the economy must not pretend that immortal characters have unavoidable biological upkeep. Durable simulation should focus on goods players actually produce, move, use, damage, improve, build with, or choose to consume.
+
 Durability should not become constant busywork. Maintenance and occasional damage are preferred over rapid equipment decay.
 
 ### NPC Baseline vs Player Excellence
@@ -241,11 +286,19 @@ NPC services should keep settlements functional but generally be more limited, e
 
 NPCs fill cracks in the economy rather than replacing the incentive to become a profession.
 
+The economy should be simulated in detail where transactions create visible fantasy-world consequences: inventories, local supply, orders, prices, transport, production inputs, maintenance, and settlement projects. Invisible background life can be abstracted when simulating it would add server cost without creating player decisions. Plausibility and useful interaction matter more than modelling a modern economy or inventing needs the characters do not have.
+
 ## 8. Defeat, Risk, and Recovery
+
+### Real-Time Combat
+
+Combat plays in real time. Every meaningful action is a skill use selected from visible touch/click controls: a basic melee attack, weapon technique, block, movement skill, item use, or spell cast. A physical keyboard may provide shortcuts, but the complete combat loop must remain playable from the on-screen action bar.
+
+Weapons, positioning, timing, range, cast time, recovery, resources, and enemy intent create tactical decisions without changing combat into a turn-based exchange. The authoritative server validates targets, timing, resources, movement, hits, effects, and defeat; the client presents immediate readable feedback and prediction only where it cannot decide outcomes unfairly.
 
 ### Normal Defeat
 
-Ordinary combat defeat should normally result in being knocked unconscious rather than permanent character death.
+Characters cannot permanently die. Combat defeat results in being knocked unconscious and may cause carried items or goods to be lost, scattered, damaged, or taken according to the encounter.
 
 Unconsciousness must not require the player to sit unable to act for a long period. Recovery should return control promptly while preserving consequences.
 
@@ -263,7 +316,7 @@ Risk should therefore generate stories rather than merely impose a timer.
 
 ### Generational Characters
 
-Generational succession has been considered but is not selected as the normal defeat system. It remains a possible future system for rare death, voluntary legacy play, aging, or long-term world history.
+Generational succession is not part of the character model. Persistent identity, history, and relationships belong to the same immortal character; no death or heir system is required.
 
 ## 9. Settlements and Player Society
 
@@ -301,7 +354,9 @@ An ungoverned settlement is not automatically a failed game state. Rebuilding or
 
 ### Exact Rules
 
-Login inactivity windows, election systems, taxation, councils, and authority boundaries remain open design questions.
+Launch governance stops at a town mayor. The mayor receives settlement taxes from nearby eligible players into a public town treasury and may spend that treasury on predefined settlement upgrades. Tax rates, eligible territory, treasury income, purchases, and office actions must be visible in a public ledger.
+
+Deeper government structures, elections, councils, inheritance, criminal law, and wider authority are not designed in advance. They should be discovered and specified only when the growing world demonstrates a need for them. Until then, the mayoral office must have bounded powers and cannot take items directly from players or spend public funds outside settlement systems.
 
 ## 11. Land, Property, and Leases
 
@@ -313,7 +368,9 @@ Land ownership is better represented as a recognised claim or lease recorded by 
 
 ### Aging Ownership
 
-Claims should eventually require renewal and may lapse after extended inactivity or non-payment. Exact lease duration is not locked.
+Each land lease lasts three real months and must be renewed before expiry. The accelerated in-game calendar does not affect this duration.
+
+An expired lease enters a clearly announced grace and reclamation process rather than deleting property instantly. Exact renewal price, warning cadence, treatment of improvements, and inheritance are content and policy details, but continued control always requires renewal.
 
 Abandoned buildings should not necessarily vanish immediately. Neglected property can become part of the world's history and may later be restored or reclaimed.
 
@@ -337,45 +394,21 @@ A player should be able to announce an expedition and encourage others to come. 
 
 A poorly prepared expedition can struggle or fail without deleting the players. Lack of food, tools, professions, safety, or suitable land can force retreat, improvisation, trade, or a call for help.
 
-## 13. Dynamic NPC Ecology
+## 13. Fixed NPC Foundation
 
-### NPCs Follow Opportunity
+### Launch Scope
 
-NPCs should arrive because they perceive sustained economic and social opportunity, not because the settlement crossed a simple population threshold or lacks a specific class.
+Initial NPCs are fixed authored characters with stable locations, roles, services, dialogue, and inventories or restock rules. They do not age, marry, have children, die, change careers, form simulated households, or migrate autonomously.
 
-Example: players establish a homestead with demand for metal. After sustained unmet demand, a miner may choose to move nearby. Their spouse may be a tailor, creating a second service as a natural consequence rather than a designed unlock.
+This boundary keeps development focused on player society and the core MMORPG systems. NPC state may still react in small authored ways to quests, settlement upgrades, discoveries, and world flags, but there is no general family or life simulation.
 
-### Demand Signals
+### Future Reconsideration
 
-NPC migration can consider unmet purchase orders, local prices, imports, local resources, active population, housing, safety, food, profitability, family suitability, and existing competition.
-
-Demand should be sustained over time so one unusual purchase does not summon a new industry.
-
-### Households
-
-NPCs can move as households rather than isolated vendors. Family members may have different professions, needs, relationships, and future paths.
-
-This can gradually produce settlement demographics and history without every service being spawned independently.
-
-### Departure
-
-If demand disappears or living conditions worsen, NPCs may eventually consider leaving. Departure timing should include randomness over an extended period rather than a perfectly predictable countdown.
-
-Players should receive clues through dialogue, behaviour, reduced investment, notices, or local rumours so migration feels causal rather than arbitrary.
-
-### Player Influence
-
-Players can influence but not fully command NPC decisions. A town might subsidise a forge, offer a contract, improve housing, make the roads safer, or guarantee purchases.
-
-An NPC may still decide to leave.
-
-### NPC Memory
-
-NPCs should remember meaningful former homes, relationships, employers, occupations, and moves. A former resident encountered years later can recognise players or ask about their previous settlement.
+Opportunity-driven migration, household simulation, memory, and departure are deferred rather than promised systems. They should be reconsidered only after fixed NPCs become a demonstrated limitation. Existing NPC identifiers and persistence should remain stable enough that later behaviour can be added without replacing characters players already know.
 
 ### Guiding Rule
 
-NPCs keep society functioning, but whenever possible they should create opportunities and vacancies for human players rather than replace them.
+NPCs keep essential services and stories available, while the most interesting professions, schools, markets, expeditions, and settlement decisions should belong to human players.
 
 ## 14. Social Spaces and the Tavern
 
@@ -411,9 +444,17 @@ Professional reputation, guild standing, settlement history, successful contract
 
 ### Community Scale
 
-The design does not require thousands of characters standing in the same city. Smaller persistent communities may better support recognition and repeated encounters.
+The population goal is several hundred concurrent players in one zone instance. The design does not require thousands of characters standing in the same city, and smaller persistent communities may better support recognition and repeated encounters.
 
 The game should be designed to remain functional at low concurrency and become richer as more players gather.
+
+The world is divided into persistent zones that may run multiple instances when population or performance requires it. Exact topology, instance selection, overflow rules, and cross-instance social behaviour should be designed during scale testing. Instancing must not duplicate unique property, markets, or settlement authority in ways that fracture the persistent world.
+
+### PvP and Criminal Play
+
+The initial game has no player-versus-player combat, player theft, or player actions that forcibly destroy another player's property. PvP may be added later only alongside a design that lets players pursue criminal roles without ruining the experience of players who did not choose to participate.
+
+Future criminal play should therefore begin from consent, bounded opt-in spaces or activities, readable risk, enforceable consequences, and reliable recovery. No present system should assume that open-world PvP will eventually exist.
 
 ### No Dependency Dead Ends
 
@@ -477,7 +518,7 @@ A particularly strong signal is players organically saying some version of 'meet
 
 Risk: the game is only enjoyable after a critical mass of players forms.
 
-Countermeasure: NPC fallback services, households, travelling services, imports, and opportunity-driven migration keep low-population settlements functional while leaving room for players to outperform them.
+Countermeasure: fixed NPC fallback services, travelling services, imports, and substitutes keep low-population settlements functional while leaving room for players to outperform them.
 
 ### Slow Progress Feels Like No Progress
 
@@ -495,19 +536,19 @@ Countermeasure: systemic events and resource chains should affect multiple profe
 
 Risk: persistent production eventually makes all common goods worthless.
 
-Countermeasure: ongoing consumption, maintenance, construction, food use, events, expeditions, NPC demand, and meaningful material sinks.
+Countermeasure: optional consumables, maintenance, construction, crafting inputs, settlement upgrades, expeditions, NPC demand, and meaningful material sinks. Mandatory hunger, thirst, or sleep are not used as artificial demand.
 
 ### NPC Replacement of Players
 
 Risk: players learn that missing professions will always be solved by spawned NPCs.
 
-Countermeasure: NPCs respond imperfectly to opportunity, have limitations, make independent decisions, and often create partial solutions rather than supplying the exact missing profession.
+Countermeasure: fixed NPCs offer limited baseline services, inventories, and quality. They do not dynamically expand to erase unmet demand, leaving clear room for player specialists.
 
 ### Land Hoarding
 
 Risk: early players permanently monopolise desirable territory.
 
-Countermeasure: leases, aging claims, inactivity rules, expandable frontier space, and reclaimable abandoned land.
+Countermeasure: three-real-month renewable leases, expiry and reclamation rules, expandable frontier space, and reclaimable abandoned land.
 
 ### Real-Time Lockout
 
@@ -533,23 +574,31 @@ Risk: direct instruction lets established schools instantly manufacture advanced
 
 Countermeasure: teaching substitutes only for explicitly allowed discovery steps. Learners still contribute time, practice, participation, and any non-teachable requirements; independent discovery always remains possible.
 
-## 20. Open Design Questions
+## 20. Locked Scope and Deliberate Deferrals
 
-### Still Unresolved
+### Locked Direction
 
-- Exact real-time length of an in-game day, season, and year.
-- Whether true character death exists at all, and whether generational succession becomes an opt-in or rare legacy system.
-- Combat model and degree of action versus tactical play.
-- PvP, criminal behaviour, theft between players, and law enforcement.
-- World topology, shard structure, instancing, and maximum intended server population.
-- Launch skill catalogue, exact hidden merger recipes, mastery thresholds, and how strongly hints expose partial progress.
-- School governance, lesson pacing, tuition safeguards, recipe ownership norms, and which requirements direct teaching may bypass.
-- Crafting interaction and how much player execution affects quality.
-- Government structure, elections, taxes, offices, and local authority.
-- Land lease length, renewal, inheritance, abandonment, and reclamation.
-- Depth of NPC family simulation, aging, birth, death, marriage, and career changes.
-- How dynamic threats and world events are generated and resolved.
-- How much of the economy is fully simulated versus abstracted.
+- An in-game day lasts 80 real minutes; season and year scale waits for crop-cadence testing.
+- Characters are immortal. Defeat means knockout and carried-item risk, never death or generational succession.
+- Combat is real-time and every attack, technique, defensive action, item, and spell is an explicit skill use.
+- Launch has no PvP, player theft, or criminal actions against non-consenting players.
+- Capacity targets several hundred concurrent players per zone instance.
+- Root skills have direct entry paths, while advanced mergers and exact progress remain discoverable.
+- Teaching depth must meet or exceed the depth of a mastered subject before direct instruction is possible.
+- Crafting uses a short, accessible timing interaction to influence quality within a skill-and-material-defined range.
+- Launch governance has only a bounded mayor, public settlement taxes, a public treasury, and predefined upgrades.
+- Land leases last three real months and expire when not renewed, subject to warning and reclamation rules.
+- Launch NPCs are fixed authored characters without family or lifecycle simulation.
+- Economic detail follows meaningful fantasy production and exchange; immortal characters do not need food, drink, or sleep.
+
+### Deliberately Deferred
+
+- Exact season and year length, pending playtests of farming access and pacing.
+- PvP or criminal roles, unless a later opt-in and consequence model protects non-participants.
+- Detailed zone topology, overflow, and cross-instance rules until scale testing.
+- Government beyond the mayoral settlement loop until players demonstrate a need for it.
+- NPC aging, birth, death, marriage, households, migration, and career changes.
+- Player-driven dynamic threat generation until ordinary combat, economy, profession, and settlement systems are mature.
 
 ## 21. Definition of Done for the Concept Prototype
 
