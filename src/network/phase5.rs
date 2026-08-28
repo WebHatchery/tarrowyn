@@ -4,10 +4,11 @@ use super::*;
 use serde::Deserialize;
 use tarrowyn_protocol::{
     AccountResponse, ApiResponse, AuthLinkRequest, AuthLinkResponse, AuthRevokeResponse,
-    LawBoundaryResponse, MarketOrderAction, MarketOrderRequest, MarketSnapshot,
-    ModerationReportRequest, ModerationReportResponse, RegionSnapshot, RegionalEventAction,
-    RegionalEventRequest, RegionalEventResponse, RegionalEventsResponse, RouteAction, RouteRequest,
-    RouteResponse, SettlementsResponse, TravelAction, TravelRequest, TravelResponse, TravelStatus,
+    GuestSessionResponse, LawBoundaryResponse, MarketOrderAction, MarketOrderRequest,
+    MarketSnapshot, ModerationReportRequest, ModerationReportResponse, RegionSnapshot,
+    RegionalEventAction, RegionalEventRequest, RegionalEventResponse, RegionalEventsResponse,
+    RouteAction, RouteRequest, RouteResponse, SettlementsResponse, TravelAction, TravelRequest,
+    TravelResponse, TravelStatus,
 };
 
 enum Phase5Command {
@@ -47,6 +48,8 @@ pub(super) struct Phase5Client {
     events: Option<RegionalEventsResponse>,
     law: Option<LawBoundaryResponse>,
     account: Option<AccountResponse>,
+    linked_account: Option<AuthLinkResponse>,
+    logged_out: bool,
     own_account_id: Option<String>,
     refresh_timer: f32,
     next_request_id: u64,
@@ -69,6 +72,8 @@ impl Phase5Client {
             events: None,
             law: None,
             account: None,
+            linked_account: None,
+            logged_out: false,
             own_account_id: None,
             refresh_timer: 0.0,
             next_request_id: 1,
@@ -379,16 +384,27 @@ impl Phase5Client {
             ),
             Phase5CommandResponse::Link(response) => {
                 api.set_bearer_token(Some(&response.session.account_token));
+                self.linked_account = Some(response.clone());
                 self.account = None;
                 notices.push(NetworkNotice::Success(
                     "Account linked; the character boundary and session are now production-ready."
                         .to_owned(),
                 ));
             }
-            Phase5CommandResponse::Revoke(response) => notices.push(NetworkNotice::Info(format!(
-                "{} session(s) revoked; reconnect is the safe return path.",
-                response.revoked_sessions
-            ))),
+            Phase5CommandResponse::Revoke(response) => {
+                self.logged_out = true;
+                self.pending_region = None;
+                self.pending_settlements = None;
+                self.pending_market = None;
+                self.pending_events = None;
+                self.pending_law = None;
+                self.pending_account = None;
+                self.commands.clear();
+                notices.push(NetworkNotice::Info(format!(
+                    "{} session(s) revoked; tap Reconnect to return safely.",
+                    response.revoked_sessions
+                )));
+            }
             Phase5CommandResponse::Report(response) => phase5_notice(
                 response.accepted,
                 response.reason,
@@ -396,7 +412,7 @@ impl Phase5Client {
                 notices,
             ),
         }
-        self.refresh_timer = 0.0;
+        self.refresh_timer = if self.logged_out { f32::MAX } else { 0.0 };
     }
 
     pub(super) fn clear(&mut self) {
@@ -409,6 +425,28 @@ impl Phase5Client {
         self.pending_command = None;
         self.commands.clear();
         self.account = None;
+        self.linked_account = None;
+        self.logged_out = false;
+        self.refresh_timer = 0.0;
+    }
+
+    pub(super) fn take_linked_account(
+        &mut self,
+        client_key: Option<&str>,
+    ) -> Option<GuestSessionResponse> {
+        let linked = self.linked_account.take()?;
+        Some(GuestSessionResponse {
+            client_key: client_key.unwrap_or("linked-client").to_owned(),
+            account_id: linked.account_id,
+            character_id: linked.character_id,
+            display_name: linked.display_name,
+            account_token: linked.session.account_token,
+            expires_in_seconds: linked.session.expires_in_seconds,
+        })
+    }
+
+    pub(super) fn take_logged_out(&mut self) -> bool {
+        std::mem::take(&mut self.logged_out)
     }
 
     pub(super) fn summary(&self) -> String {
@@ -519,6 +557,9 @@ fn phase5_notice(
         notices.push(NetworkNotice::Warning(reason));
     }
 }
+
+#[cfg(test)]
+mod tests;
 
 impl OnlineClient {
     pub(crate) fn queue_phase5(&mut self, id: &str) {

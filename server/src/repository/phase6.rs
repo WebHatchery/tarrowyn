@@ -6,6 +6,7 @@ use crate::config::ServerConfig;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 use std::fs;
+use std::path::Path;
 use tarrowyn_protocol::{
     AccountResponse, ApiResponse, AuditRecord, AuthLinkRequest, AuthLinkResponse,
     AuthRefreshRequest, AuthRefreshResponse, AuthRevokeRequest, AuthRevokeResponse, AuthSession,
@@ -741,8 +742,28 @@ fn write_backup(state: &mut RepositoryState, config: &ServerConfig) {
     let Ok(data) = serde_json::to_vec_pretty(&state.to_stored()) else {
         return;
     };
-    if fs::write(&backup_path, data).is_ok() {
+    let path = Path::new(&backup_path);
+    if let Some(parent) = path.parent() {
+        if fs::create_dir_all(parent).is_err() {
+            return;
+        }
+    }
+    let temporary_path = path.with_extension(format!(
+        "{}-{}",
+        path.extension()
+            .and_then(|extension| extension.to_str())
+            .unwrap_or("backup"),
+        std::process::id()
+    ));
+    if fs::write(&temporary_path, data).is_ok()
+        && super::persistence::replace_file(&temporary_path, path).is_ok()
+    {
         state.phase6.last_backup_tick = Some(state.tick);
         state.phase6.last_backup_path = Some(backup_path);
+    } else {
+        let _ = fs::remove_file(temporary_path);
     }
 }
+
+#[cfg(test)]
+mod tests;

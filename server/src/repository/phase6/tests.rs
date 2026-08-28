@@ -1,0 +1,32 @@
+use super::super::models::{RepositoryState, StoredState};
+use super::super::ServerConfig;
+use super::write_backup;
+use std::fs;
+
+#[test]
+fn backup_replaces_the_snapshot_as_one_complete_json_file() {
+    let root = std::env::temp_dir().join(format!(
+        "tarrowyn-backup-{}-{}",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .expect("system clock should be after the Unix epoch")
+            .as_nanos()
+    ));
+    let path = root.join("nested").join("snapshot.json");
+    let config = ServerConfig {
+        backup_path: Some(path.to_string_lossy().into_owned()),
+        ..ServerConfig::default()
+    };
+    let mut state = RepositoryState::fresh(&config);
+    state.tick = 7;
+
+    write_backup(&mut state, &config);
+
+    let bytes = fs::read(&path).expect("backup should be written");
+    let stored: StoredState = serde_json::from_slice(&bytes).expect("backup should be complete");
+    assert_eq!(stored.storage_version, super::super::STORAGE_VERSION);
+    assert_eq!(state.phase6.last_backup_tick, Some(7));
+    assert_eq!(state.phase6.last_backup_path.as_deref(), path.to_str());
+    let _ = fs::remove_dir_all(root);
+}

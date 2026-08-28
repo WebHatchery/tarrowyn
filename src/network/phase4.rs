@@ -4,11 +4,11 @@ use macroquad_toolkit::net::{HttpClient, Pending};
 use std::collections::VecDeque;
 use tarrowyn_protocol::{
     ApiResponse, ClaimLifecycleAction, ClaimLifecycleRequest, ClaimsResponse, GovernanceAction,
-    GovernanceRequest, GovernanceResponse, GovernanceState, HouseholdsResponse, KnowledgeAction,
-    KnowledgeRequest, KnowledgeResponse, LocalCombatAction, LocalCombatRequest,
-    LocalCombatResponse, LocalCombatState, ProfessionAction, ProfessionKind, ProfessionRequest,
-    ProfessionResponse, ProfessionsResponse, SkillAction, SkillRequest, SkillResponse, SkillStatus,
-    SkillsResponse, WeaponKind,
+    GovernanceRequest, GovernanceResponse, GovernanceState, GuestSessionResponse,
+    HouseholdsResponse, KnowledgeAction, KnowledgeRequest, KnowledgeResponse, LocalCombatAction,
+    LocalCombatRequest, LocalCombatResponse, LocalCombatState, ProfessionAction, ProfessionKind,
+    ProfessionRequest, ProfessionResponse, ProfessionsResponse, SkillAction, SkillRequest,
+    SkillResponse, SkillStatus, SkillsResponse, WeaponKind,
 };
 
 mod summary;
@@ -655,6 +655,17 @@ impl Phase4Client {
 
     pub(super) fn region_summary(&self) -> String {
         self.regional.summary()
+    }
+
+    pub(super) fn take_linked_account(
+        &mut self,
+        client_key: Option<&str>,
+    ) -> Option<GuestSessionResponse> {
+        self.regional.take_linked_account(client_key)
+    }
+
+    pub(super) fn take_logged_out(&mut self) -> bool {
+        self.regional.take_logged_out()
     }
 }
 

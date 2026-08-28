@@ -373,6 +373,16 @@ impl OnlineClient {
             self.state == ConnectionState::Online,
             &mut notices,
         );
+        if let Some(account) = self.phase4.take_linked_account(self.client_key.as_deref()) {
+            self.account = Some(account);
+        }
+        if self.phase4.take_logged_out() {
+            self.account = None;
+            self.api.set_bearer_token(None);
+            self.state = ConnectionState::Degraded;
+            self.status_message =
+                "Signed out; tap Reconnect when you are ready to return.".to_owned();
+        }
         self.dispatch_requests();
         self.dispatch_trade_requests();
         self.frontier.dispatch(
