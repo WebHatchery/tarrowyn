@@ -35,6 +35,8 @@ fn phase_four_wire_types_keep_actions_and_costs_explicit() {
     assert_eq!(technique_json, "\"technique\"");
     let item_json = serde_json::to_string(&LocalCombatAction::UseItem).unwrap();
     assert_eq!(item_json, "\"use_item\"");
+    let reposition_json = serde_json::to_string(&LocalCombatAction::Reposition).unwrap();
+    assert_eq!(reposition_json, "\"reposition\"");
 }
 
 #[test]

@@ -85,6 +85,7 @@ fn guard_button_queues_an_explicit_local_defense() {
         stored_property_safe: true,
         carried_risk: "A seed may be risked.".to_owned(),
         recovery_cost: 4,
+        reposition_ready: false,
     });
     client.queue_cycle("guard", "guard-1".to_owned());
     let Some(Phase4Command::Combat(request)) = client.commands.pop_front() else {
@@ -109,6 +110,7 @@ fn technique_button_queues_an_explicit_opening() {
         stored_property_safe: true,
         carried_risk: "A seed may be risked.".to_owned(),
         recovery_cost: 4,
+        reposition_ready: false,
     });
     client.queue_cycle("technique", "technique-1".to_owned());
     let Some(Phase4Command::Combat(request)) = client.commands.pop_front() else {
@@ -133,6 +135,7 @@ fn bandage_button_queues_an_explicit_item_use() {
         stored_property_safe: true,
         carried_risk: "A seed may be risked.".to_owned(),
         recovery_cost: 4,
+        reposition_ready: false,
     });
     client.queue_cycle("item", "item-1".to_owned());
     let Some(Phase4Command::Combat(request)) = client.commands.pop_front() else {
@@ -140,6 +143,31 @@ fn bandage_button_queues_an_explicit_item_use() {
     };
     assert_eq!(request.action, LocalCombatAction::UseItem);
     assert_eq!(request.weapon, WeaponKind::Shield);
+}
+
+#[test]
+fn reposition_button_queues_an_explicit_movement_action() {
+    let mut client = Phase4Client::new();
+    client.combat = Some(LocalCombatState {
+        encounter_id: "whisperwood-local-1".to_owned(),
+        enemy_name: "Brambleback scout".to_owned(),
+        enemy_health: 3,
+        player_health: 2,
+        turn: 0,
+        status: tarrowyn_protocol::LocalCombatStatus::Engaged,
+        weapon: WeaponKind::IronSword,
+        injury_limit: 3,
+        stored_property_safe: true,
+        carried_risk: "A seed may be risked.".to_owned(),
+        recovery_cost: 4,
+        reposition_ready: false,
+    });
+    client.queue_cycle("reposition", "reposition-1".to_owned());
+    let Some(Phase4Command::Combat(request)) = client.commands.pop_front() else {
+        panic!("reposition should queue a local combat request");
+    };
+    assert_eq!(request.action, LocalCombatAction::Reposition);
+    assert_eq!(request.weapon, WeaponKind::IronSword);
 }
 
 #[test]

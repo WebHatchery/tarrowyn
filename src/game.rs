@@ -471,7 +471,9 @@ impl Game {
                 "chronicle" => client.refresh_tavern(),
                 "practice" => client.queue_phase4("practice"),
                 "town-hall" | "tax-rate" | "registry" | "order" | "knowledge" | "households"
-                | "local-fight" | "technique" | "guard" | "item" => client.queue_phase4(id),
+                | "local-fight" | "technique" | "guard" | "item" | "reposition" => {
+                    client.queue_phase4(id)
+                }
                 "crafting-timing" => client.queue_crafting_timing(),
                 "school" => {
                     let own = client

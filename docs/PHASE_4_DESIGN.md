@@ -1,6 +1,6 @@
 # Phase 4 design lock — The Enduring Society
 
-Status: implemented in protocol version 4 and storage version 10.
+Status: implemented in protocol version 4 and storage version 11.
 
 This record closes the open choices identified before Phase 4 work. The rules
 are deliberately bounded: one settlement, a small public treasury, a few
@@ -134,7 +134,8 @@ retreat intents. Iron sword, spear, axe, bow, shield, and improvised club are
 explicit weapon choices with different readable damage and recovery profiles;
 the visible Local fight control cycles through them, while Technique spends the
 first exchange on a weapon-specific opening, Guard sends an explicit defensive
-intent, and Bandage consumes one carried bandage to restore one injury point.
+intent, Bandage consumes one carried bandage to restore one injury point, and
+Reposition creates one protected opening for the next strike.
 The server records the matching root practice and sword/spear/axe qualifying
 history. The threat has bounded health,
 the player has bounded health and injuries, and knockout returns the character
@@ -146,9 +147,10 @@ multi-turn loop.
 
 ## Persistence and migration
 
-The repository storage version is now 10. `StoredState.phase4` is serde-defaulted
+The repository storage version is now 11. `StoredState.phase4` is serde-defaulted
 so Phase 1–3 documents without the field load a fresh, safe Phase 4 society.
 Existing identities, inventory, plots, Phase 3 claims, events, and chronicle
-entries are retained. New request caches use stable account/request keys and
+entries are retained, and older local-combat records default the new
+reposition opening to closed. New request caches use stable account/request keys and
 are persisted with the new records, so replaying a request returns its original
 authoritative result without paying twice.

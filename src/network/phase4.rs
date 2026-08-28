@@ -240,6 +240,7 @@ impl Phase4Client {
             "technique" => self.queue_combat_action(request_id, LocalCombatAction::Technique),
             "guard" => self.queue_combat_action(request_id, LocalCombatAction::Guard),
             "item" => self.queue_combat_action(request_id, LocalCombatAction::UseItem),
+            "reposition" => self.queue_combat_action(request_id, LocalCombatAction::Reposition),
             "practice" => {
                 self.queue_skill_practice(request_id);
             }

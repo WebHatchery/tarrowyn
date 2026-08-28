@@ -147,6 +147,24 @@ impl super::super::WorldRepository {
                     }
                 }
             }
+            LocalCombatAction::Reposition => {
+                if combat.status != LocalCombatStatus::Engaged {
+                    response.reason =
+                        Some("Prepare the local encounter before repositioning.".to_owned());
+                } else if combat.reposition_ready {
+                    response.reason = Some(
+                        "You already have a clear angle; choose STRIKE before repositioning again."
+                            .to_owned(),
+                    );
+                } else {
+                    combat.reposition_ready = true;
+                    combat.turn = combat.turn.saturating_add(1);
+                    response.accepted = true;
+                    response.prompt =
+                        "You find a better angle. Your next strike avoids the threat's reply; tap STRIKE or RETREAT."
+                            .to_owned();
+                }
+            }
             LocalCombatAction::Strike | LocalCombatAction::Technique => {
                 if combat.status != LocalCombatStatus::Engaged {
                     response.reason =
@@ -159,6 +177,8 @@ impl super::super::WorldRepository {
                 } else {
                     combat.weapon = request.weapon;
                     combat.turn = combat.turn.saturating_add(1);
+                    let repositioned = combat.reposition_ready;
+                    combat.reposition_ready = false;
                     let damage = if request.action == LocalCombatAction::Technique {
                         technique_damage(request.weapon)
                     } else {
@@ -193,10 +213,12 @@ impl super::super::WorldRepository {
                                 combat.turn
                             ),
                         );
-                    } else if matches!(
-                        request.weapon,
-                        WeaponKind::ImprovisedClub | WeaponKind::Shield
-                    ) || combat.turn > 2
+                    } else if !repositioned
+                        && matches!(
+                            request.weapon,
+                            WeaponKind::ImprovisedClub | WeaponKind::Shield
+                        )
+                        || !repositioned && combat.turn > 2
                     {
                         combat.player_health = combat.player_health.saturating_sub(1);
                         if combat.player_health == 0 {
@@ -261,6 +283,7 @@ fn default_combat() -> LocalCombatState {
         carried_risk: "At most one carried seed is risked on knockout; the choice is shown first."
             .to_owned(),
         recovery_cost: 4,
+        reposition_ready: false,
     }
 }
 

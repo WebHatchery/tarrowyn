@@ -4,7 +4,7 @@
 
 The workspace has a versioned storage document, atomic replacement, scheduled
 backup metadata, integrity readiness, production session records, audit records,
-and a support repair API. Storage version 10 also persists field-tool condition,
+and a support repair API. Storage version 11 also persists field-tool condition,
 real-time lease timestamps, and public tax receipts,
 the per-character skill ledger, and loads older documents through serde defaults. A Phase 1–4
 document without Phase 5/6 fields loads through serde defaults and receives the

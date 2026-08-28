@@ -484,6 +484,7 @@ pub enum LocalCombatAction {
     Technique,
     Guard,
     UseItem,
+    Reposition,
     Retreat,
 }
 
@@ -510,6 +511,8 @@ pub struct LocalCombatState {
     pub stored_property_safe: bool,
     pub carried_risk: String,
     pub recovery_cost: u32,
+    #[serde(default)]
+    pub reposition_ready: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
