@@ -266,6 +266,7 @@ fn handle_request(mut request: Request, repository: Arc<WorldRepository>) {
                         public_action: None,
                         target: None,
                         cost: None,
+                        tax_rate_percent: None,
                     },
                 )
             })

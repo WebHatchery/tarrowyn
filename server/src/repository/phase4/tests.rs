@@ -22,6 +22,7 @@ fn governance_request(action: GovernanceAction, request_id: &str) -> GovernanceR
         public_action: None,
         target: None,
         cost: None,
+        tax_rate_percent: None,
     }
 }
 
@@ -86,6 +87,64 @@ fn governance_public_work_is_authorised_costed_and_auditable() {
         .entries
         .iter()
         .any(|entry| entry.kind == "public action completed"));
+}
+
+#[test]
+fn settlement_tax_is_bounded_daily_and_recorded_in_the_public_ledger() {
+    let repo = WorldRepository::new(ServerConfig {
+        starting_gold: 100,
+        day_length_seconds: 1.0,
+        world_seconds_per_tick: 1.0,
+        ..ServerConfig::default()
+    });
+    let session = guest(&repo, "phase4-taxpayer");
+    let mut claim_office = governance_request(GovernanceAction::ClaimOffice, "tax-office");
+    claim_office.office_id = Some("steward".to_owned());
+    assert!(
+        repo.governance(&session.account_token, claim_office)
+            .unwrap()
+            .data
+            .accepted
+    );
+
+    let mut set_tax = governance_request(GovernanceAction::SetTaxRate, "tax-rate");
+    set_tax.tax_rate_percent = Some(7);
+    let changed = repo
+        .governance(&session.account_token, set_tax)
+        .unwrap()
+        .data;
+    assert!(changed.accepted);
+    assert_eq!(changed.governance.taxation.unwrap().rate_percent, 7);
+    assert!(changed.governance.tax_ledger.is_empty());
+
+    let mut excessive = governance_request(GovernanceAction::SetTaxRate, "tax-too-high");
+    excessive.tax_rate_percent = Some(11);
+    let rejected = repo
+        .governance(&session.account_token, excessive)
+        .unwrap()
+        .data;
+    assert!(!rejected.accepted);
+    assert!(rejected.reason.unwrap().contains("0% and 10%"));
+
+    repo.tick();
+    let player = repo.inventory(&session.account_token).unwrap().data;
+    assert_eq!(player.gold, 93);
+    let ledger = repo
+        .governance(
+            &session.account_token,
+            governance_request(GovernanceAction::Inspect, "tax-inspect"),
+        )
+        .unwrap()
+        .data
+        .governance;
+    assert_eq!(ledger.public_treasury, 55);
+    assert_eq!(ledger.tax_ledger.len(), 1);
+    assert_eq!(ledger.tax_ledger[0].amount, 7);
+    assert_eq!(ledger.tax_ledger[0].day, 2);
+
+    repo.tick();
+    let second_day = repo.inventory(&session.account_token).unwrap().data;
+    assert_eq!(second_day.gold, 87);
 }
 
 #[test]

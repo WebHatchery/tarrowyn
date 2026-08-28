@@ -192,7 +192,7 @@ pub(super) fn draw_sidebar(
         actions.push(UiAction::Interact("town-hall".to_owned()));
     }
     if virtual_button(
-        Rect::new(content.x + 130.0, content.y + 438.0, 122.0, 24.0),
+        Rect::new(content.x + 130.0, content.y + 438.0, 86.0, 24.0),
         "Registry",
         ctx.connection == ConnectionState::Online,
         ButtonTone::Secondary,
@@ -201,13 +201,22 @@ pub(super) fn draw_sidebar(
         actions.push(UiAction::Interact("registry".to_owned()));
     }
     if virtual_button(
-        Rect::new(content.x + 260.0, content.y + 438.0, 122.0, 24.0),
+        Rect::new(content.x + 222.0, content.y + 438.0, 86.0, 24.0),
         "Order",
         ctx.connection == ConnectionState::Online,
         ButtonTone::Secondary,
         mouse,
     ) {
         actions.push(UiAction::Interact("order".to_owned()));
+    }
+    if virtual_button(
+        Rect::new(content.x + 314.0, content.y + 438.0, 50.0, 24.0),
+        "Tax",
+        ctx.connection == ConnectionState::Online,
+        ButtonTone::Secondary,
+        mouse,
+    ) {
+        actions.push(UiAction::Interact("tax-rate".to_owned()));
     }
     if virtual_button(
         Rect::new(content.x, content.y + 467.0, 122.0, 24.0),

@@ -25,7 +25,8 @@ are recorded in the audit stream. The no-PvP law boundary is still active.
 
 ## Persistence, backups, and repair
 
-Storage version 7 adds regional state, production session/audit records, and
+Storage version 8 adds public tax receipts alongside the regional state,
+production session/audit records, and
 the per-character skill ledger while retaining defaults for Phase 1–6 files.
 The repository now has two selectable backends: JSON with atomic temporary-file
 replacement for deterministic fixtures, and MySQL with the checked-in

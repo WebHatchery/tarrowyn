@@ -2,8 +2,13 @@ use super::{account_id, account_name, cache_key, record, validate_request_id};
 use crate::config::ServerConfig;
 use tarrowyn_protocol::{
     ApiResponse, GovernanceAction, GovernanceRequest, GovernanceResponse, OfficeKind,
-    ProposalStatus, PublicAction, PublicProposal,
+    ProposalStatus, PublicAction, PublicProposal, TaxCollection,
 };
+
+const MAX_TAX_RATE_PERCENT: u8 = 10;
+const TAX_TERRITORY: &str = "hearth-settlement";
+const HEARTH_POSITION: tarrowyn_protocol::Position = tarrowyn_protocol::Position { x: 8, y: 5 };
+const TAX_RADIUS: u32 = 4;
 
 impl super::super::WorldRepository {
     pub fn governance(
@@ -69,6 +74,42 @@ impl super::super::WorldRepository {
                         "office filled",
                         "A town-hall office finds a responsible hand",
                         &format!("{actor_name} now holds the {office_id} office."),
+                    );
+                }
+            }
+            GovernanceAction::SetTaxRate => {
+                let Some(rate) = request.tax_rate_percent else {
+                    response.reason = Some("Name the new public tax rate.".to_owned());
+                    response.governance = state.phase4.governance.clone();
+                    return finish(self, &mut state, cache, request.request_id, response);
+                };
+                if !holds_office(&state, OfficeKind::Steward, &actor_id) {
+                    response.reason = Some(
+                        "Only the Settlement Steward may set the public settlement tax.".to_owned(),
+                    );
+                } else if rate > MAX_TAX_RATE_PERCENT {
+                    response.reason = Some(format!(
+                        "The public tax rate must stay between 0% and {MAX_TAX_RATE_PERCENT}%.",
+                    ));
+                } else {
+                    let mut policy = state
+                        .phase4
+                        .governance
+                        .taxation
+                        .clone()
+                        .unwrap_or_else(super::default_tax_policy);
+                    let previous_rate = policy.rate_percent;
+                    policy.rate_percent = rate;
+                    state.phase4.governance.taxation = Some(policy);
+                    touch_office(&mut state, &actor_id);
+                    response.accepted = true;
+                    record(
+                        &mut state,
+                        "tax policy changed",
+                        "The mayor posts a bounded settlement tax",
+                        &format!(
+                            "{actor_name} changed the Hearth tax from {previous_rate}% to {rate}% on nearby carried gold.",
+                        ),
                     );
                 }
             }
@@ -448,4 +489,83 @@ pub(super) fn tick(state: &mut super::super::models::RepositoryState, config: &S
             );
         }
     }
+    collect_taxes(state);
+}
+
+fn collect_taxes(state: &mut super::super::models::RepositoryState) {
+    let Some(policy) = state.phase4.governance.taxation.clone() else {
+        return;
+    };
+    if !state
+        .phase4
+        .governance
+        .offices
+        .iter()
+        .any(|office| office.kind == OfficeKind::Steward && !office.vacant)
+    {
+        return;
+    }
+
+    let day = state.clock.day;
+    let rate = u32::from(policy.rate_percent);
+    let mut total: u32 = 0;
+    let mut payers = Vec::new();
+    for identity in state.identities.values_mut() {
+        if identity.last_tax_day >= day {
+            continue;
+        }
+        identity.last_tax_day = day;
+        if identity.knocked_out
+            || identity.position.manhattan_distance(HEARTH_POSITION) > TAX_RADIUS
+            || rate == 0
+        {
+            continue;
+        }
+        let amount = identity.gold.saturating_mul(rate) / 100;
+        if amount == 0 {
+            continue;
+        }
+        identity.gold -= amount;
+        total = total.saturating_add(amount);
+        payers.push((
+            identity.account_id.clone(),
+            identity.display_name.clone(),
+            amount,
+        ));
+    }
+    if total == 0 {
+        return;
+    }
+
+    let tick = state.tick;
+    let payer_count = payers.len();
+    for (account_id, payer_name, amount) in payers {
+        let collection_id = format!("tax-{}", state.phase4.next_tax_id);
+        state.phase4.next_tax_id += 1;
+        state.phase4.governance.tax_ledger.push(TaxCollection {
+            collection_id,
+            payer_account_id: account_id,
+            payer_name,
+            amount,
+            rate_percent: policy.rate_percent,
+            territory: TAX_TERRITORY.to_owned(),
+            day,
+            created_tick: tick,
+        });
+    }
+    state.phase4.governance.tax_ledger.truncate(64);
+    state.phase4.governance.public_treasury = state
+        .phase4
+        .governance
+        .public_treasury
+        .saturating_add(total);
+    record(
+        state,
+        "tax collection",
+        "The Hearth treasury receives its daily public tax",
+        &format!(
+            "{payer_count} nearby player balance(s) contributed {total} public gold at {}% for day {day}.",
+            policy.rate_percent
+        ),
+    );
 }

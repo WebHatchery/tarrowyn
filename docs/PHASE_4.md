@@ -36,9 +36,10 @@ impact before adding durable state.
   service or project it affected.
 - Add inactivity and succession behaviour so a missing office-holder weakens
   administration without making the settlement permanently unplayable.
-- If taxation is selected, keep it narrow and legible: define its payer,
-  recipient, rate, exemptions, accounting record, and recovery path before it
-  can affect player-owned goods.
+- Use the launch tax contract: the mayor controls a 0–10% rate, nearby carried
+  gold is collected once per world day, exemptions and the Hearth territory are
+  explicit, and every receipt enters the public governance ledger before it
+  can fund a predefined settlement upgrade.
 
 ### Land, property, and local infrastructure
 

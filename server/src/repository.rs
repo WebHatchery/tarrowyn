@@ -11,7 +11,7 @@ use tarrowyn_protocol::{
     WorldTile, MAX_CHAT_MESSAGE_LENGTH, MAX_TRADE_ITEMS, PROTOCOL_VERSION,
 };
 
-pub(super) const STORAGE_VERSION: u32 = 7;
+pub(super) const STORAGE_VERSION: u32 = 8;
 const MAX_EVENTS: usize = 2048;
 const MAX_CHAT_HISTORY: usize = 64;
 const MAX_NOTICES: usize = 32;
@@ -112,6 +112,7 @@ impl WorldRepository {
         if request.reset || !state.identities.contains_key(&client_key) {
             let number = state.next_guest;
             state.next_guest += 1;
+            let current_day = state.clock.day;
             state.identities.insert(
                 client_key.clone(),
                 Identity {
@@ -128,6 +129,7 @@ impl WorldRepository {
                     },
                     seeds_planted: 0,
                     last_seen_tick: 0,
+                    last_tax_day: current_day,
                     farming_results: HashMap::new(),
                     trade_results: HashMap::new(),
                     weapon: WeaponKind::IronSword,

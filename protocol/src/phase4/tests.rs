@@ -10,11 +10,26 @@ fn phase_four_wire_types_keep_actions_and_costs_explicit() {
         public_action: Some(PublicAction::RepairRoad),
         target: Some("North road safety".to_owned()),
         cost: None,
+        tax_rate_percent: None,
     };
     let encoded = serde_json::to_string(&request).unwrap();
     assert!(encoded.contains("\"action\":\"propose\""));
     assert!(encoded.contains("\"public_action\":\"repair_road\""));
     assert_eq!(PublicAction::RepairRoad.default_cost(), 8);
+
+    let tax_request = GovernanceRequest {
+        request_id: "town-hall-tax".to_owned(),
+        action: GovernanceAction::SetTaxRate,
+        office_id: None,
+        proposal_id: None,
+        public_action: None,
+        target: None,
+        cost: None,
+        tax_rate_percent: Some(5),
+    };
+    let tax_json = serde_json::to_string(&tax_request).unwrap();
+    assert!(tax_json.contains("set_tax_rate"));
+    assert!(tax_json.contains("tax_rate_percent"));
 }
 
 #[test]

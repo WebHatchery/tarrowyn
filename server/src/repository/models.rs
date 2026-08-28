@@ -24,6 +24,8 @@ pub(crate) struct Identity {
     #[serde(default)]
     pub(super) last_seen_tick: u64,
     #[serde(default)]
+    pub(super) last_tax_day: u32,
+    #[serde(default)]
     pub(super) farming_results: HashMap<String, FarmingResponse>,
     #[serde(default)]
     pub(super) trade_results: HashMap<String, TradeResponse>,
@@ -130,6 +132,10 @@ impl RepositoryState {
     }
 
     pub(crate) fn from_stored(stored: StoredState, config: &ServerConfig) -> Self {
+        let mut phase4 = stored.phase4;
+        if phase4.governance.taxation.is_none() {
+            phase4.governance.taxation = Some(super::phase4::default_tax_policy());
+        }
         Self {
             tick: stored.tick,
             clock: WorldClock {
@@ -155,7 +161,7 @@ impl RepositoryState {
             notices: trim_queue(stored.notices, MAX_NOTICES),
             trades: stored.trades,
             phase3: stored.phase3,
-            phase4: stored.phase4,
+            phase4,
             phase5: stored.phase5,
             phase6: stored.phase6,
         }

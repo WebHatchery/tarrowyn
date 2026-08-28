@@ -11,6 +11,8 @@ use tarrowyn_protocol::{
     SkillsResponse, WeaponKind,
 };
 
+mod summary;
+
 enum Phase4Command {
     Governance(GovernanceRequest),
     Claim(ClaimLifecycleRequest),
@@ -238,6 +240,7 @@ impl Phase4Client {
             "practice" => {
                 self.queue_skill_practice(request_id);
             }
+            "tax-rate" => self.queue_tax_rate(request_id),
             "households" => self.pending_households = None,
             _ => {}
         }
@@ -259,6 +262,7 @@ impl Phase4Client {
                     public_action: None,
                     target: None,
                     cost: None,
+                    tax_rate_percent: None,
                 }
             } else if let Some(proposal) = governance.proposals.iter().find(|proposal| {
                 !matches!(
@@ -280,6 +284,7 @@ impl Phase4Client {
                     public_action: None,
                     target: None,
                     cost: None,
+                    tax_rate_percent: None,
                 }
             } else {
                 GovernanceRequest {
@@ -290,12 +295,40 @@ impl Phase4Client {
                     public_action: Some(tarrowyn_protocol::PublicAction::RepairRoad),
                     target: Some("North road safety".to_owned()),
                     cost: None,
+                    tax_rate_percent: None,
                 }
             }
         });
         if let Some(request) = action {
             self.commands.push_back(Phase4Command::Governance(request));
         }
+    }
+
+    fn queue_tax_rate(&mut self, request_id: String) {
+        let Some(governance) = self.governance.as_ref() else {
+            return;
+        };
+        let current = governance
+            .taxation
+            .as_ref()
+            .map(|policy| policy.rate_percent)
+            .unwrap_or(0);
+        let next = match current {
+            0 => 5,
+            5 => 10,
+            _ => 0,
+        };
+        self.commands
+            .push_back(Phase4Command::Governance(GovernanceRequest {
+                request_id,
+                action: GovernanceAction::SetTaxRate,
+                office_id: None,
+                proposal_id: None,
+                public_action: None,
+                target: None,
+                cost: None,
+                tax_rate_percent: Some(next),
+            }));
     }
 
     fn queue_claim(&mut self, request_id: String) {
@@ -595,63 +628,7 @@ impl Phase4Client {
     }
 
     pub(super) fn summary(&self) -> String {
-        let offices = self
-            .governance
-            .as_ref()
-            .map(|governance| {
-                let filled = governance
-                    .offices
-                    .iter()
-                    .filter(|office| !office.vacant)
-                    .count();
-                format!("Town hall {filled}/{} offices", governance.offices.len())
-            })
-            .unwrap_or_else(|| "Town hall loading".to_owned());
-        let registry = self
-            .claims
-            .as_ref()
-            .map(|claims| format!("{} plots available", claims.available_plots.len()))
-            .unwrap_or_else(|| "Registry loading".to_owned());
-        let orders = self
-            .professions
-            .as_ref()
-            .map(|professions| {
-                let open = professions
-                    .orders
-                    .iter()
-                    .filter(|order| order.status == tarrowyn_protocol::ServiceOrderStatus::Open)
-                    .count();
-                format!("{open} orders open")
-            })
-            .unwrap_or_else(|| "Orders loading".to_owned());
-        let knowledge = self
-            .knowledge
-            .as_ref()
-            .map(|knowledge| {
-                format!(
-                    "{} lessons known",
-                    knowledge.knowledge.known_by_player.len()
-                )
-            })
-            .unwrap_or_else(|| "Knowledge loading".to_owned());
-        let skills = self
-            .skills
-            .as_ref()
-            .map(|skills| {
-                let mastered = skills
-                    .skills
-                    .iter()
-                    .filter(|skill| skill.status == SkillStatus::Mastered)
-                    .count();
-                let resonating = skills
-                    .skills
-                    .iter()
-                    .filter(|skill| skill.status == SkillStatus::Resonating)
-                    .count();
-                format!("Skills {mastered} mastered, {resonating} resonating")
-            })
-            .unwrap_or_else(|| "Skills loading".to_owned());
-        format!("{offices} • {registry}\n{orders} • {knowledge} • {skills}")
+        summary::render(self)
     }
 
     pub(super) fn queue_region_cycle(&mut self, id: &str) {

@@ -1,6 +1,6 @@
 # Phase 4 design lock — The Enduring Society
 
-Status: implemented in protocol version 4 and storage version 7.
+Status: implemented in protocol version 4 and storage version 8.
 
 This record closes the open choices identified before Phase 4 work. The rules
 are deliberately bounded: one settlement, a small public treasury, a few
@@ -9,7 +9,8 @@ household, and one local encounter.
 
 ## Governance and public resources
 
-The Hearth has three offices:
+The Hearth has three offices. The Settlement Steward is the bounded launch
+mayor role:
 
 - the Settlement Steward approves and completes every bounded public action;
 - the Works Warden owns road, bridge, and public-work completion; and
@@ -22,11 +23,18 @@ festival, a public work, and a contract-board update. Every completion deducts
 from the public treasury and writes actor, proposal, cost, target service, and
 tick to the governance decision record and settlement chronicle.
 
-There is no player-facing taxation in Phase 4. `taxation` is persisted as
-`None`, which keeps payer, recipient, exemptions, accounting, and recovery
-unambiguous until a later design review selects a tax. Public upkeep is paid
-from the same visible treasury; if it runs dry, infrastructure condition falls
-and the failure is recorded.
+The launch mayoral loop also posts a narrow public settlement tax. The default
+policy charges 5% of carried gold once per world day from recognised players
+within four Manhattan tiles of the Hearth; the policy never removes items and
+exempts players outside the territory or currently knocked out. The mayor can
+cycle the rate through 0%, 5%, and 10% from the visible touch control, while
+the server rejects every value outside the 0–10% bound. No mayor means no new
+collection, so leadership failure weakens income without silently draining
+players. Each receipt records payer, amount, rate, territory, day, and tick in
+the public governance ledger, while the policy records payer, recipient,
+exemptions, accounting note, and recovery path. Public upkeep and predefined
+upgrades are paid from the same visible treasury; if it runs dry,
+infrastructure condition falls and the failure is recorded.
 
 An office-holder who exceeds `governance_inactivity_ticks` becomes vacant.
 Administration quality falls, but the settlement remains usable and any player
@@ -111,7 +119,7 @@ multi-turn loop.
 
 ## Persistence and migration
 
-The repository storage version is now 3. `StoredState.phase4` is serde-defaulted
+The repository storage version is now 8. `StoredState.phase4` is serde-defaulted
 so Phase 1–3 documents without the field load a fresh, safe Phase 4 society.
 Existing identities, inventory, plots, Phase 3 claims, events, and chronicle
 entries are retained. New request caches use stable account/request keys and

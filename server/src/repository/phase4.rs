@@ -6,7 +6,7 @@ use tarrowyn_protocol::{
     Capability, ClaimLifecycleResponse, ClaimRecord, GovernanceResponse, GovernanceState,
     HouseholdRecord, InfrastructureRecord, KnowledgeItem, KnowledgeResponse, LocalCombatResponse,
     LocalCombatState, MaterialStock, OfficeKind, OfficeRecord, ProfessionProfile,
-    ProfessionResponse, ServiceOrder, SkillLesson, SkillResponse,
+    ProfessionResponse, ServiceOrder, SkillLesson, SkillResponse, TaxPolicy,
 };
 
 mod claims;
@@ -32,6 +32,8 @@ pub(super) enum Phase4Response {
 pub(super) struct Phase4State {
     #[serde(default = "default_next_lesson_id")]
     pub(super) next_lesson_id: u64,
+    #[serde(default = "default_next_tax_id")]
+    pub(super) next_tax_id: u64,
     pub(super) next_proposal_id: u64,
     pub(super) next_decision_id: u64,
     pub(super) next_order_id: u64,
@@ -63,6 +65,7 @@ impl Default for Phase4State {
 pub(super) fn fresh(_config: &ServerConfig) -> Phase4State {
     Phase4State {
         next_lesson_id: 1,
+        next_tax_id: 1,
         next_proposal_id: 1,
         next_decision_id: 1,
         next_order_id: 1,
@@ -95,7 +98,8 @@ pub(super) fn fresh(_config: &ServerConfig) -> Phase4State {
             public_treasury: DEFAULT_TREASURY,
             administration_quality: 80,
             service_funding_until_tick: 0,
-            taxation: None,
+            taxation: Some(default_tax_policy()),
+            tax_ledger: Vec::new(),
             cursor: 0,
         },
         infrastructure: vec![
@@ -199,6 +203,27 @@ pub(super) fn fresh(_config: &ServerConfig) -> Phase4State {
 
 fn default_next_lesson_id() -> u64 {
     1
+}
+
+fn default_next_tax_id() -> u64 {
+    1
+}
+
+pub(super) fn default_tax_policy() -> TaxPolicy {
+    TaxPolicy {
+        payer: "Players within four tiles of the Hearth".to_owned(),
+        recipient: "Hearth public treasury".to_owned(),
+        rate_percent: 5,
+        exemptions: vec![
+            "Players outside Hearth territory".to_owned(),
+            "Knocked-out players".to_owned(),
+        ],
+        accounting_note: "A small daily charge on nearby carried gold; no items are taken."
+            .to_owned(),
+        recovery_path:
+            "A mayor may set a rate from 0% through 10%; the public ledger keeps receipts."
+                .to_owned(),
+    }
 }
 
 fn office(id: &str, kind: OfficeKind, title: &str, authority: &str) -> OfficeRecord {

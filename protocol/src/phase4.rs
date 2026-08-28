@@ -100,6 +100,18 @@ pub struct TaxPolicy {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct TaxCollection {
+    pub collection_id: String,
+    pub payer_account_id: String,
+    pub payer_name: String,
+    pub amount: u32,
+    pub rate_percent: u8,
+    pub territory: String,
+    pub day: u32,
+    pub created_tick: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct GovernanceState {
     pub settlement_id: String,
     pub offices: Vec<OfficeRecord>,
@@ -109,6 +121,8 @@ pub struct GovernanceState {
     pub administration_quality: u8,
     pub service_funding_until_tick: u64,
     pub taxation: Option<TaxPolicy>,
+    #[serde(default)]
+    pub tax_ledger: Vec<TaxCollection>,
     pub cursor: u64,
 }
 
@@ -120,6 +134,7 @@ pub enum GovernanceAction {
     Propose,
     Approve,
     Complete,
+    SetTaxRate,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -131,6 +146,8 @@ pub struct GovernanceRequest {
     pub public_action: Option<PublicAction>,
     pub target: Option<String>,
     pub cost: Option<u32>,
+    #[serde(default)]
+    pub tax_rate_percent: Option<u8>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]

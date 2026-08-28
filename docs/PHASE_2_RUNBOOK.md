@@ -18,7 +18,7 @@ not persisted. Repeating the same guest `client_key` creates a fresh session
 for the same durable character; using `reset: true` creates a new development
 identity.
 
-The current repository storage version is `7`. JSON migrations read older
+The current repository storage version is `8`. JSON migrations read older
 documents through serde defaults and write the upgraded document. The MySQL
 backend applies its checked-in schema migration at startup and keeps the same
 storage version inside its authoritative snapshot. Any future migration must
