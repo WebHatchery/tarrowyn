@@ -278,6 +278,21 @@ fn professions_knowledge_and_households_make_the_settlement_interdependent() {
         .accepted
     );
     assert!(
+        !repo
+            .knowledge(
+                &requester.account_token,
+                KnowledgeRequest {
+                    request_id: "teach-self".to_owned(),
+                    action: KnowledgeAction::Teach,
+                    knowledge_id: Some("moonberry-tending".to_owned()),
+                    target_account_id: Some(requester.account_id.clone()),
+                },
+            )
+            .unwrap()
+            .data
+            .accepted
+    );
+    assert!(
         repo.knowledge(
             &requester.account_token,
             KnowledgeRequest {
@@ -291,6 +306,16 @@ fn professions_knowledge_and_households_make_the_settlement_interdependent() {
         .data
         .accepted
     );
+    let teaching = repo
+        .skills(&requester.account_token)
+        .unwrap()
+        .data
+        .skills
+        .into_iter()
+        .find(|skill| skill.skill_id == "teaching")
+        .expect("teaching root should be present");
+    assert_eq!(teaching.mastery, 1);
+    assert_eq!(teaching.status, tarrowyn_protocol::SkillStatus::Practising);
     assert!(
         repo.knowledge(
             &provider.account_token,

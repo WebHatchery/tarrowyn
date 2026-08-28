@@ -80,7 +80,10 @@ impl super::super::WorldRepository {
                     return finish(self, &mut state, cache, request.request_id, response);
                 };
                 let item_id = state.phase4.knowledge[index].knowledge_id.clone();
-                if !known(&state, &key, &item_id) {
+                if target_key == key {
+                    response.reason =
+                        Some("A lesson needs another player to receive the technique.".to_owned());
+                } else if !known(&state, &key, &item_id) {
                     response.reason =
                         Some("Discover or receive the knowledge before teaching it.".to_owned());
                 } else if !state.phase4.knowledge[index].teachable {
@@ -95,6 +98,7 @@ impl super::super::WorldRepository {
                     response.accepted = true;
                     response.message =
                         "The receiving player can now apply the taught technique.".to_owned();
+                    super::super::skills::record_practice(&mut state, &key, "teaching");
                     record(&mut state, "knowledge taught", "A useful truth crosses from one player to another", "The server recorded a teachable knowledge transfer in the settlement archive.");
                 }
             }

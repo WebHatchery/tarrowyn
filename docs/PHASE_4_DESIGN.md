@@ -62,8 +62,10 @@ The complete order loop is:
 
 The first discoverable knowledge is the Moonberry trellis method. It can be
 discovered, written into the guild archive, taught to another account, and
-applied. The server owns all discovery and transfer checks; the client only
-shows the resulting projection.
+applied. A teaching action must name another recognised player and records
+practice in the Teaching root only after the transfer succeeds. The server owns
+all discovery and transfer checks; the client only shows the resulting
+projection.
 
 ## Households and local life
 
