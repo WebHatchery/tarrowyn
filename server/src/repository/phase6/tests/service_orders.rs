@@ -1,6 +1,7 @@
 use super::*;
 use tarrowyn_protocol::{
-    AuthLinkRequest, GuestSessionRequest, ProfessionAction, ProfessionKind, ProfessionRequest,
+    AuthLinkRequest, GuestSessionRequest, MarketOrderAction, MarketOrderRequest, ProfessionAction,
+    ProfessionKind, ProfessionRequest,
 };
 
 #[test]
@@ -125,4 +126,51 @@ fn provider_deletion_returns_surviving_requester_service_escrow() {
         tarrowyn_protocol::ServiceOrderStatus::Cancelled
     );
     assert!(order.provider_account_id.is_none());
+}
+
+#[test]
+fn account_link_migrates_identity_keyed_market_replays() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("market-replay-link".to_owned()),
+            reset: false,
+        })
+        .unwrap()
+        .data;
+    let request = MarketOrderRequest {
+        request_id: "market-replay".to_owned(),
+        action: MarketOrderAction::Create,
+        order_id: None,
+        destination_location_id: Some("whisperwood-outpost".to_owned()),
+        commodity: Some(tarrowyn_protocol::CommodityKind::Seeds),
+        quantity: Some(1),
+    };
+    let original = repository
+        .market_order(&session.account_token, request.clone())
+        .unwrap()
+        .data
+        .order
+        .expect("the guest should create a market order");
+    let linked = repository
+        .auth_link(
+            &session.account_token,
+            AuthLinkRequest {
+                request_id: "market-replay-link-request".to_owned(),
+                provider: "webhatchery-identity-oidc".to_owned(),
+                subject: "market-replay-subject".to_owned(),
+                display_name: Some("Linked market resident".to_owned()),
+            },
+        )
+        .unwrap()
+        .data;
+    let replay = repository
+        .market_order(&linked.session.account_token, request)
+        .unwrap()
+        .data
+        .order
+        .expect("the identity-keyed replay should remain available");
+    assert_eq!(replay.order_id, original.order_id);
+    assert_eq!(replay.owner_account_id, linked.account_id);
+    assert_eq!(replay.owner_name, "Linked market resident");
 }

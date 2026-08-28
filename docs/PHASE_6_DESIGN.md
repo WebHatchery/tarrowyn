@@ -9,9 +9,10 @@ linked to that subject once; the character ID remains the durable character
 boundary. Production access tokens are opaque, short-lived, rotated on refresh,
 and revocable. Refresh tokens are stored only as server-side session records.
 Linking a guest migrates its persisted account references across trades, claims,
-orders, frontier parties, market records, retained history, and audits before
-the production session is issued, so pre-link play remains attached to the same
-character boundary.
+orders, frontier parties, market records, retained history, audits, and
+identity-keyed replay payloads before the production session is issued, so
+pre-link play remains attached to the same character boundary without breaking
+request idempotency.
 Logout revokes one or all sessions. Credential recovery and MFA remain the
 identity gateway's responsibility; the game server receives only a verified
 subject.

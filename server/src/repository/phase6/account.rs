@@ -12,6 +12,7 @@ pub(super) fn migrate_guest_account_references(
         return;
     }
 
+    migrate_identity_replay_caches(state, old_account_id, new_account_id, new_display_name);
     for trade in state.trades.values_mut() {
         migrate_trade(trade, old_account_id, new_account_id, new_display_name);
     }
@@ -43,6 +44,97 @@ pub(super) fn migrate_guest_account_references(
     for audit in &mut state.phase6.audits {
         replace_id(&mut audit.actor_account_id, old_account_id, new_account_id);
         replace_id(&mut audit.target, old_account_id, new_account_id);
+    }
+}
+
+fn migrate_identity_replay_caches(
+    state: &mut RepositoryState,
+    old_account_id: &str,
+    new_account_id: &str,
+    new_display_name: &str,
+) {
+    if let Some(identity) = state
+        .identities
+        .values_mut()
+        .find(|identity| identity.account_id == old_account_id)
+    {
+        for response in identity.farming_results.values_mut() {
+            migrate_player(
+                &mut response.player,
+                old_account_id,
+                new_account_id,
+                new_display_name,
+            );
+        }
+        for response in identity.trade_results.values_mut() {
+            if let Some(trade) = response.trade.as_mut() {
+                migrate_trade(trade, old_account_id, new_account_id, new_display_name);
+            }
+        }
+        for response in identity.chat_results.values_mut() {
+            if let Some(message) = response.message.as_mut() {
+                migrate_chat(message, old_account_id, new_account_id, new_display_name);
+            }
+        }
+    }
+    for response in state.phase3.request_results.values_mut() {
+        match response {
+            super::super::phase3::Phase3Response::Contract(response) => migrate_player(
+                &mut response.player,
+                old_account_id,
+                new_account_id,
+                new_display_name,
+            ),
+            super::super::phase3::Phase3Response::Combat(response) => migrate_player(
+                &mut response.player,
+                old_account_id,
+                new_account_id,
+                new_display_name,
+            ),
+            super::super::phase3::Phase3Response::Recovery(response) => migrate_player(
+                &mut response.player,
+                old_account_id,
+                new_account_id,
+                new_display_name,
+            ),
+            super::super::phase3::Phase3Response::Claim(response) => {
+                if let Some(claim) = response.claim.as_mut() {
+                    if replace_id(&mut claim.owner_account_id, old_account_id, new_account_id) {
+                        claim.owner_name = new_display_name.to_owned();
+                    }
+                }
+            }
+            super::super::phase3::Phase3Response::Expedition(response) => {
+                if let Some(expedition) = response.expedition.as_mut() {
+                    migrate_expedition(
+                        expedition,
+                        old_account_id,
+                        new_account_id,
+                        new_display_name,
+                    );
+                }
+            }
+        }
+    }
+    for response in state.phase5.request_results.values_mut() {
+        if let super::super::phase5::Phase5Response::Market(response) = response {
+            if let Some(order) = response.order.as_mut() {
+                if replace_id(&mut order.owner_account_id, old_account_id, new_account_id) {
+                    order.owner_name = new_display_name.to_owned();
+                }
+            }
+        }
+    }
+}
+
+fn migrate_player(
+    player: &mut tarrowyn_protocol::PlayerProjection,
+    old_account_id: &str,
+    new_account_id: &str,
+    new_display_name: &str,
+) {
+    if replace_id(&mut player.account_id, old_account_id, new_account_id) {
+        player.display_name = new_display_name.to_owned();
     }
 }
 
