@@ -500,6 +500,12 @@ environment to pass migration, concurrent-write, backup, restore, failover,
 and rollback validation. Selecting MySQL does not by itself make the current
 deployment production-ready.
 
+The client treats a restore-invalidated event cursor as a recoverable boundary:
+the shared toolkit preserves the server error code, and the client discards
+stale cursor-derived projections before reloading authoritative state and
+history from cursor zero. A restore must never turn cached history into a new
+reward.
+
 ### Regional Chronicle
 
 The regional chronicle is server-owned public history. The normal settlement

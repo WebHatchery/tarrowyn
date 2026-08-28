@@ -16,6 +16,7 @@ use tarrowyn_protocol::{
 };
 
 const REQUEST_TIMEOUT_SECONDS: f32 = 6.0;
+mod cursor;
 mod frontier;
 mod maintenance;
 mod phase4;
@@ -566,6 +567,9 @@ impl OnlineClient {
                         response.meta.server_tick,
                     );
                 }
+            }
+            Err(error) if cursor::is_cursor_ahead_error(&error) => {
+                cursor::recover_from_restore(self, notices)
             }
             Err(error) => self.connection_failed(error, notices),
         }

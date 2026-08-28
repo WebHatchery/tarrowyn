@@ -159,6 +159,13 @@ regional handoff. It must never present a locally cached success as an
 authoritative reward. Shared response decoding rejects a protocol-version
 mismatch before any endpoint projection can be applied; the client surfaces
 that failure through its visible recovery state and `Reconnect` control.
+The shared toolkit also preserves structured API error codes across native and
+browser transport paths. When `/v1/events` reports `cursor_ahead` after a
+restore, the client keeps the connection open, clears cursor-derived players,
+chat, feed, chronicle, frontier, and reward projections, cancels stale state
+and chronicle requests, and immediately reloads `/v1/state` plus history from
+cursor zero. This prevents a restored server from being presented with cached
+history or a stale cursor.
 
 ## Acceptance test
 

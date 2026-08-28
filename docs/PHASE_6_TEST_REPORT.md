@@ -153,6 +153,12 @@ records server working set and stop/start-to-readiness recovery alongside the
 mixed-load wall time; the latest 24-client baseline measured 56.97 MB and
 2,720.28 ms.
 
+The shared client recovery tests also cover the restore-era `cursor_ahead`
+boundary. Structured API errors remain identifiable through the shared native
+and browser HTTP paths; the client clears stale cursor-derived projections and
+schedules a fresh authoritative state/history load without dropping to the
+generic disconnected state.
+
 ## Long-session gate and remaining risks
 
 The fixed 80-minute day is recorded in the GDD and Phase 5/6 decision records;

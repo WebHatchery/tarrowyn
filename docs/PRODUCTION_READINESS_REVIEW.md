@@ -12,6 +12,9 @@ two-tap linked-account deletion control that clears the session and exposes
 Reconnect after the server schedules the authoritative deletion tick.
 The client also polls readiness and turns configured maintenance or degraded
 health into visible next-step status guidance.
+It preserves structured API error codes through the shared toolkit and, when a
+restore invalidates its event cursor, clears stale history projections and
+reloads the authoritative state from cursor zero while keeping the road open.
 
 The measured scope is deliberately regional: one worker, 24 concurrent-client
 target, bounded queues, and selectable JSON/MySQL persistence. The local Phase 6
