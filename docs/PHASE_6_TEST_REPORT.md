@@ -51,6 +51,14 @@ readiness, and restore-on-a-copy. Node-failure and clock-restart behavior are re
 the durable travel/order/event cursors; a duplicate request returns its cached
 result instead of paying twice.
 
+On 2026-08-29, `scripts/phase6_load_test.ps1` passed its isolated regional drill
+with 24 clients and three rounds: 552 HTTP requests completed in 4,465.24 ms of
+mixed-load wall time, with 104 accepted and 88 rejected command outcomes. The
+run exercised state, events, movement, chat, markets, travel, the autonomous
+tick, scheduled backup, operator metrics, server-owned arrival, and restart
+recovery. The result is evidence for the bounded 24-client regional target, not
+for multi-worker production concurrency or several-hundred-player capacity.
+
 ## Long-session gate and remaining risks
 
 The fixed 80-minute day is recorded in the GDD and Phase 5/6 decision records;

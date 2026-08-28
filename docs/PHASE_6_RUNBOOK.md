@@ -41,6 +41,20 @@ database. It validates the restored world and identity index before dropping
 that generated database and removing its temporary files. It does not reset or
 delete the configured database.
 
+For the local regional load and restart drill, run:
+
+```powershell
+.\scripts\phase6_load_test.ps1
+```
+
+The default run starts an isolated JSON worker on port 8799, creates 24 clients,
+and performs three mixed rounds across state, cursorable events, movement, chat,
+markets, and travel. It measures the mixed-load wall time, checks scheduled
+backup and operator metrics, waits for server-owned travel arrival, restarts the
+worker, and verifies the travelled location. The script removes its temporary
+state, backup, and process environment on completion. Pass `-ClientCount` or
+`-Rounds` to extend the fixture; the client target remains at least 24.
+
 ## Deploy, rollback, and maintenance
 
 1. Check `/v1/ops/health`, the last backup tick, and `persistence_error`; do not

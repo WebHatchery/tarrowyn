@@ -8,8 +8,10 @@ calendar, topology, law, privacy, legacy, and operational decisions are
 written down.
 
 The measured scope is deliberately regional: one worker, 24 concurrent-client
-target, bounded queues, and selectable JSON/MySQL persistence. The MySQL
-backend applies an explicit migration and writes the authoritative snapshot
+target, bounded queues, and selectable JSON/MySQL persistence. The local Phase 6
+mixed-load drill passed with 24 clients, three rounds, 552 requests, and 4,465.24
+ms wall time, including backup and restart recovery. The MySQL backend applies
+an explicit migration and writes the authoritative snapshot
 and identity index transactionally. Public launch remains blocked until the
 deployment owner runs that backend against the target database, proves
 concurrent-write behavior, completes a MySQL restore drill, and supplies the
