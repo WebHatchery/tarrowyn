@@ -59,8 +59,9 @@ ordinary-player 403 boundary.
 
 After launch, content operations should add new routes, farm plots, crops, contracts,
 events, households, and settlement opportunities through the validated JSON
-pipeline. The current validator protects the canonical manifests and their
-identifiers, and server planting, regional event seeding, settlement profiles,
+pipeline. The current validator protects the exact canonical manifest set,
+required record fields, and their identifiers, and server planting, regional
+event seeding, settlement profiles,
 infrastructure projections, and market base prices consume validated
 crop/event/settlement/item content. Settlement condition and opportunity
 profiles also consume validated settlement content. The repeatable Brambleback

@@ -95,7 +95,8 @@ The account-deletion worker anonymises chronicle text in both windows and in
 the event stream before private identity state is removed.
 
 The checked-in content contract is validated twice at release boundaries: the
-PowerShell gate requires the canonical manifest set to be present and valid
+PowerShell gate requires the canonical manifest set, exact schema declaration,
+record IDs, required text fields, and required arrays to be present and valid
 JSON, while server startup parses typed action, crop, item, event, settlement,
 region, household, infrastructure, NPC-household, recipe, calendar, and game-config
 records and rejects duplicate IDs, incomplete
