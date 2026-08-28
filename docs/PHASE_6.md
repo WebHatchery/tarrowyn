@@ -209,3 +209,7 @@ operated honestly and recovered safely.
 - Operator, support, moderation, and player-facing incident runbooks.
 - A final production-readiness review that records remaining risks, measured
   limits, and the content roadmap after launch.
+
+The current target-environment gates and deliberate product deferrals are
+tracked with evidence and exit conditions in
+[`PHASE_6_FOLLOW_UP_REGISTER.md`](PHASE_6_FOLLOW_UP_REGISTER.md).

@@ -92,5 +92,7 @@ players and long-term operation. The implementation records are
 [`PHASE_6_RUNBOOK.md`](PHASE_6_RUNBOOK.md),
 [`PHASE_6_TEST_REPORT.md`](PHASE_6_TEST_REPORT.md), and
 [`PRODUCTION_READINESS_REVIEW.md`](PRODUCTION_READINESS_REVIEW.md).
+The open target-environment gates and deliberate product deferrals are kept in
+[`PHASE_6_FOLLOW_UP_REGISTER.md`](PHASE_6_FOLLOW_UP_REGISTER.md).
 
 - [The Years of Tarrowyn GDD](../The_Years_of_Tarrowyn_GDD.md)

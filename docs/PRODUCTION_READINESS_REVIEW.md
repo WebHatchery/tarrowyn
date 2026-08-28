@@ -57,6 +57,11 @@ The live Phase 6 journey now also proves the allowlisted support-account HTTP
 view, its character and cursor boundary, secret-free response shape, and the
 ordinary-player 403 boundary.
 
+The complete list of target-environment gates, desired human evidence, and
+deliberate product deferrals is maintained in
+[`PHASE_6_FOLLOW_UP_REGISTER.md`](PHASE_6_FOLLOW_UP_REGISTER.md); this review
+does not treat any of those external or deferred rows as silently complete.
+
 After launch, content operations should add new routes, farm plots, crops, contracts,
 events, households, and settlement opportunities through the validated JSON
 pipeline. The current validator protects the exact canonical manifest set,
