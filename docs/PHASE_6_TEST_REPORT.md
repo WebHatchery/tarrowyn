@@ -103,12 +103,17 @@ the durable travel/order/event cursors; a duplicate request returns its cached
 result instead of paying twice.
 
 On 2026-08-29, `scripts/phase6_load_test.ps1` passed its isolated regional drill
-with 24 clients and three rounds: 552 HTTP requests completed in 4,479.15 ms of
-mixed-load wall time, with 104 accepted and 88 rejected command outcomes. The
+with 24 clients and three rounds: 624 HTTP requests completed in 4,578.51 ms of
+mixed-load wall time, with 107 accepted and 157 rejected command outcomes. The
 run exercised state, events, movement, chat, markets, travel, the autonomous
 tick, scheduled backup, operator metrics, server-owned arrival, and restart
 recovery. The result is evidence for the bounded 24-client regional target, not
 for multi-worker production concurrency or several-hundred-player capacity.
+Each round also includes a deliberate invalid movement probe so the rejection
+metric is deterministic rather than dependent on timing contention. Exploratory
+50- and 100-client single-round runs completed their mixed requests but raised
+the expected `market_backlog` alert once open orders exceeded the current
+32-order alert boundary; they do not establish a supported larger capacity.
 The standalone `scripts/phase6_failure_drill.ps1` also passed on the same date:
 it loaded the generated JSON backup into an isolated temporary server, confirmed
 readiness and a fresh backup, ran the regional Phase 5 tests, and left the active

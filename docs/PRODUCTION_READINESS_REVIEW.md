@@ -13,7 +13,7 @@ Reconnect after the server schedules the authoritative deletion tick.
 
 The measured scope is deliberately regional: one worker, 24 concurrent-client
 target, bounded queues, and selectable JSON/MySQL persistence. The local Phase 6
-mixed-load drill passed with 24 clients, three rounds, 552 requests, and 4,479.15
+mixed-load drill passed with 24 clients, three rounds, 624 requests, and 4,578.51
 ms wall time, including backup and restart recovery. The accelerated long-session
 fixture also crosses all four development seasons while checking lease, tax,
 market, household, chronicle, and newcomer continuity. Season labels also come

@@ -125,6 +125,14 @@ function Invoke-MixedClientLoad {
             if ($move.data.accepted) { $acceptedCommands++ } else { $rejectedCommands++ }
             if ($chat.data.accepted) { $acceptedCommands++ } else { $rejectedCommands++ }
 
+            $invalidMove = Invoke-PostJson "/v1/movement" `
+                @{ request_id = "phase6-load-$ClientIndex-invalid-move-$round"; dx = 0; dy = 0 } $headers $Address
+            $requestCount++
+            if ($null -eq $invalidMove.data.accepted -or $invalidMove.data.accepted) {
+                throw "the invalid movement probe did not return a rejected authoritative outcome"
+            }
+            $rejectedCommands++
+
             if ($round -eq 0) {
                 $order = Invoke-PostJson "/v1/market/orders" `
                     @{ request_id = "phase6-load-$ClientIndex-order"; action = "create"; destination_location_id = "saltmere"; commodity = "seeds"; quantity = 1 } $headers $Address
@@ -245,7 +253,8 @@ try {
     Assert-True ($metrics.data.server_tick -gt 0) "the operational tick metric did not advance"
     Assert-True ($metrics.data.completed_commands -gt 0) "completed command metrics did not advance"
     Assert-True ($metrics.data.rejected_commands -gt 0) "rejected command metrics did not advance"
-    Assert-True ($metrics.data.alert_flags.Count -eq 0) "the mixed load raised an unexpected alert"
+    $alertFlags = @($metrics.data.alert_flags)
+    Assert-True ($alertFlags.Count -eq 0) ("the mixed load raised unexpected alerts: " + ($alertFlags -join ", "))
 
     Stop-Phase6Server $server
     $server = $null
