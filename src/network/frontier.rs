@@ -80,6 +80,9 @@ impl FrontierClient {
         {
             self.pending_chronicle = None;
             if let Ok(response) = result {
+                if response.data.summary.is_some() {
+                    projection.chronicle_summary = response.data.summary;
+                }
                 for entry in response.data.entries {
                     if !projection
                         .chronicle

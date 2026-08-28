@@ -1,4 +1,5 @@
 use super::*;
+use crate::network::CraftingView;
 
 pub(super) fn draw(crafting: CraftingView, mouse: Vec2, actions: &mut Vec<UiAction>) {
     let panel = Rect::new(196.0, 174.0, 888.0, 274.0);

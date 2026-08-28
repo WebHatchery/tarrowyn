@@ -84,6 +84,14 @@ target's account and character projection, claims, trades, retained chronicle,
 and current event cursor without returning access tokens, refresh tokens,
 provider subjects, or other secrets.
 
+Chronicle retention has two server-owned windows. The latest 64 entries remain
+in the ordinary settlement view; entries leaving that window move to a durable
+append-only archive. Settlement chronicle responses include a bounded archive
+summary, while authenticated chronicle search scans the recent window and the
+archive. This keeps the client display small without deleting old achievements.
+The account-deletion worker anonymises chronicle text in both windows and in
+the event stream before private identity state is removed.
+
 The checked-in content contract is validated twice at release boundaries: the
 PowerShell gate requires the canonical manifest set to be present and valid
 JSON, while server startup parses typed action, crop, item, event, settlement,

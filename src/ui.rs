@@ -1,14 +1,13 @@
 //! Virtual-resolution UI for the Phase 0 first-evening client.
 
-use crate::data::{ActionDef, GameData};
-use crate::network::{ConnectionState, CraftingView, RemotePlayer};
-use crate::state::{tile_color, CropState, TileKind, WorldState};
+use crate::data::ActionDef;
+use crate::network::{ConnectionState, RemotePlayer};
+use crate::state::{tile_color, CropState, TileKind};
 use macroquad::prelude::*;
 use macroquad_toolkit::grid::TilePos;
 use macroquad_toolkit::prelude::*;
 use macroquad_toolkit::ui::draw_ui_text_ex;
-use macroquad_toolkit::ui::{RectExt, VirtualUi};
-use tarrowyn_protocol::{ChatMessage, ChronicleEntry, OpportunitySignal, WildernessZone};
+use macroquad_toolkit::ui::RectExt;
 
 #[path = "ui_crafting.rs"]
 mod ui_crafting;
@@ -18,62 +17,16 @@ mod ui_online;
 pub const LOGICAL_WIDTH: f32 = 1280.0;
 pub const LOGICAL_HEIGHT: f32 = 720.0;
 
+#[path = "ui_context.rs"]
+mod ui_context;
+pub use ui_context::{UiAction, UiContext};
+
 const PANEL: Color = Color::new(0.055, 0.075, 0.09, 0.97);
 const PANEL_LIGHT: Color = Color::new(0.08, 0.11, 0.13, 0.98);
 const LINE: Color = Color::new(0.32, 0.48, 0.50, 0.75);
 const CREAM: Color = Color::new(0.91, 0.87, 0.73, 1.0);
 const MINT: Color = Color::new(0.50, 0.82, 0.68, 1.0);
 const GOLD: Color = Color::new(0.90, 0.69, 0.30, 1.0);
-
-#[derive(Debug, Clone, PartialEq)]
-pub enum UiAction {
-    NewEvening,
-    UseOnline,
-    UseOffline,
-    Reconnect,
-    Save,
-    Load,
-    DeleteSave,
-    Move(i32, i32),
-    MoveTo(TilePos),
-    Interact(String),
-    SendChat,
-    QuickChat(String),
-    Zoom(f32),
-}
-
-pub struct UiContext<'a> {
-    pub data: &'a GameData,
-    pub world: &'a WorldState,
-    pub player_position: TilePos,
-    pub day: u32,
-    pub clock_minutes: u32,
-    pub night: bool,
-    pub stats: &'a str,
-    pub own_account_id: Option<&'a str>,
-    pub remote_players: &'a [RemotePlayer],
-    pub farm_animals: &'a [tarrowyn_protocol::FarmAnimal],
-    pub chat: &'a [ChatMessage],
-    pub chat_draft: &'a str,
-    pub server_tick: u64,
-    pub connection: ConnectionState,
-    pub status_message: &'a str,
-    pub identity_name: Option<&'a str>,
-    pub offline: bool,
-    pub save_exists: bool,
-    pub save_slots: &'a [String],
-    pub loaded_assets: usize,
-    pub camera_zoom: f32,
-    pub wilderness: Option<&'a WildernessZone>,
-    pub chronicle: &'a [ChronicleEntry],
-    pub opportunities: &'a [OpportunitySignal],
-    pub phase4_summary: &'a str,
-    pub phase5_summary: &'a str,
-    pub account_deletion_armed: bool,
-    pub crafting: Option<CraftingView>,
-    pub knocked_out: bool,
-    pub ui: &'a VirtualUi,
-}
 
 pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
     let mouse = ctx.ui.mouse_position();

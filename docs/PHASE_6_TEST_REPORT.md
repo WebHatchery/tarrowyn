@@ -53,6 +53,11 @@ manifest.
 The fixed-NPC household regression confirms the Bellweather service household
 follows validated NPC-household content without exposing a general family
 simulation contract.
+The chronicle regression confirms the newest 64 entries remain in the normal
+settlement view while older entries move to a durable archive, contribute a
+bounded summary, and remain discoverable through authenticated full-history
+search. The account-deletion regression also checks that named chronicle text
+is anonymised in recent entries, archived entries, and the event stream.
 The Phase 5 fixture verifies that travel, market, event, household, identity,
 refresh, and revocation state survive the authoritative repository boundary.
 The client Phase 5 tests verify that a linked account's visible deletion

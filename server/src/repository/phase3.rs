@@ -4,16 +4,21 @@ use crate::repository::models::RepositoryState;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 use tarrowyn_protocol::{
-    AdventurerContract, ChronicleEntry, ChronicleResponse, ClaimResponse, ClaimStatus,
-    CombatAction, CombatOutcome, CombatRequest, CombatResponse, ContractAction, ContractRequest,
-    ContractResponse, ContractStatus, ContractsResponse, Expedition, ExpeditionMember,
-    ExpeditionResponse, ExpeditionRole, ExpeditionStatus, FrontierEvent, HouseholdStatus,
-    LandClaim, OpportunitiesResponse, OpportunitySignal, PlayerProjection, Position,
-    RecoveryChoice, RecoveryRequest, RecoveryResponse, WeaponKind, WildernessZone, WorldEvent,
+    AdventurerContract, ChronicleEntry, ChronicleResponse, ChronicleSummary, ClaimResponse,
+    ClaimStatus, CombatAction, CombatOutcome, CombatRequest, CombatResponse, ContractAction,
+    ContractRequest, ContractResponse, ContractStatus, ContractsResponse, Expedition,
+    ExpeditionMember, ExpeditionResponse, ExpeditionRole, ExpeditionStatus, FrontierEvent,
+    HouseholdStatus, LandClaim, OpportunitiesResponse, OpportunitySignal, PlayerProjection,
+    Position, RecoveryChoice, RecoveryRequest, RecoveryResponse, WeaponKind, WildernessZone,
+    WorldEvent,
 };
 
-const MAX_CHRONICLE: usize = 64;
+pub(crate) const MAX_CHRONICLE: usize = 64;
 const CONTRACT_ID: &str = "brambleback-watch";
+const MAX_CHRONICLE_SUMMARY_KINDS: usize = 12;
+
+#[cfg(test)]
+mod tests;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub(super) struct ContractProgress {
@@ -41,6 +46,8 @@ pub(super) struct Phase3State {
     pub(super) unmet_demand_ticks: u64,
     pub(super) poor_condition_ticks: u64,
     pub(super) chronicle: VecDeque<ChronicleEntry>,
+    #[serde(default)]
+    pub(super) chronicle_archive: Vec<ChronicleEntry>,
     pub(super) claim: Option<LandClaim>,
     pub(super) expedition: Option<Expedition>,
     pub(super) outpost: Option<Position>,
@@ -80,6 +87,7 @@ impl Default for Phase3State {
             unmet_demand_ticks: 0,
             poor_condition_ticks: 0,
             chronicle: VecDeque::new(),
+            chronicle_archive: Vec::new(),
             claim: None,
             expedition: None,
             outpost: None,
@@ -90,6 +98,14 @@ impl Default for Phase3State {
 
 pub(super) fn fresh() -> Phase3State {
     Phase3State::default()
+}
+
+pub(super) fn archive_excess(phase: &mut Phase3State) {
+    while phase.chronicle.len() > MAX_CHRONICLE {
+        if let Some(entry) = phase.chronicle.pop_front() {
+            phase.chronicle_archive.push(entry);
+        }
+    }
 }
 
 pub(super) fn tick(state: &mut RepositoryState, config: &ServerConfig) {
@@ -587,6 +603,7 @@ impl WorldRepository {
                     .filter(|entry| entry.cursor > since)
                     .cloned()
                     .collect(),
+                summary: chronicle_summary(&state.phase3.chronicle_archive, since),
                 cursor: state.cursor,
             },
         })
@@ -712,7 +729,47 @@ pub(super) fn record(state: &mut RepositoryState, kind: &str, title: &str, text:
         *stored = entry.clone();
     }
     state.phase3.chronicle.push_back(entry);
-    while state.phase3.chronicle.len() > MAX_CHRONICLE {
-        state.phase3.chronicle.pop_front();
+    archive_excess(&mut state.phase3);
+}
+
+pub(super) fn chronicle_entries<'a>(
+    phase: &'a Phase3State,
+) -> impl Iterator<Item = &'a ChronicleEntry> + 'a {
+    phase.chronicle_archive.iter().chain(phase.chronicle.iter())
+}
+
+pub(super) fn chronicle_summary(
+    entries: &[ChronicleEntry],
+    since: u64,
+) -> Option<ChronicleSummary> {
+    let entries: Vec<&ChronicleEntry> = entries
+        .iter()
+        .filter(|entry| entry.cursor > since)
+        .collect();
+    let first = entries.first()?;
+    let last = entries.last()?;
+    let mut kinds = Vec::new();
+    for kind in entries.iter().map(|entry| entry.kind.as_str()) {
+        if kinds.len() < MAX_CHRONICLE_SUMMARY_KINDS
+            && !kinds.iter().any(|existing| existing == kind)
+        {
+            kinds.push(kind.to_owned());
+        }
     }
+    let highlights = entries
+        .iter()
+        .rev()
+        .take(3)
+        .rev()
+        .map(|entry| entry.title.clone())
+        .collect();
+    Some(ChronicleSummary {
+        from_tick: first.created_tick,
+        to_tick: last.created_tick,
+        from_cursor: first.cursor,
+        to_cursor: last.cursor,
+        entry_count: entries.len().min(u32::MAX as usize) as u32,
+        kinds,
+        highlights,
+    })
 }

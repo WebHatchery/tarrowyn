@@ -341,20 +341,34 @@ pub(super) fn draw_sidebar(
     ) {
         actions.push(UiAction::UseOffline);
     }
+    let chronicle_line = ctx
+        .chronicle_summary
+        .map(|summary| {
+            format!(
+                "{} older chronicle entries remain searchable; {}",
+                summary.entry_count,
+                summary
+                    .highlights
+                    .last()
+                    .map(String::as_str)
+                    .unwrap_or("the archive is ready")
+            )
+        })
+        .or_else(|| {
+            ctx.chronicle
+                .last()
+                .map(|entry| entry.title.clone())
+                .or_else(|| {
+                    ctx.opportunities
+                        .first()
+                        .map(|opportunity| opportunity.clue.clone())
+                })
+        })
+        .unwrap_or_else(|| "The frontier registry is listening.".to_owned());
     draw_text_block(
         &format!(
             "{}\n{}\n{}\n{}",
-            ctx.status_message,
-            ctx.phase4_summary,
-            ctx.phase5_summary,
-            ctx.chronicle
-                .last()
-                .map(|entry| entry.title.as_str())
-                .or_else(|| ctx
-                    .opportunities
-                    .first()
-                    .map(|opportunity| opportunity.clue.as_str()))
-                .unwrap_or("The frontier registry is listening.")
+            ctx.status_message, ctx.phase4_summary, ctx.phase5_summary, chronicle_line
         ),
         content.x,
         content.y + 612.0,

@@ -54,5 +54,8 @@ simulation consumer, including the fixed Bellweather household, has its own
 fixture and compatibility test before future content is treated as
 runtime-authoritative. General NPC family simulation remains a documented GDD
 deferral.
-New content must preserve newcomer access, fallback services, and searchable
-chronicle history.
+Chronicle history keeps a 64-entry current window, moves older records into a
+durable searchable archive, and exposes a bounded archive summary to the normal
+client view. Account deletion anonymises matching chronicle text in the recent
+window, archive, and event stream. New content must preserve newcomer access,
+fallback services, and this history boundary.

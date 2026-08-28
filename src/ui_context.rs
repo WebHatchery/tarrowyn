@@ -1,0 +1,59 @@
+use crate::data::GameData;
+use crate::network::{ConnectionState, CraftingView, RemotePlayer};
+use crate::state::WorldState;
+use macroquad_toolkit::grid::TilePos;
+use macroquad_toolkit::ui::VirtualUi;
+use tarrowyn_protocol::{
+    ChatMessage, ChronicleEntry, ChronicleSummary, OpportunitySignal, WildernessZone,
+};
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum UiAction {
+    NewEvening,
+    UseOnline,
+    UseOffline,
+    Reconnect,
+    Save,
+    Load,
+    DeleteSave,
+    Move(i32, i32),
+    MoveTo(TilePos),
+    Interact(String),
+    SendChat,
+    QuickChat(String),
+    Zoom(f32),
+}
+
+pub struct UiContext<'a> {
+    pub data: &'a GameData,
+    pub world: &'a WorldState,
+    pub player_position: TilePos,
+    pub day: u32,
+    pub clock_minutes: u32,
+    pub night: bool,
+    pub stats: &'a str,
+    pub own_account_id: Option<&'a str>,
+    pub remote_players: &'a [RemotePlayer],
+    pub farm_animals: &'a [tarrowyn_protocol::FarmAnimal],
+    pub chat: &'a [ChatMessage],
+    pub chat_draft: &'a str,
+    pub server_tick: u64,
+    pub connection: ConnectionState,
+    pub status_message: &'a str,
+    pub identity_name: Option<&'a str>,
+    pub offline: bool,
+    pub save_exists: bool,
+    pub save_slots: &'a [String],
+    pub loaded_assets: usize,
+    pub camera_zoom: f32,
+    pub wilderness: Option<&'a WildernessZone>,
+    pub chronicle: &'a [ChronicleEntry],
+    pub chronicle_summary: Option<&'a ChronicleSummary>,
+    pub opportunities: &'a [OpportunitySignal],
+    pub phase4_summary: &'a str,
+    pub phase5_summary: &'a str,
+    pub account_deletion_armed: bool,
+    pub crafting: Option<CraftingView>,
+    pub knocked_out: bool,
+    pub ui: &'a VirtualUi,
+}

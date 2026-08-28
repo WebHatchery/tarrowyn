@@ -42,6 +42,7 @@ fn erase_account(state: &mut RepositoryState, request: &PendingAccountDeletion) 
     if identity.account_id != request.account_id {
         return;
     }
+    let deleted_display_name = identity.display_name.clone();
 
     let deleted_tokens: HashSet<String> = state
         .phase6
@@ -81,7 +82,7 @@ fn erase_account(state: &mut RepositoryState, request: &PendingAccountDeletion) 
         }
     }
 
-    anonymize_public_history(state, request);
+    anonymize_public_history(state, request, &deleted_display_name);
     state.phase6.auth_link_results.retain(|key, response| {
         !key.starts_with(&format!("{}:", request.identity_key))
             && response.account_id != request.account_id
@@ -221,7 +222,11 @@ fn erase_private_phase4_state(state: &mut RepositoryState, request: &PendingAcco
     }
 }
 
-fn anonymize_public_history(state: &mut RepositoryState, request: &PendingAccountDeletion) {
+fn anonymize_public_history(
+    state: &mut RepositoryState,
+    request: &PendingAccountDeletion,
+    deleted_display_name: &str,
+) {
     if let Some(claim) = state.phase3.claim.as_mut() {
         if claim.owner_account_id == request.account_id {
             claim.owner_account_id = DELETED_ACCOUNT.to_owned();
@@ -236,11 +241,23 @@ fn anonymize_public_history(state: &mut RepositoryState, request: &PendingAccoun
         anonymize_chat(message, request.account_id.as_str());
     }
     for event in &mut state.events {
-        anonymize_event(&mut event.event, request.account_id.as_str());
+        anonymize_event(
+            &mut event.event,
+            request.account_id.as_str(),
+            deleted_display_name,
+        );
+    }
+    for entry in state
+        .phase3
+        .chronicle
+        .iter_mut()
+        .chain(state.phase3.chronicle_archive.iter_mut())
+    {
+        anonymize_chronicle(entry, deleted_display_name);
     }
 }
 
-fn anonymize_event(event: &mut WorldEvent, account_id: &str) {
+fn anonymize_event(event: &mut WorldEvent, account_id: &str, deleted_display_name: &str) {
     match event {
         WorldEvent::Presence(presence) => {
             if presence.account_id == account_id {
@@ -272,11 +289,17 @@ fn anonymize_event(event: &mut WorldEvent, account_id: &str) {
         }
         WorldEvent::Frontier(FrontierEvent::Threat(_))
         | WorldEvent::Frontier(FrontierEvent::Opportunity(_)) => {}
-        WorldEvent::Clock(_)
-        | WorldEvent::Farming(_)
-        | WorldEvent::TavernNotice(_)
-        | WorldEvent::Chronicle(_) => {}
+        WorldEvent::Clock(_) | WorldEvent::Farming(_) | WorldEvent::TavernNotice(_) => {}
+        WorldEvent::Chronicle(entry) => anonymize_chronicle(entry, deleted_display_name),
     }
+}
+
+fn anonymize_chronicle(entry: &mut tarrowyn_protocol::ChronicleEntry, deleted_display_name: &str) {
+    if deleted_display_name.is_empty() {
+        return;
+    }
+    entry.title = entry.title.replace(deleted_display_name, DELETED_NAME);
+    entry.text = entry.text.replace(deleted_display_name, DELETED_NAME);
 }
 
 fn anonymize_chat(message: &mut tarrowyn_protocol::ChatMessage, account_id: &str) {

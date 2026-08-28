@@ -1,6 +1,6 @@
 //! Production identity, operations, support, and long-lived world protocol records.
 
-use crate::{ChronicleEntry, ClaimRecord, PlayerProjection, TradeOffer};
+use crate::{ChronicleEntry, ChronicleSummary, ClaimRecord, PlayerProjection, TradeOffer};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -192,6 +192,8 @@ pub struct OpsMetricsResponse {
 pub struct ChronicleSearchResponse {
     pub query: String,
     pub entries: Vec<ChronicleEntry>,
+    #[serde(default)]
+    pub summary: Option<ChronicleSummary>,
     pub next_cursor: Option<u64>,
     pub cursor: u64,
 }

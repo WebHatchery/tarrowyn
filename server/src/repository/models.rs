@@ -160,6 +160,7 @@ impl RepositoryState {
             trim_replay_cache(&mut identity.chat_results);
         }
         let mut phase3 = stored.phase3;
+        super::phase3::archive_excess(&mut phase3);
         trim_replay_cache(&mut phase3.request_results);
         let mut phase4 = stored.phase4;
         trim_replay_cache(&mut phase4.request_results);

@@ -81,6 +81,13 @@ fails the drill.
 7. Reconcile the event cursor, travel records, orders, claims, and chronicle
    before reopening player access.
 
+Chronicle support is split between the normal settlement view and the
+authenticated search path. The view is intentionally bounded to recent
+entries plus its archive summary; use `/v1/chronicle/search?q=...&since=...`
+when investigating older history. After an account deletion, verify the
+recent window, archived records, and retained chronicle event records contain
+`Former resident` rather than the deleted display name.
+
 Rollback never replays rewards locally. A deployment mismatch is reported as a
 maintenance/reconnect state and the client waits for an authoritative response.
 

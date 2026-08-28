@@ -7,69 +7,27 @@ use macroquad_toolkit::net::{HttpClient, Pending};
 use serde::Serialize;
 use std::collections::VecDeque;
 use tarrowyn_protocol::{
-    ApiResponse, ChatMessage, ChatRequest, ChronicleEntry, EventsResponse, Expedition, FarmAnimal,
-    FarmingAction, FarmingRequest, FrontierEvent, GuestSessionRequest, GuestSessionResponse,
-    LandClaim, MovementIntent, OpportunitySignal, PlayerPresence, PlayerProjection, StateSnapshot,
-    TavernFeedResponse, TradeOffer, TradeRequest, TradeResponse, TradesResponse, WildernessZone,
-    WorldClock, WorldEvent, WorldSnapshot, MAX_CHAT_MESSAGE_LENGTH,
+    ApiResponse, ChatMessage, ChatRequest, ChronicleEntry, ChronicleSummary, EventsResponse,
+    Expedition, FarmAnimal, FarmingAction, FarmingRequest, FrontierEvent, GuestSessionRequest,
+    GuestSessionResponse, LandClaim, MovementIntent, OpportunitySignal, PlayerPresence,
+    PlayerProjection, StateSnapshot, TavernFeedResponse, TradeOffer, TradeRequest, TradeResponse,
+    TradesResponse, WildernessZone, WorldClock, WorldEvent, WorldSnapshot, MAX_CHAT_MESSAGE_LENGTH,
 };
 
 const REQUEST_TIMEOUT_SECONDS: f32 = 6.0;
-const STALE_TICKS: u64 = 20;
-
 mod frontier;
 mod phase4;
 mod phase5;
 mod requests;
 mod trade_client;
+mod types;
 mod world;
 
 use frontier::FrontierClient;
 pub(crate) use phase4::CraftingView;
 use phase4::Phase4Client;
 use requests::{PendingChat, PendingFarming, PendingMovement};
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum ConnectionState {
-    Connecting,
-    Online,
-    Degraded,
-    Offline,
-}
-
-impl ConnectionState {
-    pub fn label(self) -> &'static str {
-        match self {
-            Self::Connecting => "CONNECTING",
-            Self::Online => "ONLINE",
-            Self::Degraded => "DEGRADED",
-            Self::Offline => "OFFLINE",
-        }
-    }
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub enum NetworkNotice {
-    Info(String),
-    Success(String),
-    Warning(String),
-    Danger(String),
-}
-
-pub struct RemotePlayer {
-    pub account_id: String,
-    pub character_id: String,
-    pub display_name: String,
-    pub position: TilePos,
-    pub last_seen_tick: u64,
-    pub online: bool,
-}
-
-impl RemotePlayer {
-    pub fn stale(&self, server_tick: u64) -> bool {
-        !self.online || server_tick.saturating_sub(self.last_seen_tick) > STALE_TICKS
-    }
-}
+pub use types::{ConnectionState, NetworkNotice, RemotePlayer};
 
 pub struct WorldProjection {
     pub world: WorldState,
@@ -87,6 +45,7 @@ pub struct WorldProjection {
     pub trades: Vec<TradeOffer>,
     pub wilderness: Option<WildernessZone>,
     pub chronicle: Vec<ChronicleEntry>,
+    pub chronicle_summary: Option<ChronicleSummary>,
     pub opportunities: Vec<OpportunitySignal>,
     pub claim: Option<LandClaim>,
     pub outpost: Option<macroquad_toolkit::grid::TilePos>,
@@ -116,6 +75,7 @@ impl WorldProjection {
             trades: Vec::new(),
             wilderness: None,
             chronicle: Vec::new(),
+            chronicle_summary: None,
             opportunities: Vec::new(),
             claim: None,
             outpost: None,

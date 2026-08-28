@@ -206,6 +206,7 @@ impl Game {
                     camera_zoom: self.camera.zoom,
                     wilderness: client.projection.wilderness.as_ref(),
                     chronicle: &client.projection.chronicle,
+                    chronicle_summary: client.projection.chronicle_summary.as_ref(),
                     opportunities: &client.projection.opportunities,
                     phase4_summary: &client.phase4_summary(),
                     phase5_summary: &client.phase5_summary(),
@@ -253,6 +254,7 @@ impl Game {
                     camera_zoom: self.camera.zoom,
                     wilderness: None,
                     chronicle: &[],
+                    chronicle_summary: None,
                     opportunities: &[],
                     phase4_summary: "Phase 4 ledgers are available only on the shared road.",
                     phase5_summary:

@@ -44,8 +44,8 @@ fn stale_presence_is_visible_after_server_ticks_age() {
         last_seen_tick: 1,
         online: true,
     };
-    assert!(player.stale(STALE_TICKS + 2));
-    assert!(!player.stale(STALE_TICKS));
+    assert!(player.stale(super::types::STALE_TICKS + 2));
+    assert!(!player.stale(super::types::STALE_TICKS));
 }
 
 #[test]

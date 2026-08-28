@@ -101,9 +101,16 @@ Current implementation note: the checked-in pipeline now validates and serves
 typed crop, item, contract, threat, recipe, household, settlement, infrastructure,
 NPC-household, event, region, calendar, and farm-plot content. The remaining
 content work is expansion and pacing validation, not a missing launch manifest.
-- Define how chronicle history is retained, summarised, archived, searched,
-  and displayed after years of events without making old player achievements
-  disappear.
+
+Chronicle policy is now explicit: the server keeps the newest 64 entries in the
+normal regional view and moves older entries into an append-only durable archive.
+The normal view receives a bounded summary of archived ticks, entry count, event
+kinds, and recent highlights. The authenticated search endpoint scans both the
+archive and recent window, so an old achievement remains retrievable even after
+it leaves the normal view. Account deletion anonymises matching names in recent,
+archived, and event-stream chronicle records; the archive is intentionally not
+used as a client-side unbounded display buffer.
+
 - Add economy and population monitoring for inflation, item scarcity, NPC
   replacement, abandoned claims, settlement decline, and newcomer access.
 - Make an explicit decision on optional legacy or generational play. If it is

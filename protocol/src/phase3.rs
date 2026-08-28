@@ -216,8 +216,21 @@ pub struct ChronicleEntry {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ChronicleSummary {
+    pub from_tick: u64,
+    pub to_tick: u64,
+    pub from_cursor: u64,
+    pub to_cursor: u64,
+    pub entry_count: u32,
+    pub kinds: Vec<String>,
+    pub highlights: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct ChronicleResponse {
     pub entries: Vec<ChronicleEntry>,
+    #[serde(default)]
+    pub summary: Option<ChronicleSummary>,
     pub cursor: u64,
 }
 

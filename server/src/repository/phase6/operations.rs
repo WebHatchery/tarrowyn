@@ -93,7 +93,9 @@ impl WorldRepository {
                     .cloned()
                     .collect(),
                 trades,
-                chronicle: state.phase3.chronicle.iter().cloned().collect(),
+                chronicle: super::super::phase3::chronicle_entries(&state.phase3)
+                    .cloned()
+                    .collect(),
                 event_cursor: state.cursor,
             },
         })
@@ -292,9 +294,20 @@ impl WorldRepository {
         authenticate(&mut state, token, &self.config)?;
         let query = query.trim().chars().take(80).collect::<String>();
         let needle = query.to_lowercase();
-        let entries: Vec<_> = state
+        let matches = |entry: &&tarrowyn_protocol::ChronicleEntry| {
+            entry.cursor > since
+                && (needle.is_empty()
+                    || format!("{} {} {}", entry.title, entry.text, entry.kind)
+                        .to_lowercase()
+                        .contains(&needle))
+        };
+        let entries: Vec<_> = super::super::phase3::chronicle_entries(&state.phase3)
+            .filter(matches)
+            .cloned()
+            .collect();
+        let archived_matches: Vec<_> = state
             .phase3
-            .chronicle
+            .chronicle_archive
             .iter()
             .filter(|entry| {
                 entry.cursor > since
@@ -311,6 +324,7 @@ impl WorldRepository {
             data: ChronicleSearchResponse {
                 query,
                 entries,
+                summary: super::super::phase3::chronicle_summary(&archived_matches, since),
                 next_cursor,
                 cursor: state.cursor,
             },

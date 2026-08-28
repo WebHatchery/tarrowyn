@@ -155,6 +155,17 @@ fn account_deletion_removes_private_state_and_anonymizes_public_history() {
         state.phase4.governance.offices[0].holder_name = Some("Leaving traveller".to_owned());
         key
     };
+    {
+        let mut state = repository.state.lock().unwrap();
+        for index in 0..(super::super::phase3::MAX_CHRONICLE + 1) {
+            super::super::phase3::record(
+                &mut state,
+                "named achievement",
+                &format!("Leaving traveller achievement {index}"),
+                "Leaving traveller helped keep the hall open.",
+            );
+        }
+    }
 
     let request = AccountDeletionRequest {
         request_id: "deletion-request".to_owned(),
@@ -193,6 +204,21 @@ fn account_deletion_removes_private_state_and_anonymizes_public_history() {
         tarrowyn_protocol::WorldEvent::Chat(message)
             if message.account_id == "former-resident"
     )));
+    assert!(state
+        .phase3
+        .chronicle
+        .iter()
+        .chain(state.phase3.chronicle_archive.iter())
+        .all(|entry| !entry.text.contains("Leaving traveller")
+            && !entry.title.contains("Leaving traveller")));
+    assert!(state.events.iter().all(|event| {
+        !matches!(
+            &event.event,
+            tarrowyn_protocol::WorldEvent::Chronicle(entry)
+                if entry.text.contains("Leaving traveller")
+                    || entry.title.contains("Leaving traveller")
+        )
+    }));
     assert!(state
         .phase6
         .audits
