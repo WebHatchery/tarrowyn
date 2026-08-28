@@ -11,6 +11,7 @@ use tarrowyn_protocol::{
 };
 
 mod long_session;
+mod support_inventory;
 mod support_travel;
 
 #[test]

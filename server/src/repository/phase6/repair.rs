@@ -111,6 +111,7 @@ fn normalize_inventory(
         identity.inventory.turnips = identity.inventory.turnips.min(9_999);
         identity.inventory.moonberries = identity.inventory.moonberries.min(9_999);
         identity.inventory.seeds = identity.inventory.seeds.min(9_999);
+        identity.inventory.bandages = identity.inventory.bandages.min(9_999);
     }
     (
         true,

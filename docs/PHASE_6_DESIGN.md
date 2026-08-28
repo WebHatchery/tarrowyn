@@ -88,6 +88,8 @@ stock, then closes the order so a second request cannot refund it twice.
 Stuck-travel repair is also owned by the regional authority: it accepts only a
 recorded active or interrupted journey, returns the character to that journey's
 recorded origin, preserves cargo and rewards, and records the regional repair.
+Inventory normalisation clamps every persisted item counter, including combat
+bandages, to the documented support ceiling without creating new goods.
 Unsupported repairs return a clear reason rather than guessing at state. Every
 repair carries an operator note and audit ID.
 The allowlisted `GET /v1/support/account?account_id=...` view exposes the

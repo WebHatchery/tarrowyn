@@ -114,6 +114,9 @@ cleared journey.
 The account-deletion fixture proves that open and failed regional market
 orders are anonymised, cancelled, and returned to origin stock before the
 owner's private identity is removed.
+The inventory repair fixture covers the persisted bandage counter alongside the
+crop and seed counters, confirming the support ceiling applies to every item
+field and remains replay-safe.
 The provider secret and TLS termination remain deployment concerns and are not
 stored in the repository.
 
