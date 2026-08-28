@@ -10,10 +10,12 @@ foreach ($name in $required) {
 $region = Get-Content -Raw -LiteralPath (Join-Path $dataRoot "region.json") | ConvertFrom-Json
 $locations = @($region.locations | ForEach-Object { $_.id })
 $routes = @($region.routes | ForEach-Object { $_.id })
+$farmPlots = @($region.farm_plots | ForEach-Object { "$($_.x),$($_.y)" })
 if ($locations.Count -ne ($locations | Sort-Object -Unique).Count) { throw "Region location IDs must be unique." }
 if ($routes.Count -ne ($routes | Sort-Object -Unique).Count) { throw "Region route IDs must be unique." }
+if ($farmPlots.Count -lt 1 -or $farmPlots.Count -ne ($farmPlots | Sort-Object -Unique).Count) { throw "Region farm plot positions must be present and unique." }
 if ($locations.Count -lt 3) { throw "The regional manifest needs three locations." }
 foreach ($route in $region.routes) {
     if ($locations -notcontains $route.origin -or $locations -notcontains $route.destination) { throw "Route $($route.id) references an unknown location." }
 }
-Write-Host "Content manifests valid: $($required.Count) files, $($locations.Count) locations, $($routes.Count) routes."
+Write-Host "Content manifests valid: $($required.Count) files, $($locations.Count) locations, $($routes.Count) routes, $($farmPlots.Count) farm plots."

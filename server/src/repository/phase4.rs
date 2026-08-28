@@ -111,11 +111,7 @@ pub(super) fn fresh(_config: &ServerConfig) -> Phase4State {
             .map(infrastructure_from_profile)
             .collect(),
         claims: Vec::new(),
-        available_plots: vec![
-            tarrowyn_protocol::Position { x: 2, y: 8 },
-            tarrowyn_protocol::Position { x: 2, y: 9 },
-            tarrowyn_protocol::Position { x: 10, y: 8 },
-        ],
+        available_plots: crate::content::farm_plot_positions(),
         households: vec![crate::content::npc_household("bellweather")],
         profiles: HashMap::new(),
         materials: HashMap::new(),

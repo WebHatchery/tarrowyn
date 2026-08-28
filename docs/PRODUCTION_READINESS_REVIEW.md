@@ -29,8 +29,11 @@ external alert routing. Preview connection settings belong in the ignored
 Those are explicit remaining risks, not hidden behind the game client. Client
 connection-failure alerting remains deployment/client-owned because the server
 cannot observe a client after its connection disappears.
+The standalone JSON restore-on-a-copy drill also passed: it loaded the generated
+backup, confirmed readiness and a replacement backup, ran the regional Phase 5
+tests, and preserved the active state file.
 
-After launch, content operations should add new routes, crops, contracts,
+After launch, content operations should add new routes, farm plots, crops, contracts,
 events, households, and settlement opportunities through the validated JSON
 pipeline. The current validator protects the canonical manifests and their
 identifiers, and server planting, regional event seeding, settlement profiles,

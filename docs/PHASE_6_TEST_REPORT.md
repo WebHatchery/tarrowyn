@@ -106,6 +106,10 @@ run exercised state, events, movement, chat, markets, travel, the autonomous
 tick, scheduled backup, operator metrics, server-owned arrival, and restart
 recovery. The result is evidence for the bounded 24-client regional target, not
 for multi-worker production concurrency or several-hundred-player capacity.
+The standalone `scripts/phase6_failure_drill.ps1` also passed on the same date:
+it loaded the generated JSON backup into an isolated temporary server, confirmed
+readiness and a fresh backup, ran the regional Phase 5 tests, and left the active
+state untouched.
 
 ## Long-session gate and remaining risks
 

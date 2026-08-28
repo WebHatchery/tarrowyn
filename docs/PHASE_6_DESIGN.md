@@ -96,8 +96,8 @@ and supply profiles. Market base prices also consume the item manifest, which
 now covers every traded commodity. Regional season labels now also follow the
 calendar sequence and season length; the configured real-time day length still
 belongs to the server deployment boundary. Route transport, endpoint topology,
-location roles, resources, names, services, positions, and route tuning now
-follow the validated region manifest. The repeatable Brambleback
+location roles, resources, names, services, positions, route tuning, and the
+shared farm-plot positions now follow the validated region manifest. The repeatable Brambleback
 contract now consumes a typed contract manifest for its narrative, target,
 required progress, and reward curve. The launch wilderness threat now consumes
 a typed threat manifest for its identity, monster, position, health, risk

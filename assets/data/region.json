@@ -6,6 +6,11 @@
     "year_days": 56,
     "seasons": ["thaw", "greenrise", "harvest", "deepwinter"]
   },
+  "farm_plots": [
+    {"x": 2, "y": 8},
+    {"x": 2, "y": 9},
+    {"x": 10, "y": 8}
+  ],
   "locations": [
     {
       "id": "hearth",

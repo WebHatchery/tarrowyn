@@ -119,6 +119,7 @@ static REGION_CATALOG: OnceLock<RegionManifest> = OnceLock::new();
 struct RegionManifest {
     region_id: String,
     calendar: CalendarManifest,
+    farm_plots: Vec<Position>,
     locations: Vec<LocationManifest>,
     routes: Vec<RouteManifest>,
 }
@@ -218,7 +219,7 @@ pub fn validate() -> Result<(), String> {
     frontier::validate()?;
     validate_events(&events)?;
     validate_items(&items)?;
-    validate_region(&region)?;
+    validate_region(&region, &game_config)?;
     households::validate(&region)?;
     settlements::validate(&region)?;
     npcs::validate()?;
@@ -284,6 +285,10 @@ pub(crate) fn season_for_day(day: u32) -> String {
     let season_index = (day.saturating_sub(1) / region.calendar.season_days) as usize
         % region.calendar.seasons.len();
     region.calendar.seasons[season_index].clone()
+}
+
+pub(crate) fn farm_plot_positions() -> Vec<Position> {
+    region_catalog().farm_plots.clone()
 }
 
 pub(crate) fn region_route_profile(route_id: &str) -> RegionRouteProfile {
@@ -490,9 +495,28 @@ fn validate_items(items: &ItemsManifest) -> Result<(), String> {
     Ok(())
 }
 
-fn validate_region(region: &RegionManifest) -> Result<(), String> {
+fn validate_region(
+    region: &RegionManifest,
+    game_config: &GameConfigManifest,
+) -> Result<(), String> {
     if region.region_id != "hearthlands" || region.calendar.day_seconds == 0 {
         return Err("region needs the authoritative ID and a positive day length".to_owned());
+    }
+    let farm_plot_keys: HashSet<(i32, i32)> = region
+        .farm_plots
+        .iter()
+        .map(|position| (position.x, position.y))
+        .collect();
+    if region.farm_plots.is_empty()
+        || farm_plot_keys.len() != region.farm_plots.len()
+        || region.farm_plots.iter().any(|position| {
+            position.x < 0
+                || position.y < 0
+                || position.x as u32 >= game_config.world_width
+                || position.y as u32 >= game_config.world_height
+        })
+    {
+        return Err("region farm plots must be unique, non-empty, and inside the world".to_owned());
     }
     validate_id_list(
         "location",

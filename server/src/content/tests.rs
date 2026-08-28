@@ -79,6 +79,18 @@ fn season_labels_follow_the_validated_region_calendar() {
 }
 
 #[test]
+fn farm_plot_positions_follow_the_validated_region_manifest() {
+    assert_eq!(
+        super::farm_plot_positions(),
+        vec![
+            tarrowyn_protocol::Position { x: 2, y: 8 },
+            tarrowyn_protocol::Position { x: 2, y: 9 },
+            tarrowyn_protocol::Position { x: 10, y: 8 },
+        ]
+    );
+}
+
+#[test]
 fn route_profiles_follow_the_validated_region_manifest() {
     let ferry = super::region_route_profile("saltmere-ferry");
     assert_eq!(ferry.name, "Saltmere ferry");
