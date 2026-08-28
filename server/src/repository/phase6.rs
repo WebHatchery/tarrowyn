@@ -54,6 +54,8 @@ pub(super) struct Phase6State {
     pub(super) reports: HashMap<String, ModerationReportResponse>,
     #[serde(default)]
     pub(super) moderation_results: HashMap<String, ModerationReportResponse>,
+    #[serde(default)]
+    pub(super) moderation_last_report_ticks: HashMap<String, u64>,
     pub(super) request_results: HashMap<String, SupportRepairResponse>,
     pub(super) last_backup_tick: Option<u64>,
     pub(super) last_backup_path: Option<String>,
@@ -80,6 +82,7 @@ pub(super) fn fresh(_config: &ServerConfig) -> Phase6State {
         audits: VecDeque::new(),
         reports: HashMap::new(),
         moderation_results: HashMap::new(),
+        moderation_last_report_ticks: HashMap::new(),
         request_results: HashMap::new(),
         last_backup_tick: None,
         last_backup_path: None,
@@ -584,6 +587,7 @@ pub(super) fn phase6_tick(state: &mut RepositoryState, config: &ServerConfig) {
     trim_replay_cache(&mut state.phase6.auth_refresh_results);
     trim_replay_cache(&mut state.phase6.auth_revoke_results);
     trim_replay_cache(&mut state.phase6.moderation_results);
+    trim_replay_cache(&mut state.phase6.moderation_last_report_ticks);
     state.phase6.audits.truncate(512);
 }
 

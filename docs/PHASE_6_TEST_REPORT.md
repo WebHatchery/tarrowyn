@@ -4,11 +4,11 @@
 
 The workspace has a versioned storage document, atomic replacement, scheduled
 backup metadata, integrity readiness, production session records, audit records,
-and a support repair API. Storage version 17 also persists auth replay results,
+and a support repair API. Storage version 18 also persists auth replay results,
 alongside field-tool condition,
 real-time lease timestamps, and public tax receipts,
 the per-character skill ledger, Bellweather animal condition, and daily care
-state, loads older documents through serde defaults, and fails closed on a
+state, persists the account moderation cooldown, loads older documents through serde defaults, and fails closed on a
 corrupt JSON snapshot. A Phase 1–4
 document without Phase 5/6 fields loads through serde defaults and receives the
 current regional and operations state.
@@ -17,7 +17,7 @@ refresh, and revocation state survive the authoritative repository boundary.
 The selected MySQL bridge now has a checked-in migration, startup pool/migration
 failure handling, transactional snapshot/index writes, and driver-selection
 tests. The configured local preview MySQL service passed
-`scripts/verify_mysql.ps1`: storage version 17 readiness, authoritative animal
+`scripts/verify_mysql.ps1`: storage version 18 readiness, authoritative animal
 state, duplicate chat/auth/moderation replay, concurrent duplicate chat replay,
 temporary backup creation, and identity/state persistence across a server
 restart all succeeded. It then restored a native

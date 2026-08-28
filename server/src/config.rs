@@ -17,6 +17,7 @@ pub struct ServerConfig {
     pub session_ttl_seconds: u32,
     pub movement_cooldown_ticks: u64,
     pub chat_max_length: usize,
+    pub moderation_cooldown_ticks: u64,
     pub starting_gold: u32,
     pub starting_seeds: u32,
     pub crop_stage_seconds: f32,
@@ -57,6 +58,7 @@ impl Default for ServerConfig {
             session_ttl_seconds: 30,
             movement_cooldown_ticks: 1,
             chat_max_length: 160,
+            moderation_cooldown_ticks: 20,
             starting_gold: 12,
             starting_seeds: 6,
             crop_stage_seconds: 30.0,
@@ -113,6 +115,10 @@ impl ServerConfig {
             ),
             chat_max_length: env_u64("TARROWYN_CHAT_MAX_LENGTH", defaults.chat_max_length as u64)
                 as usize,
+            moderation_cooldown_ticks: env_u64(
+                "TARROWYN_MODERATION_COOLDOWN_TICKS",
+                defaults.moderation_cooldown_ticks,
+            ),
             starting_gold: env_u64("TARROWYN_STARTING_GOLD", defaults.starting_gold as u64) as u32,
             starting_seeds: env_u64("TARROWYN_STARTING_SEEDS", defaults.starting_seeds as u64)
                 as u32,

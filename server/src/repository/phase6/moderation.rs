@@ -24,6 +24,20 @@ impl WorldRepository {
                 data: previous.clone(),
             });
         }
+        if state
+            .phase6
+            .moderation_last_report_ticks
+            .get(&key)
+            .is_some_and(|last| {
+                state.tick.saturating_sub(*last) < self.config.moderation_cooldown_ticks
+            })
+        {
+            return Err(RepositoryError::new(
+                429,
+                "moderation_rate_limited",
+                "Wait before submitting another moderation report.",
+            ));
+        }
         let report_id = format!("report-{}", state.phase6.next_audit_id);
         state.phase6.next_audit_id = state.phase6.next_audit_id.saturating_add(1);
         let response = ModerationReportResponse {
@@ -52,6 +66,11 @@ impl WorldRepository {
             .phase6
             .moderation_results
             .insert(cache, response.clone());
+        let report_tick = state.tick;
+        state
+            .phase6
+            .moderation_last_report_ticks
+            .insert(key, report_tick);
         self.persist(&state);
         Ok(ApiResponse {
             meta: meta(

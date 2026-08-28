@@ -16,7 +16,7 @@ $environmentNames = @(
     "DB_DRIVER", "DB_HOST", "DB_PORT", "DB_DATABASE", "DB_USERNAME", "DB_PASSWORD",
     "TARROWYN_SERVER_ADDR", "TARROWYN_BACKUP_PATH", "TARROWYN_BACKUP_INTERVAL_TICKS",
     "TARROWYN_TICK_MS", "TARROWYN_SESSION_TTL_SECONDS", "TARROWYN_MOVEMENT_COOLDOWN_TICKS",
-    "MYSQL_PWD"
+    "TARROWYN_MODERATION_COOLDOWN_TICKS", "MYSQL_PWD"
 )
 $oldEnvironment = @{}
 
@@ -193,7 +193,7 @@ try {
 
     $server = Start-PreviewServer
     $health = Wait-Ready
-    Assert-True ($health.data.storage_version -ge 17) "the migrated world is older than storage version 17"
+    Assert-True ($health.data.storage_version -ge 18) "the migrated world is older than storage version 18"
 
     $nonce = [guid]::NewGuid().ToString("N")
     $clientKey = "mysql-acceptance-$PID-$nonce"
@@ -266,7 +266,7 @@ try {
     }
     Assert-True (Test-Path -LiteralPath $backupPath) "the MySQL-backed server did not write its configured backup"
     $backup = Get-Content -Raw -LiteralPath $backupPath | ConvertFrom-Json
-    Assert-True ($backup.storage_version -ge 17) "the backup storage version was not current"
+    Assert-True ($backup.storage_version -ge 18) "the backup storage version was not current"
     Assert-True ($backup.phase4.animals.Count -ge 1) "the backup omitted the authored animal state"
     $characterId = $session.data.character_id
 
@@ -274,7 +274,7 @@ try {
     $server = $null
     $server = Start-PreviewServer
     $health = Wait-Ready
-    Assert-True ($health.data.storage_version -ge 17) "the restarted MySQL server reported an old storage version"
+    Assert-True ($health.data.storage_version -ge 18) "the restarted MySQL server reported an old storage version"
     $resumed = Invoke-RestMethod -Method Post -Uri "http://$ServerAddress/v1/session/guest" `
         -ContentType "application/json" -Body (@{ client_key = $clientKey; reset = $false } | ConvertTo-Json -Compress)
     Assert-True ($resumed.data.character_id -eq $characterId) "the MySQL-backed identity did not survive restart"
