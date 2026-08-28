@@ -2,7 +2,190 @@
 
 use super::super::models::RepositoryState;
 use super::super::phase4::unix_time_seconds;
-use tarrowyn_protocol::ClaimLifecycleStatus;
+use super::super::{meta, record_command_outcome, RepositoryError, WorldRepository};
+use super::{audit, is_support_operator, validate_request_id};
+use tarrowyn_protocol::{
+    ApiResponse, ClaimLifecycleStatus, SupportRepairAction, SupportRepairRequest,
+    SupportRepairResponse,
+};
+
+impl WorldRepository {
+    pub fn support_repair(
+        &self,
+        token: &str,
+        request: SupportRepairRequest,
+    ) -> Result<ApiResponse<SupportRepairResponse>, RepositoryError> {
+        let mut state = self.state.lock().expect("world repository lock poisoned");
+        let actor_key = super::super::authenticate(&mut state, token, &self.config)?;
+        validate_request_id(&request.request_id)?;
+        let actor = state
+            .identities
+            .get(&actor_key)
+            .expect("identity exists")
+            .account_id
+            .clone();
+        if !is_support_operator(&self.config, &actor) {
+            return Err(RepositoryError::new(
+                403,
+                "support_operator_required",
+                "A configured support operator account is required for repair actions.",
+            ));
+        }
+        if request.note.trim().is_empty() {
+            return Err(RepositoryError::new(
+                400,
+                "repair_note_required",
+                "Every support repair needs an operator note.",
+            ));
+        }
+        let cache = format!("repair:{}:{}", actor, request.request_id);
+        if let Some(previous) = state.phase6.request_results.get(&cache) {
+            return Ok(ApiResponse {
+                meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
+                data: previous.clone(),
+            });
+        }
+        let target_account = request.account_id.clone().unwrap_or_else(|| actor.clone());
+        let target_key = state
+            .identities
+            .iter()
+            .find(|(_, identity)| identity.account_id == target_account)
+            .map(|(key, _)| key.clone());
+        let (accepted, summary, reason) = match request.action {
+            SupportRepairAction::ClearStuckTravel => clear_stuck_travel(&mut state, target_key),
+            SupportRepairAction::NormalizeInventory => normalize_inventory(&mut state, target_key),
+            SupportRepairAction::ReconcileTrade => {
+                reconcile_trade(&mut state, request.target_id.as_deref())
+            }
+            SupportRepairAction::RestoreClaim => {
+                restore_claim(&mut state, &target_account, request.target_id.as_deref())
+            }
+            SupportRepairAction::MergeHousehold => {
+                merge_household(&mut state, request.target_id.as_deref())
+            }
+            SupportRepairAction::ResolveModeration => {
+                resolve_moderation(&mut state, request.target_id.as_deref())
+            }
+        };
+        let audit_id = audit(
+            &mut state,
+            &actor,
+            "support.repair",
+            &target_account,
+            if accepted { "accepted" } else { "rejected" },
+            &request.note,
+        );
+        let response = SupportRepairResponse {
+            request_id: request.request_id.clone(),
+            audit_id,
+            accepted,
+            summary,
+            reason,
+        };
+        state.phase6.request_results.insert(cache, response.clone());
+        record_command_outcome(&mut state, response.accepted);
+        self.persist(&state);
+        Ok(ApiResponse {
+            meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
+            data: response,
+        })
+    }
+}
+
+fn clear_stuck_travel(
+    state: &mut RepositoryState,
+    target_key: Option<String>,
+) -> (bool, String, Option<String>) {
+    let Some(target_key) = target_key else {
+        return (
+            false,
+            String::new(),
+            Some("The target account is not present.".to_owned()),
+        );
+    };
+    state.phase5.travel.remove(&target_key);
+    if let Some(identity) = state.identities.get_mut(&target_key) {
+        identity.position = crate::content::region_location_profile("hearth").position;
+    }
+    (
+        true,
+        "Stuck travel cleared at the origin with cargo and rewards preserved.".to_owned(),
+        None,
+    )
+}
+
+fn normalize_inventory(
+    state: &mut RepositoryState,
+    target_key: Option<String>,
+) -> (bool, String, Option<String>) {
+    let Some(target_key) = target_key else {
+        return (
+            false,
+            String::new(),
+            Some("The target account is not present.".to_owned()),
+        );
+    };
+    if let Some(identity) = state.identities.get_mut(&target_key) {
+        identity.inventory.wheat = identity.inventory.wheat.min(9_999);
+        identity.inventory.turnips = identity.inventory.turnips.min(9_999);
+        identity.inventory.moonberries = identity.inventory.moonberries.min(9_999);
+        identity.inventory.seeds = identity.inventory.seeds.min(9_999);
+    }
+    (
+        true,
+        "Inventory values were normalised to the documented support ceiling.".to_owned(),
+        None,
+    )
+}
+
+fn reconcile_trade(
+    state: &mut RepositoryState,
+    target_id: Option<&str>,
+) -> (bool, String, Option<String>) {
+    let Some(order_id) = target_id else {
+        return (
+            false,
+            String::new(),
+            Some("A market order ID is required.".to_owned()),
+        );
+    };
+    let Some(order) = state.phase5.market_orders.iter_mut().find(|order| {
+        order.order_id == order_id
+            && matches!(order.status, tarrowyn_protocol::MarketOrderStatus::Open)
+    }) else {
+        return (
+            false,
+            String::new(),
+            Some("No open market order needs reconciliation.".to_owned()),
+        );
+    };
+    order.status = tarrowyn_protocol::MarketOrderStatus::Cancelled;
+    (
+        true,
+        "The open order was cancelled; its audit trail remains available for refund review."
+            .to_owned(),
+        None,
+    )
+}
+
+fn resolve_moderation(
+    state: &mut RepositoryState,
+    target_id: Option<&str>,
+) -> (bool, String, Option<String>) {
+    let Some(report) = target_id.and_then(|id| state.phase6.reports.get_mut(id)) else {
+        return (
+            false,
+            String::new(),
+            Some("That moderation report is not recorded.".to_owned()),
+        );
+    };
+    report.status = "resolved".to_owned();
+    (
+        true,
+        "Moderation report marked resolved and retained in the audit record.".to_owned(),
+        None,
+    )
+}
 
 pub(super) fn restore_claim(
     state: &mut RepositoryState,
