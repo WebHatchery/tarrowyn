@@ -111,6 +111,9 @@ The stuck-travel repair fixture proves that `ClearStuckTravel` uses the
 journey's recorded origin instead of a hard-coded settlement, preserves the
 journey's cargo/reward boundary, records the repair, and rejects an already
 cleared journey.
+The account-deletion fixture proves that open and failed regional market
+orders are anonymised, cancelled, and returned to origin stock before the
+owner's private identity is removed.
 The provider secret and TLS termination remain deployment concerns and are not
 stored in the repository.
 

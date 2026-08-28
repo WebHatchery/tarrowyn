@@ -101,7 +101,10 @@ append-only archive. Settlement chronicle responses include a bounded archive
 summary, while authenticated chronicle search scans the recent window and the
 archive. This keeps the client display small without deleting old achievements.
 The account-deletion worker anonymises chronicle text in both windows and in
-the event stream before private identity state is removed.
+the event stream before private identity state is removed. Before that removal,
+any open or failed regional market order owned by the account is cancelled and
+its unsettled escrow is returned to origin stock; the anonymised order remains
+as public settlement history without an ownerless shipment.
 
 The checked-in content contract is validated twice at release boundaries: the
 PowerShell gate requires the canonical manifest set, exact schema declaration,

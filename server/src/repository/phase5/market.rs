@@ -4,6 +4,47 @@ use super::super::models::RepositoryState;
 use super::*;
 use tarrowyn_protocol::MarketOrderStatus;
 
+pub fn close_deleted_account_orders(state: &mut RepositoryState, account_id: &str) {
+    let indexes: Vec<usize> = state
+        .phase5
+        .market_orders
+        .iter()
+        .enumerate()
+        .filter(|(_, order)| order.owner_account_id == account_id)
+        .map(|(index, _)| index)
+        .collect();
+    for index in indexes {
+        let order = state.phase5.market_orders[index].clone();
+        if matches!(
+            order.status,
+            MarketOrderStatus::Open | MarketOrderStatus::Failed
+        ) {
+            let stock = state
+                .phase5
+                .stock
+                .entry(stock_key(
+                    &order.origin_location_id,
+                    order.commodity.label(),
+                ))
+                .or_default();
+            *stock = stock.saturating_add(order.quantity);
+            state.phase5.market_orders[index].status = MarketOrderStatus::Cancelled;
+            state.phase5.market_orders[index].settled_tick = Some(state.tick);
+            record_regional(
+                state,
+                &[
+                    order.origin_location_id.as_str(),
+                    order.destination_location_id.as_str(),
+                ],
+                "market order account cleanup",
+                "An account departure returned unsettled shipment escrow to regional stock.",
+            );
+        }
+        state.phase5.market_orders[index].owner_account_id = "former-resident".to_owned();
+        state.phase5.market_orders[index].owner_name = "Former resident".to_owned();
+    }
+}
+
 pub fn reconcile_market_order(
     state: &mut RepositoryState,
     target_id: Option<&str>,

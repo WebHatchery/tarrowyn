@@ -16,7 +16,7 @@ mod market;
 mod recovery;
 mod state;
 use logic::*;
-pub(super) use market::reconcile_market_order;
+pub(super) use market::{close_deleted_account_orders, reconcile_market_order};
 pub(super) use recovery::clear_stuck_travel;
 pub(super) use state::{fresh, Phase5Response, Phase5State};
 

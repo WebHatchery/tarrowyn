@@ -99,7 +99,9 @@ authenticated search path. The view is intentionally bounded to recent
 entries plus its archive summary; use `/v1/chronicle/search?q=...&since=...`
 when investigating older history. After an account deletion, verify the
 recent window, archived records, and retained chronicle event records contain
-`Former resident` rather than the deleted display name.
+`Former resident` rather than the deleted display name. Also verify that any
+open or failed market order owned by the deleted account is cancelled and its
+escrow has returned to the order's origin stock.
 
 Rollback never replays rewards locally. A deployment mismatch is reported as a
 maintenance/reconnect state and the client waits for an authoritative response.

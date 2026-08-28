@@ -2,8 +2,8 @@ use super::super::models::RepositoryState;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use tarrowyn_protocol::{
-    AccountDeletionResponse, ClaimLifecycleStatus, ClaimStatus, FrontierEvent, MarketOrderStatus,
-    ProposalStatus, ServiceOrderStatus, WorldEvent,
+    AccountDeletionResponse, ClaimLifecycleStatus, ClaimStatus, FrontierEvent, ProposalStatus,
+    ServiceOrderStatus, WorldEvent,
 };
 
 const DELETED_ACCOUNT: &str = "former-resident";
@@ -71,16 +71,7 @@ fn erase_account(state: &mut RepositoryState, request: &PendingAccountDeletion) 
         trade.creator_account_id != request.account_id
             && trade.recipient_account_id != request.account_id
     });
-    for order in &mut state.phase5.market_orders {
-        if order.owner_account_id == request.account_id {
-            order.owner_account_id = DELETED_ACCOUNT.to_owned();
-            order.owner_name = DELETED_NAME.to_owned();
-            if order.status == MarketOrderStatus::Open {
-                order.status = MarketOrderStatus::Cancelled;
-                order.settled_tick = Some(state.tick);
-            }
-        }
-    }
+    super::super::phase5::close_deleted_account_orders(state, &request.account_id);
 
     anonymize_public_history(state, request, &deleted_display_name);
     state.phase6.auth_link_results.retain(|key, response| {

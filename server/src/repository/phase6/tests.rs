@@ -143,6 +143,47 @@ fn account_deletion_removes_private_state_and_anonymizes_public_history() {
             },
         )
         .unwrap();
+    let market_order = repository
+        .market_order(
+            &token,
+            MarketOrderRequest {
+                request_id: "deletion-market-order".to_owned(),
+                action: MarketOrderAction::Create,
+                order_id: None,
+                destination_location_id: Some("whisperwood-outpost".to_owned()),
+                commodity: Some(CommodityKind::Seeds),
+                quantity: Some(2),
+            },
+        )
+        .unwrap()
+        .data;
+    let market_order_id = market_order.order.unwrap().order_id;
+    let failed_market_order = repository
+        .market_order(
+            &token,
+            MarketOrderRequest {
+                request_id: "deletion-failed-market-order".to_owned(),
+                action: MarketOrderAction::Create,
+                order_id: None,
+                destination_location_id: Some("whisperwood-outpost".to_owned()),
+                commodity: Some(CommodityKind::Seeds),
+                quantity: Some(2),
+            },
+        )
+        .unwrap()
+        .data;
+    let failed_market_order_id = failed_market_order.order.unwrap().order_id;
+    let origin_seed_stock_before = {
+        let mut state = repository.state.lock().unwrap();
+        state
+            .phase5
+            .market_orders
+            .iter_mut()
+            .find(|order| order.order_id == failed_market_order_id)
+            .expect("failed market order remains recorded")
+            .status = MarketOrderStatus::Failed;
+        state.phase5.stock.get("hearth:seeds").copied().unwrap_or(0)
+    };
     let identity_key = {
         let mut state = repository.state.lock().unwrap();
         let key = state
@@ -193,6 +234,30 @@ fn account_deletion_removes_private_state_and_anonymizes_public_history() {
     assert!(!state.identities.contains_key(&identity_key));
     assert!(state.phase6.accounts.is_empty());
     assert!(state.phase6.sessions.is_empty());
+    let market_order = state
+        .phase5
+        .market_orders
+        .iter()
+        .find(|order| order.order_id == market_order_id)
+        .expect("deleted account market order remains as history");
+    assert_eq!(market_order.owner_account_id, "former-resident");
+    assert_eq!(market_order.owner_name, "Former resident");
+    assert_eq!(market_order.status, MarketOrderStatus::Cancelled);
+    assert_eq!(market_order.settled_tick, Some(state.tick));
+    let failed_market_order = state
+        .phase5
+        .market_orders
+        .iter()
+        .find(|order| order.order_id == failed_market_order_id)
+        .expect("failed deleted account order remains as history");
+    assert_eq!(failed_market_order.owner_account_id, "former-resident");
+    assert_eq!(failed_market_order.owner_name, "Former resident");
+    assert_eq!(failed_market_order.status, MarketOrderStatus::Cancelled);
+    assert_eq!(failed_market_order.settled_tick, Some(state.tick));
+    assert_eq!(
+        state.phase5.stock.get("hearth:seeds").copied().unwrap_or(0),
+        origin_seed_stock_before + 4
+    );
     assert!(!state.phase4.profiles.contains_key(&identity_key));
     assert!(state.phase4.governance.offices[0].vacant);
     assert!(state.phase4.claims[0].owner_account_id.is_none());
