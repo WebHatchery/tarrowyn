@@ -80,6 +80,13 @@ drills; the JSON backend remains the deterministic default for local fixtures.
 - Verify that a node or region failure does not create duplicate rewards,
   split-brain ownership, impossible travel, or unrecoverable cursor gaps.
 
+Current measurement note: the isolated harness passes the supported 24-client
+regional target with a 250 ms tick, backup, travel arrival, metrics, and restart
+recovery. Exploratory 50- and 100-client single-round runs complete their mixed
+requests but raise the configured `market_backlog` alert after open orders pass
+32. The several-hundred-player zone goal therefore remains an explicit scale
+and topology gate, not an implied property of the current one-worker preview.
+
 ### Long-term world and content operations
 
 - Lock the real-time lengths of days, seasons, and years, including how those
