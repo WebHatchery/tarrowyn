@@ -81,10 +81,11 @@ maintenance/reconnect state and the client waits for an authoritative response.
 
 ## Restore and repair
 
-Run `scripts/phase6_failure_drill.ps1` against a copy of the JSON state and
-backup. The drill parses the backup, checks storage version, starts a server on
-a temporary port, and reads `/v1/ops/health`; it does not overwrite the active
-world. The MySQL backend currently exposes the same versioned snapshot as a
+Run `scripts/phase6_failure_drill.ps1` with the active JSON state and its backup
+present. The drill fingerprints the active state, parses the backup, checks
+storage version, starts a server on a temporary port, reads `/v1/ops/health`,
+and verifies that the active fingerprint is unchanged; it does not overwrite the
+active world. The MySQL backend currently exposes the same versioned snapshot as a
 transactional bridge. `scripts/verify_mysql.ps1` covers the local migration,
 restart, duplicate-request, backup, and native dump/restore portion of that
 gate; target-environment failover, concurrency, and rollback drills remain
