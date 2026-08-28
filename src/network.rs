@@ -9,13 +9,15 @@ use std::collections::VecDeque;
 use tarrowyn_protocol::{
     ApiResponse, ChatMessage, ChatRequest, ChronicleEntry, ChronicleSummary, EventsResponse,
     Expedition, FarmAnimal, FarmingAction, FarmingRequest, FrontierEvent, GuestSessionRequest,
-    GuestSessionResponse, LandClaim, MovementIntent, OpportunitySignal, PlayerPresence,
-    PlayerProjection, StateSnapshot, TavernFeedResponse, TradeOffer, TradeRequest, TradeResponse,
-    TradesResponse, WildernessZone, WorldClock, WorldEvent, WorldSnapshot, MAX_CHAT_MESSAGE_LENGTH,
+    GuestSessionResponse, LandClaim, MovementIntent, OpportunitySignal, OpsHealthResponse,
+    PlayerPresence, PlayerProjection, StateSnapshot, TavernFeedResponse, TradeOffer, TradeRequest,
+    TradeResponse, TradesResponse, WildernessZone, WorldClock, WorldEvent, WorldSnapshot,
+    MAX_CHAT_MESSAGE_LENGTH,
 };
 
 const REQUEST_TIMEOUT_SECONDS: f32 = 6.0;
 mod frontier;
+mod maintenance;
 mod phase4;
 mod phase5;
 mod requests;
@@ -238,6 +240,7 @@ pub struct OnlineClient {
     pending_guest: Option<Pending<ApiResponse<GuestSessionResponse>>>,
     pending_world: Option<Pending<ApiResponse<WorldSnapshot>>>,
     pending_state: Option<Pending<ApiResponse<StateSnapshot>>>,
+    pending_ops_health: Option<Pending<ApiResponse<OpsHealthResponse>>>,
     pending_events: Option<Pending<ApiResponse<EventsResponse>>>,
     pending_movement: Option<PendingMovement>,
     pending_chat: Option<PendingChat>,
@@ -277,6 +280,7 @@ impl OnlineClient {
             pending_guest: None,
             pending_world: None,
             pending_state: None,
+            pending_ops_health: None,
             pending_events: None,
             pending_movement: None,
             pending_chat: None,
@@ -311,6 +315,7 @@ impl OnlineClient {
         self.poll_guest(dt, &mut notices);
         self.poll_world(dt, &mut notices);
         self.poll_state(dt, &mut notices);
+        maintenance::poll_ops_health(self, dt);
         self.poll_events(dt, &mut notices);
         self.poll_movement(dt, &mut notices);
         self.poll_chat(dt, &mut notices);
@@ -439,6 +444,7 @@ impl OnlineClient {
         }
         self.pending_world = None;
         self.pending_state = None;
+        self.pending_ops_health = None;
         self.pending_events = None;
         self.pending_movement = None;
         self.pending_chat = None;
@@ -654,6 +660,9 @@ impl OnlineClient {
         }
         if self.pending_state.is_none() && self.state_refresh <= 0.0 {
             self.pending_state = Some(self.api.get("/v1/state"));
+        }
+        if self.pending_ops_health.is_none() && self.state_refresh <= 0.0 {
+            self.pending_ops_health = Some(self.api.get("/v1/ops/health"));
         }
         if self.pending_events.is_none() {
             self.pending_events = Some(

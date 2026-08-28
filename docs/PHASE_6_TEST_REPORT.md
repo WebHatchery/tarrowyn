@@ -64,6 +64,9 @@ The client Phase 5 tests verify that a linked account's visible deletion
 control requires two taps, a development guest cannot arm deletion, and the
 deletion response is decoded as its dedicated command rather than the
 ambiguous market response.
+The client network tests verify that the deployment maintenance message takes
+priority in the visible status line and that degraded readiness without a
+message still gives the player a tap-to-reconnect instruction.
 The selected MySQL bridge now has a checked-in migration, startup pool/migration
 failure handling, transactional snapshot/index writes, and driver-selection
 tests. The configured local preview MySQL service passed

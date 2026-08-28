@@ -10,6 +10,8 @@ calendar, topology, law, privacy, legacy, and operational decisions are
 written down. The player-facing privacy path now includes a visible,
 two-tap linked-account deletion control that clears the session and exposes
 Reconnect after the server schedules the authoritative deletion tick.
+The client also polls readiness and turns configured maintenance or degraded
+health into visible next-step status guidance.
 
 The measured scope is deliberately regional: one worker, 24 concurrent-client
 target, bounded queues, and selectable JSON/MySQL persistence. The local Phase 6
