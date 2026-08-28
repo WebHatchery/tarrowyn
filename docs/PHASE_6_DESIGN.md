@@ -96,7 +96,9 @@ traded commodity. Wiring the remaining manifests into their live simulation
 consumers remains content expansion work rather than an implicit promise of
 the current fixtures. Regional season labels now also follow the validated
 calendar sequence and season length; the configured real-time day length still
-belongs to the server deployment boundary.
+belongs to the server deployment boundary. Route transport and endpoint
+topology now follow the validated region manifest; route tuning remains an
+authored fixture until the richer route schema is introduced.
 
 ## Hosting and observability
 

@@ -69,3 +69,11 @@ fn season_labels_follow_the_validated_region_calendar() {
     assert_eq!(super::season_for_day(43), "deepwinter");
     assert_eq!(super::season_for_day(57), "thaw");
 }
+
+#[test]
+fn route_profiles_follow_the_validated_region_manifest() {
+    let ferry = super::region_route_profile("saltmere-ferry");
+    assert_eq!(ferry.transport, "boat");
+    assert_eq!(ferry.origin, "hearth");
+    assert_eq!(ferry.destination, "saltmere");
+}

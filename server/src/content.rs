@@ -151,6 +151,13 @@ struct RouteManifest {
     destination: String,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct RegionRouteProfile {
+    pub(crate) transport: String,
+    pub(crate) origin: String,
+    pub(crate) destination: String,
+}
+
 pub fn validate() -> Result<(), String> {
     let schema: ContentSchemaManifest =
         serde_json::from_str(include_str!("../../assets/data/content_schema.json"))
@@ -268,7 +275,27 @@ pub(crate) fn item_base_price(item_id: &str) -> u32 {
 }
 
 pub(crate) fn season_for_day(day: u32) -> String {
-    let region = REGION_CATALOG.get_or_init(|| {
+    let region = region_catalog();
+    let season_index = (day.saturating_sub(1) / region.calendar.season_days) as usize
+        % region.calendar.seasons.len();
+    region.calendar.seasons[season_index].clone()
+}
+
+pub(crate) fn region_route_profile(route_id: &str) -> RegionRouteProfile {
+    let route = region_catalog()
+        .routes
+        .iter()
+        .find(|route| route.id == route_id)
+        .expect("validated region catalog must contain the requested route");
+    RegionRouteProfile {
+        transport: route.transport.clone(),
+        origin: route.origin.clone(),
+        destination: route.destination.clone(),
+    }
+}
+
+fn region_catalog() -> &'static RegionManifest {
+    REGION_CATALOG.get_or_init(|| {
         let region: RegionManifest =
             serde_json::from_str(include_str!("../../assets/data/region.json"))
                 .expect("region content JSON must be valid");
@@ -276,10 +303,7 @@ pub(crate) fn season_for_day(day: u32) -> String {
             panic!("region content must define a non-empty calendar");
         }
         region
-    });
-    let season_index = (day.saturating_sub(1) / region.calendar.season_days) as usize
-        % region.calendar.seasons.len();
-    region.calendar.seasons[season_index].clone()
+    })
 }
 
 fn validate_schema(schema: &ContentSchemaManifest) -> Result<(), String> {

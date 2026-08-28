@@ -87,9 +87,6 @@ pub(crate) fn fresh(_config: &ServerConfig) -> Phase5State {
         route(
             "north-pack-road",
             "North pack road",
-            "hearth",
-            "whisperwood-outpost",
-            "caravan",
             6,
             28,
             72,
@@ -102,9 +99,6 @@ pub(crate) fn fresh(_config: &ServerConfig) -> Phase5State {
         route(
             "saltmere-ferry",
             "Saltmere ferry",
-            "hearth",
-            "saltmere",
-            "boat",
             7,
             12,
             84,
@@ -117,9 +111,6 @@ pub(crate) fn fresh(_config: &ServerConfig) -> Phase5State {
         route(
             "watch-trail",
             "Watch trail",
-            "whisperwood-outpost",
-            "saltmere",
-            "pack route",
             9,
             34,
             55,
@@ -227,9 +218,6 @@ pub(crate) fn fresh(_config: &ServerConfig) -> Phase5State {
 fn route(
     id: &str,
     name: &str,
-    origin: &str,
-    destination: &str,
-    transport: &str,
     length: u32,
     risk: u8,
     condition: u8,
@@ -239,12 +227,13 @@ fn route(
     status: RouteStatus,
     note: &str,
 ) -> RouteRecord {
+    let profile = crate::content::region_route_profile(id);
     RouteRecord {
         route_id: id.to_owned(),
         name: name.to_owned(),
-        origin_location_id: origin.to_owned(),
-        destination_location_id: destination.to_owned(),
-        transport: transport.to_owned(),
+        origin_location_id: profile.origin,
+        destination_location_id: profile.destination,
+        transport: profile.transport,
         length,
         risk_percent: risk,
         condition,

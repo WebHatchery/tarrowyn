@@ -30,6 +30,8 @@ The market price regression confirms every traded commodity's base price
 comes from the validated item manifest.
 The calendar regression confirms regional season labels follow the validated
 region calendar at season and year boundaries.
+The route-profile regression confirms authoritative route transport and
+endpoint topology follow the validated region manifest.
 The Phase 5 fixture verifies that travel, market, event, household, identity,
 refresh, and revocation state survive the authoritative repository boundary.
 The client Phase 5 tests verify that a linked account's visible deletion
