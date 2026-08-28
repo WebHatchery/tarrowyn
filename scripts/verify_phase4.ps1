@@ -67,8 +67,17 @@ try {
         -ContentType "application/json" -Body (@{ client_key = "phase4-steward"; reset = $true } | ConvertTo-Json -Compress)
     $two = Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:8787/v1/session/guest" `
         -ContentType "application/json" -Body (@{ client_key = "phase4-provider"; reset = $true } | ConvertTo-Json -Compress)
+    $three = Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:8787/v1/session/guest" `
+        -ContentType "application/json" -Body (@{ client_key = "phase4-wayfarer"; reset = $true } | ConvertTo-Json -Compress)
     $oneHeaders = @{ Authorization = "Bearer $($one.data.account_token)" }
     $twoHeaders = @{ Authorization = "Bearer $($two.data.account_token)" }
+    $threeHeaders = @{ Authorization = "Bearer $($three.data.account_token)" }
+    $initialState = Invoke-RestMethod -Method Get -Uri "http://127.0.0.1:8787/v1/state" -Headers $oneHeaders
+    Assert-True ($initialState.data.world.players.Count -eq 3) "the three-role settlement group was not visible"
+    $wayfarerChat = Post-Json "/v1/chat" @{ request_id = "wayfarer-chat"; channel = "settlement"; text = "Meet at the Hearth tonight" } $threeHeaders
+    Assert-True $wayfarerChat.data.accepted "the social wayfarer could not post a settlement message"
+    $feed = Invoke-RestMethod -Method Get -Uri "http://127.0.0.1:8787/v1/tavern/feed" -Headers $oneHeaders
+    Assert-True (@($feed.data.chat | Where-Object text -eq "Meet at the Hearth tonight").Count -eq 1) "the third player's social message was not visible"
 
     $office = Post-Json "/v1/settlement/governance" @{ request_id = "office"; action = "claim_office"; office_id = "steward" } $oneHeaders
     Assert-True $office.data.accepted "the Steward office was not claimable"
@@ -144,7 +153,7 @@ try {
     $resumedState = Invoke-RestMethod -Method Get -Uri "http://127.0.0.1:8787/v1/state" -Headers $resumedHeaders
     Assert-True ($resumedState.data.world.animals[0].condition -eq 3) "the cared animal condition did not survive restart"
 
-    Write-Host "Phase 4 acceptance passed: governance, infrastructure, lease lifecycle, profession order, knowledge transfer, animal care, complementary household, local combat, and restart." -ForegroundColor Green
+    Write-Host "Phase 4 acceptance passed: three-role presence/chat, governance, infrastructure, lease lifecycle, profession order, knowledge transfer, animal care, complementary household, local combat, and restart." -ForegroundColor Green
 } finally {
     if ($null -ne $server -and -not $server.HasExited) { Stop-Phase4Server $server }
     Remove-Item Env:TARROWYN_STATE_PATH -ErrorAction SilentlyContinue

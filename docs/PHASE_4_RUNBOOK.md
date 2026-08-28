@@ -65,7 +65,7 @@ focused Phase 4 fixture with:
 cargo test -p tarrowyn-server phase4
 ```
 
-For the live HTTP, restart, and two-account acceptance pass, run:
+For the live HTTP, restart, and three-role acceptance pass, run:
 
 ```powershell
 .\scripts\verify_phase4.ps1
