@@ -1,6 +1,9 @@
 use super::super::WorldRepository;
 use crate::config::ServerConfig;
-use tarrowyn_protocol::{ChatRequest, GuestSessionRequest, MovementIntent};
+use tarrowyn_protocol::{
+    ChatRequest, ChatResponse, GuestSessionRequest, MovementIntent, MovementResponse, Position,
+    SupportRepairResponse,
+};
 
 #[test]
 fn persistence_backend_rejects_unknown_driver_before_world_start() {
@@ -102,6 +105,64 @@ fn persistence_failure_degrades_operator_readiness() {
         .is_some_and(|message| message.contains("persistence write failed")));
 
     let _ = std::fs::remove_dir(&state_path);
+}
+
+#[test]
+fn replay_caches_are_trimmed_on_the_world_tick() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("replay-cache-limit".to_owned()),
+            reset: false,
+        })
+        .unwrap()
+        .data;
+    {
+        let mut state = repository.state.lock().unwrap();
+        let identity = state.identities.get_mut("replay-cache-limit").unwrap();
+        for index in 0..513 {
+            let request_id = format!("replay-{index}");
+            identity.movement_results.insert(
+                request_id.clone(),
+                MovementResponse {
+                    request_id: request_id.clone(),
+                    accepted: false,
+                    position: Position { x: 8, y: 6 },
+                    reason: None,
+                },
+            );
+            identity.chat_results.insert(
+                request_id.clone(),
+                ChatResponse {
+                    request_id,
+                    accepted: false,
+                    message: None,
+                    reason: None,
+                },
+            );
+        }
+        for index in 0..513 {
+            state.phase6.request_results.insert(
+                format!("repair-{index}"),
+                SupportRepairResponse {
+                    request_id: format!("repair-{index}"),
+                    audit_id: format!("audit-{index}"),
+                    accepted: false,
+                    summary: String::new(),
+                    reason: None,
+                },
+            );
+        }
+    }
+
+    repository.tick();
+
+    let state = repository.state.lock().unwrap();
+    let identity = state.identities.get("replay-cache-limit").unwrap();
+    assert!(identity.movement_results.len() <= 512);
+    assert!(identity.chat_results.len() <= 512);
+    assert!(state.phase6.request_results.len() <= 512);
+    let _ = session;
 }
 
 #[test]

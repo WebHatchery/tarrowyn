@@ -34,6 +34,9 @@ and public tax receipts,
 the regional state,
 production session/audit records, and
 the per-character skill ledger while retaining defaults for Phase 1–6 files.
+Every mutation replay cache is trimmed to a 512-entry per-scope bound on the
+authoritative world tick, including identity, regional, support, authentication,
+moderation, and earlier-phase command results.
 The repository now has two selectable backends: JSON with atomic temporary-file
 replacement for deterministic fixtures. A configured JSON snapshot that cannot
 be read or parsed fails closed without being replaced by a fresh world. MySQL

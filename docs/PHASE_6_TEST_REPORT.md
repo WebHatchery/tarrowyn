@@ -13,6 +13,9 @@ state, persists the account moderation cooldown, loads older documents through s
 corrupt or newer-than-server JSON snapshot. A Phase 1–4
 document without Phase 5/6 fields loads through serde defaults and receives the
 current regional and operations state.
+Mutation replay caches are bounded to 512 entries per scope during world ticks,
+covering identity and phase command results so long sessions do not grow them
+without limit.
 The Phase 5 fixture verifies that travel, market, event, household, identity,
 refresh, and revocation state survive the authoritative repository boundary.
 The selected MySQL bridge now has a checked-in migration, startup pool/migration

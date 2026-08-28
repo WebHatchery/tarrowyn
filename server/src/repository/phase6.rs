@@ -17,6 +17,7 @@ mod moderation;
 
 const IDENTITY_PROVIDER: &str = "webhatchery-identity-oidc";
 const PRIVACY_POLICY_VERSION: &str = "2026-08-19";
+pub(super) const MAX_REPLAY_CACHE: usize = 512;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub(super) struct ProductionAccount {
@@ -614,11 +615,21 @@ pub(super) fn phase6_tick(state: &mut RepositoryState, config: &ServerConfig) {
     trim_replay_cache(&mut state.phase6.auth_revoke_results);
     trim_replay_cache(&mut state.phase6.moderation_results);
     trim_replay_cache(&mut state.phase6.moderation_last_report_ticks);
+    trim_replay_cache(&mut state.phase3.request_results);
+    trim_replay_cache(&mut state.phase4.request_results);
+    trim_replay_cache(&mut state.phase5.request_results);
+    trim_replay_cache(&mut state.phase6.request_results);
+    for identity in state.identities.values_mut() {
+        trim_replay_cache(&mut identity.farming_results);
+        trim_replay_cache(&mut identity.trade_results);
+        trim_replay_cache(&mut identity.movement_results);
+        trim_replay_cache(&mut identity.chat_results);
+    }
     state.phase6.audits.truncate(512);
 }
 
 fn trim_replay_cache<T>(cache: &mut HashMap<String, T>) {
-    while cache.len() > 512 {
+    while cache.len() > MAX_REPLAY_CACHE {
         let Some(key) = cache.keys().next().cloned() else {
             break;
         };
