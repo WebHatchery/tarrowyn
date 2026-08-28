@@ -32,6 +32,7 @@ struct RouteManifest {
 }
 
 pub fn validate() -> Result<(), String> {
+    crate::repository::validate_skill_catalog()?;
     let manifest: RegionManifest =
         serde_json::from_str(include_str!("../../assets/data/region.json"))
             .map_err(|error| format!("region content JSON is invalid: {error}"))?;

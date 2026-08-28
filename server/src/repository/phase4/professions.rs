@@ -46,7 +46,8 @@ impl super::super::WorldRepository {
             order: None,
             reason: None,
         };
-        match request.action {
+        let action = request.action;
+        match action {
             ProfessionAction::Inspect => response.accepted = true,
             ProfessionAction::LearnCapability => {
                 let profession = request.profession.unwrap_or(ProfessionKind::Carpenter);
@@ -221,6 +222,17 @@ impl super::super::WorldRepository {
                     let actor_name = account_name(&state, &key);
                     record(&mut state, "service order completed", "Craft and demand meet at the Hearth", &format!("{} completed {} at {} quality; the requesting role receives the listed benefit.", actor_name, completed_order.service, completed_order.quality));
                 }
+            }
+        }
+        if response.accepted {
+            let skill_id = match action {
+                ProfessionAction::LearnCapability | ProfessionAction::CompleteOrder => {
+                    Some("carpentry")
+                }
+                _ => None,
+            };
+            if let Some(skill_id) = skill_id {
+                super::super::skills::record_practice(&mut state, &key, skill_id);
             }
         }
         response.professions = view(&state, &key);

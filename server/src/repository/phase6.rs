@@ -430,7 +430,7 @@ impl WorldRepository {
                     "degraded".to_owned()
                 },
                 ready: integrity_ok(&state),
-                storage_version: 6,
+                storage_version: super::STORAGE_VERSION,
                 protocol_version: PROTOCOL_VERSION.to_owned(),
                 last_backup_tick: state.phase6.last_backup_tick,
                 last_backup_path: state.phase6.last_backup_path.clone(),

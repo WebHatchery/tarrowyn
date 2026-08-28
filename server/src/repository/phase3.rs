@@ -311,11 +311,13 @@ impl WorldRepository {
                             .expect("contract exists");
                         progress.progress = progress.progress.saturating_add(1).min(3);
                         response.accepted = true;
+                        super::skills::record_practice(&mut state, &key, "navigation");
                     }
                 }
                 ContractAction::Report
                     if current.status == ContractStatus::Accepted && current.progress >= 3 =>
                 {
+                    super::skills::record_practice(&mut state, &key, "survival");
                     let reward = current.completion_count.saturating_add(1) * 2 + 4;
                     let identity = state.identities.get_mut(&key).expect("identity exists");
                     identity.gold = identity.gold.saturating_add(reward);

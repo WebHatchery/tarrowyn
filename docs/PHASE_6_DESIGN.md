@@ -26,8 +26,9 @@ are recorded in the audit stream. The no-PvP law boundary is still active.
 ## Persistence, backups, and repair
 
 The current production-shaped storage contract is versioned JSON behind an
-atomic temporary-file replacement. Storage version 6 adds regional state and
-production session/audit records while retaining defaults for Phase 1–5 files.
+atomic temporary-file replacement. Storage version 7 adds regional state,
+production session/audit records, and the per-character skill ledger while
+retaining defaults for Phase 1–6 files.
 The server writes a scheduled backup to the configured backup path and reports
 the last successful tick through `/v1/ops/health`. Restore drills validate the
 backup as JSON before serving it as a named state path; a restore is never an

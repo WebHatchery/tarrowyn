@@ -13,7 +13,7 @@ use tarrowyn_protocol::{
     WorldTile, MAX_CHAT_MESSAGE_LENGTH, MAX_TRADE_ITEMS, PROTOCOL_VERSION,
 };
 
-const STORAGE_VERSION: u32 = 6;
+pub(super) const STORAGE_VERSION: u32 = 7;
 const MAX_EVENTS: usize = 2048;
 const MAX_CHAT_HISTORY: usize = 64;
 const MAX_NOTICES: usize = 32;
@@ -27,7 +27,9 @@ mod phase3_frontier;
 mod phase4;
 mod phase5;
 mod phase6;
+mod skills;
 mod trades;
+pub(crate) use skills::validate_catalog as validate_skill_catalog;
 
 use models::{Identity, RepositoryState, Session};
 use persistence::{load_state, replace_file};
@@ -124,6 +126,7 @@ impl WorldRepository {
                     knocked_out: false,
                     injuries: 0,
                     recovery_cost: 0,
+                    skills: models::SkillLedger::default(),
                 },
             );
         }

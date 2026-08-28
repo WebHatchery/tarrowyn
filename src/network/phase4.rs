@@ -7,7 +7,7 @@ use tarrowyn_protocol::{
     GovernanceRequest, GovernanceResponse, GovernanceState, HouseholdsResponse, KnowledgeAction,
     KnowledgeRequest, KnowledgeResponse, LocalCombatAction, LocalCombatRequest,
     LocalCombatResponse, LocalCombatState, ProfessionAction, ProfessionKind, ProfessionRequest,
-    ProfessionResponse, ProfessionsResponse,
+    ProfessionResponse, ProfessionsResponse, SkillStatus, SkillsResponse,
 };
 
 enum Phase4Command {
@@ -33,6 +33,7 @@ pub(super) struct Phase4Client {
     pending_claims: Option<Pending<ApiResponse<ClaimsResponse>>>,
     pending_professions: Option<Pending<ApiResponse<ProfessionsResponse>>>,
     pending_knowledge: Option<Pending<ApiResponse<KnowledgeResponse>>>,
+    pending_skills: Option<Pending<ApiResponse<SkillsResponse>>>,
     pending_households: Option<Pending<ApiResponse<HouseholdsResponse>>>,
     pending_combat: Option<Pending<ApiResponse<LocalCombatState>>>,
     pending_command: Option<Pending<ApiResponse<Phase4CommandResponse>>>,
@@ -41,6 +42,7 @@ pub(super) struct Phase4Client {
     claims: Option<ClaimsResponse>,
     professions: Option<ProfessionsResponse>,
     knowledge: Option<KnowledgeResponse>,
+    skills: Option<SkillsResponse>,
     combat: Option<LocalCombatState>,
     own_account_id: Option<String>,
     regional: Phase5Client,
@@ -53,6 +55,7 @@ impl Phase4Client {
             pending_claims: None,
             pending_professions: None,
             pending_knowledge: None,
+            pending_skills: None,
             pending_households: None,
             pending_combat: None,
             pending_command: None,
@@ -61,6 +64,7 @@ impl Phase4Client {
             claims: None,
             professions: None,
             knowledge: None,
+            skills: None,
             combat: None,
             own_account_id: None,
             regional: Phase5Client::new(),
@@ -119,6 +123,15 @@ impl Phase4Client {
             "knowledge archive",
         );
         poll_projection(
+            &mut self.pending_skills,
+            dt,
+            |response| {
+                self.skills = Some(response.data);
+            },
+            notices,
+            "skill ledger",
+        );
+        poll_projection(
             &mut self.pending_households,
             dt,
             |_| {},
@@ -164,6 +177,9 @@ impl Phase4Client {
         }
         if self.pending_knowledge.is_none() {
             self.pending_knowledge = Some(api.get("/v1/knowledge"));
+        }
+        if self.pending_skills.is_none() {
+            self.pending_skills = Some(api.get("/v1/skills"));
         }
         if self.pending_households.is_none() {
             self.pending_households = Some(api.get("/v1/households"));
@@ -443,6 +459,7 @@ impl Phase4Client {
         self.pending_claims = None;
         self.pending_professions = None;
         self.pending_knowledge = None;
+        self.pending_skills = None;
         self.pending_households = None;
         self.pending_combat = None;
         self.pending_command = None;
@@ -490,7 +507,24 @@ impl Phase4Client {
                 )
             })
             .unwrap_or_else(|| "Knowledge loading".to_owned());
-        format!("{offices} • {registry}\n{orders} • {knowledge} • Households visible")
+        let skills = self
+            .skills
+            .as_ref()
+            .map(|skills| {
+                let mastered = skills
+                    .skills
+                    .iter()
+                    .filter(|skill| skill.status == SkillStatus::Mastered)
+                    .count();
+                let resonating = skills
+                    .skills
+                    .iter()
+                    .filter(|skill| skill.status == SkillStatus::Resonating)
+                    .count();
+                format!("Skills {mastered} mastered, {resonating} resonating")
+            })
+            .unwrap_or_else(|| "Skills loading".to_owned());
+        format!("{offices} • {registry}\n{orders} • {knowledge} • {skills}")
     }
 
     pub(super) fn queue_region_cycle(&mut self, id: &str) {

@@ -74,6 +74,7 @@ impl WorldRepository {
                 .expect("identity exists"),
         );
         if response.accepted {
+            super::skills::record_practice(&mut state, &identity_key, "crop-tending");
             let plot = state.plots[plot_index];
             push_event(&mut state, WorldEvent::Farming(plot));
             add_notice(&mut state, "fields", farming_notice(request.action));

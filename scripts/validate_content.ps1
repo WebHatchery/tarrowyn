@@ -1,7 +1,7 @@
 $ErrorActionPreference = "Stop"
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $dataRoot = Join-Path $projectRoot "assets\data"
-$required = @("region.json", "settlements.json", "events.json", "items.json", "content_schema.json")
+$required = @("region.json", "settlements.json", "events.json", "items.json", "content_schema.json", "skills.json")
 foreach ($name in $required) {
     $path = Join-Path $dataRoot $name
     if (-not (Test-Path -LiteralPath $path)) { throw "Missing content manifest: $name" }

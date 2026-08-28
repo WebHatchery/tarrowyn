@@ -137,6 +137,19 @@ impl super::super::WorldRepository {
                         let identity = state.identities.get_mut(&key).expect("identity exists");
                         identity.gold = identity.gold.saturating_add(3);
                         identity.skill = identity.skill.saturating_add(1);
+                        super::super::skills::record_practice(
+                            &mut state,
+                            &key,
+                            match request.weapon {
+                                WeaponKind::IronSword => "sword-fighting",
+                                WeaponKind::ImprovisedClub => "unarmed-fighting",
+                            },
+                        );
+                        super::super::skills::record_weapon_defeat(
+                            &mut state,
+                            &key,
+                            request.weapon,
+                        );
                         record(
                             &mut state,
                             "combat victory",

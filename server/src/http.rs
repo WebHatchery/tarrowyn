@@ -92,6 +92,9 @@ fn handle_request(mut request: Request, repository: Arc<WorldRepository>) {
         (Method::Get, "/v1/inventory") => {
             authenticated(&request, &repository, |token| repository.inventory(token))
         }
+        (Method::Get, "/v1/skills") => {
+            authenticated(&request, &repository, |token| repository.skills(token))
+        }
         (Method::Post, "/v1/movement") => match read_json::<MovementIntent>(&mut request) {
             Ok(body) => authenticated(&request, &repository, |token| {
                 repository.movement(token, body)

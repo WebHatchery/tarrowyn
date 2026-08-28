@@ -1,6 +1,14 @@
 use super::phase3::Phase3State;
 use super::*;
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub(super) struct SkillLedger {
+    pub(super) practice: HashMap<String, u32>,
+    pub(super) known: Vec<String>,
+    pub(super) qualifying_events: HashMap<String, u32>,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub(super) struct Identity {
@@ -27,6 +35,8 @@ pub(super) struct Identity {
     pub(super) injuries: u8,
     #[serde(default)]
     pub(super) recovery_cost: u32,
+    #[serde(default)]
+    pub(super) skills: SkillLedger,
 }
 
 #[derive(Debug, Clone)]
