@@ -138,6 +138,44 @@ function Invoke-NativeDatabaseRestore([string]$temporaryRoot, [string]$nonce) {
     }
 }
 
+function Invoke-ConcurrentDuplicateChat([string]$address, [hashtable]$headers, [string]$requestId, [string]$text) {
+    $jobScript = {
+        param([string]$serverAddress, [string]$token, [string]$duplicateRequestId, [string]$chatText)
+        try {
+            $response = Invoke-RestMethod -Method Post -Uri "http://$serverAddress/v1/chat" `
+                -Headers @{ Authorization = "Bearer $token" } -ContentType "application/json" `
+                -Body (@{ request_id = $duplicateRequestId; channel = "settlement"; text = $chatText } | ConvertTo-Json -Compress)
+            [pscustomobject]@{
+                passed = $true
+                accepted = [bool]$response.data.accepted
+                messageId = $response.data.message.message_id
+            }
+        } catch {
+            [pscustomobject]@{ passed = $false; error = $_.Exception.Message }
+        }
+    }
+    $jobs = @()
+    try {
+        for ($index = 0; $index -lt 8; $index++) {
+            $jobs += Start-Job -ScriptBlock $jobScript -ArgumentList @(
+                $address, $headers.Authorization.Substring(7), $requestId, $text
+            )
+        }
+        $completed = Wait-Job -Job $jobs -Timeout 30
+        Assert-True (@($completed).Count -eq 8) "concurrent duplicate chat requests did not finish"
+        $results = @($jobs | Receive-Job)
+        Assert-True ($results.Count -eq 8) "concurrent duplicate chat requests returned an incomplete result set"
+        $failures = @($results | Where-Object { -not $_.passed -or -not $_.accepted })
+        Assert-True ($failures.Count -eq 0) "a concurrent duplicate chat request was rejected"
+        $messageIds = @($results | Select-Object -ExpandProperty messageId -Unique)
+        Assert-True ($messageIds.Count -eq 1) "concurrent duplicate chat requests produced multiple message IDs"
+    } finally {
+        foreach ($job in $jobs) {
+            Remove-Job -Job $job -Force -ErrorAction SilentlyContinue
+        }
+    }
+}
+
 try {
     New-Item -ItemType Directory -Path $temporaryRoot | Out-Null
     foreach ($name in $environmentNames) {
@@ -174,6 +212,10 @@ try {
     $replayedChat = Post-Json "/v1/chat" $chatBody $headers
     Assert-True ($chat.data.accepted -and $replayedChat.data.accepted) "the MySQL-backed chat mutation was rejected"
     Assert-True ($chat.data.message.message_id -eq $replayedChat.data.message.message_id) "duplicate request replay produced a second MySQL-backed chat result"
+    $concurrentChatText = "Concurrent MySQL bridge acceptance $nonce"
+    Invoke-ConcurrentDuplicateChat $ServerAddress $headers "mysql-concurrent-chat-$nonce" $concurrentChatText
+    $feed = Invoke-RestMethod -Method Get -Uri "http://$ServerAddress/v1/tavern/feed" -Headers $headers
+    Assert-True (@($feed.data.chat | Where-Object text -eq $concurrentChatText).Count -eq 1) "concurrent duplicate chat requests were not reduced to one visible message"
 
     for ($attempt = 0; $attempt -lt 80 -and -not (Test-Path -LiteralPath $backupPath); $attempt++) {
         Start-Sleep -Milliseconds 250
@@ -201,7 +243,7 @@ try {
     $env:MYSQL_PWD = $env:DB_PASSWORD
     Invoke-NativeDatabaseRestore $temporaryRoot $nonce
 
-    Write-Host "MySQL acceptance passed: migration/readiness, authoritative state, duplicate-request replay, backup, restart persistence, and native dump/restore." -ForegroundColor Green
+    Write-Host "MySQL acceptance passed: migration/readiness, authoritative state, concurrent duplicate replay, backup, restart persistence, and native dump/restore." -ForegroundColor Green
 } finally {
     if ($null -ne $server -and -not $server.HasExited) { Stop-PreviewServer $server }
     foreach ($name in $environmentNames) {

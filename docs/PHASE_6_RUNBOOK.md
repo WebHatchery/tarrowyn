@@ -32,9 +32,10 @@ The script uses a separate HTTP port and temporary JSON backup, adds one uniquel
 named guest identity to the configured preview world, checks the migration and
 animal projection, replays one chat request, restarts the server, and then uses
 `mysqldump.exe` and `mysql.exe` to restore into a generated temporary database.
-It validates the restored world and identity index before dropping that
-generated database and removing its temporary files. It does not reset or
-delete the configured database.
+It also submits eight overlapping retries of one chat request and requires a
+single cached result. It validates the restored world and identity index before
+dropping that generated database and removing its temporary files. It does not
+reset or delete the configured database.
 
 ## Deploy, rollback, and maintenance
 

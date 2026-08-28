@@ -45,10 +45,12 @@ gates.
   actions. Repair operations must be audited and safe to repeat.
 
 Current implementation note: the selectable MySQL backend and initial
-transactional snapshot/index migration are now present. The checklist remains
-open for live-database acceptance, multi-worker concurrency, database-native
-backup/restore, and rollback drills; the JSON backend remains the deterministic
-default for local fixtures.
+transactional snapshot/index migration are now present. The configured local
+preview passes `scripts/verify_mysql.ps1`, including migration/readiness,
+overlapping duplicate-request replay, restart persistence, and native
+dump/restore into a temporary database. The checklist remains open for target
+environment migration, multi-worker concurrency, failover, and rollback
+drills; the JSON backend remains the deterministic default for local fixtures.
 
 ### Deployment and operations
 
