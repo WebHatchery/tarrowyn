@@ -201,6 +201,7 @@ fn professions_knowledge_and_households_make_the_settlement_interdependent() {
                 profession: Some(ProfessionKind::Carpenter),
                 capability_id: None,
                 service: Some("Repair the farmer's field tool".to_owned()),
+                timing_score: None,
             },
         )
         .unwrap()
@@ -217,6 +218,7 @@ fn professions_knowledge_and_households_make_the_settlement_interdependent() {
                 profession: Some(ProfessionKind::Carpenter),
                 capability_id: None,
                 service: None,
+                timing_score: None,
             }
         )
         .unwrap()
@@ -233,13 +235,14 @@ fn professions_knowledge_and_households_make_the_settlement_interdependent() {
                 profession: None,
                 capability_id: None,
                 service: None,
+                timing_score: None,
             }
         )
         .unwrap()
         .data
         .accepted
     );
-    assert!(repo
+    let completed = repo
         .profession_order(
             &provider.account_token,
             ProfessionRequest {
@@ -249,12 +252,16 @@ fn professions_knowledge_and_households_make_the_settlement_interdependent() {
                 profession: None,
                 capability_id: None,
                 service: None,
-            }
+                timing_score: Some(100),
+            },
         )
         .unwrap()
-        .data
-        .order
-        .is_some_and(|order| order.status == tarrowyn_protocol::ServiceOrderStatus::Completed));
+        .data;
+    assert_eq!(
+        completed.order.unwrap().quality,
+        100,
+        "a centered timing result reaches the server's quality ceiling"
+    );
 
     assert!(
         repo.knowledge(

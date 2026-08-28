@@ -55,8 +55,10 @@ The complete order loop is:
 
 1. a requester escrows wood, iron, and a tool while creating an order;
 2. a different player with the required credential accepts it; and
-3. that provider completes it, receives gold and skill progress, and records
-   the service quality and benefit for the requesting role.
+3. that provider completes the visible timing interaction, receives gold and
+   skill progress, and records the bounded service quality and benefit for the
+   requesting role. A missing timing value remains compatible with older
+   clients and receives the neutral midpoint.
 
 The first discoverable knowledge is the Moonberry trellis method. It can be
 discovered, written into the guild archive, taught to another account, and

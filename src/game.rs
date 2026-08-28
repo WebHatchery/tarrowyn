@@ -200,6 +200,7 @@ impl Game {
                     opportunities: &client.projection.opportunities,
                     phase4_summary: &client.phase4_summary(),
                     phase5_summary: &client.phase5_summary(),
+                    crafting: client.crafting_view(),
                     knocked_out: client
                         .projection
                         .player
@@ -245,6 +246,7 @@ impl Game {
                     phase4_summary: "Phase 4 ledgers are available only on the shared road.",
                     phase5_summary:
                         "Regional map and production account are available on the shared road.",
+                    crafting: None,
                     knocked_out: false,
                     ui: &virtual_ui,
                 })
@@ -464,6 +466,7 @@ impl Game {
                 "town-hall" | "registry" | "order" | "knowledge" | "households" | "local-fight" => {
                     client.queue_phase4(id)
                 }
+                "crafting-timing" => client.queue_crafting_timing(),
                 "travel" | "recover-travel" | "market-region" | "region-event" | "account"
                 | "logout" | "report" => client.queue_phase5(id),
                 _ => self.notifications.warning(format!("Unknown action: {id}")),

@@ -40,3 +40,12 @@ fn phase_four_claims_and_knowledge_round_trip() {
     assert!(encoded.contains("available_plots"));
     assert!(encoded.contains("\"action\":\"teach\""));
 }
+
+#[test]
+fn profession_requests_keep_timing_optional_for_existing_clients() {
+    let request: ProfessionRequest = serde_json::from_str(
+        r#"{"request_id":"craft-1","action":"complete_order","order_id":"service-order-1"}"#,
+    )
+    .unwrap();
+    assert_eq!(request.timing_score, None);
+}

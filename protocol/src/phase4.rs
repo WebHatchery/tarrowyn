@@ -333,6 +333,8 @@ pub struct ProfessionRequest {
     pub profession: Option<ProfessionKind>,
     pub capability_id: Option<String>,
     pub service: Option<String>,
+    #[serde(default)]
+    pub timing_score: Option<u8>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]

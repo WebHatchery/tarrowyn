@@ -24,6 +24,7 @@ mod requests;
 mod trade_client;
 
 use frontier::FrontierClient;
+pub(crate) use phase4::CraftingView;
 use phase4::Phase4Client;
 use requests::{PendingChat, PendingFarming, PendingMovement};
 

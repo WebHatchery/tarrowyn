@@ -44,8 +44,24 @@ pub(super) struct Phase4Client {
     knowledge: Option<KnowledgeResponse>,
     skills: Option<SkillsResponse>,
     combat: Option<LocalCombatState>,
+    crafting: Option<CraftingChallenge>,
     own_account_id: Option<String>,
     regional: Phase5Client,
+}
+
+#[derive(Debug, Clone, Copy)]
+pub(crate) struct CraftingView {
+    pub(crate) progress: f32,
+    pub(crate) target_start: f32,
+    pub(crate) target_end: f32,
+}
+
+struct CraftingChallenge {
+    order_id: String,
+    progress: f32,
+    direction: f32,
+    target_start: f32,
+    target_end: f32,
 }
 
 impl Phase4Client {
@@ -66,6 +82,7 @@ impl Phase4Client {
             knowledge: None,
             skills: None,
             combat: None,
+            crafting: None,
             own_account_id: None,
             regional: Phase5Client::new(),
         }
@@ -86,6 +103,7 @@ impl Phase4Client {
         if !online {
             return;
         }
+        advance_crafting(&mut self.crafting, dt);
         poll_projection(
             &mut self.pending_governance,
             dt,
@@ -309,6 +327,9 @@ impl Phase4Client {
     }
 
     fn queue_order(&mut self, request_id: String) {
+        if self.crafting.is_some() {
+            return;
+        }
         let own = self.own_account_id.as_deref();
         let action = if self.professions.as_ref().is_none_or(|professions| {
             !professions
@@ -323,6 +344,7 @@ impl Phase4Client {
                 profession: Some(ProfessionKind::Carpenter),
                 capability_id: None,
                 service: None,
+                timing_score: None,
             })
         } else if let Some(order) = self.professions.as_ref().and_then(|professions| {
             professions.orders.iter().find(|order| {
@@ -337,21 +359,21 @@ impl Phase4Client {
                 profession: None,
                 capability_id: None,
                 service: None,
+                timing_score: None,
             })
-        } else if let Some(order) = self.professions.as_ref().and_then(|professions| {
-            professions.orders.iter().find(|order| {
-                order.provider_account_id.as_deref() == own
-                    && order.status == tarrowyn_protocol::ServiceOrderStatus::Accepted
+        } else if let Some(order_id) = self
+            .professions
+            .as_ref()
+            .and_then(|professions| {
+                professions.orders.iter().find(|order| {
+                    order.provider_account_id.as_deref() == own
+                        && order.status == tarrowyn_protocol::ServiceOrderStatus::Accepted
+                })
             })
-        }) {
-            Phase4Command::Profession(ProfessionRequest {
-                request_id,
-                action: ProfessionAction::CompleteOrder,
-                order_id: Some(order.order_id.clone()),
-                profession: None,
-                capability_id: None,
-                service: None,
-            })
+            .map(|order| order.order_id.clone())
+        {
+            self.begin_crafting(&order_id);
+            return;
         } else {
             Phase4Command::Profession(ProfessionRequest {
                 request_id,
@@ -360,9 +382,50 @@ impl Phase4Client {
                 profession: Some(ProfessionKind::Carpenter),
                 capability_id: None,
                 service: Some("Repair a field tool for the next harvest".to_owned()),
+                timing_score: None,
             })
         };
         self.commands.push_back(action);
+    }
+
+    fn begin_crafting(&mut self, order_id: &str) {
+        self.crafting = Some(CraftingChallenge {
+            order_id: order_id.to_owned(),
+            progress: 0.0,
+            direction: 1.0,
+            target_start: 0.38,
+            target_end: 0.66,
+        });
+    }
+
+    pub(super) fn crafting_view(&self) -> Option<(f32, f32, f32)> {
+        self.crafting.as_ref().map(|challenge| {
+            (
+                challenge.progress,
+                challenge.target_start,
+                challenge.target_end,
+            )
+        })
+    }
+
+    pub(super) fn submit_crafting(&mut self, request_id: String) -> bool {
+        let Some(challenge) = self.crafting.take() else {
+            return false;
+        };
+        let center = (challenge.target_start + challenge.target_end) * 0.5;
+        let distance = (challenge.progress - center).abs();
+        let timing_score = (100.0 - distance * 140.0).clamp(0.0, 100.0) as u8;
+        self.commands
+            .push_back(Phase4Command::Profession(ProfessionRequest {
+                request_id,
+                action: ProfessionAction::CompleteOrder,
+                order_id: Some(challenge.order_id),
+                profession: None,
+                capability_id: None,
+                service: None,
+                timing_score: Some(timing_score),
+            }));
+        true
     }
 
     fn queue_knowledge(&mut self, request_id: String) {
@@ -464,6 +527,7 @@ impl Phase4Client {
         self.pending_combat = None;
         self.pending_command = None;
         self.commands.clear();
+        self.crafting = None;
         self.regional.clear();
     }
 
@@ -536,6 +600,23 @@ impl Phase4Client {
     }
 }
 
+#[cfg(test)]
+mod tests;
+
+fn advance_crafting(challenge: &mut Option<CraftingChallenge>, dt: f32) {
+    let Some(challenge) = challenge else {
+        return;
+    };
+    challenge.progress += dt.max(0.0) * 0.45 * challenge.direction;
+    if challenge.progress >= 1.0 {
+        challenge.progress = 1.0;
+        challenge.direction = -1.0;
+    } else if challenge.progress <= 0.0 {
+        challenge.progress = 0.0;
+        challenge.direction = 1.0;
+    }
+}
+
 fn poll_projection<T, F>(
     pending: &mut Option<Pending<ApiResponse<T>>>,
     dt: f32,
@@ -594,5 +675,26 @@ impl OnlineClient {
 
     pub(crate) fn phase4_summary(&self) -> String {
         self.phase4.summary()
+    }
+
+    pub(crate) fn crafting_view(&self) -> Option<CraftingView> {
+        self.phase4
+            .crafting_view()
+            .map(|(progress, target_start, target_end)| CraftingView {
+                progress,
+                target_start,
+                target_end,
+            })
+    }
+
+    pub(crate) fn queue_crafting_timing(&mut self) {
+        if self.state != super::ConnectionState::Online {
+            return;
+        }
+        let request_id = self.next_request_id("craft");
+        if self.phase4.submit_crafting(request_id) {
+            self.status_message =
+                "Crafting result sent; waiting for the workshop ledger…".to_owned();
+        }
     }
 }

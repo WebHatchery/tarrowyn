@@ -1,7 +1,7 @@
 //! Virtual-resolution UI for the Phase 0 first-evening client.
 
 use crate::data::{ActionDef, GameData};
-use crate::network::{ConnectionState, RemotePlayer};
+use crate::network::{ConnectionState, CraftingView, RemotePlayer};
 use crate::state::{tile_color, CropState, TileKind, WorldState};
 use macroquad::prelude::*;
 use macroquad_toolkit::grid::TilePos;
@@ -10,6 +10,8 @@ use macroquad_toolkit::ui::draw_ui_text_ex;
 use macroquad_toolkit::ui::{RectExt, VirtualUi};
 use tarrowyn_protocol::{ChatMessage, ChronicleEntry, OpportunitySignal, WildernessZone};
 
+#[path = "ui_crafting.rs"]
+mod ui_crafting;
 #[path = "ui_online.rs"]
 mod ui_online;
 
@@ -66,6 +68,7 @@ pub struct UiContext<'a> {
     pub opportunities: &'a [OpportunitySignal],
     pub phase4_summary: &'a str,
     pub phase5_summary: &'a str,
+    pub crafting: Option<CraftingView>,
     pub knocked_out: bool,
     pub ui: &'a VirtualUi,
 }
@@ -76,12 +79,17 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
 
     draw_header(&ctx);
     let map_rect = draw_world_panel(&ctx, mouse);
-    if is_mouse_button_released(MouseButton::Left) {
+    if ctx.crafting.is_none() && is_mouse_button_released(MouseButton::Left) {
         if let Some(tile) = MapView::new(&ctx, map_rect).tile_at(mouse) {
             actions.push(UiAction::MoveTo(tile));
         }
     }
     draw_sidebar(&ctx, mouse, &mut actions);
+    if let Some(crafting) = ctx.crafting {
+        ui_crafting::draw(crafting, mouse, &mut actions);
+        actions
+            .retain(|action| matches!(action, UiAction::Interact(id) if id == "crafting-timing"));
+    }
     draw_footer(&ctx);
 
     actions

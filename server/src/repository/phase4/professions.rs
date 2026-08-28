@@ -204,7 +204,9 @@ impl super::super::WorldRepository {
                     let completed_order = {
                         let order = &mut state.phase4.orders[index];
                         order.status = ServiceOrderStatus::Completed;
-                        order.quality = (70 + level.saturating_mul(10)).min(100);
+                        let timing_score = request.timing_score.unwrap_or(50);
+                        order.quality = (50 + u32::from(timing_score) / 2 + u32::from(level) * 5)
+                            .min(100) as u8;
                         order.completed_tick = Some(tick);
                         order.clone()
                     };
