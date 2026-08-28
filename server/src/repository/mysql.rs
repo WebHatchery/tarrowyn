@@ -7,6 +7,7 @@ use mysql::prelude::Queryable;
 use mysql::{OptsBuilder, Pool, TxOpts};
 
 const MIGRATION_VERSION: u32 = 1;
+const MIGRATION_LOCK_NAME: &str = "tarrowyn-schema-migration";
 const MIGRATION_TABLE_SQL: &str = "CREATE TABLE IF NOT EXISTS tarrowyn_schema_migrations (
     version INT UNSIGNED PRIMARY KEY,
     applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -125,41 +126,58 @@ impl MysqlStore {
         connection.query_drop(MIGRATION_TABLE_SQL).map_err(|_| {
             PersistenceBackendError::new("the MySQL migration table could not be created")
         })?;
-        let applied: Option<u32> = connection
-            .exec_first(
-                "SELECT version FROM tarrowyn_schema_migrations WHERE version = ?",
-                (MIGRATION_VERSION,),
-            )
+        let lock_acquired: Option<u8> = connection
+            .exec_first("SELECT IFNULL(GET_LOCK(?, 30), 0)", (MIGRATION_LOCK_NAME,))
             .map_err(|_| {
-                PersistenceBackendError::new("the MySQL migration table could not be read")
+                PersistenceBackendError::new("the MySQL migration lock could not be acquired")
             })?;
-        if applied.is_some() {
-            return Ok(());
+        if lock_acquired != Some(1) {
+            return Err(PersistenceBackendError::new(
+                "the MySQL migration lock timed out",
+            ));
         }
-        let mut transaction = connection
-            .start_transaction(TxOpts::default())
-            .map_err(|_| {
-                PersistenceBackendError::new("the MySQL migration transaction could not start")
-            })?;
-        for statement in MIGRATION_SQL
-            .split(';')
-            .map(str::trim)
-            .filter(|statement| !statement.is_empty())
-        {
+        let migration_result = (|| {
+            let applied: Option<u32> = connection
+                .exec_first(
+                    "SELECT version FROM tarrowyn_schema_migrations WHERE version = ?",
+                    (MIGRATION_VERSION,),
+                )
+                .map_err(|_| {
+                    PersistenceBackendError::new("the MySQL migration table could not be read")
+                })?;
+            if applied.is_some() {
+                return Ok(());
+            }
+            let mut transaction =
+                connection
+                    .start_transaction(TxOpts::default())
+                    .map_err(|_| {
+                        PersistenceBackendError::new(
+                            "the MySQL migration transaction could not start",
+                        )
+                    })?;
+            for statement in MIGRATION_SQL
+                .split(';')
+                .map(str::trim)
+                .filter(|statement| !statement.is_empty())
+            {
+                transaction.query_drop(statement).map_err(|_| {
+                    PersistenceBackendError::new("the MySQL schema migration failed")
+                })?;
+            }
             transaction
-                .query_drop(statement)
-                .map_err(|_| PersistenceBackendError::new("the MySQL schema migration failed"))?;
-        }
-        transaction
-            .exec_drop(
-                "INSERT INTO tarrowyn_schema_migrations (version) VALUES (?)",
-                (MIGRATION_VERSION,),
-            )
-            .map_err(|_| {
-                PersistenceBackendError::new("the MySQL migration record could not be written")
-            })?;
-        transaction.commit().map_err(|_| {
-            PersistenceBackendError::new("the MySQL migration transaction could not commit")
-        })
+                .exec_drop(
+                    "INSERT INTO tarrowyn_schema_migrations (version) VALUES (?)",
+                    (MIGRATION_VERSION,),
+                )
+                .map_err(|_| {
+                    PersistenceBackendError::new("the MySQL migration record could not be written")
+                })?;
+            transaction.commit().map_err(|_| {
+                PersistenceBackendError::new("the MySQL migration transaction could not commit")
+            })
+        })();
+        let _ = connection.exec_drop("SELECT RELEASE_LOCK(?)", (MIGRATION_LOCK_NAME,));
+        migration_result
     }
 }

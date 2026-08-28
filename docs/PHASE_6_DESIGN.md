@@ -66,7 +66,9 @@ overwriting unknown durable fields.
 The remaining persistence gate is deliberately explicit: run the MySQL
 migration and restart/duplicate-request/partial-write tests against the target
 database, then prove database backup and restore rather than relying only on
-the JSON snapshot companion. The current in-process repository still targets
+the JSON snapshot companion. MySQL schema startup uses a bounded advisory lock
+so concurrent workers cannot race on the migration record. The current
+in-process repository still targets
 one authoritative worker; multi-worker locking and relational decomposition
 remain follow-up work.
 
