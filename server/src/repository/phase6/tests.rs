@@ -4,8 +4,9 @@ use super::super::WorldRepository;
 use super::backup::write;
 use std::fs;
 use tarrowyn_protocol::{
-    ChatRequest, ClaimLifecycleAction, ClaimLifecycleRequest, GovernanceAction, GovernanceRequest,
-    GuestSessionRequest, MovementIntent, TradeAction, TradeBundle, TradeRequest,
+    AccountDeletionRequest, AuthLinkRequest, ChatRequest, ClaimLifecycleAction,
+    ClaimLifecycleRequest, GovernanceAction, GovernanceRequest, GuestSessionRequest,
+    MovementIntent, TradeAction, TradeBundle, TradeRequest,
 };
 
 #[test]
@@ -82,6 +83,126 @@ fn failed_scheduled_backup_degrades_readiness_until_recovery() {
     assert!(recovered.backup_error.is_none());
     assert_eq!(recovered.last_backup_tick, Some(2));
     let _ = fs::remove_file(backup_path);
+}
+
+#[test]
+fn account_deletion_removes_private_state_and_anonymizes_public_history() {
+    let state_path = std::env::temp_dir().join(format!(
+        "tarrowyn-account-deletion-{}.json",
+        std::process::id()
+    ));
+    let config = ServerConfig {
+        persistence_path: Some(state_path.to_string_lossy().into_owned()),
+        backup_path: None,
+        ..ServerConfig::default()
+    };
+    let repository = WorldRepository::new(config.clone());
+    let guest = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("deletion-client".to_owned()),
+            reset: false,
+        })
+        .unwrap()
+        .data;
+    let linked = repository
+        .auth_link(
+            &guest.account_token,
+            AuthLinkRequest {
+                request_id: "deletion-link".to_owned(),
+                provider: "webhatchery-identity-oidc".to_owned(),
+                subject: "deletion-subject".to_owned(),
+                display_name: Some("Leaving traveller".to_owned()),
+            },
+        )
+        .unwrap()
+        .data;
+    let token = linked.session.account_token.clone();
+    let account_id = linked.account_id.clone();
+    repository
+        .chat(
+            &token,
+            ChatRequest {
+                request_id: "deletion-chat".to_owned(),
+                channel: "settlement".to_owned(),
+                text: "Please keep the hall open.".to_owned(),
+            },
+        )
+        .unwrap();
+    repository
+        .claim_lifecycle(
+            &token,
+            ClaimLifecycleRequest {
+                request_id: "deletion-claim".to_owned(),
+                action: ClaimLifecycleAction::Request,
+                claim_id: None,
+                target_account_id: None,
+            },
+        )
+        .unwrap();
+    let identity_key = {
+        let mut state = repository.state.lock().unwrap();
+        let key = state
+            .phase6
+            .accounts
+            .get(&account_id)
+            .unwrap()
+            .identity_key
+            .clone();
+        state.phase4.profiles.insert(key.clone(), Vec::new());
+        state.phase4.governance.offices[0].holder_account_id = Some(account_id.clone());
+        state.phase4.governance.offices[0].holder_name = Some("Leaving traveller".to_owned());
+        key
+    };
+
+    let request = AccountDeletionRequest {
+        request_id: "deletion-request".to_owned(),
+        account_id: account_id.clone(),
+    };
+    let scheduled = repository
+        .account_delete(&token, request.clone())
+        .unwrap()
+        .data;
+    assert!(scheduled.accepted);
+    assert_eq!(scheduled.status, "scheduled");
+    assert_eq!(
+        repository.account_delete(&token, request).unwrap().data,
+        scheduled
+    );
+
+    drop(repository);
+    let repository = WorldRepository::new(config);
+    repository.tick();
+
+    assert!(repository.account(&token).is_err());
+    let state = repository.state.lock().unwrap();
+    assert!(!state.identities.contains_key(&identity_key));
+    assert!(state.phase6.accounts.is_empty());
+    assert!(state.phase6.sessions.is_empty());
+    assert!(!state.phase4.profiles.contains_key(&identity_key));
+    assert!(state.phase4.governance.offices[0].vacant);
+    assert!(state.phase4.claims[0].owner_account_id.is_none());
+    assert!(state
+        .chat_history
+        .iter()
+        .any(|message| message.account_id == "former-resident"
+            && message.text.contains("removed after account deletion")));
+    assert!(state.events.iter().any(|event| matches!(
+        &event.event,
+        tarrowyn_protocol::WorldEvent::Chat(message)
+            if message.account_id == "former-resident"
+    )));
+    assert!(state
+        .phase6
+        .audits
+        .iter()
+        .any(|record| record.action == "account.delete.completed"));
+    assert!(state
+        .phase6
+        .audits
+        .iter()
+        .all(|record| record.actor_account_id != account_id && record.target != account_id));
+    drop(state);
+    let _ = std::fs::remove_file(state_path);
 }
 
 #[test]

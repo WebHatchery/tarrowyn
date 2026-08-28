@@ -14,9 +14,11 @@ subject.
 
 Account identity is retained until deletion. Chat reports are retained for 90
 days, while settlement history is retained as public world history with
-account identifiers minimised. Payment-free gameplay has no payment data. A
-future deletion job must remove provider mapping and private support data while
-preserving an anonymised chronicle entry where required for world continuity.
+account identifiers minimised. Payment-free gameplay has no payment data. An
+authenticated deletion request is durably queued and executed on the next
+authoritative tick; it removes the provider mapping, sessions, character-private
+state, and private support records while preserving anonymised public history
+where required for world continuity.
 
 All mutation endpoints validate bounded request IDs and 64 KiB JSON request
 bodies, use server authorization, and retain idempotent results where retries
@@ -27,14 +29,14 @@ text into audit notes. The no-PvP law boundary is still active.
 
 ## Persistence, backups, and repair
 
-Storage version 19 adds persisted chat, movement, auth-link, auth-refresh,
+Storage version 20 adds persisted chat, movement, auth-link, auth-refresh,
 auth-revoke, moderation-report replay results, and the account moderation cooldown
 alongside the persisted Bellweather animal condition and daily care state,
 the reposition opening and wind spark,
 field-tool condition, and real-time lease timestamps
 and public tax receipts,
 the regional state,
-production session/audit records, and
+production session/audit records, and queued account-deletion work, and
 the per-character skill ledger while retaining defaults for Phase 1–6 files.
 Every mutation replay cache is trimmed to a 512-entry per-scope bound on the
 authoritative world tick, including identity, regional, support, authentication,

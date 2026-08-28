@@ -67,6 +67,22 @@ pub struct AccountResponse {
     pub character: PlayerProjection,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct AccountDeletionRequest {
+    pub request_id: String,
+    pub account_id: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct AccountDeletionResponse {
+    pub request_id: String,
+    pub account_id: String,
+    pub character_id: String,
+    pub accepted: bool,
+    pub status: String,
+    pub reason: Option<String>,
+}
+
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum SupportRepairAction {

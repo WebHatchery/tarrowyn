@@ -122,6 +122,7 @@ Suggested production-facing additions include:
 | `POST /v1/auth/link` / `POST /v1/auth/refresh` | Link a development identity and manage an expiring production session. |
 | `POST /v1/auth/revoke` | Revoke sessions or credentials after logout, compromise, or support action. |
 | `GET /v1/account` | Read the authenticated account and character boundary. |
+| `POST /v1/account/delete` | Queue authenticated account deletion and anonymise retained public history. |
 | `POST /v1/support/repair` | Audited operator repair for explicitly supported stuck-state cases. |
 | `GET /v1/ops/health` / `GET /v1/ops/metrics` | Expose readiness and operational signals to the deployment, not to ordinary players. |
 | `GET /v1/chronicle/search` | Search or summarise long-lived regional history with access controls. |

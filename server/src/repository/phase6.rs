@@ -6,14 +6,18 @@ use crate::config::ServerConfig;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
 use tarrowyn_protocol::{
-    AccountResponse, ApiResponse, AuditRecord, AuthLinkRequest, AuthLinkResponse,
-    AuthRefreshRequest, AuthRefreshResponse, AuthRevokeRequest, AuthRevokeResponse, AuthSession,
-    ModerationReportResponse, SupportRepairAction, SupportRepairRequest, SupportRepairResponse,
+    AccountDeletionRequest, AccountDeletionResponse, AccountResponse, ApiResponse, AuditRecord,
+    AuthLinkRequest, AuthLinkResponse, AuthRefreshRequest, AuthRefreshResponse, AuthRevokeRequest,
+    AuthRevokeResponse, AuthSession, ModerationReportResponse, SupportRepairAction,
+    SupportRepairRequest, SupportRepairResponse,
 };
 
 mod backup;
+mod deletion;
 mod moderation;
 mod operations;
+
+use deletion::PendingAccountDeletion;
 
 const IDENTITY_PROVIDER: &str = "webhatchery-identity-oidc";
 const PRIVACY_POLICY_VERSION: &str = "2026-08-19";
@@ -57,6 +61,8 @@ pub(super) struct Phase6State {
     #[serde(default)]
     pub(super) moderation_last_report_ticks: HashMap<String, u64>,
     pub(super) request_results: HashMap<String, SupportRepairResponse>,
+    #[serde(default)]
+    pub(super) deletion_requests: HashMap<String, PendingAccountDeletion>,
     pub(super) last_backup_tick: Option<u64>,
     pub(super) last_backup_path: Option<String>,
     pub(super) rejected_commands: u64,
@@ -84,6 +90,7 @@ pub(super) fn fresh(_config: &ServerConfig) -> Phase6State {
         moderation_results: HashMap::new(),
         moderation_last_report_ticks: HashMap::new(),
         request_results: HashMap::new(),
+        deletion_requests: HashMap::new(),
         last_backup_tick: None,
         last_backup_path: None,
         rejected_commands: 0,
@@ -386,6 +393,85 @@ impl WorldRepository {
         Ok(ApiResponse { meta: meta(state.tick, None, Some(state.cursor)), data: AccountResponse { account_id: identity.account_id.clone(), provider: production.map(|account| account.provider.clone()).unwrap_or_else(|| "development-guest".to_owned()), character_id: identity.character_id.clone(), display_name: identity.display_name.clone(), guest_fixture: production.is_none(), privacy_policy_version: PRIVACY_POLICY_VERSION.to_owned(), retention_note: "Account identity is retained until deletion; chat reports are retained for 90 days; settlement history is retained as public world history with account identifiers minimised.".to_owned(), session_expires_at_tick: expires, character: super::player_projection(&state, &key) } })
     }
 
+    pub fn account_delete(
+        &self,
+        token: &str,
+        request: AccountDeletionRequest,
+    ) -> Result<ApiResponse<AccountDeletionResponse>, RepositoryError> {
+        let mut state = self.state.lock().expect("world repository lock poisoned");
+        validate_request_id(&request.request_id)?;
+        if request.account_id.trim().is_empty() || request.account_id.len() > 160 {
+            return Err(RepositoryError::new(
+                400,
+                "invalid_account_id",
+                "The account ID to delete is required and bounded.",
+            ));
+        }
+        let key = authenticate(&mut state, token, &self.config)?;
+        let account = state
+            .identities
+            .get(&key)
+            .expect("identity exists")
+            .account_id
+            .clone();
+        if account != request.account_id {
+            return Err(RepositoryError::new(
+                403,
+                "account_boundary_violation",
+                "An account may delete only its own character boundary.",
+            ));
+        }
+        if !state.phase6.accounts.contains_key(&account) {
+            return Err(RepositoryError::new(
+                409,
+                "guest_account_deletion_not_supported",
+                "Link this development guest to the identity gateway before requesting deletion.",
+            ));
+        }
+        let cache_key = format!("delete:{account}:{}", request.request_id);
+        if let Some(pending) = state.phase6.deletion_requests.get(&cache_key) {
+            return Ok(ApiResponse {
+                meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
+                data: deletion::scheduled_response(pending),
+            });
+        }
+        let character_id = state
+            .identities
+            .get(&key)
+            .expect("identity exists")
+            .character_id
+            .clone();
+        let pending = PendingAccountDeletion {
+            request_id: request.request_id.clone(),
+            account_id: account.clone(),
+            identity_key: key,
+            character_id: character_id.clone(),
+        };
+        state.phase6.deletion_requests.insert(cache_key, pending);
+        audit(
+            &mut state,
+            &account,
+            "account.delete.requested",
+            &account,
+            "accepted",
+            "Account deletion was queued for the next authoritative tick.",
+        );
+        let response = AccountDeletionResponse {
+            request_id: request.request_id.clone(),
+            account_id: account,
+            character_id,
+            accepted: true,
+            status: "scheduled".to_owned(),
+            reason: None,
+        };
+        record_command_outcome(&mut state, true);
+        self.persist(&state);
+        Ok(ApiResponse {
+            meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
+            data: response,
+        })
+    }
+
     pub fn support_repair(
         &self,
         token: &str,
@@ -475,6 +561,7 @@ impl WorldRepository {
 }
 
 pub(super) fn phase6_tick(state: &mut RepositoryState, config: &ServerConfig) -> Option<bool> {
+    deletion::process(state);
     trim_replay_cache(&mut state.phase6.auth_link_results);
     trim_replay_cache(&mut state.phase6.auth_refresh_results);
     trim_replay_cache(&mut state.phase6.auth_revoke_results);
@@ -484,6 +571,7 @@ pub(super) fn phase6_tick(state: &mut RepositoryState, config: &ServerConfig) ->
     trim_replay_cache(&mut state.phase4.request_results);
     trim_replay_cache(&mut state.phase5.request_results);
     trim_replay_cache(&mut state.phase6.request_results);
+    trim_replay_cache(&mut state.phase6.deletion_requests);
     for identity in state.identities.values_mut() {
         trim_replay_cache(&mut identity.farming_results);
         trim_replay_cache(&mut identity.trade_results);

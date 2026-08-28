@@ -5,11 +5,11 @@
 The workspace has a versioned storage document, atomic replacement, scheduled
 backup metadata, integrity readiness, operator persistence- and backup-failure readiness,
 production session records, audit records, and a support repair API. Storage
-version 19 also persists chat, movement, and auth replay results,
+version 20 also persists chat, movement, and auth replay results,
 alongside field-tool condition,
 real-time lease timestamps, and public tax receipts,
 the per-character skill ledger, Bellweather animal condition, and daily care
-state, persists the account moderation cooldown, loads older documents through serde defaults, and fails closed on a
+state, persists the account moderation cooldown and queued account-deletion work, loads older documents through serde defaults, and fails closed on a
 corrupt or newer-than-server JSON snapshot. A Phase 1–4
 document without Phase 5/6 fields loads through serde defaults and receives the
 current regional and operations state.
@@ -21,7 +21,7 @@ refresh, and revocation state survive the authoritative repository boundary.
 The selected MySQL bridge now has a checked-in migration, startup pool/migration
 failure handling, transactional snapshot/index writes, and driver-selection
 tests. The configured local preview MySQL service passed
-`scripts/verify_mysql.ps1`: storage version 19 readiness, authoritative animal
+`scripts/verify_mysql.ps1`: storage version 20 readiness, authoritative animal
 state, duplicate chat/movement/auth/moderation replay, concurrent duplicate chat replay,
 temporary backup creation, and identity/state persistence across a server
 restart all succeeded. It then restored a native

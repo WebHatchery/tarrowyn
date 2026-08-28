@@ -239,7 +239,7 @@ try {
     $arrival = Wait-TravelArrival $sessions[0].data.account_token
     Assert-True (Test-Path -LiteralPath $backupPath) "the scheduled backup was not written"
     $backup = Get-Content -Raw -LiteralPath $backupPath | ConvertFrom-Json
-    Assert-True ($backup.storage_version -ge 19) "the load backup has an old storage version"
+    Assert-True ($backup.storage_version -ge 20) "the load backup has an old storage version"
 
     $metrics = Invoke-RestMethod -Method Get -Uri "http://$ServerAddress/v1/ops/metrics" -Headers $headers
     Assert-True ($metrics.data.server_tick -gt 0) "the operational tick metric did not advance"

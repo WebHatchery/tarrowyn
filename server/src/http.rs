@@ -5,12 +5,13 @@ use std::io::Read;
 use std::sync::Arc;
 use std::thread;
 use tarrowyn_protocol::{
-    ApiErrorResponse, ApiMeta, ApiResponse, AuthLinkRequest, AuthRefreshRequest, AuthRevokeRequest,
-    ChatRequest, ClaimLifecycleRequest, ClaimRequest, CombatRequest, ContractRequest,
-    ExpeditionRequest, FarmingRequest, GovernanceAction, GovernanceRequest, KnowledgeAction,
-    KnowledgeRequest, LocalCombatRequest, MarketOrderRequest, ModerationReportRequest,
-    MovementIntent, ProfessionRequest, RecoveryRequest, RegionalEventRequest, RouteRequest,
-    SkillRequest, SupportRepairRequest, TradeRequest, TravelRequest, PROTOCOL_VERSION,
+    AccountDeletionRequest, ApiErrorResponse, ApiMeta, ApiResponse, AuthLinkRequest,
+    AuthRefreshRequest, AuthRevokeRequest, ChatRequest, ClaimLifecycleRequest, ClaimRequest,
+    CombatRequest, ContractRequest, ExpeditionRequest, FarmingRequest, GovernanceAction,
+    GovernanceRequest, KnowledgeAction, KnowledgeRequest, LocalCombatRequest, MarketOrderRequest,
+    ModerationReportRequest, MovementIntent, ProfessionRequest, RecoveryRequest,
+    RegionalEventRequest, RouteRequest, SkillRequest, SupportRepairRequest, TradeRequest,
+    TravelRequest, PROTOCOL_VERSION,
 };
 use tiny_http::{Header, Method, Request, Response, Server, StatusCode};
 
@@ -95,6 +96,14 @@ fn handle_request(mut request: Request, repository: Arc<WorldRepository>) {
         },
         (Method::Get, "/v1/account") => {
             authenticated(&request, &repository, |token| repository.account(token))
+        }
+        (Method::Post, "/v1/account/delete") => {
+            match read_json::<AccountDeletionRequest>(&mut request) {
+                Ok(body) => authenticated(&request, &repository, |token| {
+                    repository.account_delete(token, body)
+                }),
+                Err(error) => error_response(400, "invalid_json", error, repository.health().meta),
+            }
         }
         (Method::Get, "/v1/ops/metrics") => {
             authenticated(&request, &repository, |token| repository.ops_metrics(token))
