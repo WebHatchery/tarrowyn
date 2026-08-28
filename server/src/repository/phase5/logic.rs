@@ -41,7 +41,7 @@ pub(super) fn location_position(state: &RepositoryState, id: &str) -> Position {
         .iter()
         .find(|location| location.location_id == id)
         .map(|location| location.position)
-        .unwrap_or(Position { x: 8, y: 6 })
+        .unwrap_or_else(|| crate::content::region_location_profile("hearth").position)
 }
 
 pub(super) fn travel_response(

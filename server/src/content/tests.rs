@@ -104,6 +104,9 @@ fn route_profiles_follow_the_validated_region_manifest() {
 
 #[test]
 fn location_profiles_follow_the_validated_region_manifest() {
+    let hearth = super::region_location_profile("hearth");
+    assert_eq!(hearth.position, tarrowyn_protocol::Position { x: 8, y: 6 });
+
     let watch = super::region_location_profile("whisperwood-outpost");
     assert_eq!(watch.name, "Whisperwood Watch");
     assert_eq!(watch.kind, tarrowyn_protocol::LocationKind::Outpost);

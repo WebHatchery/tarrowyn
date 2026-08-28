@@ -152,7 +152,7 @@ impl WorldRepository {
                     account_id: format!("dev-account-{number}"),
                     character_id: format!("dev-character-{number}"),
                     display_name: format!("Guest {number}"),
-                    position: Position { x: 8, y: 6 },
+                    position: crate::content::region_location_profile("hearth").position,
                     gold: self.config.starting_gold,
                     field_tool_condition: FIELD_TOOL_MAX_CONDITION,
                     skill: 1,
