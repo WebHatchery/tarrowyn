@@ -3,6 +3,12 @@ use std::time::Duration;
 #[derive(Debug, Clone)]
 pub struct ServerConfig {
     pub bind_addr: String,
+    pub db_driver: String,
+    pub db_host: String,
+    pub db_port: u16,
+    pub db_database: String,
+    pub db_username: String,
+    pub db_password: String,
     pub world_width: u32,
     pub world_height: u32,
     pub day_length_seconds: f32,
@@ -36,6 +42,12 @@ impl Default for ServerConfig {
     fn default() -> Self {
         Self {
             bind_addr: "127.0.0.1:8787".to_owned(),
+            db_driver: "json".to_owned(),
+            db_host: "localhost".to_owned(),
+            db_port: 3306,
+            db_database: "tarrowyn".to_owned(),
+            db_username: String::new(),
+            db_password: String::new(),
             world_width: 18,
             world_height: 11,
             day_length_seconds: 4_800.0,
@@ -72,6 +84,12 @@ impl ServerConfig {
         let defaults = Self::default();
         Self {
             bind_addr: env_string("TARROWYN_SERVER_ADDR", defaults.bind_addr),
+            db_driver: env_string("DB_DRIVER", defaults.db_driver),
+            db_host: env_string("DB_HOST", defaults.db_host),
+            db_port: env_u16("DB_PORT", defaults.db_port),
+            db_database: env_string("DB_DATABASE", defaults.db_database),
+            db_username: env_string("DB_USERNAME", defaults.db_username),
+            db_password: env_string("DB_PASSWORD", defaults.db_password),
             world_width: env_u32("TARROWYN_WORLD_WIDTH", defaults.world_width),
             world_height: env_u32("TARROWYN_WORLD_HEIGHT", defaults.world_height),
             day_length_seconds: env_f32("TARROWYN_DAY_LENGTH_SECONDS", defaults.day_length_seconds),
@@ -195,6 +213,10 @@ fn env_u64(name: &str, default: u64) -> u64 {
 
 fn env_u32(name: &str, default: u32) -> u32 {
     env_u64(name, default as u64) as u32
+}
+
+fn env_u16(name: &str, default: u16) -> u16 {
+    env_u64(name, default as u64) as u16
 }
 
 fn env_f32(name: &str, default: f32) -> f32 {

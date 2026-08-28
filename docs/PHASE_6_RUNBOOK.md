@@ -16,17 +16,20 @@ MySQL is the selected shared-world database. Local preview uses the ignored
 `.env.preview` file with `DB_DRIVER=mysql`, `DB_HOST`, `DB_PORT`,
 `DB_DATABASE`, `DB_USERNAME`, and `DB_PASSWORD`. Never commit that file or copy
 it into a release artifact. Production injects the same variables from its
-secret manager. The current JSON-backed release candidate does not consume
-this database contract yet; do not deploy it as a public multi-worker service
-until the MySQL repository, migrations, backup, restore, and rollback checks
-are implemented and pass.
+secret manager. The server applies `server/migrations/0001_initial_world.sql`
+on startup and refuses to listen if the pool or migration fails. JSON remains
+the default for deterministic local fixtures; set `DB_DRIVER=mysql` explicitly
+for the shared preview. Do not deploy it as a public multi-worker service
+until the live MySQL, backup, restore, and rollback checks below pass.
 
 ## Deploy, rollback, and maintenance
 
 1. Check `/v1/ops/health` and the last backup tick.
 2. Announce a maintenance window through the client status message.
 3. Stop the worker only after the current persistence write completes.
-4. Deploy the immutable release artifact and run the readiness check.
+4. Deploy the immutable release artifact and run the readiness check. For a
+   MySQL deployment, confirm the migration table and world row through the
+   database operator view before admitting traffic.
 5. If readiness or migration checks fail, stop the new worker and restore the
    previous artifact plus the last known-good state backup to a new named path.
 6. Reconcile the event cursor, travel records, orders, claims, and chronicle
@@ -37,10 +40,12 @@ maintenance/reconnect state and the client waits for an authoritative response.
 
 ## Restore and repair
 
-Run `scripts/phase6_failure_drill.ps1` against a copy of the state and backup.
-The drill parses the backup, checks storage version, starts a server on a
-temporary port, and reads `/v1/ops/health`; it does not overwrite the active
-world. For a stuck journey use `ClearStuckTravel`, for a duplicate or invalid
+Run `scripts/phase6_failure_drill.ps1` against a copy of the JSON state and
+backup. The drill parses the backup, checks storage version, starts a server on
+a temporary port, and reads `/v1/ops/health`; it does not overwrite the active
+world. The MySQL backend currently exposes the same versioned snapshot as a
+transactional bridge, so a target-environment database restore drill remains
+an explicit release gate. For a stuck journey use `ClearStuckTravel`, for a duplicate or invalid
 inventory use `NormalizeInventory`, and for an open failed shipment use
 `ReconcileTrade`. Include the player-facing reason and the support note in the
 ticket. Repeat the same request ID to confirm safe idempotency.

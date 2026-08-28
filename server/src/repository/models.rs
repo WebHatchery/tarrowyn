@@ -11,9 +11,9 @@ pub(super) struct SkillLedger {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub(super) struct Identity {
-    pub(super) account_id: String,
-    pub(super) character_id: String,
+pub(crate) struct Identity {
+    pub(crate) account_id: String,
+    pub(crate) character_id: String,
     pub(super) display_name: String,
     pub(super) position: Position,
     pub(super) gold: u32,
@@ -51,11 +51,11 @@ pub(super) struct Session {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub(super) struct StoredState {
-    pub(super) storage_version: u32,
-    pub(super) tick: u64,
+pub(crate) struct StoredState {
+    pub(crate) storage_version: u32,
+    pub(crate) tick: u64,
     pub(super) clock: WorldClock,
-    pub(super) cursor: u64,
+    pub(crate) cursor: u64,
     pub(super) next_guest: u64,
     pub(super) next_message: u64,
     pub(super) next_token: u64,
@@ -78,7 +78,7 @@ pub(super) struct StoredState {
 }
 
 #[derive(Debug)]
-pub(super) struct RepositoryState {
+pub(crate) struct RepositoryState {
     pub(super) tick: u64,
     pub(super) clock: WorldClock,
     pub(super) cursor: u64,
@@ -87,7 +87,7 @@ pub(super) struct RepositoryState {
     pub(super) next_token: u64,
     pub(super) next_trade: u64,
     pub(super) next_notice: u64,
-    pub(super) identities: HashMap<String, Identity>,
+    pub(crate) identities: HashMap<String, Identity>,
     pub(super) sessions: HashMap<String, Session>,
     pub(super) plots: Vec<FarmPlot>,
     pub(super) events: VecDeque<EventRecord>,
@@ -129,7 +129,7 @@ impl RepositoryState {
         }
     }
 
-    pub(super) fn from_stored(stored: StoredState, config: &ServerConfig) -> Self {
+    pub(crate) fn from_stored(stored: StoredState, config: &ServerConfig) -> Self {
         Self {
             tick: stored.tick,
             clock: WorldClock {
@@ -161,7 +161,7 @@ impl RepositoryState {
         }
     }
 
-    pub(super) fn to_stored(&self) -> StoredState {
+    pub(crate) fn to_stored(&self) -> StoredState {
         StoredState {
             storage_version: STORAGE_VERSION,
             tick: self.tick,

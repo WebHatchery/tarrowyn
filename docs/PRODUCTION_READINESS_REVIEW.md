@@ -8,14 +8,15 @@ calendar, topology, law, privacy, legacy, and operational decisions are
 written down.
 
 The measured scope is deliberately regional: one worker, 24 concurrent-client
-target, bounded queues, and a JSON persistence implementation with an atomic
-write path. Public launch remains blocked until the deployment owner supplies
-the selected MySQL repository implementation, real identity-gateway configuration,
-TLS termination, secret rotation, external alert routing, and an executed
-MySQL restore drill on that environment. Preview connection settings belong in
-the ignored `.env.preview` file; production credentials must come from its
-secret manager. Those are explicit remaining risks, not
-hidden behind the game client.
+target, bounded queues, and selectable JSON/MySQL persistence. The MySQL
+backend applies an explicit migration and writes the authoritative snapshot
+and identity index transactionally. Public launch remains blocked until the
+deployment owner runs that backend against the target database, proves
+concurrent-write behavior, completes a MySQL restore drill, and supplies the
+real identity-gateway configuration, TLS termination, secret rotation, and
+external alert routing. Preview connection settings belong in the ignored
+`.env.preview` file; production credentials must come from its secret manager.
+Those are explicit remaining risks, not hidden behind the game client.
 
 After launch, content operations should add new routes, crops, contracts,
 events, households, and settlement opportunities through the validated JSON

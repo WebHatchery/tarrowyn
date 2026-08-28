@@ -74,13 +74,15 @@ concurrent 20-client polling acceptance pass with:
 ## Architecture decisions
 
 The server uses `tiny_http` for the native process and a mutex-protected
-`WorldRepository` behind the HTTP handlers. The repository writes a versioned
-JSON state document to `TARROWYN_STATE_PATH` (default
+`WorldRepository` behind the HTTP handlers. `DB_DRIVER=json` (the default)
+writes a versioned JSON state document to `TARROWYN_STATE_PATH` (default
 `dist/tarrowyn-server-state.json`) after authoritative mutations and clock
-ticks. Sessions and bearer tokens are intentionally ephemeral; the guest
-client key resolves the durable account and character again after a restart.
-The storage version is part of the document so future migrations can be added
-without changing the protocol boundary.
+ticks. `DB_DRIVER=mysql` opens the selected MySQL backend, applies the checked-
+in migration in `server/migrations/`, and stores the same authoritative
+snapshot plus an account/character index in one transaction. Sessions and
+bearer tokens are intentionally ephemeral; the guest client key resolves the
+durable account and character again after a restart. The storage version is
+part of both representations so the protocol boundary remains unchanged.
 
 ## Preview database decision
 
@@ -97,11 +99,12 @@ DB_PASSWORD=
 ```
 
 Credentials remain local and must not be committed or included in browser or
-Windows packages. The current server code still uses its versioned JSON
-repository; selecting MySQL records the destination but does not claim that
-the repository migration is complete. Public deployment remains blocked until
-the MySQL implementation, schema migrations, concurrent-write tests, backups,
-restore drill, and rollback path pass.
+Windows packages. The server reads these variables from its process
+environment; load the ignored file through the deployment or preview launcher
+before starting the server. MySQL startup fails before the HTTP listener if
+the pool or migration cannot be established. Public deployment remains
+blocked until a live MySQL acceptance run, concurrent-write tests, database
+backup/restore drill, and rollback path pass on the target environment.
 
 The shared `protocol/` crate is versioned at protocol `6`. Every successful or
 error response carries protocol version and server tick metadata; cursor-based
@@ -141,6 +144,7 @@ cargo clippy --workspace --all-targets --all-features -- -D warnings
 
 The Phase 5 and Phase 6 design decisions, playthrough, test report, operator
 runbook, and production-readiness review are recorded in `docs/`. The current
-release candidate intentionally retains the JSON repository as a single-worker
-deployment shape; the readiness review records the MySQL repository migration
-and public identity-gateway work that must precede public access.
+release candidate retains JSON as the deterministic default and keeps the
+MySQL backend as a single-worker snapshot bridge; the readiness review records
+the live database, multi-worker, identity-gateway, and operational drills that
+must precede public access.

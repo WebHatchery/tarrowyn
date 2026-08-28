@@ -44,6 +44,12 @@ gates.
   invalid inventory, failed trades, household duplication, and moderation
   actions. Repair operations must be audited and safe to repeat.
 
+Current implementation note: the selectable MySQL backend and initial
+transactional snapshot/index migration are now present. The checklist remains
+open for live-database acceptance, multi-worker concurrency, database-native
+backup/restore, and rollback drills; the JSON backend remains the deterministic
+default for local fixtures.
+
 ### Deployment and operations
 
 - Select and document the hosting architecture, browser delivery path, TLS,

@@ -1,7 +1,5 @@
 use crate::config::ServerConfig;
 use std::collections::{HashMap, VecDeque};
-use std::fs;
-use std::path::Path;
 use std::sync::Mutex;
 use tarrowyn_protocol::{
     ApiError, ApiMeta, ApiResponse, ChatMessage, ChatRequest, ChatResponse, CropKind, CropState,
@@ -21,6 +19,7 @@ const MAX_TRADES: usize = 128;
 
 mod farming;
 mod models;
+mod mysql;
 mod persistence;
 mod phase3;
 mod phase3_frontier;
@@ -32,7 +31,7 @@ mod trades;
 pub(crate) use skills::validate_catalog as validate_skill_catalog;
 
 use models::{Identity, RepositoryState, Session};
-use persistence::{load_state, replace_file};
+use persistence::PersistenceBackend;
 
 #[derive(Debug, Clone)]
 pub struct RepositoryError {
@@ -57,14 +56,22 @@ impl RepositoryError {
 
 pub struct WorldRepository {
     config: ServerConfig,
+    storage: PersistenceBackend,
     state: Mutex<RepositoryState>,
 }
 
 impl WorldRepository {
     pub fn new(config: ServerConfig) -> Self {
-        let state = load_state(&config).unwrap_or_else(|| RepositoryState::fresh(&config));
+        Self::try_new(config).unwrap_or_else(|error| panic!("Tarrowyn storage failed: {error}"))
+    }
+
+    pub fn try_new(config: ServerConfig) -> Result<Self, String> {
+        let (storage, stored_state) =
+            PersistenceBackend::open(&config).map_err(|error| error.to_string())?;
+        let state = stored_state.unwrap_or_else(|| RepositoryState::fresh(&config));
         let repository = Self {
             config,
+            storage,
             state: Mutex::new(state),
         };
         let mut state = repository
@@ -80,7 +87,7 @@ impl WorldRepository {
             repository.persist(&state);
         }
         drop(state);
-        repository
+        Ok(repository)
     }
 
     pub fn health(&self) -> ApiResponse<HealthResponse> {
@@ -499,26 +506,8 @@ impl WorldRepository {
     }
 
     fn persist(&self, state: &RepositoryState) {
-        let Some(path) = self.config.persistence_path.as_deref() else {
-            return;
-        };
-        let Ok(data) = serde_json::to_vec_pretty(&state.to_stored()) else {
-            return;
-        };
-        let path = Path::new(path);
-        if let Some(parent) = path.parent() {
-            let _ = fs::create_dir_all(parent);
-        }
-        let temporary_path = path.with_extension(format!(
-            "{}-{}",
-            path.extension()
-                .and_then(|extension| extension.to_str())
-                .unwrap_or("state"),
-            std::process::id()
-        ));
-        if fs::write(&temporary_path, data).is_ok() && replace_file(&temporary_path, path).is_err()
-        {
-            let _ = fs::remove_file(temporary_path);
+        if let Err(error) = self.storage.persist(state, &self.config) {
+            eprintln!("Tarrowyn persistence write failed: {error}");
         }
     }
 }

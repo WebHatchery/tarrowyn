@@ -1,9 +1,8 @@
 //! The local authoritative Tarrowyn server.
 //!
-//! The development backend is a versioned JSON repository behind
-//! [`WorldRepository`]. It keeps the Phase 1–6 wire-and-authority fixtures
-//! deterministic while preserving the protocol and HTTP boundaries for the
-//! future managed production database.
+//! The repository boundary supports a deterministic versioned JSON fixture and
+//! the selected transactional MySQL snapshot backend. Both preserve the same
+//! Phase 1–6 protocol and HTTP authority boundary.
 
 mod config;
 mod content;

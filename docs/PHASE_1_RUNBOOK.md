@@ -25,9 +25,10 @@ Useful server configuration variables are:
 | `TARROWYN_SESSION_TTL_SECONDS` | `30` | Guest session expiry window. |
 | `TARROWYN_CHAT_MAX_LENGTH` | `160` | Server chat bound. |
 
-The first persistence backend is an in-memory repository. It is isolated behind
-`WorldRepository` so guest identity and world records can move to SQLite in
-Phase 2 without changing the protocol or HTTP handlers.
+The deterministic local backend is a versioned JSON repository. Shared preview
+can select the transactional MySQL backend with `DB_DRIVER=mysql`; both are
+isolated behind `WorldRepository` so the protocol and HTTP handlers stay
+unchanged. Keep preview credentials in the ignored `.env.preview` contract.
 
 ## Start the client
 

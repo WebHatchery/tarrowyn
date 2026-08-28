@@ -10,6 +10,11 @@ document without Phase 5/6 fields loads through serde defaults and receives the
 current regional and operations state.
 The Phase 5 fixture verifies that travel, market, event, household, identity,
 refresh, and revocation state survive the authoritative repository boundary.
+The selected MySQL bridge now has a checked-in migration, startup pool/migration
+failure handling, transactional snapshot/index writes, and driver-selection
+tests. No live MySQL service is available in this workspace, so the migration,
+restart, concurrent-write, backup/restore, and rollback checks remain target-
+environment gates.
 
 ## Security gate
 
@@ -36,8 +41,8 @@ The fixed 80-minute day is recorded in the GDD and Phase 5/6 decision records;
 the 14-day season and 56-day year remain explicitly labelled development
 fixtures pending pacing validation. Settlement condition, route maintenance,
 market sinks, household movement, decline recovery, and chronicle search are
-data-bearing surfaces. The remaining release risk is that the current JSON
-repository is a single-worker release candidate rather than a managed
-production database. Production deployment must replace it with the selected
-database/storage service and repeat the migration and restore drill before
+data-bearing surfaces. The remaining release risk is that the MySQL
+implementation is still a single-worker snapshot bridge rather than a
+decomposed multi-worker storage service. Production deployment must run the
+live migration, database restore, concurrency, and rollback drills before
 public access.

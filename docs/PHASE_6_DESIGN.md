@@ -25,14 +25,25 @@ are recorded in the audit stream. The no-PvP law boundary is still active.
 
 ## Persistence, backups, and repair
 
-The current production-shaped storage contract is versioned JSON behind an
-atomic temporary-file replacement. Storage version 7 adds regional state,
-production session/audit records, and the per-character skill ledger while
-retaining defaults for Phase 1–6 files.
+Storage version 7 adds regional state, production session/audit records, and
+the per-character skill ledger while retaining defaults for Phase 1–6 files.
+The repository now has two selectable backends: JSON with atomic temporary-file
+replacement for deterministic fixtures, and MySQL with the checked-in
+`0001_initial_world.sql` migration. The MySQL bridge stores the versioned
+authoritative snapshot and a transactional account/character index; it keeps
+the existing protocol and repository rules intact while the schema is being
+proven against a live environment.
 The server writes a scheduled backup to the configured backup path and reports
 the last successful tick through `/v1/ops/health`. Restore drills validate the
 backup as JSON before serving it as a named state path; a restore is never an
 in-place destructive command.
+
+The remaining persistence gate is deliberately explicit: run the MySQL
+migration and restart/duplicate-request/partial-write tests against the target
+database, then prove database backup and restore rather than relying only on
+the JSON snapshot companion. The current in-process repository still targets
+one authoritative worker; multi-worker locking and relational decomposition
+remain follow-up work.
 
 Repair ownership is explicit. The world authority owns travel, inventory,
 market orders, claims, households, and moderation state. The support surface

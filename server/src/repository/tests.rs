@@ -720,3 +720,24 @@ fn phase_two_state_without_frontier_fields_loads_safe_phase_three_defaults() {
 
     let _ = std::fs::remove_file(path);
 }
+
+#[test]
+fn persistence_backend_rejects_unknown_driver_before_world_start() {
+    let config = ServerConfig {
+        db_driver: "sqlite".to_owned(),
+        ..ServerConfig::default()
+    };
+    let error = WorldRepository::try_new(config).err().unwrap();
+    assert!(error.contains("use `json` or `mysql`"));
+}
+
+#[test]
+fn mysql_backend_requires_a_database_name_before_connecting() {
+    let config = ServerConfig {
+        db_driver: "mysql".to_owned(),
+        db_database: String::new(),
+        ..ServerConfig::default()
+    };
+    let error = WorldRepository::try_new(config).err().unwrap();
+    assert!(error.contains("DB_DATABASE must be non-empty"));
+}

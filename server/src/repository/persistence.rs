@@ -1,6 +1,7 @@
-//! Atomic state-file loading and replacement for the world repository.
+//! Selectable JSON/MySQL persistence boundary for the world repository.
 
 use super::models::{RepositoryState, StoredState};
+use super::mysql::MysqlStore;
 use crate::config::ServerConfig;
 use std::fs;
 #[cfg(windows)]
@@ -9,10 +10,91 @@ use std::path::Path;
 #[cfg(windows)]
 use windows_sys::Win32::Storage::FileSystem::{MoveFileExW, MOVEFILE_REPLACE_EXISTING};
 
+#[derive(Debug)]
+pub(crate) struct PersistenceBackendError(String);
+
+impl PersistenceBackendError {
+    pub(crate) fn new(message: &str) -> Self {
+        Self(message.to_owned())
+    }
+}
+
+impl std::fmt::Display for PersistenceBackendError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.write_str(&self.0)
+    }
+}
+
+pub(super) enum PersistenceBackend {
+    Json,
+    Mysql(MysqlStore),
+}
+
+impl PersistenceBackend {
+    pub(super) fn open(
+        config: &ServerConfig,
+    ) -> Result<(Self, Option<RepositoryState>), PersistenceBackendError> {
+        match config.db_driver.trim().to_ascii_lowercase().as_str() {
+            "json" => Ok((Self::Json, load_state(config))),
+            "mysql" => {
+                let store = MysqlStore::open(config)?;
+                let state = store.load(config)?;
+                Ok((Self::Mysql(store), state))
+            }
+            driver => Err(PersistenceBackendError::new(&format!(
+                "unsupported DB_DRIVER `{driver}`; use `json` or `mysql`"
+            ))),
+        }
+    }
+
+    pub(super) fn persist(
+        &self,
+        state: &RepositoryState,
+        config: &ServerConfig,
+    ) -> Result<(), PersistenceBackendError> {
+        match self {
+            Self::Json => persist_json(state, config),
+            Self::Mysql(store) => store.persist(state),
+        }
+    }
+}
+
 pub(super) fn load_state(config: &ServerConfig) -> Option<RepositoryState> {
     let bytes = fs::read(config.persistence_path.as_deref()?).ok()?;
     let stored: StoredState = serde_json::from_slice(&bytes).ok()?;
     Some(RepositoryState::from_stored(stored, config))
+}
+
+fn persist_json(
+    state: &RepositoryState,
+    config: &ServerConfig,
+) -> Result<(), PersistenceBackendError> {
+    let Some(path) = config.persistence_path.as_deref() else {
+        return Ok(());
+    };
+    let data = serde_json::to_vec_pretty(&state.to_stored()).map_err(|_| {
+        PersistenceBackendError::new("the JSON world snapshot could not be encoded")
+    })?;
+    let path = Path::new(path);
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).map_err(|_| {
+            PersistenceBackendError::new("the JSON world snapshot directory could not be created")
+        })?;
+    }
+    let temporary_path = path.with_extension(format!(
+        "{}-{}",
+        path.extension()
+            .and_then(|extension| extension.to_str())
+            .unwrap_or("state"),
+        std::process::id()
+    ));
+    fs::write(&temporary_path, data).map_err(|_| {
+        PersistenceBackendError::new("the JSON world snapshot could not be written")
+    })?;
+    replace_file(&temporary_path, path).map_err(|_| {
+        let _ = fs::remove_file(&temporary_path);
+        PersistenceBackendError::new("the JSON world snapshot could not be replaced")
+    })
 }
 
 #[cfg(not(windows))]

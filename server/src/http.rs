@@ -18,8 +18,11 @@ type JsonResponse = Response<std::io::Cursor<Vec<u8>>>;
 
 pub fn serve(config: crate::config::ServerConfig) -> Result<(), String> {
     crate::content::validate().map_err(|error| format!("content validation failed: {error}"))?;
+    let repository = Arc::new(
+        WorldRepository::try_new(config.clone())
+            .map_err(|error| format!("repository startup failed: {error}"))?,
+    );
     let server = Server::http(&config.bind_addr).map_err(|error| error.to_string())?;
-    let repository = Arc::new(WorldRepository::new(config.clone()));
     let ticker_repository = Arc::clone(&repository);
     thread::spawn(move || loop {
         thread::sleep(config.tick_interval);
