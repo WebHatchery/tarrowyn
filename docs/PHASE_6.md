@@ -123,8 +123,8 @@ used as a client-side unbounded display buffer.
   account creation/linking, reconnect, recovery, moderation/reporting, and
   safe logout.
 - The client now polls readiness alongside its normal state refresh and shows
-  the configured maintenance message, or a tap-to-reconnect fallback when the
-  server reports degraded readiness.
+  the configured maintenance message from connection startup onward, or a
+  tap-to-reconnect fallback when the server reports degraded readiness.
 - Add support-facing views for account identity, character state, settlement
   history, claims, trades, and event cursors without exposing secrets.
 - Establish a content and support cadence that preserves low-population

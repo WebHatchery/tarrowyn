@@ -66,7 +66,9 @@ deletion response is decoded as its dedicated command rather than the
 ambiguous market response.
 The client network tests verify that the deployment maintenance message takes
 priority in the visible status line and that degraded readiness without a
-message still gives the player a tap-to-reconnect instruction.
+message still gives the player a tap-to-reconnect instruction. The health
+request is started with the guest connection attempt, so maintenance guidance
+can appear before the authenticated state request succeeds.
 The selected MySQL bridge now has a checked-in migration, startup pool/migration
 failure handling, transactional snapshot/index writes, and driver-selection
 tests. The configured local preview MySQL service passed

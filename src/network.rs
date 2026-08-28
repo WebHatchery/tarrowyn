@@ -466,6 +466,7 @@ impl OnlineClient {
     fn begin_guest(&mut self, reset: bool) {
         self.state = ConnectionState::Connecting;
         self.status_message = "Contacting the development road…".to_owned();
+        self.pending_ops_health = Some(self.api.get("/v1/ops/health"));
         self.pending_guest = Some(self.api.post_json(
             "/v1/session/guest",
             &GuestSessionRequest {
