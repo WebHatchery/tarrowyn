@@ -131,7 +131,7 @@ function Invoke-NativeDatabaseRestore([string]$temporaryRoot, [string]$nonce) {
         $identityOutput = Invoke-MySql $mysql ($connectionArguments + "--database=$restoreDatabase" + "--execute=SELECT COUNT(*) FROM tarrowyn_identity_index")
         $version = [int](($versionOutput -join "").Trim())
         $identityCount = [int](($identityOutput -join "").Trim())
-        Assert-True ($version -ge 15) "the native restore lost the current world storage version"
+        Assert-True ($version -ge 17) "the native restore lost the current world storage version"
         Assert-True ($identityCount -ge 1) "the native restore lost the identity index"
     } finally {
         Invoke-MySql $mysql ($connectionArguments + "--execute=DROP DATABASE IF EXISTS $restoreDatabase") | Out-Null
@@ -217,6 +217,50 @@ try {
     $feed = Invoke-RestMethod -Method Get -Uri "http://$ServerAddress/v1/tavern/feed" -Headers $headers
     Assert-True (@($feed.data.chat | Where-Object text -eq $concurrentChatText).Count -eq 1) "concurrent duplicate chat requests were not reduced to one visible message"
 
+    $authClientKey = "$clientKey-auth"
+    $authGuest = Invoke-RestMethod -Method Post -Uri "http://$ServerAddress/v1/session/guest" `
+        -ContentType "application/json" -Body (@{ client_key = $authClientKey; reset = $true } | ConvertTo-Json -Compress)
+    $authGuestHeaders = @{ Authorization = "Bearer $($authGuest.data.account_token)" }
+    $linkBody = @{
+        request_id = "mysql-link-$nonce"
+        provider = "webhatchery-identity-oidc"
+        subject = "mysql-subject-$nonce"
+        display_name = "MySQL linked traveller"
+    }
+    $linked = Post-Json "/v1/auth/link" $linkBody $authGuestHeaders
+    $linkedHeaders = @{ Authorization = "Bearer $($linked.data.session.account_token)" }
+    $linkedRetry = Post-Json "/v1/auth/link" $linkBody $linkedHeaders
+    Assert-True ($linkedRetry.data.account_id -eq $linked.data.account_id) "MySQL auth-link replay changed the account boundary"
+    $account = Invoke-RestMethod -Method Get -Uri "http://$ServerAddress/v1/account" -Headers $linkedHeaders
+    Assert-True (-not $account.data.guest_fixture) "the MySQL-linked account remained a guest fixture"
+
+    $refreshBody = @{
+        request_id = "mysql-refresh-$nonce"
+        refresh_token = $linked.data.session.refresh_token
+    }
+    $refreshed = Post-Json "/v1/auth/refresh" $refreshBody @{}
+    $refreshedHeaders = @{ Authorization = "Bearer $($refreshed.data.session.account_token)" }
+    $refreshedRetry = Post-Json "/v1/auth/refresh" $refreshBody @{}
+    Assert-True ($refreshedRetry.data.session.account_token -eq $refreshed.data.session.account_token) "MySQL refresh replay rotated a second access session"
+
+    $revokeBody = @{ request_id = "mysql-revoke-$nonce"; revoke_all = $true }
+    $revoked = Post-Json "/v1/auth/revoke" $revokeBody $refreshedHeaders
+    $revokedRetry = Post-Json "/v1/auth/revoke" $revokeBody $refreshedHeaders
+    Assert-True ($revoked.data.revoked_sessions -ge 1) "MySQL auth revoke did not revoke the rotated session"
+    Assert-True ($revokedRetry.data.revoked_sessions -eq $revoked.data.revoked_sessions) "MySQL auth-revoke replay changed the result"
+
+    $moderationBody = @{
+        request_id = "mysql-moderation-$nonce"
+        target_account_id = $session.data.account_id
+        message_id = $null
+        category = "player_report"
+        note = "MySQL moderation replay acceptance $nonce"
+    }
+    $report = Post-Json "/v1/moderation/report" $moderationBody $headers
+    $reportRetry = Post-Json "/v1/moderation/report" $moderationBody $headers
+    Assert-True ($report.data.report_id -eq $reportRetry.data.report_id) "MySQL moderation replay queued a second report"
+    Assert-True ($report.data.status -eq "queued") "MySQL moderation report was not queued"
+
     for ($attempt = 0; $attempt -lt 80 -and -not (Test-Path -LiteralPath $backupPath); $attempt++) {
         Start-Sleep -Milliseconds 250
     }
@@ -237,13 +281,17 @@ try {
     $resumedHeaders = @{ Authorization = "Bearer $($resumed.data.account_token)" }
     $resumedState = Invoke-RestMethod -Method Get -Uri "http://$ServerAddress/v1/state" -Headers $resumedHeaders
     Assert-True ($resumedState.data.world.animals.Count -ge 1) "the restarted MySQL world lost its animal projection"
+    $revokedAfterRestart = Post-Json "/v1/auth/revoke" $revokeBody $refreshedHeaders
+    Assert-True ($revokedAfterRestart.data.revoked_sessions -eq $revoked.data.revoked_sessions) "the MySQL auth-revoke replay was lost across restart"
+    $reportAfterRestart = Post-Json "/v1/moderation/report" $moderationBody $resumedHeaders
+    Assert-True ($reportAfterRestart.data.report_id -eq $report.data.report_id) "the MySQL moderation replay was lost across restart"
 
     Stop-PreviewServer $server
     $server = $null
     $env:MYSQL_PWD = $env:DB_PASSWORD
     Invoke-NativeDatabaseRestore $temporaryRoot $nonce
 
-    Write-Host "MySQL acceptance passed: migration/readiness, authoritative state, concurrent duplicate replay, backup, restart persistence, and native dump/restore." -ForegroundColor Green
+    Write-Host "MySQL acceptance passed: migration/readiness, authoritative state, chat/auth/moderation replay, backup, restart persistence, and native dump/restore." -ForegroundColor Green
 } finally {
     if ($null -ne $server -and -not $server.HasExited) { Stop-PreviewServer $server }
     foreach ($name in $environmentNames) {

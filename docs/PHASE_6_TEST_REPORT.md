@@ -17,9 +17,9 @@ The selected MySQL bridge now has a checked-in migration, startup pool/migration
 failure handling, transactional snapshot/index writes, and driver-selection
 tests. The configured local preview MySQL service passed
 `scripts/verify_mysql.ps1`: storage version 17 readiness, authoritative animal
-state, duplicate-request replay, concurrent duplicate replay, temporary backup
-creation, and identity/state persistence across a server restart all
-succeeded. It then restored a native
+state, duplicate chat/auth/moderation replay, concurrent duplicate chat replay,
+temporary backup creation, and identity/state persistence across a server
+restart all succeeded. It then restored a native
 `mysqldump` into a generated temporary database and verified the current world
 row and identity index before cleanup. The script uses a unique guest key and
 does not reset or delete the configured database.
