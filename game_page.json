@@ -2,21 +2,21 @@
   "title": "The Years of Tarrowyn",
   "wasm": "years_of_tarrowyn",
   "roost_slug": "rust_tarrowyn",
-  "status": { "text": "Phase 3", "class": "in-development" },
+  "status": { "text": "Phase 6 Release Candidate", "class": "in-development" },
   "canvas_rendering": "pixelated",
+  "controls_hint": "Every required online action has a visible touch target; keyboard input is optional.",
   "about": [
-    "Build the first frontier outpost one day at a time. Farm, trade, take contracts, recover from danger, and leave your mark on a living shared world."
+    "Share a persistent regional world with other players. Farm, trade, travel, take contracts, recover from danger, and leave your mark on a living settlement network."
   ],
   "controls": [
-    { "key": "Tap arrows", "desc": "Walk one tile" },
-    { "key": "Tap a map tile", "desc": "Walk toward a destination" },
-    { "key": "WASD / Arrows", "desc": "Keyboard movement supplement" },
+    { "key": "Tap arrows or map tiles", "desc": "Walk through the server-owned world" },
+    { "key": "Visible action buttons", "desc": "Farm, fight, trade, travel, govern, learn, and report" },
     { "key": "Quick phrases / Send", "desc": "Exchange bounded settlement chat" },
-    { "key": "Reconnect", "desc": "Recover a degraded or offline session" },
-    { "key": "F5 / F9", "desc": "Save / load the separate offline fixture" }
+    { "key": "Reconnect / Recover", "desc": "Return safely from a degraded session or interrupted journey" },
+    { "key": "Use offline fixture", "desc": "Open the separate local first-evening development mode" }
   ],
   "details": [
-    { "label": "Milestone", "value": "Phase 3: the living frontier" },
+    { "label": "Milestone", "value": "Phase 6: the lasting realm" },
     { "label": "Genre", "value": "Cozy 2D MMORPG foundation" },
     { "label": "Engine", "value": "Macroquad + Toolkit" },
     { "label": "Server", "value": "Rust + tiny_http development authority" },

@@ -6,8 +6,9 @@ pub(super) fn draw_sidebar(
     mouse: Vec2,
     actions: &mut Vec<UiAction>,
 ) {
+    let top = content.y + 34.0;
     draw_surface(
-        Rect::new(content.x, content.y + 34.0, content.w, 58.0),
+        Rect::new(content.x, top, content.w, 40.0),
         &SurfaceStyle::new(Color::new(0.10, 0.14, 0.15, 1.0))
             .with_border(1.0, Color::new(0.32, 0.48, 0.50, 0.45)),
     );
@@ -21,67 +22,41 @@ pub(super) fn draw_sidebar(
                 .filter(|player| ctx.own_account_id != Some(player.account_id.as_str()))
                 .count()
         ),
-        content.x + 12.0,
-        content.y + 50.0,
-        content.w - 24.0,
-        42.0,
-        13.0,
+        content.x + 8.0,
+        top + 13.0,
+        content.w - 16.0,
+        25.0,
+        11.0,
         2.0,
         CREAM,
     );
 
     draw_ui_text_ex(
-        "Walk the server-owned road",
+        "Tap a tile or use arrows to walk",
         content.x,
-        content.y + 116.0,
-        TextStyle::new(16.0, CREAM).params(),
+        top + 57.0,
+        TextStyle::new(12.0, CREAM).params(),
     );
-    draw_move_pad(content.x + 77.0, content.y + 126.0, mouse, actions);
+    draw_move_pad(content.x + 238.0, top + 47.0, mouse, actions);
 
-    draw_ui_text_ex(
-        "Shared fields",
-        content.x,
-        content.y + 218.0,
-        TextStyle::new(16.0, CREAM).params(),
+    draw_button_row(
+        content,
+        top + 141.0,
+        23.0,
+        mouse,
+        &[
+            ("plant", "Plant", true, ButtonTone::Positive),
+            ("tend", "Tend", true, ButtonTone::Positive),
+            ("harvest", "Harvest", true, ButtonTone::Positive),
+            ("animal", "Care", true, ButtonTone::Positive),
+            ("trade", "Trade", true, ButtonTone::Positive),
+        ],
+        ctx,
+        actions,
     );
-    for (index, (id, label)) in [
-        ("plant", "Plant"),
-        ("tend", "Tend"),
-        ("harvest", "Harvest"),
-        ("animal", "Care"),
-        ("trade", "Trade"),
-    ]
-    .into_iter()
-    .enumerate()
-    {
-        if virtual_button(
-            Rect::new(
-                content.x + index as f32 * 73.0,
-                content.y + 226.0,
-                69.0,
-                27.0,
-            ),
-            label,
-            ctx.connection == ConnectionState::Online && !ctx.offline,
-            ButtonTone::Positive,
-            mouse,
-        ) {
-            actions.push(UiAction::Interact(id.to_owned()));
-        }
-    }
 
-    draw_ui_text_ex(
-        if ctx.wilderness.is_some() {
-            "Settlement chat • frontier signals"
-        } else {
-            "Settlement chat"
-        },
-        content.x,
-        content.y + 267.0,
-        TextStyle::new(16.0, CREAM).params(),
-    );
     draw_surface(
-        Rect::new(content.x, content.y + 278.0, content.w, 58.0),
+        Rect::new(content.x, top + 169.0, content.w, 34.0),
         &SurfaceStyle::new(Color::new(0.075, 0.105, 0.115, 1.0))
             .with_border(1.0, Color::new(0.32, 0.48, 0.50, 0.45)),
     );
@@ -89,13 +64,25 @@ pub(super) fn draw_sidebar(
         draw_ui_text_ex(
             &format!("{}: {}", message.display_name, message.text),
             content.x + 8.0,
-            content.y + 294.0 + index as f32 * 18.0,
-            TextStyle::new(11.0, if index == 0 { CREAM } else { dark::TEXT_DIM }).params(),
+            top + 182.0 + index as f32 * 13.0,
+            TextStyle::new(10.0, if index == 0 { CREAM } else { dark::TEXT_DIM }).params(),
+        );
+    }
+    if ctx.chat.is_empty() {
+        draw_ui_text_ex(
+            if ctx.wilderness.is_some() {
+                "The frontier channel is quiet."
+            } else {
+                "The settlement channel is quiet."
+            },
+            content.x + 8.0,
+            top + 191.0,
+            TextStyle::new(10.0, dark::TEXT_DIM).params(),
         );
     }
 
     draw_surface(
-        Rect::new(content.x, content.y + 341.0, content.w - 78.0, 30.0),
+        Rect::new(content.x, top + 207.0, content.w - 70.0, 27.0),
         &SurfaceStyle::new(Color::new(0.10, 0.14, 0.15, 1.0))
             .with_border(1.0, Color::new(0.32, 0.48, 0.50, 0.45)),
     );
@@ -105,10 +92,10 @@ pub(super) fn draw_sidebar(
         } else {
             ctx.chat_draft
         },
-        content.x + 9.0,
-        content.y + 361.0,
+        content.x + 8.0,
+        top + 225.0,
         TextStyle::new(
-            11.0,
+            10.0,
             if ctx.chat_draft.is_empty() {
                 dark::TEXT_DIM
             } else {
@@ -118,7 +105,7 @@ pub(super) fn draw_sidebar(
         .params(),
     );
     if virtual_button(
-        Rect::new(content.right() - 70.0, content.y + 341.0, 70.0, 30.0),
+        Rect::new(content.right() - 70.0, top + 207.0, 70.0, 27.0),
         "Send",
         !ctx.chat_draft.trim().is_empty() && ctx.connection == ConnectionState::Online,
         ButtonTone::Positive,
@@ -127,220 +114,146 @@ pub(super) fn draw_sidebar(
         actions.push(UiAction::SendChat);
     }
 
-    for (index, (id, label)) in [
-        ("contract", "Contract"),
-        ("strike", "Strike"),
-        ("technique", "Technique"),
-        ("recover", "Recover"),
-        ("claim", "Claim"),
-        ("item", "Bandage"),
-    ]
-    .iter()
-    .enumerate()
-    {
-        if virtual_button(
-            Rect::new(
-                content.x + index as f32 * 61.0,
-                content.y + 379.0,
-                56.0,
-                24.0,
+    draw_button_row(
+        content,
+        top + 239.0,
+        22.0,
+        mouse,
+        &[
+            (
+                "contract",
+                "Contract",
+                !ctx.knocked_out,
+                ButtonTone::Secondary,
             ),
-            label,
-            ctx.connection == ConnectionState::Online && (!ctx.knocked_out || *id == "recover"),
-            ButtonTone::Secondary,
-            mouse,
-        ) {
-            actions.push(UiAction::Interact((*id).to_owned()));
-        }
-    }
-
-    for (index, (id, label, tone)) in [
-        ("spell", "Spell", ButtonTone::Secondary),
-        ("expedition", "Pioneer", ButtonTone::Primary),
-        ("chronicle", "Chronicle", ButtonTone::Secondary),
-        ("say-hello", "Hello", ButtonTone::Secondary),
-        ("school", "School", ButtonTone::Primary),
-        ("practice", "Practice", ButtonTone::Positive),
-    ]
-    .into_iter()
-    .enumerate()
-    {
-        if virtual_button(
-            Rect::new(
-                content.x + index as f32 * 61.0,
-                content.y + 408.0,
-                56.0,
-                24.0,
+            ("strike", "Strike", !ctx.knocked_out, ButtonTone::Secondary),
+            (
+                "technique",
+                "Technique",
+                !ctx.knocked_out,
+                ButtonTone::Secondary,
             ),
-            label,
-            ctx.connection == ConnectionState::Online
-                && (!ctx.knocked_out || matches!(id, "chronicle" | "say-hello")),
-            tone,
-            mouse,
-        ) {
-            if id == "say-hello" {
-                actions.push(UiAction::QuickChat("Meet at the Hearth".to_owned()));
-            } else {
-                actions.push(UiAction::Interact(id.to_owned()));
-            }
-        }
-    }
-
-    if virtual_button(
-        Rect::new(content.x, content.y + 438.0, 122.0, 24.0),
-        "Town hall",
-        ctx.connection == ConnectionState::Online,
-        ButtonTone::Primary,
+            ("recover", "Recover", ctx.knocked_out, ButtonTone::Secondary),
+            ("claim", "Claim", !ctx.knocked_out, ButtonTone::Secondary),
+            ("item", "Bandage", !ctx.knocked_out, ButtonTone::Secondary),
+        ],
+        ctx,
+        actions,
+    );
+    draw_button_row(
+        content,
+        top + 264.0,
+        22.0,
         mouse,
-    ) {
-        actions.push(UiAction::Interact("town-hall".to_owned()));
-    }
-    if virtual_button(
-        Rect::new(content.x + 130.0, content.y + 438.0, 86.0, 24.0),
-        "Registry",
-        ctx.connection == ConnectionState::Online,
-        ButtonTone::Secondary,
-        mouse,
-    ) {
-        actions.push(UiAction::Interact("registry".to_owned()));
-    }
-    if virtual_button(
-        Rect::new(content.x + 222.0, content.y + 438.0, 86.0, 24.0),
-        "Order",
-        ctx.connection == ConnectionState::Online,
-        ButtonTone::Secondary,
-        mouse,
-    ) {
-        actions.push(UiAction::Interact("order".to_owned()));
-    }
-    if virtual_button(
-        Rect::new(content.x + 314.0, content.y + 438.0, 50.0, 24.0),
-        "Tax",
-        ctx.connection == ConnectionState::Online,
-        ButtonTone::Secondary,
-        mouse,
-    ) {
-        actions.push(UiAction::Interact("tax-rate".to_owned()));
-    }
-    if virtual_button(
-        Rect::new(content.x, content.y + 467.0, 69.0, 24.0),
-        "Knowledge",
-        ctx.connection == ConnectionState::Online,
-        ButtonTone::Secondary,
-        mouse,
-    ) {
-        actions.push(UiAction::Interact("knowledge".to_owned()));
-    }
-    if virtual_button(
-        Rect::new(content.x + 73.0, content.y + 467.0, 69.0, 24.0),
-        "Households",
-        ctx.connection == ConnectionState::Online,
-        ButtonTone::Secondary,
-        mouse,
-    ) {
-        actions.push(UiAction::Interact("households".to_owned()));
-    }
-    if virtual_button(
-        Rect::new(content.x + 146.0, content.y + 467.0, 69.0, 24.0),
-        "Local fight",
-        ctx.connection == ConnectionState::Online && !ctx.knocked_out,
-        ButtonTone::Secondary,
-        mouse,
-    ) {
-        actions.push(UiAction::Interact("local-fight".to_owned()));
-    }
-    if virtual_button(
-        Rect::new(content.x + 219.0, content.y + 467.0, 69.0, 24.0),
-        "Guard",
-        ctx.connection == ConnectionState::Online && !ctx.knocked_out,
-        ButtonTone::Secondary,
-        mouse,
-    ) {
-        actions.push(UiAction::Interact("guard".to_owned()));
-    }
-    if virtual_button(
-        Rect::new(content.x + 292.0, content.y + 467.0, 69.0, 24.0),
-        "Reposition",
-        ctx.connection == ConnectionState::Online && !ctx.knocked_out,
-        ButtonTone::Secondary,
-        mouse,
-    ) {
-        actions.push(UiAction::Interact("reposition".to_owned()));
-    }
-
-    for (index, (id, label)) in [
-        ("travel", "Travel"),
-        ("recover-travel", "Recover"),
-        ("market-region", "Market"),
-        ("region-event", "Event"),
-    ]
-    .iter()
-    .enumerate()
-    {
-        if virtual_button(
-            Rect::new(
-                content.x + index as f32 * 88.0,
-                content.y + 496.0,
-                82.0,
-                25.0,
+        &[
+            ("spell", "Spell", !ctx.knocked_out, ButtonTone::Secondary),
+            (
+                "expedition",
+                "Pioneer",
+                !ctx.knocked_out,
+                ButtonTone::Primary,
             ),
-            label,
-            ctx.connection == ConnectionState::Online,
-            ButtonTone::Primary,
-            mouse,
-        ) {
-            actions.push(UiAction::Interact((*id).to_owned()));
-        }
-    }
-    for (index, (id, label)) in [
-        ("account", "Account"),
-        ("logout", "Logout"),
-        ("report", "Report"),
-        (
-            "delete-account",
-            if ctx.account_deletion_armed {
-                "Tap again"
-            } else {
-                "Delete"
-            },
-        ),
-    ]
-    .iter()
-    .enumerate()
-    {
-        if virtual_button(
-            Rect::new(
-                content.x + index as f32 * 88.0,
-                content.y + 525.0,
-                82.0,
-                25.0,
+            ("chronicle", "Chronicle", true, ButtonTone::Secondary),
+            ("say-hello", "Hello", true, ButtonTone::Secondary),
+            ("school", "School", !ctx.knocked_out, ButtonTone::Primary),
+            (
+                "practice",
+                "Practice",
+                !ctx.knocked_out,
+                ButtonTone::Positive,
             ),
-            label,
-            ctx.connection == ConnectionState::Online,
-            ButtonTone::Secondary,
-            mouse,
-        ) {
-            actions.push(UiAction::Interact((*id).to_owned()));
-        }
-    }
-    if virtual_button(
-        Rect::new(content.x, content.y + 554.0, content.w, 25.0),
-        "Reconnect",
-        ctx.connection != ConnectionState::Online,
-        ButtonTone::Primary,
+        ],
+        ctx,
+        actions,
+    );
+    draw_button_row(
+        content,
+        top + 289.0,
+        22.0,
         mouse,
-    ) {
-        actions.push(UiAction::Reconnect);
-    }
-    if virtual_button(
-        Rect::new(content.x, content.y + 583.0, content.w, 25.0),
-        "Use offline fixture",
-        true,
-        ButtonTone::Secondary,
+        &[
+            ("town-hall", "Town hall", true, ButtonTone::Primary),
+            ("registry", "Registry", true, ButtonTone::Secondary),
+            ("order", "Order", true, ButtonTone::Secondary),
+            ("tax-rate", "Tax", true, ButtonTone::Secondary),
+        ],
+        ctx,
+        actions,
+    );
+    draw_button_row(
+        content,
+        top + 314.0,
+        22.0,
         mouse,
-    ) {
-        actions.push(UiAction::UseOffline);
-    }
+        &[
+            ("knowledge", "Knowledge", true, ButtonTone::Secondary),
+            ("households", "Households", true, ButtonTone::Secondary),
+            (
+                "local-fight",
+                "Local fight",
+                !ctx.knocked_out,
+                ButtonTone::Secondary,
+            ),
+            ("guard", "Guard", !ctx.knocked_out, ButtonTone::Secondary),
+            (
+                "reposition",
+                "Reposition",
+                !ctx.knocked_out,
+                ButtonTone::Secondary,
+            ),
+        ],
+        ctx,
+        actions,
+    );
+    draw_button_row(
+        content,
+        top + 339.0,
+        22.0,
+        mouse,
+        &[
+            ("travel", "Travel", true, ButtonTone::Primary),
+            ("recover-travel", "Recover", true, ButtonTone::Primary),
+            ("market-region", "Market", true, ButtonTone::Primary),
+            ("region-event", "Event", true, ButtonTone::Primary),
+        ],
+        ctx,
+        actions,
+    );
+    draw_button_row(
+        content,
+        top + 364.0,
+        22.0,
+        mouse,
+        &[
+            ("account", "Account", true, ButtonTone::Secondary),
+            ("logout", "Logout", true, ButtonTone::Secondary),
+            ("report", "Report", true, ButtonTone::Secondary),
+            (
+                "delete-account",
+                if ctx.account_deletion_armed {
+                    "Tap again"
+                } else {
+                    "Delete"
+                },
+                true,
+                ButtonTone::Secondary,
+            ),
+        ],
+        ctx,
+        actions,
+    );
+    draw_button_row(
+        content,
+        top + 389.0,
+        22.0,
+        mouse,
+        &[
+            ("reconnect", "Reconnect", true, ButtonTone::Primary),
+            ("offline", "Offline fixture", true, ButtonTone::Secondary),
+        ],
+        ctx,
+        actions,
+    );
     let chronicle_line = ctx
         .chronicle_summary
         .map(|summary| {
@@ -365,17 +278,65 @@ pub(super) fn draw_sidebar(
                 })
         })
         .unwrap_or_else(|| "The frontier registry is listening.".to_owned());
-    draw_text_block(
-        &format!(
-            "{}\n{}\n{}\n{}",
-            ctx.status_message, ctx.phase4_summary, ctx.phase5_summary, chronicle_line
-        ),
-        content.x,
-        content.y + 612.0,
-        content.w,
-        28.0,
-        11.0,
-        2.0,
-        dark::TEXT_DIM,
+    let phase_line = format!(
+        "{} • {}",
+        ctx.phase4_summary
+            .lines()
+            .next()
+            .unwrap_or("Town hall loading"),
+        ctx.phase5_summary
+            .lines()
+            .next()
+            .unwrap_or("Region loading")
     );
+    draw_ui_text_ex(
+        &phase_line,
+        content.x,
+        top + 416.0,
+        TextStyle::new(9.0, dark::TEXT_DIM).params(),
+    );
+    draw_ui_text_ex(
+        &chronicle_line,
+        content.x,
+        top + 431.0,
+        TextStyle::new(9.0, dark::TEXT_DIM).params(),
+    );
+}
+
+fn draw_button_row(
+    content: Rect,
+    y: f32,
+    height: f32,
+    mouse: Vec2,
+    entries: &[(&str, &str, bool, ButtonTone)],
+    ctx: &UiContext<'_>,
+    actions: &mut Vec<UiAction>,
+) {
+    let gap = 4.0;
+    let width =
+        (content.w - gap * (entries.len().saturating_sub(1) as f32)) / entries.len().max(1) as f32;
+    for (index, (id, label, active, tone)) in entries.iter().enumerate() {
+        let enabled = match *id {
+            "reconnect" => ctx.connection != ConnectionState::Online,
+            "offline" => true,
+            _ => *active && ctx.connection == ConnectionState::Online,
+        };
+        if virtual_button(
+            Rect::new(content.x + index as f32 * (width + gap), y, width, height),
+            label,
+            enabled,
+            *tone,
+            mouse,
+        ) {
+            if *id == "reconnect" {
+                actions.push(UiAction::Reconnect);
+            } else if *id == "offline" {
+                actions.push(UiAction::UseOffline);
+            } else if *id == "say-hello" {
+                actions.push(UiAction::QuickChat("Meet at the Hearth".to_owned()));
+            } else {
+                actions.push(UiAction::Interact((*id).to_owned()));
+            }
+        }
+    }
 }
