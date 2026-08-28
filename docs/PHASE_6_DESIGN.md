@@ -68,9 +68,11 @@ migration and restart/duplicate-request/partial-write tests against the target
 database, then prove database backup and restore rather than relying only on
 the JSON snapshot companion. MySQL schema startup uses a bounded advisory lock
 so concurrent workers cannot race on the migration record. The current
-in-process repository still targets
-one authoritative worker; multi-worker locking and relational decomposition
-remain follow-up work.
+in-process repository still targets one authoritative worker. A MySQL worker now
+holds a separate process-lifetime world-authority advisory lock and a second
+worker sharing that database fails startup after a bounded wait, rather than
+silently overwriting a newer snapshot. Multi-worker locking with relational
+decomposition remains follow-up work.
 
 Repair ownership is explicit. The world authority owns travel, inventory,
 market orders, claims, households, and moderation state. The support surface

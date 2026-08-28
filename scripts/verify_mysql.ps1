@@ -75,6 +75,37 @@ function Start-PreviewServer {
         -WorkingDirectory $projectRoot -WindowStyle Hidden -PassThru
 }
 
+function Assert-SecondWorkerRejected {
+    $secondAddress = "127.0.0.1:8800"
+    $previousAddress = $env:TARROWYN_SERVER_ADDR
+    $second = $null
+    try {
+        $env:TARROWYN_SERVER_ADDR = $secondAddress
+        $second = Start-PreviewServer
+        if ($null -eq $previousAddress) {
+            Remove-Item "Env:TARROWYN_SERVER_ADDR" -ErrorAction SilentlyContinue
+        } else {
+            [Environment]::SetEnvironmentVariable("TARROWYN_SERVER_ADDR", $previousAddress, "Process")
+        }
+        for ($attempt = 0; $attempt -lt 80 -and -not $second.HasExited; $attempt++) {
+            Start-Sleep -Milliseconds 250
+        }
+        Assert-True $second.HasExited "a second MySQL worker was allowed to start against the same world"
+    } finally {
+        if ($null -ne $second -and -not $second.HasExited) {
+            $originalAddress = $ServerAddress
+            $ServerAddress = $secondAddress
+            Stop-PreviewServer $second
+            $ServerAddress = $originalAddress
+        }
+        if ($null -eq $previousAddress) {
+            Remove-Item "Env:TARROWYN_SERVER_ADDR" -ErrorAction SilentlyContinue
+        } else {
+            [Environment]::SetEnvironmentVariable("TARROWYN_SERVER_ADDR", $previousAddress, "Process")
+        }
+    }
+}
+
 function Wait-Ready {
     for ($attempt = 0; $attempt -lt 80; $attempt++) {
         try {
@@ -194,6 +225,7 @@ try {
     $server = Start-PreviewServer
     $health = Wait-Ready
     Assert-True ($health.data.storage_version -ge 20) "the migrated world is older than storage version 20"
+    Assert-SecondWorkerRejected
 
     $nonce = [guid]::NewGuid().ToString("N")
     $clientKey = "mysql-acceptance-$PID-$nonce"
@@ -298,7 +330,7 @@ try {
     $env:MYSQL_PWD = $env:DB_PASSWORD
     Invoke-NativeDatabaseRestore $temporaryRoot $nonce
 
-    Write-Host "MySQL acceptance passed: migration/readiness, authoritative state, chat/movement/auth/moderation replay, backup, restart persistence, and native dump/restore." -ForegroundColor Green
+    Write-Host "MySQL acceptance passed: migration/readiness, single-worker authority, authoritative state, chat/movement/auth/moderation replay, backup, restart persistence, and native dump/restore." -ForegroundColor Green
 } finally {
     if ($null -ne $server -and -not $server.HasExited) { Stop-PreviewServer $server }
     foreach ($name in $environmentNames) {

@@ -5,9 +5,12 @@ use super::persistence::PersistenceBackendError;
 use crate::config::ServerConfig;
 use mysql::prelude::Queryable;
 use mysql::{OptsBuilder, Pool, TxOpts};
+use std::sync::Mutex;
 
 const MIGRATION_VERSION: u32 = 1;
 const MIGRATION_LOCK_NAME: &str = "tarrowyn-schema-migration";
+const WORLD_AUTHORITY_LOCK_NAME: &str = "tarrowyn-world-authority";
+const WORLD_AUTHORITY_LOCK_TIMEOUT_SECONDS: u32 = 5;
 const MIGRATION_TABLE_SQL: &str = "CREATE TABLE IF NOT EXISTS tarrowyn_schema_migrations (
     version INT UNSIGNED PRIMARY KEY,
     applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -16,6 +19,7 @@ const MIGRATION_SQL: &str = include_str!("../../migrations/0001_initial_world.sq
 
 pub(super) struct MysqlStore {
     pool: Pool,
+    authority_connection: Mutex<Option<mysql::PooledConn>>,
 }
 
 impl MysqlStore {
@@ -34,8 +38,12 @@ impl MysqlStore {
         let pool = Pool::new(options).map_err(|_| {
             PersistenceBackendError::new("the MySQL connection pool could not be created")
         })?;
-        let store = Self { pool };
+        let store = Self {
+            pool,
+            authority_connection: Mutex::new(None),
+        };
         store.migrate()?;
+        store.acquire_authority_lock()?;
         Ok(store)
     }
 
@@ -121,6 +129,31 @@ impl MysqlStore {
         })
     }
 
+    fn acquire_authority_lock(&self) -> Result<(), PersistenceBackendError> {
+        let mut connection = self.connection()?;
+        let lock_acquired: Option<u8> = connection
+            .exec_first(
+                "SELECT IFNULL(GET_LOCK(?, ?), 0)",
+                (
+                    WORLD_AUTHORITY_LOCK_NAME,
+                    WORLD_AUTHORITY_LOCK_TIMEOUT_SECONDS,
+                ),
+            )
+            .map_err(|_| {
+                PersistenceBackendError::new("the MySQL world authority lock could not be acquired")
+            })?;
+        if lock_acquired != Some(1) {
+            return Err(PersistenceBackendError::new(
+                "another MySQL world authority is already running",
+            ));
+        }
+        *self
+            .authority_connection
+            .lock()
+            .expect("MySQL authority connection lock poisoned") = Some(connection);
+        Ok(())
+    }
+
     fn migrate(&self) -> Result<(), PersistenceBackendError> {
         let mut connection = self.connection()?;
         connection.query_drop(MIGRATION_TABLE_SQL).map_err(|_| {
@@ -179,5 +212,17 @@ impl MysqlStore {
         })();
         let _ = connection.exec_drop("SELECT RELEASE_LOCK(?)", (MIGRATION_LOCK_NAME,));
         migration_result
+    }
+}
+
+impl Drop for MysqlStore {
+    fn drop(&mut self) {
+        if let Ok(mut guard) = self.authority_connection.lock() {
+            if let Some(connection) = guard.as_mut() {
+                let _ =
+                    connection.exec_drop("SELECT RELEASE_LOCK(?)", (WORLD_AUTHORITY_LOCK_NAME,));
+            }
+            guard.take();
+        }
     }
 }

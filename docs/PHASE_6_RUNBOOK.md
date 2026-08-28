@@ -23,6 +23,10 @@ on startup and refuses to listen if the pool or migration fails. JSON remains
 the default for deterministic local fixtures; set `DB_DRIVER=mysql` explicitly
 for the shared preview. Do not deploy it as a public multi-worker service
 until the live MySQL, backup, restore, and rollback checks below pass.
+The snapshot bridge also holds a process-lifetime `tarrowyn-world-authority`
+advisory lock. A second worker pointed at the same database must fail startup;
+do not interpret that rejection as multi-worker support. Use one worker for the
+current bridge until relational ownership and cursor handoff are implemented.
 
 For a configured local MySQL preview, run:
 

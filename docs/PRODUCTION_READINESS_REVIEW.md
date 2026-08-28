@@ -29,6 +29,10 @@ external alert routing. Preview connection settings belong in the ignored
 Those are explicit remaining risks, not hidden behind the game client. Client
 connection-failure alerting remains deployment/client-owned because the server
 cannot observe a client after its connection disappears.
+The snapshot bridge now holds a process-lifetime MySQL authority lock, so an
+additional worker sharing the database fails closed at startup; this protects
+the one-worker contract but is not a substitute for the deferred multi-worker
+relational design.
 Boundary probes also completed the same recovery path at 50 and 100 clients when
 the expected `market_backlog` alert was explicitly allowed; these runs are
 evidence for monitored operation, not for the several-hundred-player goal.

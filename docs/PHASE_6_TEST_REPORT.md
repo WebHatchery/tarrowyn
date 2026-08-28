@@ -79,7 +79,9 @@ The target environment still owns the remaining migration, multi-worker
 concurrent-write, database failover, and rollback gates. The local script
 exercises the JSON backup companion, native dump/restore, overlapping retries,
 and the single-worker MySQL bridge, not production topology or database
-failover.
+failover. The bridge now enforces that single-worker boundary with a bounded
+process-lifetime MySQL world-authority advisory lock; a second worker fails
+startup instead of being allowed to overwrite an in-memory snapshot.
 
 ## Security gate
 
