@@ -124,7 +124,7 @@ orders, knowledge, household, and local-combat endpoints. Phase 5 adds
 `/v1/events/region`, `/v1/households/region`, and `/v1/law`. Phase 6 adds
 `/v1/auth/link`, `/v1/auth/refresh`, `/v1/auth/revoke`, `/v1/account`,
 `/v1/account/delete`,
-`/v1/support/repair`, `/v1/moderation/report`, `/v1/ops/health`,
+`/v1/support/account`, `/v1/support/repair`, `/v1/moderation/report`, `/v1/ops/health`,
 `/v1/ops/metrics`, `/v1/chronicle/search`, and `/v1/skills`; the latter exposes
 the server-owned root catalogue, vague merger hints, authoritative
 per-character mastery, a touchable first-practice action for every root, a

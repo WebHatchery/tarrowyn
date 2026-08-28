@@ -42,7 +42,9 @@ subjects, empty repair notes, request-ID and 64 KiB request-body validation, ide
 mutations, expired/revoked access, refresh rotation, chat limits, and the
 protected no-PvP law response. Chat metadata, direct trades, claims, governance,
 moderation reports, and support repairs are audit-linked without copying chat
-text into the audit stream. Moderation reports are queued and audit-linked.
+text into the audit stream. Moderation reports are queued and audit-linked. The
+support account view is operator-only, returns the requested character-facing
+records and cursor, and excludes session tokens and provider subjects.
 The provider secret and TLS termination remain deployment concerns and are not
 stored in the repository.
 

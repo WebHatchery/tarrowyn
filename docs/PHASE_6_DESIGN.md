@@ -73,6 +73,10 @@ fails closed unless the authenticated account appears in the deployment's
 normalisation, trade reconciliation, claim handoff, household history, and
 moderation resolution. Unsupported repairs return a clear reason rather than
 guessing at state. Every repair carries an operator note and audit ID.
+The allowlisted `GET /v1/support/account?account_id=...` view exposes the
+target's account and character projection, claims, trades, retained chronicle,
+and current event cursor without returning access tokens, refresh tokens,
+provider subjects, or other secrets.
 
 ## Hosting and observability
 

@@ -93,9 +93,10 @@ support credentials to the client. A moderator records the category, target,
 evidence reference, decision, and retention deadline. Resolve through the
 audited support repair surface using a token for an account in the configured
 operator allowlist. Ordinary player tokens receive a clear forbidden response.
-Account views show account ID, character ID,
-settlement history, claims, trades, and cursors, but never access tokens,
-refresh tokens, provider secrets, or raw credentials.
+The allowlisted `GET /v1/support/account?account_id=...` view shows account ID,
+character ID, settlement history, claims, trades, and cursors, but never access
+tokens, refresh tokens, provider secrets, or raw credentials. Ordinary player
+tokens must receive the forbidden response.
 
 ## Player incident path
 

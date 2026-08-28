@@ -1,6 +1,6 @@
 //! Production identity, operations, support, and long-lived world protocol records.
 
-use crate::{ChronicleEntry, PlayerProjection};
+use crate::{ChronicleEntry, ClaimRecord, PlayerProjection, TradeOffer};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -81,6 +81,15 @@ pub struct AccountDeletionResponse {
     pub accepted: bool,
     pub status: String,
     pub reason: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct SupportAccountResponse {
+    pub account: AccountResponse,
+    pub claims: Vec<ClaimRecord>,
+    pub trades: Vec<TradeOffer>,
+    pub chronicle: Vec<ChronicleEntry>,
+    pub event_cursor: u64,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]

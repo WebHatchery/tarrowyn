@@ -3,10 +3,102 @@ use super::super::{
 };
 use super::is_support_operator;
 use tarrowyn_protocol::{
-    ApiResponse, ChronicleSearchResponse, OpsHealthResponse, OpsMetricsResponse,
+    AccountResponse, ApiResponse, ChronicleSearchResponse, OpsHealthResponse, OpsMetricsResponse,
+    SupportAccountResponse,
 };
 
 impl WorldRepository {
+    pub fn support_account(
+        &self,
+        token: &str,
+        target_account_id: &str,
+    ) -> Result<ApiResponse<SupportAccountResponse>, RepositoryError> {
+        let mut state = self.state.lock().expect("world repository lock poisoned");
+        let operator_key = authenticate(&mut state, token, &self.config)?;
+        let operator_account = state
+            .identities
+            .get(&operator_key)
+            .expect("identity exists")
+            .account_id
+            .clone();
+        if !is_support_operator(&self.config, &operator_account) {
+            return Err(RepositoryError::new(
+                403,
+                "support_operator_required",
+                "A configured support operator account is required for account views.",
+            ));
+        }
+        let target_account_id = target_account_id.trim();
+        if target_account_id.is_empty() || target_account_id.len() > 160 {
+            return Err(RepositoryError::new(
+                400,
+                "invalid_account_id",
+                "A bounded target account ID is required for support views.",
+            ));
+        }
+        let Some((target_key, identity)) = state
+            .identities
+            .iter()
+            .find(|(_, identity)| identity.account_id == target_account_id)
+        else {
+            return Err(RepositoryError::new(
+                404,
+                "account_not_found",
+                "That account is not present in the authoritative world.",
+            ));
+        };
+        let target_key = target_key.clone();
+        let identity = identity.clone();
+        let production = state.phase6.accounts.get(target_account_id);
+        let session_expires_at_tick = state
+            .phase6
+            .sessions
+            .values()
+            .filter(|session| session.account_id == target_account_id)
+            .map(|session| session.expires_at_tick)
+            .max()
+            .unwrap_or(0);
+        let account = AccountResponse {
+            account_id: identity.account_id.clone(),
+            provider: production
+                .map(|account| account.provider.clone())
+                .unwrap_or_else(|| "development-guest".to_owned()),
+            character_id: identity.character_id.clone(),
+            display_name: identity.display_name.clone(),
+            guest_fixture: production.is_none(),
+            privacy_policy_version: super::PRIVACY_POLICY_VERSION.to_owned(),
+            retention_note: "Account identity is retained until deletion; chat reports are retained for 90 days; settlement history is retained as public world history with account identifiers minimised.".to_owned(),
+            session_expires_at_tick,
+            character: super::super::player_projection(&state, &target_key),
+        };
+        let mut trades = state
+            .trades
+            .values()
+            .filter(|trade| {
+                trade.creator_account_id == target_account_id
+                    || trade.recipient_account_id == target_account_id
+            })
+            .cloned()
+            .collect::<Vec<_>>();
+        trades.sort_by_key(|trade| std::cmp::Reverse(trade.created_tick));
+        Ok(ApiResponse {
+            meta: meta(state.tick, None, Some(state.cursor)),
+            data: SupportAccountResponse {
+                account,
+                claims: state
+                    .phase4
+                    .claims
+                    .iter()
+                    .filter(|claim| claim.owner_account_id.as_deref() == Some(target_account_id))
+                    .cloned()
+                    .collect(),
+                trades,
+                chronicle: state.phase3.chronicle.iter().cloned().collect(),
+                event_cursor: state.cursor,
+            },
+        })
+    }
+
     pub fn ops_health(&self) -> ApiResponse<OpsHealthResponse> {
         let state = self.state.lock().expect("world repository lock poisoned");
         let persistence_failed = *self

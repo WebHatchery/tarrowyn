@@ -108,6 +108,12 @@ fn handle_request(mut request: Request, repository: Arc<WorldRepository>) {
         (Method::Get, "/v1/ops/metrics") => {
             authenticated(&request, &repository, |token| repository.ops_metrics(token))
         }
+        (Method::Get, "/v1/support/account") => {
+            let account_id = query_value(&query, "account_id").unwrap_or("").to_owned();
+            authenticated(&request, &repository, |token| {
+                repository.support_account(token, &account_id)
+            })
+        }
         (Method::Get, "/v1/world") => {
             authenticated(&request, &repository, |token| repository.world(token))
         }
