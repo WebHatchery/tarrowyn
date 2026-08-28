@@ -229,6 +229,23 @@ fn regional_event_cursor_and_household_history_survive_ticks() {
         .iter()
         .any(|event| event.event_id == event_id
             && event.stage == tarrowyn_protocol::RegionalEventStage::Escalation));
+    let arbitrary_intervention = repository
+        .event_action(
+            &session.account_token,
+            RegionalEventRequest {
+                request_id: "intervene-arbitrary".to_owned(),
+                action: RegionalEventAction::Intervene,
+                event_id: Some(event_id.clone()),
+                intervention: Some("ferry sabotage".to_owned()),
+            },
+        )
+        .unwrap()
+        .data;
+    assert!(!arbitrary_intervention.accepted);
+    assert!(arbitrary_intervention
+        .reason
+        .as_deref()
+        .is_some_and(|reason| reason.contains("visible intervention options")));
     let intervention = repository
         .event_action(
             &session.account_token,

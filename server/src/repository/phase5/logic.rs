@@ -246,13 +246,27 @@ pub(super) fn intervene_event(
             Some("That regional event is not recorded.".to_owned()),
         );
     };
-    let Some(intervention) = intervention.filter(|value| !value.trim().is_empty()) else {
+    let Some(intervention) = intervention
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+    else {
         return (
             false,
             None,
             Some("Name the visible intervention to commit.".to_owned()),
         );
     };
+    if !state.phase5.events[index]
+        .intervention_options
+        .iter()
+        .any(|option| option == intervention)
+    {
+        return (
+            false,
+            Some(state.phase5.events[index].clone()),
+            Some("Choose one of the visible intervention options.".to_owned()),
+        );
+    }
     if !matches!(
         state.phase5.events[index].stage,
         RegionalEventStage::Signal | RegionalEventStage::Escalation
@@ -266,7 +280,7 @@ pub(super) fn intervene_event(
     state.phase5.events[index].stage = RegionalEventStage::Intervention;
     state.phase5.events[index].chosen_intervention = Some(intervention.to_owned());
     state.phase5.events[index].updated_tick = state.tick;
-    if intervention.contains("ferry") {
+    if intervention == "repair ferry markers" {
         if let Some(route) = state
             .phase5
             .routes
