@@ -33,15 +33,17 @@ cannot observe a client after its connection disappears.
 After launch, content operations should add new routes, crops, contracts,
 events, households, and settlement opportunities through the validated JSON
 pipeline. The current validator protects the canonical manifests and their
-identifiers, and server planting, regional event seeding, settlement supply
-projections, and market base prices consume validated
+identifiers, and server planting, regional event seeding, settlement profiles,
+infrastructure projections, and market base prices consume validated
 crop/event/settlement/item content. Settlement condition and opportunity
-profiles also consume validated settlement content. The repeatable Brambleback contract and
+profiles also consume validated settlement content. The repeatable Brambleback
+contract and
 launch wilderness threat consume validated contract/threat content, while
 route topology, season labels, and location roles/resources consume validated
-region content, including location presentation and route tuning. Opportunity and regional household projections consume
-validated household content. Each new live
-simulation consumer still needs its own fixture and compatibility test before
-that content is treated as runtime-authoritative.
+region content, including location presentation and route tuning. Opportunity
+and regional household projections consume validated household content.
+Infrastructure projections consume validated infrastructure content. Each live
+simulation consumer has its own fixture and compatibility test before future
+content is treated as runtime-authoritative.
 New content must preserve newcomer access, fallback services, and searchable
 chronicle history.

@@ -106,48 +106,10 @@ pub(super) fn fresh(_config: &ServerConfig) -> Phase4State {
             tax_ledger: Vec::new(),
             cursor: 0,
         },
-        infrastructure: vec![
-            infrastructure(
-                "north-road",
-                "North road",
-                tarrowyn_protocol::InfrastructureKind::Road,
-                tarrowyn_protocol::Position { x: 11, y: 6 },
-                72,
-                2,
-                58,
-                "The Brambleback threat and unpaid upkeep make travel uncertain.",
-            ),
-            infrastructure(
-                "stone-bridge",
-                "Stone bridge",
-                tarrowyn_protocol::InfrastructureKind::Bridge,
-                tarrowyn_protocol::Position { x: 10, y: 6 },
-                88,
-                1,
-                75,
-                "The bridge is sound but still needs regular inspection.",
-            ),
-            infrastructure(
-                "hearth-hall",
-                "Town hall",
-                tarrowyn_protocol::InfrastructureKind::PublicBuilding,
-                tarrowyn_protocol::Position { x: 8, y: 5 },
-                94,
-                2,
-                82,
-                "The hall keeps its records even when an office is vacant.",
-            ),
-            infrastructure(
-                "hearth-services",
-                "Hearth services",
-                tarrowyn_protocol::InfrastructureKind::Service,
-                tarrowyn_protocol::Position { x: 8, y: 5 },
-                86,
-                3,
-                70,
-                "Menders and healers report whether shared funding reaches them.",
-            ),
-        ],
+        infrastructure: crate::content::infrastructure_profiles()
+            .into_iter()
+            .map(infrastructure_from_profile)
+            .collect(),
         claims: Vec::new(),
         available_plots: vec![
             tarrowyn_protocol::Position { x: 2, y: 8 },
@@ -269,6 +231,23 @@ fn office(id: &str, kind: OfficeKind, title: &str, authority: &str) -> OfficeRec
         last_active_tick: 0,
         vacant: true,
         vacancy_reason: Some("The first office-holder has not yet been chosen.".to_owned()),
+    }
+}
+
+fn infrastructure_from_profile(
+    profile: crate::content::InfrastructureProfile,
+) -> InfrastructureRecord {
+    InfrastructureRecord {
+        infrastructure_id: profile.id,
+        name: profile.name,
+        kind: profile.kind,
+        position: profile.position,
+        condition: profile.condition,
+        upkeep_per_day: profile.upkeep_per_day,
+        service_quality: profile.service_quality,
+        status: infrastructure_status(profile.condition),
+        last_maintained_tick: 0,
+        failure_note: Some(profile.note),
     }
 }
 

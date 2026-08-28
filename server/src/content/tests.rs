@@ -141,3 +141,21 @@ fn household_templates_follow_the_validated_manifest() {
     assert_eq!(regional.destination_location_id.as_deref(), Some("hearth"));
     assert_eq!(regional.status, "considering");
 }
+
+#[test]
+fn infrastructure_profiles_follow_the_validated_manifest() {
+    let profiles = super::infrastructure_profiles();
+    assert_eq!(profiles.len(), 4);
+    assert_eq!(profiles[0].id, "north-road");
+    assert_eq!(
+        profiles[0].kind,
+        tarrowyn_protocol::InfrastructureKind::Road
+    );
+    assert_eq!(
+        profiles[0].position,
+        tarrowyn_protocol::Position { x: 11, y: 6 }
+    );
+    assert_eq!(profiles[0].condition, 72);
+    assert_eq!(profiles[0].upkeep_per_day, 2);
+    assert_eq!(profiles[0].service_quality, 58);
+}

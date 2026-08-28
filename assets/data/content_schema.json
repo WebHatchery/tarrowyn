@@ -10,6 +10,7 @@
     "threats.json",
     "region.json",
     "households.json",
+    "infrastructure.json",
     "settlements.json",
     "skills.json"
   ],

@@ -85,17 +85,14 @@ provider subjects, or other secrets.
 The checked-in content contract is validated twice at release boundaries: the
 PowerShell gate requires the canonical manifest set to be present and valid
 JSON, while server startup parses typed action, crop, item, event, settlement,
-region, calendar, and game-config records and rejects duplicate IDs, incomplete
+region, household, infrastructure, calendar, and game-config records and rejects duplicate IDs, incomplete
 records, unknown route or settlement locations, invalid event stages, and a
 day-length mismatch. The validator protects future content additions; wiring
 the crop manifest into server planting now follows that validated order, and
 regional event seeding now consumes the validated event narrative by manifest
 order, and settlement projections consume their manifest condition, opportunity,
-and supply profiles.
-Market base prices also consume the item manifest, which now covers every
-traded commodity. Wiring the remaining manifests into their live simulation
-consumers remains content expansion work rather than an implicit promise of
-the current fixtures. Regional season labels now also follow the validated
+and supply profiles. Market base prices also consume the item manifest, which
+now covers every traded commodity. Regional season labels now also follow the
 calendar sequence and season length; the configured real-time day length still
 belongs to the server deployment boundary. Route transport, endpoint topology,
 location roles, resources, names, services, positions, and route tuning now
@@ -105,7 +102,10 @@ required progress, and reward curve. The launch wilderness threat now consumes
 a typed threat manifest for its identity, monster, position, health, risk
 modifier, resource demand, and rumour. The Maren opportunity and regional
 household projections now share a typed household manifest for members,
-movement, service, reasons, and history.
+movement, service, reasons, and history. Infrastructure projections now consume
+typed infrastructure content for public works, positions, maintenance, quality,
+and recovery notes. Each live simulation consumer has a fixture and
+compatibility test; future content additions must preserve the same boundary.
 
 ## Hosting and observability
 

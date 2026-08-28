@@ -3,13 +3,15 @@
 use serde::Deserialize;
 use std::collections::HashSet;
 use std::sync::OnceLock;
-use tarrowyn_protocol::{CropKind, LocationKind, Position, RouteStatus, SettlementCondition};
+use tarrowyn_protocol::{CropKind, LocationKind, Position, RouteStatus};
 
 mod frontier;
 mod households;
+mod settlements;
 
 pub(crate) use frontier::{contract_template, threat_template};
 pub(crate) use households::{opportunity_template, regional_household_template};
+pub(crate) use settlements::{infrastructure_profiles, settlement_profile, InfrastructureProfile};
 
 const REQUIRED_MANIFESTS: &[&str] = &[
     "game_config.json",
@@ -21,6 +23,7 @@ const REQUIRED_MANIFESTS: &[&str] = &[
     "threats.json",
     "region.json",
     "households.json",
+    "infrastructure.json",
     "settlements.json",
     "skills.json",
 ];
@@ -107,54 +110,7 @@ pub(crate) struct EventTemplate {
     pub(crate) intervention_options: Vec<String>,
 }
 
-#[derive(Debug, Deserialize)]
-struct SettlementsManifest {
-    settlements: Vec<SettlementManifest>,
-}
-
-static SETTLEMENT_CATALOG: OnceLock<Vec<SettlementManifest>> = OnceLock::new();
 static REGION_CATALOG: OnceLock<RegionManifest> = OnceLock::new();
-
-#[derive(Debug, Deserialize)]
-struct SettlementManifest {
-    id: String,
-    location: String,
-    name: String,
-    population: u32,
-    food: u8,
-    safety: u8,
-    infrastructure: u8,
-    industry: u8,
-    governance: u8,
-    player_activity: u8,
-    condition: String,
-    milestones: Vec<String>,
-    vacancies: Vec<String>,
-    demand: Vec<String>,
-    abundant: Vec<String>,
-    scarce: Vec<String>,
-    price_index_percent: u16,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct SettlementProfile {
-    pub(crate) name: String,
-    pub(crate) location: String,
-    pub(crate) population: u32,
-    pub(crate) food: u8,
-    pub(crate) safety: u8,
-    pub(crate) infrastructure: u8,
-    pub(crate) industry: u8,
-    pub(crate) governance: u8,
-    pub(crate) player_activity: u8,
-    pub(crate) condition: SettlementCondition,
-    pub(crate) milestones: Vec<String>,
-    pub(crate) vacancies: Vec<String>,
-    pub(crate) demand: Vec<String>,
-    pub(crate) abundant: Vec<String>,
-    pub(crate) scarce: Vec<String>,
-    pub(crate) price_index_percent: u16,
-}
 
 #[derive(Debug, Deserialize)]
 struct RegionManifest {
@@ -251,9 +207,6 @@ pub fn validate() -> Result<(), String> {
     let region: RegionManifest =
         serde_json::from_str(include_str!("../../assets/data/region.json"))
             .map_err(|error| format!("region JSON is invalid: {error}"))?;
-    let settlements: SettlementsManifest =
-        serde_json::from_str(include_str!("../../assets/data/settlements.json"))
-            .map_err(|error| format!("settlements JSON is invalid: {error}"))?;
 
     validate_schema(&schema)?;
     validate_game_config(&game_config, &region)?;
@@ -264,7 +217,7 @@ pub fn validate() -> Result<(), String> {
     validate_items(&items)?;
     validate_region(&region)?;
     households::validate(&region)?;
-    validate_settlements(&settlements, &region)?;
+    settlements::validate(&region)?;
     crate::repository::validate_skill_catalog()?;
     Ok(())
 }
@@ -304,46 +257,6 @@ pub(crate) fn regional_event_template(event_index: u64) -> EventTemplate {
         effects: event.effects.clone(),
         cause: event.cause.clone(),
         intervention_options: event.intervention_options.clone(),
-    }
-}
-
-pub(crate) fn settlement_profile(settlement_id: &str) -> SettlementProfile {
-    let settlements = SETTLEMENT_CATALOG.get_or_init(|| {
-        let settlements: SettlementsManifest =
-            serde_json::from_str(include_str!("../../assets/data/settlements.json"))
-                .expect("settlements content JSON must be valid");
-        validate_settlements(&settlements, region_catalog())
-            .expect("settlements content must satisfy its schema");
-        settlements.settlements
-    });
-    let settlement = settlements
-        .iter()
-        .find(|settlement| settlement.id == settlement_id)
-        .expect("validated settlement catalog must contain the requested settlement");
-    SettlementProfile {
-        name: settlement.name.clone(),
-        location: settlement.location.clone(),
-        population: settlement.population,
-        food: settlement.food,
-        safety: settlement.safety,
-        infrastructure: settlement.infrastructure,
-        industry: settlement.industry,
-        governance: settlement.governance,
-        player_activity: settlement.player_activity,
-        condition: match settlement.condition.as_str() {
-            "flourishing" => SettlementCondition::Flourishing,
-            "stable" => SettlementCondition::Stable,
-            "strained" => SettlementCondition::Strained,
-            "quiet" => SettlementCondition::Quiet,
-            "recovering" => SettlementCondition::Recovering,
-            _ => panic!("validated settlement catalog contains an unsupported condition"),
-        },
-        milestones: settlement.milestones.clone(),
-        vacancies: settlement.vacancies.clone(),
-        demand: settlement.demand.clone(),
-        abundant: settlement.abundant.clone(),
-        scarce: settlement.scarce.clone(),
-        price_index_percent: settlement.price_index_percent,
     }
 }
 
@@ -661,72 +574,6 @@ fn validate_region(region: &RegionManifest) -> Result<(), String> {
             || !location_ids.contains(route.destination.as_str())
     }) {
         return Err("region route references an unknown location".to_owned());
-    }
-    Ok(())
-}
-
-fn validate_settlements(
-    settlements: &SettlementsManifest,
-    region: &RegionManifest,
-) -> Result<(), String> {
-    validate_id_list(
-        "settlement",
-        settlements
-            .settlements
-            .iter()
-            .map(|settlement| settlement.id.as_str())
-            .collect(),
-    )?;
-    let location_ids: HashSet<&str> = region
-        .locations
-        .iter()
-        .map(|location| location.id.as_str())
-        .collect();
-    if settlements.settlements.is_empty()
-        || settlements.settlements.iter().any(|settlement| {
-            settlement.location.trim().is_empty()
-                || settlement.name.trim().is_empty()
-                || settlement.population == 0
-                || settlement.food > 100
-                || settlement.safety > 100
-                || settlement.infrastructure > 100
-                || settlement.industry > 100
-                || settlement.governance > 100
-                || settlement.player_activity > 100
-                || !matches!(
-                    settlement.condition.as_str(),
-                    "flourishing" | "stable" | "strained" | "quiet" | "recovering"
-                )
-                || settlement.milestones.is_empty()
-                || settlement
-                    .milestones
-                    .iter()
-                    .any(|milestone| milestone.trim().is_empty())
-                || settlement.vacancies.is_empty()
-                || settlement
-                    .vacancies
-                    .iter()
-                    .any(|vacancy| vacancy.trim().is_empty())
-                || settlement.demand.is_empty()
-                || settlement
-                    .demand
-                    .iter()
-                    .any(|demand| demand.trim().is_empty())
-                || settlement.abundant.is_empty()
-                || settlement
-                    .abundant
-                    .iter()
-                    .any(|good| good.trim().is_empty())
-                || settlement.scarce.is_empty()
-                || settlement.scarce.iter().any(|good| good.trim().is_empty())
-                || settlement.price_index_percent == 0
-                || !location_ids.contains(settlement.location.as_str())
-        })
-    {
-        return Err(
-            "settlements need complete conditions, opportunities, known locations, and supply notes"
-                .to_owned(),
-        );
     }
     Ok(())
 }

@@ -1,0 +1,44 @@
+{
+  "infrastructure": [
+    {
+      "id": "north-road",
+      "name": "North road",
+      "kind": "road",
+      "position": {"x": 11, "y": 6},
+      "condition": 72,
+      "upkeep_per_day": 2,
+      "service_quality": 58,
+      "note": "The Brambleback threat and unpaid upkeep make travel uncertain."
+    },
+    {
+      "id": "stone-bridge",
+      "name": "Stone bridge",
+      "kind": "bridge",
+      "position": {"x": 10, "y": 6},
+      "condition": 88,
+      "upkeep_per_day": 1,
+      "service_quality": 75,
+      "note": "The bridge is sound but still needs regular inspection."
+    },
+    {
+      "id": "hearth-hall",
+      "name": "Town hall",
+      "kind": "public_building",
+      "position": {"x": 8, "y": 5},
+      "condition": 94,
+      "upkeep_per_day": 2,
+      "service_quality": 82,
+      "note": "The hall keeps its records even when an office is vacant."
+    },
+    {
+      "id": "hearth-services",
+      "name": "Hearth services",
+      "kind": "service",
+      "position": {"x": 8, "y": 5},
+      "condition": 86,
+      "upkeep_per_day": 3,
+      "service_quality": 70,
+      "note": "Menders and healers report whether shared funding reaches them."
+    }
+  ]
+}

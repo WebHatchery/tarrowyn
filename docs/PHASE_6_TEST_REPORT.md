@@ -17,8 +17,9 @@ Mutation replay caches are bounded to 512 entries per scope during world ticks,
 covering identity and phase command results so long sessions do not grow them
 without limit.
 The release validator also parses the canonical action, crop, item, event,
-settlement, region, calendar, and game-config manifests with typed schemas and
-cross-reference checks; duplicate IDs and incompatible records fail startup.
+settlement, region, household, infrastructure, calendar, and game-config
+manifests with typed schemas and cross-reference checks; duplicate IDs and
+incompatible records fail startup.
 The server crop-rotation regression confirms planting follows the validated
 crop manifest rather than a separate hard-coded order.
 The server event-template regression confirms regional event seeding follows
@@ -43,6 +44,9 @@ the validated threat manifest for its monster, position, health, and risk.
 The household-template regression confirms the opportunity and regional
 household projections share the validated household manifest for identity,
 members, movement, service, and history.
+The infrastructure-profile regression confirms public-work projections follow
+the validated infrastructure manifest for identity, kind, position, maintenance,
+quality, and recovery notes.
 The Phase 5 fixture verifies that travel, market, event, household, identity,
 refresh, and revocation state survive the authoritative repository boundary.
 The client Phase 5 tests verify that a linked account's visible deletion
