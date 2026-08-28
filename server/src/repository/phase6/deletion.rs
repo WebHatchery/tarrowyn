@@ -189,11 +189,13 @@ fn erase_private_phase4_state(state: &mut RepositoryState, request: &PendingAcco
             }
         }
     }
-    for order in &mut state.phase4.orders {
-        let requester_deleted = order.requester_account_id == request.account_id;
-        let provider_deleted =
-            order.provider_account_id.as_deref() == Some(request.account_id.as_str());
+    for index in 0..state.phase4.orders.len() {
+        let requester_deleted =
+            state.phase4.orders[index].requester_account_id == request.account_id;
+        let provider_deleted = state.phase4.orders[index].provider_account_id.as_deref()
+            == Some(request.account_id.as_str());
         if requester_deleted {
+            let order = &mut state.phase4.orders[index];
             order.requester_account_id = DELETED_ACCOUNT.to_owned();
             order.requester_name = DELETED_NAME.to_owned();
             if matches!(
@@ -204,6 +206,11 @@ fn erase_private_phase4_state(state: &mut RepositoryState, request: &PendingAcco
             }
         }
         if provider_deleted {
+            if state.phase4.orders[index].status == ServiceOrderStatus::Accepted {
+                let order = state.phase4.orders[index].clone();
+                super::super::phase4::restore_service_order_escrow(state, &order);
+            }
+            let order = &mut state.phase4.orders[index];
             order.provider_account_id = None;
             order.provider_name = None;
             if order.status == ServiceOrderStatus::Accepted {

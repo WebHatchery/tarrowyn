@@ -374,5 +374,22 @@ pub(super) fn default_capability(profession: tarrowyn_protocol::ProfessionKind) 
     }
 }
 
+pub(super) fn restore_service_order_escrow(state: &mut RepositoryState, order: &ServiceOrder) {
+    let Some(requester_key) = key_for_account(state, &order.requester_account_id) else {
+        return;
+    };
+    let Some(stock) = state.phase4.materials.get_mut(&requester_key) else {
+        return;
+    };
+    stock.wood = stock.wood.saturating_add(order.materials.wood);
+    stock.iron = stock.iron.saturating_add(order.materials.iron);
+    stock.cloth = stock.cloth.saturating_add(order.materials.cloth);
+    stock.bandages = stock.bandages.saturating_add(order.materials.bandages);
+    stock.tools = stock
+        .tools
+        .saturating_add(order.materials.tools)
+        .saturating_add(order.tools_required);
+}
+
 #[cfg(test)]
 mod tests;

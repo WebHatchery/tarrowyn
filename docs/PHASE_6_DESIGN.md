@@ -8,6 +8,10 @@ provider subject mapping, never a provider credential. A guest fixture may be
 linked to that subject once; the character ID remains the durable character
 boundary. Production access tokens are opaque, short-lived, rotated on refresh,
 and revocable. Refresh tokens are stored only as server-side session records.
+Linking a guest migrates its persisted account references across trades, claims,
+orders, frontier parties, market records, retained history, and audits before
+the production session is issued, so pre-link play remains attached to the same
+character boundary.
 Logout revokes one or all sessions. Credential recovery and MFA remain the
 identity gateway's responsibility; the game server receives only a verified
 subject.
@@ -107,6 +111,10 @@ the event stream before private identity state is removed. Before that removal,
 any open or failed regional market order owned by the account is cancelled and
 its unsettled escrow is returned to origin stock; the anonymised order remains
 as public settlement history without an ownerless shipment.
+When a provider leaves while holding an accepted service order, the surviving
+requester's typed material and tool escrow is returned before that order is
+cancelled; an order owned by the departing requester is instead removed with
+the requester's private state and is not credited to another player.
 
 The checked-in content contract is validated twice at release boundaries: the
 PowerShell gate requires the canonical manifest set, exact schema declaration,

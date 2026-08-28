@@ -11,12 +11,14 @@ use tarrowyn_protocol::{
     AuthRevokeResponse, AuthSession, ModerationReportResponse, SupportRepairResponse,
 };
 
+mod account;
 mod backup;
 mod deletion;
 mod moderation;
 mod operations;
 mod repair;
 
+use account::migrate_guest_account_references;
 use deletion::PendingAccountDeletion;
 
 const IDENTITY_PROVIDER: &str = "webhatchery-identity-oidc";
@@ -173,6 +175,25 @@ impl WorldRepository {
                     .map(|identity| identity.display_name.clone())
                     .unwrap_or_else(|| "Tarrowyn traveller".to_owned())
             });
+        let old_account_id = state
+            .identities
+            .get(&guest_key)
+            .expect("identity exists")
+            .account_id
+            .clone();
+        let old_display_name = state
+            .identities
+            .get(&guest_key)
+            .expect("identity exists")
+            .display_name
+            .clone();
+        migrate_guest_account_references(
+            &mut state,
+            &old_account_id,
+            &account_id,
+            &old_display_name,
+            &display_name,
+        );
         let character_id = {
             let identity = state
                 .identities
