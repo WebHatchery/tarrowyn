@@ -43,6 +43,35 @@ fn corrupt_json_snapshot_fails_closed_without_overwriting_the_file() {
 }
 
 #[test]
+fn newer_json_snapshot_fails_closed_without_downgrading_the_file() {
+    let path =
+        std::env::temp_dir().join(format!("tarrowyn-newer-state-{}.json", std::process::id()));
+    let config = ServerConfig {
+        persistence_path: Some(path.to_string_lossy().into_owned()),
+        ..ServerConfig::default()
+    };
+    let repository = WorldRepository::new(config.clone());
+    repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("newer-state".to_owned()),
+            reset: false,
+        })
+        .unwrap();
+    drop(repository);
+
+    let mut snapshot: serde_json::Value =
+        serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
+    snapshot["storage_version"] = serde_json::json!(u32::MAX);
+    let encoded = serde_json::to_vec_pretty(&snapshot).unwrap();
+    std::fs::write(&path, &encoded).unwrap();
+
+    let error = WorldRepository::try_new(config).err().unwrap();
+    assert!(error.contains("newer server version"));
+    assert_eq!(std::fs::read(&path).unwrap(), encoded);
+    let _ = std::fs::remove_file(path);
+}
+
+#[test]
 fn chat_and_movement_replays_survive_repository_restart() {
     let path =
         std::env::temp_dir().join(format!("tarrowyn-core-replay-{}.json", std::process::id()));

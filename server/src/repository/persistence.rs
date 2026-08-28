@@ -77,6 +77,11 @@ pub(super) fn load_state(
     let stored: StoredState = serde_json::from_slice(&bytes).map_err(|_| {
         PersistenceBackendError::new("the JSON world snapshot contains invalid state JSON")
     })?;
+    if stored.storage_version > super::STORAGE_VERSION {
+        return Err(PersistenceBackendError::new(
+            "the JSON world snapshot was created by a newer server version",
+        ));
+    }
     Ok(Some(RepositoryState::from_stored(stored, config)))
 }
 

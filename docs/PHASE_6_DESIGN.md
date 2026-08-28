@@ -45,7 +45,9 @@ proven against a live environment.
 The server writes a scheduled backup to the configured backup path and reports
 the last successful tick through `/v1/ops/health`. Restore drills validate the
 backup as JSON before serving it as a named state path; a restore is never an
-in-place destructive command.
+in-place destructive command. Both JSON and MySQL refuse a snapshot from a
+newer server version, preventing an older rollback binary from overwriting
+unknown durable fields.
 
 The remaining persistence gate is deliberately explicit: run the MySQL
 migration and restart/duplicate-request/partial-write tests against the target

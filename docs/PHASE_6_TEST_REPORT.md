@@ -9,7 +9,7 @@ alongside field-tool condition,
 real-time lease timestamps, and public tax receipts,
 the per-character skill ledger, Bellweather animal condition, and daily care
 state, persists the account moderation cooldown, loads older documents through serde defaults, and fails closed on a
-corrupt JSON snapshot. A Phase 1–4
+corrupt or newer-than-server JSON snapshot. A Phase 1–4
 document without Phase 5/6 fields loads through serde defaults and receives the
 current regional and operations state.
 The Phase 5 fixture verifies that travel, market, event, household, identity,

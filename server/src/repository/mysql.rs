@@ -57,6 +57,11 @@ impl MysqlStore {
         let stored: StoredState = serde_json::from_str(&state_json).map_err(|_| {
             PersistenceBackendError::new("the MySQL world snapshot contains invalid state JSON")
         })?;
+        if stored.storage_version > super::STORAGE_VERSION {
+            return Err(PersistenceBackendError::new(
+                "the MySQL world snapshot was created by a newer server version",
+            ));
+        }
         Ok(Some(RepositoryState::from_stored(stored, config)))
     }
 
