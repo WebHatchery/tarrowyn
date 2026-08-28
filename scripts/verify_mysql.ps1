@@ -15,7 +15,8 @@ $server = $null
 $environmentNames = @(
     "DB_DRIVER", "DB_HOST", "DB_PORT", "DB_DATABASE", "DB_USERNAME", "DB_PASSWORD",
     "TARROWYN_SERVER_ADDR", "TARROWYN_BACKUP_PATH", "TARROWYN_BACKUP_INTERVAL_TICKS",
-    "TARROWYN_TICK_MS", "TARROWYN_SESSION_TTL_SECONDS", "TARROWYN_MOVEMENT_COOLDOWN_TICKS"
+    "TARROWYN_TICK_MS", "TARROWYN_SESSION_TTL_SECONDS", "TARROWYN_MOVEMENT_COOLDOWN_TICKS",
+    "MYSQL_PWD"
 )
 $oldEnvironment = @{}
 
@@ -84,6 +85,59 @@ function Wait-Ready {
     throw "MySQL acceptance failed: MySQL-backed server did not become ready"
 }
 
+function Resolve-MySqlTool([string]$name) {
+    $command = Get-Command $name -ErrorAction SilentlyContinue
+    if ($null -ne $command) { return $command.Source }
+    $candidate = Join-Path $env:ProgramFiles ("MySQL\MySQL Server 8.0\bin\" + $name)
+    if (Test-Path -LiteralPath $candidate) { return $candidate }
+    throw "MySQL acceptance failed: $name was not found on PATH or in the standard MySQL Server 8.0 folder"
+}
+
+function Invoke-MySql([string]$executable, [string[]]$arguments) {
+    $output = & $executable @arguments 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        $message = ($output | ForEach-Object { $_.ToString() }) -join " "
+        throw "MySQL acceptance failed: native database command failed: $message"
+    }
+    return @($output)
+}
+
+function Invoke-NativeDatabaseRestore([string]$temporaryRoot, [string]$nonce) {
+    $mysql = Resolve-MySqlTool "mysql.exe"
+    $dump = Resolve-MySqlTool "mysqldump.exe"
+    $dumpPath = Join-Path $temporaryRoot "mysql-native-backup.sql"
+    $restoreDatabase = "tarrowyn_restore_${PID}_$($nonce.Substring(0, 8))"
+    $connectionArguments = @(
+        "--host=$env:DB_HOST", "--port=$env:DB_PORT", "--user=$env:DB_USERNAME",
+        "--batch", "--skip-column-names", "--silent"
+    )
+    try {
+        Invoke-MySql $mysql ($connectionArguments + "--execute=CREATE DATABASE IF NOT EXISTS $restoreDatabase CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci") | Out-Null
+        Invoke-MySql $dump @(
+            "--host=$env:DB_HOST", "--port=$env:DB_PORT", "--user=$env:DB_USERNAME",
+            "--single-transaction", "--skip-lock-tables", "--no-tablespaces",
+            "--result-file=$dumpPath", $env:DB_DATABASE
+        ) | Out-Null
+        Assert-True (Test-Path -LiteralPath $dumpPath) "mysqldump did not create the native backup file"
+
+        $restoreInput = Get-Content -Raw -LiteralPath $dumpPath
+        $restoreOutput = $restoreInput | & $mysql @($connectionArguments + "--database=$restoreDatabase") 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            $message = ($restoreOutput | ForEach-Object { $_.ToString() }) -join " "
+            throw "MySQL acceptance failed: native database restore failed: $message"
+        }
+
+        $versionOutput = Invoke-MySql $mysql ($connectionArguments + "--database=$restoreDatabase" + "--execute=SELECT storage_version FROM tarrowyn_world_state WHERE id = 1")
+        $identityOutput = Invoke-MySql $mysql ($connectionArguments + "--database=$restoreDatabase" + "--execute=SELECT COUNT(*) FROM tarrowyn_identity_index")
+        $version = [int](($versionOutput -join "").Trim())
+        $identityCount = [int](($identityOutput -join "").Trim())
+        Assert-True ($version -ge 14) "the native restore lost the current world storage version"
+        Assert-True ($identityCount -ge 1) "the native restore lost the identity index"
+    } finally {
+        Invoke-MySql $mysql ($connectionArguments + "--execute=DROP DATABASE IF EXISTS $restoreDatabase") | Out-Null
+    }
+}
+
 try {
     New-Item -ItemType Directory -Path $temporaryRoot | Out-Null
     foreach ($name in $environmentNames) {
@@ -142,7 +196,12 @@ try {
     $resumedState = Invoke-RestMethod -Method Get -Uri "http://$ServerAddress/v1/state" -Headers $resumedHeaders
     Assert-True ($resumedState.data.world.animals.Count -ge 1) "the restarted MySQL world lost its animal projection"
 
-    Write-Host "MySQL acceptance passed: migration/readiness, authoritative state, duplicate-request replay, backup, and restart persistence." -ForegroundColor Green
+    Stop-PreviewServer $server
+    $server = $null
+    $env:MYSQL_PWD = $env:DB_PASSWORD
+    Invoke-NativeDatabaseRestore $temporaryRoot $nonce
+
+    Write-Host "MySQL acceptance passed: migration/readiness, authoritative state, duplicate-request replay, backup, restart persistence, and native dump/restore." -ForegroundColor Green
 } finally {
     if ($null -ne $server -and -not $server.HasExited) { Stop-PreviewServer $server }
     foreach ($name in $environmentNames) {

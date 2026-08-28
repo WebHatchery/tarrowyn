@@ -30,8 +30,11 @@ For a configured local MySQL preview, run:
 
 The script uses a separate HTTP port and temporary JSON backup, adds one uniquely
 named guest identity to the configured preview world, checks the migration and
-animal projection, replays one chat request, restarts the server, and removes
-only its temporary files. It does not reset or delete the configured database.
+animal projection, replays one chat request, restarts the server, and then uses
+`mysqldump.exe` and `mysql.exe` to restore into a generated temporary database.
+It validates the restored world and identity index before dropping that
+generated database and removing its temporary files. It does not reset or
+delete the configured database.
 
 ## Deploy, rollback, and maintenance
 
@@ -56,8 +59,9 @@ backup. The drill parses the backup, checks storage version, starts a server on
 a temporary port, and reads `/v1/ops/health`; it does not overwrite the active
 world. The MySQL backend currently exposes the same versioned snapshot as a
 transactional bridge. `scripts/verify_mysql.ps1` covers the local migration,
-restart, duplicate-request, and backup portion of that gate; a target-environment
-database restore drill remains explicit. For a stuck journey use `ClearStuckTravel`, for a duplicate or invalid
+restart, duplicate-request, backup, and native dump/restore portion of that
+gate; target-environment failover, concurrency, and rollback drills remain
+explicit. For a stuck journey use `ClearStuckTravel`, for a duplicate or invalid
 inventory use `NormalizeInventory`, and for an open failed shipment use
 `ReconcileTrade`. Include the player-facing reason and the support note in the
 ticket. Repeat the same request ID to confirm safe idempotency.

@@ -17,13 +17,15 @@ failure handling, transactional snapshot/index writes, and driver-selection
 tests. The configured local preview MySQL service passed
 `scripts/verify_mysql.ps1`: storage version 14 readiness, authoritative animal
 state, duplicate-request replay, temporary backup creation, and identity/state
-persistence across a server restart all succeeded. The script uses a unique
-guest key and does not reset or delete the configured database.
+persistence across a server restart all succeeded. It then restored a native
+`mysqldump` into a generated temporary database and verified the current world
+row and identity index before cleanup. The script uses a unique guest key and
+does not reset or delete the configured database.
 
 The target environment still owns the remaining migration, concurrent-write,
-database-native backup/restore, and rollback gates. The local script exercises
-the JSON backup companion and the single-worker MySQL bridge, not production
-topology or database failover.
+database failover, concurrent-write, and rollback gates. The local script
+exercises the JSON backup companion, native dump/restore, and single-worker
+MySQL bridge, not production topology or database failover.
 
 ## Security gate
 
