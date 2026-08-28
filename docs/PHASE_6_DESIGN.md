@@ -53,7 +53,8 @@ remain follow-up work.
 
 Repair ownership is explicit. The world authority owns travel, inventory,
 market orders, claims, households, and moderation state. The support surface
-accepts repeatable, audited operations for stuck travel, inventory
+fails closed unless the authenticated account appears in the deployment's
+`TARROWYN_SUPPORT_OPERATOR_ACCOUNTS` allowlist, then accepts repeatable, audited operations for stuck travel, inventory
 normalisation, trade reconciliation, claim handoff, household history, and
 moderation resolution. Unsupported repairs return a clear reason rather than
 guessing at state. Every repair carries an operator note and audit ID.

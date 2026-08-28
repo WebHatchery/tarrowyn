@@ -36,6 +36,7 @@ pub struct ServerConfig {
     pub production_session_ttl_seconds: u32,
     pub refresh_ttl_seconds: u32,
     pub maintenance_message: Option<String>,
+    pub support_operator_accounts: Vec<String>,
 }
 
 impl Default for ServerConfig {
@@ -75,6 +76,7 @@ impl Default for ServerConfig {
             production_session_ttl_seconds: 900,
             refresh_ttl_seconds: 2_592_000,
             maintenance_message: None,
+            support_operator_accounts: Vec::new(),
         }
     }
 }
@@ -170,6 +172,7 @@ impl ServerConfig {
                 defaults.refresh_ttl_seconds,
             ),
             maintenance_message: env_string_optional("TARROWYN_MAINTENANCE_MESSAGE", None),
+            support_operator_accounts: env_list("TARROWYN_SUPPORT_OPERATOR_ACCOUNTS"),
         }
     }
 
@@ -225,4 +228,14 @@ fn env_f32(name: &str, default: f32) -> f32 {
         .and_then(|value| value.parse().ok())
         .filter(|value: &f32| value.is_finite() && *value > 0.0)
         .unwrap_or(default)
+}
+
+fn env_list(name: &str) -> Vec<String> {
+    std::env::var(name)
+        .unwrap_or_default()
+        .split(',')
+        .map(str::trim)
+        .filter(|value| !value.is_empty())
+        .map(str::to_owned)
+        .collect()
 }

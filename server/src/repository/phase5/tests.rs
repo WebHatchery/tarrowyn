@@ -217,7 +217,7 @@ fn oidc_link_refresh_and_revoke_keep_character_boundary() {
         tick_interval: Duration::from_millis(1),
         ..ServerConfig::default()
     });
-    let guest = guest(&repository, "phase5-link");
+    let linked_guest = guest(&repository, "phase5-link");
     let link_request = AuthLinkRequest {
         request_id: "link".to_owned(),
         provider: "webhatchery-identity-oidc".to_owned(),
@@ -225,11 +225,11 @@ fn oidc_link_refresh_and_revoke_keep_character_boundary() {
         display_name: Some("Linked traveller".to_owned()),
     };
     let linked = repository
-        .auth_link(&guest.account_token, link_request.clone())
+        .auth_link(&linked_guest.account_token, link_request.clone())
         .unwrap()
         .data;
     let linked_retry = repository
-        .auth_link(&guest.account_token, link_request)
+        .auth_link(&linked_guest.account_token, link_request)
         .unwrap()
         .data;
     assert_eq!(linked_retry, linked);

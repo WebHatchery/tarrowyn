@@ -333,6 +333,24 @@ impl WorldRepository {
         let mut state = self.state.lock().expect("world repository lock poisoned");
         let actor_key = authenticate(&mut state, token, &self.config)?;
         validate_request_id(&request.request_id)?;
+        let actor = state
+            .identities
+            .get(&actor_key)
+            .expect("identity exists")
+            .account_id
+            .clone();
+        if !self
+            .config
+            .support_operator_accounts
+            .iter()
+            .any(|account_id| account_id == &actor)
+        {
+            return Err(RepositoryError::new(
+                403,
+                "support_operator_required",
+                "A configured support operator account is required for repair actions.",
+            ));
+        }
         if request.note.trim().is_empty() {
             return Err(RepositoryError::new(
                 400,
@@ -355,12 +373,6 @@ impl WorldRepository {
                 data: previous.clone(),
             });
         }
-        let actor = state
-            .identities
-            .get(&actor_key)
-            .expect("identity exists")
-            .account_id
-            .clone();
         let target_account = request.account_id.clone().unwrap_or_else(|| actor.clone());
         let target_key = state
             .identities

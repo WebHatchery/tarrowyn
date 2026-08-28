@@ -4,7 +4,8 @@ use tarrowyn_protocol::{
     ChatRequest, ClaimAction, ClaimRequest, ClaimStatus, CombatAction, CombatRequest,
     ContractAction, ContractRequest, ExpeditionAction, ExpeditionRequest, ExpeditionRole,
     FarmingAction, FarmingRequest, GuestSessionRequest, HouseholdStatus, MovementIntent, Position,
-    TileKind, TradeAction, TradeBundle, TradeRequest, TradeStatus, WeaponKind, WorldEvent,
+    SupportRepairAction, SupportRepairRequest, TileKind, TradeAction, TradeBundle, TradeRequest,
+    TradeStatus, WeaponKind, WorldEvent,
 };
 
 fn repo() -> WorldRepository {
@@ -173,6 +174,52 @@ fn movement_rate_limit_chat_bound_and_session_expiry_are_server_rules() {
         repo.tick();
     }
     assert!(repo.world(&session.account_token).is_err());
+}
+
+#[test]
+fn support_repairs_are_operator_only_and_replay_safe() {
+    let player_repository = WorldRepository::new(ServerConfig {
+        backup_path: None,
+        ..ServerConfig::default()
+    });
+    let player = guest(&player_repository, "support-player");
+    let denied = player_repository
+        .support_repair(
+            &player.account_token,
+            SupportRepairRequest {
+                request_id: "player-repair".to_owned(),
+                action: SupportRepairAction::NormalizeInventory,
+                account_id: None,
+                target_id: None,
+                note: "player should not repair state".to_owned(),
+            },
+        )
+        .unwrap_err();
+    assert_eq!(denied.status, 403);
+
+    let operator_repository = WorldRepository::new(ServerConfig {
+        backup_path: None,
+        support_operator_accounts: vec!["dev-account-1".to_owned()],
+        ..ServerConfig::default()
+    });
+    let operator = guest(&operator_repository, "support-operator");
+    let request = SupportRepairRequest {
+        request_id: "operator-repair".to_owned(),
+        action: SupportRepairAction::NormalizeInventory,
+        account_id: None,
+        target_id: None,
+        note: "normalise the operator fixture".to_owned(),
+    };
+    let repaired = operator_repository
+        .support_repair(&operator.account_token, request.clone())
+        .unwrap()
+        .data;
+    let replay = operator_repository
+        .support_repair(&operator.account_token, request)
+        .unwrap()
+        .data;
+    assert!(repaired.accepted);
+    assert_eq!(replay, repaired);
 }
 
 #[test]

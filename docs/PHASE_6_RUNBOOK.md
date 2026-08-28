@@ -10,7 +10,9 @@ release artifact; do not copy a live state file into the browser bundle.
 Configuration is environment-specific. Set `TARROWYN_STATE_PATH`,
 `TARROWYN_BACKUP_PATH`, `TARROWYN_PRODUCTION_SESSION_TTL_SECONDS`,
 `TARROWYN_REFRESH_TTL_SECONDS`, and the identity-gateway deployment secret in
-the secret manager. Keep development guests on a separate state path.
+the secret manager. Set `TARROWYN_SUPPORT_OPERATOR_ACCOUNTS` to a comma-separated
+allowlist of operator account IDs; an empty value fails closed. Keep development
+guests on a separate state path.
 
 MySQL is the selected shared-world database. Local preview uses the ignored
 `.env.preview` file with `DB_DRIVER=mysql`, `DB_HOST`, `DB_PORT`,
@@ -72,7 +74,9 @@ ticket. Repeat the same request ID to confirm safe idempotency.
 Reports from `/v1/moderation/report` begin in `queued` status and never expose
 support credentials to the client. A moderator records the category, target,
 evidence reference, decision, and retention deadline. Resolve through the
-audited support repair surface. Account views show account ID, character ID,
+audited support repair surface using a token for an account in the configured
+operator allowlist. Ordinary player tokens receive a clear forbidden response.
+Account views show account ID, character ID,
 settlement history, claims, trades, and cursors, but never access tokens,
 refresh tokens, provider secrets, or raw credentials.
 
