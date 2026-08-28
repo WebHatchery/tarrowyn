@@ -38,7 +38,7 @@ failover.
 ## Security gate
 
 Representative checks cover unsupported identity providers, bounded provider
-subjects, empty repair notes, request-ID validation, idempotent regional
+subjects, empty repair notes, request-ID and 64 KiB request-body validation, idempotent regional
 mutations, expired/revoked access, refresh rotation, chat limits, and the
 protected no-PvP law response. Chat metadata, direct trades, claims, governance,
 moderation reports, and support repairs are audit-linked without copying chat

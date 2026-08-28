@@ -18,8 +18,9 @@ account identifiers minimised. Payment-free gameplay has no payment data. A
 future deletion job must remove provider mapping and private support data while
 preserving an anonymised chronicle entry where required for world continuity.
 
-All mutation endpoints validate bounded request IDs, use server authorization,
-and retain idempotent results where retries can happen. Chat has length and
+All mutation endpoints validate bounded request IDs and 64 KiB JSON request
+bodies, use server authorization, and retain idempotent results where retries
+can happen. Chat has length and
 per-tick limits; chat metadata, trades, claims, governance, moderation, and
 support repairs are recorded in the audit stream without copying private chat
 text into audit notes. The no-PvP law boundary is still active.

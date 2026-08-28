@@ -15,6 +15,10 @@ use tarrowyn_protocol::{
 use tiny_http::{Header, Method, Request, Response, Server, StatusCode};
 
 type JsonResponse = Response<std::io::Cursor<Vec<u8>>>;
+const MAX_REQUEST_BODY_BYTES: usize = 64 * 1024;
+
+#[cfg(test)]
+mod tests;
 
 pub fn serve(config: crate::config::ServerConfig) -> Result<(), String> {
     crate::content::validate().map_err(|error| format!("content validation failed: {error}"))?;
@@ -413,26 +417,34 @@ where
 }
 
 fn read_json<T: DeserializeOwned>(request: &mut Request) -> Result<T, String> {
-    let mut body = String::new();
-    request
-        .as_reader()
-        .read_to_string(&mut body)
-        .map_err(|error| format!("Could not read request body: {error}"))?;
+    let mut reader = request.as_reader();
+    let body = read_bounded_body(&mut reader)?;
     serde_json::from_str(&body).map_err(|error| format!("Could not decode request JSON: {error}"))
 }
 
 fn read_json_or_default<T: DeserializeOwned + Default>(request: &mut Request) -> Result<T, String> {
-    let mut body = String::new();
-    request
-        .as_reader()
-        .read_to_string(&mut body)
-        .map_err(|error| format!("Could not read request body: {error}"))?;
+    let mut reader = request.as_reader();
+    let body = read_bounded_body(&mut reader)?;
     if body.trim().is_empty() {
         Ok(T::default())
     } else {
         serde_json::from_str(&body)
             .map_err(|error| format!("Could not decode request JSON: {error}"))
     }
+}
+
+fn read_bounded_body<R: Read>(reader: &mut R) -> Result<String, String> {
+    let mut bytes = Vec::new();
+    reader
+        .take((MAX_REQUEST_BODY_BYTES + 1) as u64)
+        .read_to_end(&mut bytes)
+        .map_err(|error| format!("Could not read request body: {error}"))?;
+    if bytes.len() > MAX_REQUEST_BODY_BYTES {
+        return Err(format!(
+            "Request body exceeds {MAX_REQUEST_BODY_BYTES} bytes."
+        ));
+    }
+    String::from_utf8(bytes).map_err(|_| "Request body must be valid UTF-8.".to_owned())
 }
 
 fn bearer_token(request: &Request) -> Option<String> {
