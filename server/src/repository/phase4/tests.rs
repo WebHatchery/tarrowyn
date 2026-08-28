@@ -487,6 +487,20 @@ fn local_combat_has_readable_recovery_and_safe_storage_rules() {
         .unwrap()
         .data;
     assert!(prepared.accepted);
+    let guarded = repo
+        .local_combat(
+            &session.account_token,
+            LocalCombatRequest {
+                request_id: "guard".to_owned(),
+                action: LocalCombatAction::Guard,
+                weapon: tarrowyn_protocol::WeaponKind::IronSword,
+            },
+        )
+        .unwrap()
+        .data;
+    assert!(guarded.accepted);
+    assert_eq!(guarded.combat.turn, 1);
+    assert_eq!(guarded.combat.player_health, 2);
     let strike = repo
         .local_combat(
             &session.account_token,

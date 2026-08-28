@@ -1,6 +1,7 @@
 use super::*;
 use tarrowyn_protocol::{
-    ProfessionAction, SkillAction, SkillLesson, SkillStatus, SkillView, SkillsResponse, WeaponKind,
+    LocalCombatAction, LocalCombatState, ProfessionAction, SkillAction, SkillLesson, SkillStatus,
+    SkillView, SkillsResponse, WeaponKind,
 };
 
 #[test]
@@ -67,6 +68,30 @@ fn local_fight_cycles_through_readable_weapon_families() {
         next_combat_weapon(Some(WeaponKind::Bow)),
         WeaponKind::Shield
     );
+}
+
+#[test]
+fn guard_button_queues_an_explicit_local_defense() {
+    let mut client = Phase4Client::new();
+    client.combat = Some(LocalCombatState {
+        encounter_id: "whisperwood-local-1".to_owned(),
+        enemy_name: "Brambleback scout".to_owned(),
+        enemy_health: 3,
+        player_health: 2,
+        turn: 1,
+        status: tarrowyn_protocol::LocalCombatStatus::Engaged,
+        weapon: WeaponKind::Spear,
+        injury_limit: 3,
+        stored_property_safe: true,
+        carried_risk: "A seed may be risked.".to_owned(),
+        recovery_cost: 4,
+    });
+    client.queue_cycle("guard", "guard-1".to_owned());
+    let Some(Phase4Command::Combat(request)) = client.commands.pop_front() else {
+        panic!("guard should queue a local combat request");
+    };
+    assert_eq!(request.action, LocalCombatAction::Guard);
+    assert_eq!(request.weapon, WeaponKind::Spear);
 }
 
 #[test]

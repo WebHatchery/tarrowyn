@@ -115,8 +115,9 @@ bounded and has no birth, death, marriage, or generational persistence.
 The local encounter has prepare, strike, guard, and retreat intents. Iron sword,
 spear, axe, bow, shield, and improvised club are explicit weapon choices with
 different readable damage and recovery profiles; the visible Local fight
-control cycles through them, while the server records the matching root
-practice and sword/spear/axe qualifying history. The threat has bounded health,
+control cycles through them and the companion Guard control sends an explicit
+defensive intent, while the server records the matching root practice and
+sword/spear/axe qualifying history. The threat has bounded health,
 the player has bounded health and injuries, and knockout returns the character
 to the Hearth. Stored property is always safe. At most one carried seed is
 shown as the risk, and the recovery cost is visible before a recovery choice.

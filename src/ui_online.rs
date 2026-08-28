@@ -219,7 +219,7 @@ pub(super) fn draw_sidebar(
         actions.push(UiAction::Interact("tax-rate".to_owned()));
     }
     if virtual_button(
-        Rect::new(content.x, content.y + 467.0, 122.0, 24.0),
+        Rect::new(content.x, content.y + 467.0, 86.0, 24.0),
         "Knowledge",
         ctx.connection == ConnectionState::Online,
         ButtonTone::Secondary,
@@ -228,7 +228,7 @@ pub(super) fn draw_sidebar(
         actions.push(UiAction::Interact("knowledge".to_owned()));
     }
     if virtual_button(
-        Rect::new(content.x + 130.0, content.y + 467.0, 122.0, 24.0),
+        Rect::new(content.x + 92.0, content.y + 467.0, 86.0, 24.0),
         "Households",
         ctx.connection == ConnectionState::Online,
         ButtonTone::Secondary,
@@ -237,13 +237,22 @@ pub(super) fn draw_sidebar(
         actions.push(UiAction::Interact("households".to_owned()));
     }
     if virtual_button(
-        Rect::new(content.x + 260.0, content.y + 467.0, 122.0, 24.0),
+        Rect::new(content.x + 184.0, content.y + 467.0, 86.0, 24.0),
         "Local fight",
         ctx.connection == ConnectionState::Online && !ctx.knocked_out,
         ButtonTone::Secondary,
         mouse,
     ) {
         actions.push(UiAction::Interact("local-fight".to_owned()));
+    }
+    if virtual_button(
+        Rect::new(content.x + 276.0, content.y + 467.0, 88.0, 24.0),
+        "Guard",
+        ctx.connection == ConnectionState::Online && !ctx.knocked_out,
+        ButtonTone::Secondary,
+        mouse,
+    ) {
+        actions.push(UiAction::Interact("guard".to_owned()));
     }
 
     for (index, (id, label)) in [

@@ -237,6 +237,7 @@ impl Phase4Client {
             "order" => self.queue_order(request_id),
             "knowledge" => self.queue_knowledge(request_id),
             "local-fight" => self.queue_combat(request_id),
+            "guard" => self.queue_combat_action(request_id, LocalCombatAction::Guard),
             "practice" => {
                 self.queue_skill_practice(request_id);
             }
@@ -555,6 +556,19 @@ impl Phase4Client {
                 request_id,
                 action,
                 weapon: next_combat_weapon(self.combat.as_ref().map(|combat| combat.weapon)),
+            }));
+    }
+
+    fn queue_combat_action(&mut self, request_id: String, action: LocalCombatAction) {
+        self.commands
+            .push_back(Phase4Command::Combat(LocalCombatRequest {
+                request_id,
+                action,
+                weapon: self
+                    .combat
+                    .as_ref()
+                    .map(|combat| combat.weapon)
+                    .unwrap_or(WeaponKind::IronSword),
             }));
     }
 
