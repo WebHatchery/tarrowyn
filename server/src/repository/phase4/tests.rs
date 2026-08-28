@@ -13,6 +13,7 @@ fn guest(repo: &WorldRepository, key: &str) -> tarrowyn_protocol::GuestSessionRe
         client_key: Some(key.to_owned()),
         reset: false,
     })
+    .expect("guest session")
     .data
 }
 

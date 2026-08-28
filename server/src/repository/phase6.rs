@@ -175,6 +175,7 @@ impl WorldRepository {
                 guest_linked: true,
             },
         );
+        state.sessions.remove(token);
         let session = issue_session(&mut state, &self.config, &guest_key, &account_id);
         audit(
             &mut state,

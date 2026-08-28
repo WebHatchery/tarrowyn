@@ -12,6 +12,7 @@ fn guest(repository: &WorldRepository, key: &str) -> tarrowyn_protocol::GuestSes
             client_key: Some(key.to_owned()),
             reset: false,
         })
+        .expect("guest session")
         .data
 }
 
@@ -229,7 +230,7 @@ fn oidc_link_refresh_and_revoke_keep_character_boundary() {
         .unwrap()
         .data;
     let linked_retry = repository
-        .auth_link(&linked_guest.account_token, link_request)
+        .auth_link(&linked.session.account_token, link_request)
         .unwrap()
         .data;
     assert_eq!(linked_retry, linked);
@@ -239,7 +240,7 @@ fn oidc_link_refresh_and_revoke_keep_character_boundary() {
         .data;
     assert!(!account.guest_fixture);
     assert_eq!(account.character_id, linked.character_id);
-    let _resumed_guest = guest(&repository, "phase5-link");
+    assert!(repository.account(&linked_guest.account_token).is_err());
     assert!(repository.account(&linked.session.account_token).is_ok());
     let refresh_request = AuthRefreshRequest {
         request_id: "refresh".to_owned(),
@@ -298,7 +299,7 @@ fn identity_linking_rejects_guest_and_subject_collisions() {
 
     let guest_conflict = repository
         .auth_link(
-            &first_guest.account_token,
+            &linked.session.account_token,
             AuthLinkRequest {
                 request_id: "guest-collision".to_owned(),
                 subject: "different-subject".to_owned(),
@@ -348,9 +349,8 @@ fn auth_replay_results_survive_repository_restart() {
     drop(first);
 
     let second = WorldRepository::new(config);
-    let resumed_guest = guest(&second, "phase6-auth-replay");
     let linked_after_restart = second
-        .auth_link(&resumed_guest.account_token, link_request)
+        .auth_link(&refreshed.session.account_token, link_request)
         .unwrap()
         .data;
     let refreshed_after_restart = second.auth_refresh(refresh_request).unwrap().data;
@@ -360,4 +360,40 @@ fn auth_replay_results_survive_repository_restart() {
         .account(&refreshed_after_restart.session.account_token)
         .is_ok());
     let _ = std::fs::remove_file(path);
+}
+
+#[test]
+fn production_characters_cannot_reenter_through_guest_login() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let guest_session = guest(&repository, "phase6-guest-boundary");
+    let linked = repository
+        .auth_link(
+            &guest_session.account_token,
+            AuthLinkRequest {
+                request_id: "boundary-link".to_owned(),
+                provider: "webhatchery-identity-oidc".to_owned(),
+                subject: "boundary-subject".to_owned(),
+                display_name: None,
+            },
+        )
+        .unwrap()
+        .data;
+    repository
+        .auth_revoke(
+            &linked.session.account_token,
+            AuthRevokeRequest {
+                request_id: "boundary-revoke".to_owned(),
+                revoke_all: true,
+            },
+        )
+        .unwrap();
+
+    let rejected = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some(guest_session.client_key),
+            reset: false,
+        })
+        .unwrap_err();
+    assert_eq!(rejected.status, 409);
+    assert_eq!(rejected.error.code, "production_identity_required");
 }

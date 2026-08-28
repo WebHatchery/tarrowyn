@@ -8,6 +8,7 @@ fn guest(repository: &WorldRepository, client_key: &str) -> String {
             client_key: Some(client_key.to_owned()),
             reset: false,
         })
+        .expect("guest session")
         .data
         .account_token
 }
@@ -49,10 +50,12 @@ fn a_root_can_begin_through_an_idempotent_first_practice() {
         backup_path: None,
         ..ServerConfig::default()
     });
-    let session = repository.guest_session(GuestSessionRequest {
-        client_key: Some("skills-first-practice".to_owned()),
-        reset: false,
-    });
+    let session = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("skills-first-practice".to_owned()),
+            reset: false,
+        })
+        .expect("guest session");
     let request = SkillRequest {
         request_id: "practice-fishing".to_owned(),
         action: SkillAction::Practice,
@@ -89,10 +92,12 @@ fn practice_is_persistent_and_complete_discoveries_are_authoritative() {
         backup_path: None,
         ..ServerConfig::default()
     });
-    let session = repository.guest_session(GuestSessionRequest {
-        client_key: Some("skills-discovery".to_owned()),
-        reset: false,
-    });
+    let session = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("skills-discovery".to_owned()),
+            reset: false,
+        })
+        .expect("guest session");
     {
         let mut state = repository.state.lock().expect("state lock");
         for skill in ["sword-fighting", "spear-fighting", "axe-fighting"] {
@@ -137,14 +142,18 @@ fn a_nearby_master_can_teach_a_root_once() {
         backup_path: None,
         ..ServerConfig::default()
     });
-    let teacher = repository.guest_session(GuestSessionRequest {
-        client_key: Some("school-teacher".to_owned()),
-        reset: false,
-    });
-    let learner = repository.guest_session(GuestSessionRequest {
-        client_key: Some("school-learner".to_owned()),
-        reset: false,
-    });
+    let teacher = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("school-teacher".to_owned()),
+            reset: false,
+        })
+        .expect("guest session");
+    let learner = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("school-learner".to_owned()),
+            reset: false,
+        })
+        .expect("guest session");
     {
         let mut state = repository.state.lock().expect("state lock");
         for _ in 0..16 {

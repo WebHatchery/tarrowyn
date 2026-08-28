@@ -104,12 +104,27 @@ impl WorldRepository {
         }
     }
 
-    pub fn guest_session(&self, request: GuestSessionRequest) -> ApiResponse<GuestSessionResponse> {
+    pub fn guest_session(
+        &self,
+        request: GuestSessionRequest,
+    ) -> Result<ApiResponse<GuestSessionResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
         let client_key = request
             .client_key
             .filter(|key| !key.trim().is_empty())
             .unwrap_or_else(|| format!("guest-client-{}", state.next_guest));
+        if state
+            .phase6
+            .accounts
+            .values()
+            .any(|account| account.identity_key == client_key)
+        {
+            return Err(RepositoryError::new(
+                409,
+                "production_identity_required",
+                "This character is linked to a production identity; provider sign-in is required.",
+            ));
+        }
         if request.reset || !state.identities.contains_key(&client_key) {
             let number = state.next_guest;
             state.next_guest += 1;
@@ -192,7 +207,7 @@ impl WorldRepository {
             },
         };
         self.persist(&state);
-        response
+        Ok(response)
     }
 
     pub fn world(&self, token: &str) -> Result<ApiResponse<WorldSnapshot>, RepositoryError> {

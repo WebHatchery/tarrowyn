@@ -9,10 +9,12 @@ fn completing_a_watch_earns_a_trailhand_credential() {
         backup_path: None,
         ..ServerConfig::default()
     });
-    let session = repository.guest_session(GuestSessionRequest {
-        client_key: Some("adventurer-rank".to_owned()),
-        reset: false,
-    });
+    let session = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("adventurer-rank".to_owned()),
+            reset: false,
+        })
+        .expect("guest session");
     repository
         .contract(
             &session.data.account_token,

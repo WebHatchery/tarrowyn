@@ -52,7 +52,16 @@ fn handle_request(mut request: Request, repository: Arc<WorldRepository>) {
         (Method::Get, "/health") => json_response(StatusCode(200), repository.health()),
         (Method::Get, "/v1/ops/health") => json_response(StatusCode(200), repository.ops_health()),
         (Method::Post, "/v1/session/guest") => match read_json_or_default(&mut request) {
-            Ok(body) => json_response(StatusCode(200), repository.guest_session(body)),
+            Ok(body) => match repository.guest_session(body) {
+                Ok(response) => json_response(StatusCode(200), response),
+                Err(error) => json_response(
+                    StatusCode(error.status),
+                    ApiErrorResponse {
+                        meta: repository.health().meta,
+                        error: error.error,
+                    },
+                ),
+            },
             Err(error) => error_response(400, "invalid_json", error, repository.health().meta),
         },
         (Method::Post, "/v1/auth/link") => match read_json::<AuthLinkRequest>(&mut request) {

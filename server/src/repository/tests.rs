@@ -20,6 +20,7 @@ fn guest(repo: &WorldRepository, key: &str) -> GuestSessionResponse {
         client_key: Some(key.to_owned()),
         reset: false,
     })
+    .expect("guest session")
     .data
 }
 
