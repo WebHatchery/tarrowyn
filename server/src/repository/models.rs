@@ -32,6 +32,10 @@ pub(crate) struct Identity {
     pub(super) farming_results: HashMap<String, FarmingResponse>,
     #[serde(default)]
     pub(super) trade_results: HashMap<String, TradeResponse>,
+    #[serde(default)]
+    pub(super) movement_results: HashMap<String, MovementResponse>,
+    #[serde(default)]
+    pub(super) chat_results: HashMap<String, ChatResponse>,
     #[serde(default = "default_weapon")]
     pub(super) weapon: WeaponKind,
     #[serde(default)]
@@ -55,8 +59,6 @@ pub(super) struct Session {
     pub(super) last_seen_tick: u64,
     pub(super) last_movement_tick: Option<u64>,
     pub(super) last_chat_tick: Option<u64>,
-    pub(super) movement_results: HashMap<String, MovementResponse>,
-    pub(super) chat_results: HashMap<String, ChatResponse>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -178,8 +180,6 @@ impl RepositoryState {
                         last_seen_tick: stored.tick,
                         last_movement_tick: None,
                         last_chat_tick: None,
-                        movement_results: HashMap::new(),
-                        chat_results: HashMap::new(),
                     },
                 )
             })

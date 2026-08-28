@@ -131,7 +131,7 @@ function Invoke-NativeDatabaseRestore([string]$temporaryRoot, [string]$nonce) {
         $identityOutput = Invoke-MySql $mysql ($connectionArguments + "--database=$restoreDatabase" + "--execute=SELECT COUNT(*) FROM tarrowyn_identity_index")
         $version = [int](($versionOutput -join "").Trim())
         $identityCount = [int](($identityOutput -join "").Trim())
-        Assert-True ($version -ge 17) "the native restore lost the current world storage version"
+        Assert-True ($version -ge 19) "the native restore lost the current world storage version"
         Assert-True ($identityCount -ge 1) "the native restore lost the identity index"
     } finally {
         Invoke-MySql $mysql ($connectionArguments + "--execute=DROP DATABASE IF EXISTS $restoreDatabase") | Out-Null
@@ -193,7 +193,7 @@ try {
 
     $server = Start-PreviewServer
     $health = Wait-Ready
-    Assert-True ($health.data.storage_version -ge 18) "the migrated world is older than storage version 18"
+    Assert-True ($health.data.storage_version -ge 19) "the migrated world is older than storage version 19"
 
     $nonce = [guid]::NewGuid().ToString("N")
     $clientKey = "mysql-acceptance-$PID-$nonce"
@@ -212,6 +212,9 @@ try {
     $replayedChat = Post-Json "/v1/chat" $chatBody $headers
     Assert-True ($chat.data.accepted -and $replayedChat.data.accepted) "the MySQL-backed chat mutation was rejected"
     Assert-True ($chat.data.message.message_id -eq $replayedChat.data.message.message_id) "duplicate request replay produced a second MySQL-backed chat result"
+    $movementBody = @{ request_id = "mysql-movement-$nonce"; dx = 0; dy = 1 }
+    $movement = Post-Json "/v1/movement" $movementBody $headers
+    Assert-True $movement.data.accepted "the MySQL-backed movement mutation was rejected"
     $concurrentChatText = "Concurrent MySQL bridge acceptance $nonce"
     Invoke-ConcurrentDuplicateChat $ServerAddress $headers "mysql-concurrent-chat-$nonce" $concurrentChatText
     $feed = Invoke-RestMethod -Method Get -Uri "http://$ServerAddress/v1/tavern/feed" -Headers $headers
@@ -266,7 +269,7 @@ try {
     }
     Assert-True (Test-Path -LiteralPath $backupPath) "the MySQL-backed server did not write its configured backup"
     $backup = Get-Content -Raw -LiteralPath $backupPath | ConvertFrom-Json
-    Assert-True ($backup.storage_version -ge 18) "the backup storage version was not current"
+    Assert-True ($backup.storage_version -ge 19) "the backup storage version was not current"
     Assert-True ($backup.phase4.animals.Count -ge 1) "the backup omitted the authored animal state"
     $characterId = $session.data.character_id
 
@@ -274,13 +277,17 @@ try {
     $server = $null
     $server = Start-PreviewServer
     $health = Wait-Ready
-    Assert-True ($health.data.storage_version -ge 18) "the restarted MySQL server reported an old storage version"
+    Assert-True ($health.data.storage_version -ge 19) "the restarted MySQL server reported an old storage version"
     $resumed = Invoke-RestMethod -Method Post -Uri "http://$ServerAddress/v1/session/guest" `
         -ContentType "application/json" -Body (@{ client_key = $clientKey; reset = $false } | ConvertTo-Json -Compress)
     Assert-True ($resumed.data.character_id -eq $characterId) "the MySQL-backed identity did not survive restart"
     $resumedHeaders = @{ Authorization = "Bearer $($resumed.data.account_token)" }
     $resumedState = Invoke-RestMethod -Method Get -Uri "http://$ServerAddress/v1/state" -Headers $resumedHeaders
     Assert-True ($resumedState.data.world.animals.Count -ge 1) "the restarted MySQL world lost its animal projection"
+    $replayedChatAfterRestart = Post-Json "/v1/chat" $chatBody $resumedHeaders
+    Assert-True ($replayedChatAfterRestart.data.message.message_id -eq $chat.data.message.message_id) "the MySQL chat replay was lost across restart"
+    $replayedMovementAfterRestart = Post-Json "/v1/movement" $movementBody $resumedHeaders
+    Assert-True ($replayedMovementAfterRestart.data.position.x -eq $movement.data.position.x -and $replayedMovementAfterRestart.data.position.y -eq $movement.data.position.y) "the MySQL movement replay was lost across restart"
     $revokedAfterRestart = Post-Json "/v1/auth/revoke" $revokeBody $refreshedHeaders
     Assert-True ($revokedAfterRestart.data.revoked_sessions -eq $revoked.data.revoked_sessions) "the MySQL auth-revoke replay was lost across restart"
     $reportAfterRestart = Post-Json "/v1/moderation/report" $moderationBody $resumedHeaders
@@ -291,7 +298,7 @@ try {
     $env:MYSQL_PWD = $env:DB_PASSWORD
     Invoke-NativeDatabaseRestore $temporaryRoot $nonce
 
-    Write-Host "MySQL acceptance passed: migration/readiness, authoritative state, chat/auth/moderation replay, backup, restart persistence, and native dump/restore." -ForegroundColor Green
+    Write-Host "MySQL acceptance passed: migration/readiness, authoritative state, chat/movement/auth/moderation replay, backup, restart persistence, and native dump/restore." -ForegroundColor Green
 } finally {
     if ($null -ne $server -and -not $server.HasExited) { Stop-PreviewServer $server }
     foreach ($name in $environmentNames) {

@@ -654,8 +654,6 @@ fn issue_session(
             last_seen_tick: state.tick,
             last_movement_tick: None,
             last_chat_tick: None,
-            movement_results: HashMap::new(),
-            chat_results: HashMap::new(),
         },
     );
     AuthSession {

@@ -10,7 +10,7 @@ use tarrowyn_protocol::{
     WorldEvent, WorldSnapshot, MAX_CHAT_MESSAGE_LENGTH, MAX_TRADE_ITEMS, PROTOCOL_VERSION,
 };
 
-pub(super) const STORAGE_VERSION: u32 = 18;
+pub(super) const STORAGE_VERSION: u32 = 19;
 const MAX_EVENTS: usize = 2048;
 const MAX_CHAT_HISTORY: usize = 64;
 const MAX_NOTICES: usize = 32;
@@ -150,6 +150,8 @@ impl WorldRepository {
                     last_tax_day: current_day,
                     farming_results: HashMap::new(),
                     trade_results: HashMap::new(),
+                    movement_results: HashMap::new(),
+                    chat_results: HashMap::new(),
                     weapon: WeaponKind::IronSword,
                     knocked_out: false,
                     injuries: 0,
@@ -185,8 +187,6 @@ impl WorldRepository {
                 last_seen_tick: tick,
                 last_movement_tick: None,
                 last_chat_tick: None,
-                movement_results: HashMap::new(),
-                chat_results: HashMap::new(),
             },
         );
         let event = {
@@ -264,9 +264,9 @@ impl WorldRepository {
             ));
         }
         if let Some(previous) = state
-            .sessions
-            .get(token)
-            .and_then(|session| session.movement_results.get(&intent.request_id))
+            .identities
+            .get(&key)
+            .and_then(|identity| identity.movement_results.get(&intent.request_id))
             .cloned()
         {
             return Ok(ApiResponse {
@@ -343,9 +343,9 @@ impl WorldRepository {
                 };
                 let cursor = push_event(&mut state, event);
                 state
-                    .sessions
-                    .get_mut(token)
-                    .expect("session exists")
+                    .identities
+                    .get_mut(&key)
+                    .expect("identity exists")
                     .movement_results
                     .insert(intent.request_id.clone(), response.clone());
                 self.persist(&state);
@@ -356,11 +356,12 @@ impl WorldRepository {
             }
         }
         state
-            .sessions
-            .get_mut(token)
-            .expect("session exists")
+            .identities
+            .get_mut(&key)
+            .expect("identity exists")
             .movement_results
             .insert(intent.request_id.clone(), response.clone());
+        self.persist(&state);
         Ok(ApiResponse {
             meta: meta(state.tick, Some(intent.request_id), Some(state.cursor)),
             data: response,
@@ -407,9 +408,9 @@ impl WorldRepository {
         expire_sessions(&mut state, &self.config);
         let key = authenticate(&mut state, token, &self.config)?;
         if let Some(previous) = state
-            .sessions
-            .get(token)
-            .and_then(|session| session.chat_results.get(&request.request_id))
+            .identities
+            .get(&key)
+            .and_then(|identity| identity.chat_results.get(&request.request_id))
             .cloned()
         {
             return Ok(ApiResponse {
@@ -476,14 +477,14 @@ impl WorldRepository {
                 .get_mut(token)
                 .expect("session exists")
                 .last_chat_tick = Some(state.tick);
-            self.persist(&state);
         }
         state
-            .sessions
-            .get_mut(token)
-            .expect("session exists")
+            .identities
+            .get_mut(&key)
+            .expect("identity exists")
             .chat_results
             .insert(request.request_id.clone(), response.clone());
+        self.persist(&state);
         Ok(ApiResponse {
             meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
             data: response,
