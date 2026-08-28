@@ -122,7 +122,10 @@ The calendar uses the GDD's locked 80 real minutes per day. Seasons and years
 remain deferred for pacing validation; the current 14-day season and 56-day
 year values are development fixtures only. The calendar changes crop growth,
 leases, household decisions, migration, prices, and history labels through
-data-driven fields. Essential services stay open during seasonal pressure.
+data-driven fields. The accelerated long-session fixture crosses all four
+development seasons, keeps real-time leases independent from world-day rollover,
+and checks household, tax, market, chronicle, and newcomer continuity. Essential
+services stay open during seasonal pressure.
 
 Optional generational legacy play is deferred and not selected. Combat defeat
 never causes permanent character death or an automatic legacy transition.

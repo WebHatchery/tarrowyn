@@ -12,7 +12,9 @@ written down.
 The measured scope is deliberately regional: one worker, 24 concurrent-client
 target, bounded queues, and selectable JSON/MySQL persistence. The local Phase 6
 mixed-load drill passed with 24 clients, three rounds, 552 requests, and 4,479.15
-ms wall time, including backup and restart recovery. The MySQL backend applies
+ms wall time, including backup and restart recovery. The accelerated long-session
+fixture also crosses all four development seasons while checking lease, tax,
+market, household, chronicle, and newcomer continuity. The MySQL backend applies
 an explicit migration and writes the authoritative snapshot
 and identity index transactionally. Public launch remains blocked until the
 deployment owner runs that backend against the target database, proves

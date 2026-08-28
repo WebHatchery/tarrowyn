@@ -83,3 +83,11 @@ implementation is still a single-worker snapshot bridge rather than a
 decomposed multi-worker storage service. Production deployment must run the
 live migration, database restore, concurrency, and rollback drills before
 public access.
+
+The deterministic `long_session_crosses_calendar_and_keeps_world_accessible`
+fixture crosses thaw, greenrise, harvest, deepwinter, and the next thaw while
+checking a household's regional arrival history, a 90-real-day lease under the
+accelerated calendar, market expiry, public tax collection and upkeep, regional
+event resolution and chronicle retention, and newcomer seeds, locations, and
+vacancies. It proves fixture continuity and recovery boundaries without treating
+the deferred season/year pacing as a final product decision.

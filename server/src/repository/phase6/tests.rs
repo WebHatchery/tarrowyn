@@ -9,6 +9,8 @@ use tarrowyn_protocol::{
     MovementIntent, TradeAction, TradeBundle, TradeRequest,
 };
 
+mod long_session;
+
 #[test]
 fn backup_replaces_the_snapshot_as_one_complete_json_file() {
     let root = std::env::temp_dir().join(format!(
