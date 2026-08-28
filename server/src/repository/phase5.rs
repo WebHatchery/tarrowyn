@@ -191,12 +191,12 @@ impl WorldRepository {
                 "route logistics",
                 "A player action changed the route's cost, risk, or capacity.",
             );
-            self.persist(&state);
         }
         state
             .phase5
             .request_results
             .insert(cache_key, Phase5Response::Route(response.clone()));
+        self.persist(&state);
         Ok(ApiResponse {
             meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
             data: response,
@@ -414,12 +414,12 @@ impl WorldRepository {
                 "regional market",
                 "A cross-settlement order changed stock, price, and route demand.",
             );
-            self.persist(&state);
         }
         state
             .phase5
             .request_results
             .insert(cache_key, Phase5Response::Market(response.clone()));
+        self.persist(&state);
         Ok(ApiResponse {
             meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
             data: response,
@@ -488,13 +488,11 @@ impl WorldRepository {
             event,
             reason,
         };
-        if accepted {
-            self.persist(&state);
-        }
         state
             .phase5
             .request_results
             .insert(cache_key, Phase5Response::Event(response.clone()));
+        self.persist(&state);
         Ok(ApiResponse {
             meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
             data: response,
