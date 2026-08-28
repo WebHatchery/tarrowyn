@@ -7,10 +7,12 @@ use tarrowyn_protocol::{CropKind, LocationKind, Position, RouteStatus};
 
 mod frontier;
 mod households;
+mod npcs;
 mod settlements;
 
 pub(crate) use frontier::{contract_template, threat_template};
 pub(crate) use households::{opportunity_template, regional_household_template};
+pub(crate) use npcs::household as npc_household;
 pub(crate) use settlements::{infrastructure_profiles, settlement_profile, InfrastructureProfile};
 
 const REQUIRED_MANIFESTS: &[&str] = &[
@@ -24,6 +26,7 @@ const REQUIRED_MANIFESTS: &[&str] = &[
     "region.json",
     "households.json",
     "infrastructure.json",
+    "npc_households.json",
     "settlements.json",
     "skills.json",
 ];
@@ -218,6 +221,7 @@ pub fn validate() -> Result<(), String> {
     validate_region(&region)?;
     households::validate(&region)?;
     settlements::validate(&region)?;
+    npcs::validate()?;
     crate::repository::validate_skill_catalog()?;
     Ok(())
 }

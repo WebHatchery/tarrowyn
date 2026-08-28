@@ -11,6 +11,7 @@
     "region.json",
     "households.json",
     "infrastructure.json",
+    "npc_households.json",
     "settlements.json",
     "skills.json"
   ],

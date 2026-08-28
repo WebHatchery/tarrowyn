@@ -159,3 +159,17 @@ fn infrastructure_profiles_follow_the_validated_manifest() {
     assert_eq!(profiles[0].upkeep_per_day, 2);
     assert_eq!(profiles[0].service_quality, 58);
 }
+
+#[test]
+fn fixed_npc_households_follow_the_validated_manifest() {
+    let household = super::npc_household("bellweather");
+    assert_eq!(household.household_id, "household-bellweather");
+    assert_eq!(household.members.len(), 2);
+    assert_eq!(household.members[0].role, "miller");
+    assert_eq!(
+        household.status,
+        tarrowyn_protocol::HouseholdLifeStatus::Arrived
+    );
+    assert_eq!(household.service_quality, 72);
+    assert_eq!(household.demand, 60);
+}

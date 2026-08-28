@@ -1,0 +1,32 @@
+{
+  "npc_households": [
+    {
+      "id": "bellweather",
+      "household_id": "household-bellweather",
+      "household_name": "The Bellweather household",
+      "members": [
+        {
+          "name": "Iven",
+          "role": "miller",
+          "service": "grain milling and field planning"
+        },
+        {
+          "name": "Sella",
+          "role": "herbal healer",
+          "service": "bandages and recovery advice"
+        }
+      ],
+      "home": "The Hearth settlement",
+      "needs": ["steady grain demand", "safe roads"],
+      "work": "The miller feeds the fields while the healer keeps workers safe.",
+      "service_quality": 72,
+      "demand": 60,
+      "housing": 70,
+      "safety": 62,
+      "food": 68,
+      "competition": 20,
+      "status": "arrived",
+      "clue": "The miller and healer will keep both services open if demand and roads hold."
+    }
+  ]
+}

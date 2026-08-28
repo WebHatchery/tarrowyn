@@ -85,7 +85,8 @@ provider subjects, or other secrets.
 The checked-in content contract is validated twice at release boundaries: the
 PowerShell gate requires the canonical manifest set to be present and valid
 JSON, while server startup parses typed action, crop, item, event, settlement,
-region, household, infrastructure, calendar, and game-config records and rejects duplicate IDs, incomplete
+region, household, infrastructure, NPC-household, calendar, and game-config
+records and rejects duplicate IDs, incomplete
 records, unknown route or settlement locations, invalid event stages, and a
 day-length mismatch. The validator protects future content additions; wiring
 the crop manifest into server planting now follows that validated order, and
@@ -104,8 +105,11 @@ modifier, resource demand, and rumour. The Maren opportunity and regional
 household projections now share a typed household manifest for members,
 movement, service, reasons, and history. Infrastructure projections now consume
 typed infrastructure content for public works, positions, maintenance, quality,
-and recovery notes. Each live simulation consumer has a fixture and
-compatibility test; future content additions must preserve the same boundary.
+and recovery notes. The fixed Bellweather household now consumes typed
+NPC-household content; its condition-reactive service lifecycle remains
+authoritative code, while general NPC family simulation remains deferred. Each
+live simulation consumer has a fixture and compatibility test; future content
+additions must preserve the same boundary.
 
 ## Hosting and observability
 

@@ -43,7 +43,9 @@ route topology, season labels, and location roles/resources consume validated
 region content, including location presentation and route tuning. Opportunity
 and regional household projections consume validated household content.
 Infrastructure projections consume validated infrastructure content. Each live
-simulation consumer has its own fixture and compatibility test before future
-content is treated as runtime-authoritative.
+simulation consumer, including the fixed Bellweather household, has its own
+fixture and compatibility test before future content is treated as
+runtime-authoritative. General NPC family simulation remains a documented GDD
+deferral.
 New content must preserve newcomer access, fallback services, and searchable
 chronicle history.

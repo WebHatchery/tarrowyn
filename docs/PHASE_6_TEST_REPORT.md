@@ -47,6 +47,9 @@ members, movement, service, and history.
 The infrastructure-profile regression confirms public-work projections follow
 the validated infrastructure manifest for identity, kind, position, maintenance,
 quality, and recovery notes.
+The fixed-NPC household regression confirms the Bellweather service household
+follows validated NPC-household content without exposing a general family
+simulation contract.
 The Phase 5 fixture verifies that travel, market, event, household, identity,
 refresh, and revocation state survive the authoritative repository boundary.
 The client Phase 5 tests verify that a linked account's visible deletion
