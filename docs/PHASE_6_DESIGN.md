@@ -97,10 +97,9 @@ traded commodity. Wiring the remaining manifests into their live simulation
 consumers remains content expansion work rather than an implicit promise of
 the current fixtures. Regional season labels now also follow the validated
 calendar sequence and season length; the configured real-time day length still
-belongs to the server deployment boundary. Route transport and endpoint
-topology, plus location roles and resources, now follow the validated region
-manifest; names, services, positions, and route tuning remain authored
-fixtures until the richer schemas are introduced. The repeatable Brambleback
+belongs to the server deployment boundary. Route transport, endpoint topology,
+location roles, resources, names, services, positions, and route tuning now
+follow the validated region manifest. The repeatable Brambleback
 contract now consumes a typed contract manifest for its narrative, target,
 required progress, and reward curve. The launch wilderness threat now consumes
 a typed threat manifest for its identity, monster, position, health, risk

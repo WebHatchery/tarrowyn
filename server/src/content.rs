@@ -3,7 +3,7 @@
 use serde::Deserialize;
 use std::collections::HashSet;
 use std::sync::OnceLock;
-use tarrowyn_protocol::{CropKind, SettlementCondition};
+use tarrowyn_protocol::{CropKind, LocationKind, Position, RouteStatus, SettlementCondition};
 
 mod frontier;
 mod households;
@@ -175,29 +175,59 @@ struct CalendarManifest {
 #[derive(Debug, Deserialize)]
 struct LocationManifest {
     id: String,
+    name: String,
+    kind: String,
+    position: Position,
     role: String,
     resources: Vec<String>,
+    services: Vec<String>,
+    condition: u8,
+    access_note: String,
 }
 
 #[derive(Debug, Deserialize)]
 struct RouteManifest {
     id: String,
+    name: String,
     transport: String,
     origin: String,
     destination: String,
+    length: u32,
+    risk_percent: u8,
+    condition: u8,
+    capacity: u32,
+    travel_ticks: u64,
+    repair_cost: u32,
+    status: String,
+    note: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct RegionRouteProfile {
+    pub(crate) name: String,
     pub(crate) transport: String,
     pub(crate) origin: String,
     pub(crate) destination: String,
+    pub(crate) length: u32,
+    pub(crate) risk_percent: u8,
+    pub(crate) condition: u8,
+    pub(crate) capacity: u32,
+    pub(crate) travel_ticks: u64,
+    pub(crate) repair_cost: u32,
+    pub(crate) status: RouteStatus,
+    pub(crate) note: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct RegionLocationProfile {
+    pub(crate) name: String,
+    pub(crate) kind: LocationKind,
+    pub(crate) position: Position,
     pub(crate) role: String,
     pub(crate) resources: Vec<String>,
+    pub(crate) services: Vec<String>,
+    pub(crate) condition: u8,
+    pub(crate) access_note: String,
 }
 
 pub fn validate() -> Result<(), String> {
@@ -346,9 +376,25 @@ pub(crate) fn region_route_profile(route_id: &str) -> RegionRouteProfile {
         .find(|route| route.id == route_id)
         .expect("validated region catalog must contain the requested route");
     RegionRouteProfile {
+        name: route.name.clone(),
         transport: route.transport.clone(),
         origin: route.origin.clone(),
         destination: route.destination.clone(),
+        length: route.length,
+        risk_percent: route.risk_percent,
+        condition: route.condition,
+        capacity: route.capacity,
+        travel_ticks: route.travel_ticks,
+        repair_cost: route.repair_cost,
+        status: match route.status.as_str() {
+            "operational" => RouteStatus::Operational,
+            "delayed" => RouteStatus::Delayed,
+            "threatened" => RouteStatus::Threatened,
+            "repairing" => RouteStatus::Repairing,
+            "closed" => RouteStatus::Closed,
+            _ => panic!("validated region catalog contains an unsupported route status"),
+        },
+        note: route.note.clone(),
     }
 }
 
@@ -359,8 +405,19 @@ pub(crate) fn region_location_profile(location_id: &str) -> RegionLocationProfil
         .find(|location| location.id == location_id)
         .expect("validated region catalog must contain the requested location");
     RegionLocationProfile {
+        name: location.name.clone(),
+        kind: match location.kind.as_str() {
+            "settlement" => LocationKind::Settlement,
+            "outpost" => LocationKind::Outpost,
+            "frontier" => LocationKind::Frontier,
+            _ => panic!("validated region catalog contains an unsupported location kind"),
+        },
+        position: location.position,
         role: location.role.clone(),
         resources: location.resources.clone(),
+        services: location.services.clone(),
+        condition: location.condition,
+        access_note: location.access_note.clone(),
     }
 }
 
@@ -538,20 +595,44 @@ fn validate_region(region: &RegionManifest) -> Result<(), String> {
     )?;
     if region.locations.len() < 3
         || region.locations.iter().any(|location| {
-            location.role.trim().is_empty()
+            location.name.trim().is_empty()
+                || !matches!(
+                    location.kind.as_str(),
+                    "settlement" | "outpost" | "frontier"
+                )
+                || location.role.trim().is_empty()
                 || location.resources.is_empty()
                 || location
                     .resources
                     .iter()
                     .any(|resource| resource.trim().is_empty())
+                || location.services.is_empty()
+                || location
+                    .services
+                    .iter()
+                    .any(|service| service.trim().is_empty())
+                || location.condition > 100
+                || location.access_note.trim().is_empty()
         })
         || region.routes.iter().any(|route| {
-            route.transport.trim().is_empty()
+            route.name.trim().is_empty()
+                || route.transport.trim().is_empty()
                 || route.origin.trim().is_empty()
                 || route.destination.trim().is_empty()
+                || route.length == 0
+                || route.risk_percent > 100
+                || route.condition > 100
+                || route.capacity == 0
+                || route.travel_ticks == 0
+                || route.repair_cost == 0
+                || !matches!(
+                    route.status.as_str(),
+                    "operational" | "delayed" | "threatened" | "repairing" | "closed"
+                )
+                || route.note.trim().is_empty()
         })
     {
-        return Err("region locations and routes contain incomplete records".to_owned());
+        return Err("region locations and routes contain incomplete or invalid records".to_owned());
     }
     if region.calendar.season_days == 0
         || region.calendar.seasons.len() != 4

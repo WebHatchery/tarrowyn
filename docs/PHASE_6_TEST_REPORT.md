@@ -31,10 +31,11 @@ The market price regression confirms every traded commodity's base price
 comes from the validated item manifest.
 The calendar regression confirms regional season labels follow the validated
 region calendar at season and year boundaries.
-The route-profile regression confirms authoritative route transport and
-endpoint topology follow the validated region manifest.
-The location-profile regression confirms authoritative location roles and
-resources follow the validated region manifest.
+The route-profile regression confirms authoritative route transport, endpoint
+topology, timing, risk, capacity, and status follow the validated region
+manifest.
+The location-profile regression confirms authoritative names, kinds, positions,
+roles, resources, services, and condition follow the validated region manifest.
 The contract-template regression confirms the repeatable Brambleback watch
 uses the validated contract manifest for its target and progression contract.
 The threat-template regression confirms the launch wilderness threat follows

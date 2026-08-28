@@ -5,9 +5,9 @@ use crate::config::ServerConfig;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use tarrowyn_protocol::{
-    LocationKind, LocationRecord, MarketOrder, MarketOrderResponse, Position, RegionalEvent,
-    RegionalEventResponse, RegionalHousehold, RouteRecord, RouteResponse, RouteStatus,
-    SettlementProjection, TravelResponse, TravelState,
+    LocationRecord, MarketOrder, MarketOrderResponse, RegionalEvent, RegionalEventResponse,
+    RegionalHousehold, RouteRecord, RouteResponse, SettlementProjection, TravelResponse,
+    TravelState,
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -44,71 +44,14 @@ impl Default for Phase5State {
 pub(crate) fn fresh(_config: &ServerConfig) -> Phase5State {
     let household = crate::content::regional_household_template("household-maren");
     let locations = vec![
-        location(
-            "hearth",
-            "The Hearth",
-            LocationKind::Settlement,
-            Position { x: 8, y: 6 },
-            &["town hall", "market", "healer"],
-            76,
-            "The open settlement is the reliable entry point for new players.",
-        ),
-        location(
-            "whisperwood-outpost",
-            "Whisperwood Watch",
-            LocationKind::Outpost,
-            Position { x: 12, y: 4 },
-            &["scout vacancy", "frontier contracts"],
-            38,
-            "A pioneer can enter through a watch, repair, or caravan role.",
-        ),
-        location(
-            "saltmere",
-            "Saltmere Landing",
-            LocationKind::Settlement,
-            Position { x: 3, y: 9 },
-            &["boat service", "stonecutting"],
-            62,
-            "The landing is open to carriers and a service vacancy even when busy.",
-        ),
+        location("hearth"),
+        location("whisperwood-outpost"),
+        location("saltmere"),
     ];
     let routes = vec![
-        route(
-            "north-pack-road",
-            "North pack road",
-            6,
-            28,
-            72,
-            3,
-            6,
-            4,
-            RouteStatus::Threatened,
-            "A threatened road can be repaired, escorted, or delayed without deleting a journey.",
-        ),
-        route(
-            "saltmere-ferry",
-            "Saltmere ferry",
-            7,
-            12,
-            84,
-            2,
-            7,
-            3,
-            RouteStatus::Operational,
-            "The ferry is slower than a finished road but keeps the landing supplied.",
-        ),
-        route(
-            "watch-trail",
-            "Watch trail",
-            9,
-            34,
-            55,
-            1,
-            9,
-            5,
-            RouteStatus::Delayed,
-            "The frontier trail is a recovery opportunity for scouts and repair crews.",
-        ),
+        route("north-pack-road"),
+        route("saltmere-ferry"),
+        route("watch-trail"),
     ];
     let settlements = vec![
         settlement("hearth-settlement"),
@@ -154,58 +97,38 @@ pub(crate) fn fresh(_config: &ServerConfig) -> Phase5State {
     }
 }
 
-fn location(
-    id: &str,
-    name: &str,
-    kind: LocationKind,
-    position: Position,
-    services: &[&str],
-    condition: u8,
-    access_note: &str,
-) -> LocationRecord {
+fn location(id: &str) -> LocationRecord {
     let profile = crate::content::region_location_profile(id);
     LocationRecord {
         location_id: id.to_owned(),
-        name: name.to_owned(),
-        kind,
-        position,
+        name: profile.name,
+        kind: profile.kind,
+        position: profile.position,
         role: profile.role,
         resources: profile.resources,
-        services: services.iter().map(|value| (*value).to_owned()).collect(),
-        condition,
-        access_note: access_note.to_owned(),
+        services: profile.services,
+        condition: profile.condition,
+        access_note: profile.access_note,
     }
 }
 
-#[allow(clippy::too_many_arguments)]
-fn route(
-    id: &str,
-    name: &str,
-    length: u32,
-    risk: u8,
-    condition: u8,
-    capacity: u32,
-    travel_ticks: u64,
-    repair_cost: u32,
-    status: RouteStatus,
-    note: &str,
-) -> RouteRecord {
+fn route(id: &str) -> RouteRecord {
     let profile = crate::content::region_route_profile(id);
     RouteRecord {
         route_id: id.to_owned(),
-        name: name.to_owned(),
+        name: profile.name,
         origin_location_id: profile.origin,
         destination_location_id: profile.destination,
         transport: profile.transport,
-        length,
-        risk_percent: risk,
-        condition,
-        capacity,
-        travel_ticks,
-        repair_cost,
-        status,
+        length: profile.length,
+        risk_percent: profile.risk_percent,
+        condition: profile.condition,
+        capacity: profile.capacity,
+        travel_ticks: profile.travel_ticks,
+        repair_cost: profile.repair_cost,
+        status: profile.status,
         last_action_tick: 0,
-        note: note.to_owned(),
+        note: profile.note,
     }
 }
 

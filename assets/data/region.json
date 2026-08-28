@@ -7,13 +7,85 @@
     "seasons": ["thaw", "greenrise", "harvest", "deepwinter"]
   },
   "locations": [
-    {"id": "hearth", "role": "settlement", "resources": ["wheat", "seeds"]},
-    {"id": "whisperwood-outpost", "role": "frontier", "resources": ["timber", "iron salvage"]},
-    {"id": "saltmere", "role": "settlement", "resources": ["stone", "bandages"]}
+    {
+      "id": "hearth",
+      "name": "The Hearth",
+      "kind": "settlement",
+      "position": {"x": 8, "y": 6},
+      "role": "settlement",
+      "resources": ["wheat", "seeds"],
+      "services": ["town hall", "market", "healer"],
+      "condition": 76,
+      "access_note": "The open settlement is the reliable entry point for new players."
+    },
+    {
+      "id": "whisperwood-outpost",
+      "name": "Whisperwood Watch",
+      "kind": "outpost",
+      "position": {"x": 12, "y": 4},
+      "role": "frontier",
+      "resources": ["timber", "iron salvage"],
+      "services": ["scout vacancy", "frontier contracts"],
+      "condition": 38,
+      "access_note": "A pioneer can enter through a watch, repair, or caravan role."
+    },
+    {
+      "id": "saltmere",
+      "name": "Saltmere Landing",
+      "kind": "settlement",
+      "position": {"x": 3, "y": 9},
+      "role": "settlement",
+      "resources": ["stone", "bandages"],
+      "services": ["boat service", "stonecutting"],
+      "condition": 62,
+      "access_note": "The landing is open to carriers and a service vacancy even when busy."
+    }
   ],
   "routes": [
-    {"id": "north-pack-road", "transport": "caravan", "origin": "hearth", "destination": "whisperwood-outpost"},
-    {"id": "saltmere-ferry", "transport": "boat", "origin": "hearth", "destination": "saltmere"},
-    {"id": "watch-trail", "transport": "pack route", "origin": "whisperwood-outpost", "destination": "saltmere"}
+    {
+      "id": "north-pack-road",
+      "name": "North pack road",
+      "transport": "caravan",
+      "origin": "hearth",
+      "destination": "whisperwood-outpost",
+      "length": 6,
+      "risk_percent": 28,
+      "condition": 72,
+      "capacity": 3,
+      "travel_ticks": 6,
+      "repair_cost": 4,
+      "status": "threatened",
+      "note": "A threatened road can be repaired, escorted, or delayed without deleting a journey."
+    },
+    {
+      "id": "saltmere-ferry",
+      "name": "Saltmere ferry",
+      "transport": "boat",
+      "origin": "hearth",
+      "destination": "saltmere",
+      "length": 7,
+      "risk_percent": 12,
+      "condition": 84,
+      "capacity": 2,
+      "travel_ticks": 7,
+      "repair_cost": 3,
+      "status": "operational",
+      "note": "The ferry is slower than a finished road but keeps the landing supplied."
+    },
+    {
+      "id": "watch-trail",
+      "name": "Watch trail",
+      "transport": "pack route",
+      "origin": "whisperwood-outpost",
+      "destination": "saltmere",
+      "length": 9,
+      "risk_percent": 34,
+      "condition": 55,
+      "capacity": 1,
+      "travel_ticks": 9,
+      "repair_cost": 5,
+      "status": "delayed",
+      "note": "The frontier trail is a recovery opportunity for scouts and repair crews."
+    }
   ]
 }

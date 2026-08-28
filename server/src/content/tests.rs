@@ -81,15 +81,24 @@ fn season_labels_follow_the_validated_region_calendar() {
 #[test]
 fn route_profiles_follow_the_validated_region_manifest() {
     let ferry = super::region_route_profile("saltmere-ferry");
+    assert_eq!(ferry.name, "Saltmere ferry");
     assert_eq!(ferry.transport, "boat");
     assert_eq!(ferry.origin, "hearth");
     assert_eq!(ferry.destination, "saltmere");
+    assert_eq!(ferry.length, 7);
+    assert_eq!(ferry.risk_percent, 12);
+    assert_eq!(ferry.status, tarrowyn_protocol::RouteStatus::Operational);
 }
 
 #[test]
 fn location_profiles_follow_the_validated_region_manifest() {
     let watch = super::region_location_profile("whisperwood-outpost");
+    assert_eq!(watch.name, "Whisperwood Watch");
+    assert_eq!(watch.kind, tarrowyn_protocol::LocationKind::Outpost);
+    assert_eq!(watch.position, tarrowyn_protocol::Position { x: 12, y: 4 });
     assert_eq!(watch.role, "frontier");
+    assert_eq!(watch.condition, 38);
+    assert_eq!(watch.services[0], "scout vacancy");
     assert_eq!(
         watch.resources,
         vec!["timber".to_owned(), "iron salvage".to_owned()]
