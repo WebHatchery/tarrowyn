@@ -112,6 +112,27 @@ impl WorldRepository {
                 data: previous,
             });
         }
+        if state
+            .phase6
+            .accounts
+            .values()
+            .any(|account| account.identity_key == guest_key)
+        {
+            return Err(RepositoryError::new(
+                409,
+                "guest_already_linked",
+                "This guest character is already linked; continue with its existing identity.",
+            ));
+        }
+        if state.phase6.accounts.values().any(|account| {
+            account.provider == request.provider && account.subject == request.subject
+        }) {
+            return Err(RepositoryError::new(
+                409,
+                "identity_already_linked",
+                "That identity provider subject is already linked to another character.",
+            ));
+        }
         let account_id = state
             .phase6
             .accounts

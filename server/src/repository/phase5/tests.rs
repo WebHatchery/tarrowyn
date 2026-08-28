@@ -269,6 +269,56 @@ fn oidc_link_refresh_and_revoke_keep_character_boundary() {
 }
 
 #[test]
+fn identity_linking_rejects_guest_and_subject_collisions() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let first_guest = guest(&repository, "phase6-link-owner");
+    let request = AuthLinkRequest {
+        request_id: "owner-link".to_owned(),
+        provider: "webhatchery-identity-oidc".to_owned(),
+        subject: "shared-subject".to_owned(),
+        display_name: None,
+    };
+    let linked = repository
+        .auth_link(&first_guest.account_token, request.clone())
+        .unwrap()
+        .data;
+
+    let second_guest = guest(&repository, "phase6-link-collision");
+    let subject_conflict = repository
+        .auth_link(
+            &second_guest.account_token,
+            AuthLinkRequest {
+                request_id: "subject-collision".to_owned(),
+                ..request.clone()
+            },
+        )
+        .unwrap_err();
+    assert_eq!(subject_conflict.status, 409);
+    assert_eq!(subject_conflict.error.code, "identity_already_linked");
+
+    let guest_conflict = repository
+        .auth_link(
+            &first_guest.account_token,
+            AuthLinkRequest {
+                request_id: "guest-collision".to_owned(),
+                subject: "different-subject".to_owned(),
+                ..request
+            },
+        )
+        .unwrap_err();
+    assert_eq!(guest_conflict.status, 409);
+    assert_eq!(guest_conflict.error.code, "guest_already_linked");
+    assert_eq!(
+        repository
+            .account(&linked.session.account_token)
+            .unwrap()
+            .data
+            .account_id,
+        linked.account_id
+    );
+}
+
+#[test]
 fn auth_replay_results_survive_repository_restart() {
     let path =
         std::env::temp_dir().join(format!("tarrowyn-auth-replay-{}.json", std::process::id()));
