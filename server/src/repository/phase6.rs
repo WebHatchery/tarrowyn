@@ -1,6 +1,6 @@
 //! Production-readiness authority: identity linking, audit, recovery, and observability.
 
-use super::models::RepositoryState;
+use super::models::{trim_replay_cache, RepositoryState, MAX_REPLAY_CACHE};
 use super::*;
 use crate::config::ServerConfig;
 use serde::{Deserialize, Serialize};
@@ -17,7 +17,6 @@ mod operations;
 
 const IDENTITY_PROVIDER: &str = "webhatchery-identity-oidc";
 const PRIVACY_POLICY_VERSION: &str = "2026-08-19";
-pub(super) const MAX_REPLAY_CACHE: usize = 512;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub(super) struct ProductionAccount {
@@ -476,9 +475,6 @@ impl WorldRepository {
 }
 
 pub(super) fn phase6_tick(state: &mut RepositoryState, config: &ServerConfig) {
-    if config.backup_interval_ticks > 0 && state.tick.is_multiple_of(config.backup_interval_ticks) {
-        backup::write(state, config);
-    }
     trim_replay_cache(&mut state.phase6.auth_link_results);
     trim_replay_cache(&mut state.phase6.auth_refresh_results);
     trim_replay_cache(&mut state.phase6.auth_revoke_results);
@@ -494,15 +490,9 @@ pub(super) fn phase6_tick(state: &mut RepositoryState, config: &ServerConfig) {
         trim_replay_cache(&mut identity.movement_results);
         trim_replay_cache(&mut identity.chat_results);
     }
-    state.phase6.audits.truncate(512);
-}
-
-fn trim_replay_cache<T>(cache: &mut HashMap<String, T>) {
-    while cache.len() > MAX_REPLAY_CACHE {
-        let Some(key) = cache.keys().next().cloned() else {
-            break;
-        };
-        cache.remove(&key);
+    state.phase6.audits.truncate(MAX_REPLAY_CACHE);
+    if config.backup_interval_ticks > 0 && state.tick.is_multiple_of(config.backup_interval_ticks) {
+        backup::write(state, config);
     }
 }
 

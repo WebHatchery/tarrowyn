@@ -4,6 +4,17 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use tarrowyn_protocol::FarmPlot;
 
+pub(super) const MAX_REPLAY_CACHE: usize = 512;
+
+pub(super) fn trim_replay_cache<T>(cache: &mut HashMap<String, T>) {
+    while cache.len() > MAX_REPLAY_CACHE {
+        let Some(key) = cache.keys().next().cloned() else {
+            break;
+        };
+        cache.remove(&key);
+    }
+}
+
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub(super) struct SkillLedger {
     pub(super) practice: HashMap<String, u32>,
@@ -141,7 +152,27 @@ impl RepositoryState {
     }
 
     pub(crate) fn from_stored(stored: StoredState, config: &ServerConfig) -> Self {
+        let mut identities = stored.identities;
+        for identity in identities.values_mut() {
+            trim_replay_cache(&mut identity.farming_results);
+            trim_replay_cache(&mut identity.trade_results);
+            trim_replay_cache(&mut identity.movement_results);
+            trim_replay_cache(&mut identity.chat_results);
+        }
+        let mut phase3 = stored.phase3;
+        trim_replay_cache(&mut phase3.request_results);
         let mut phase4 = stored.phase4;
+        trim_replay_cache(&mut phase4.request_results);
+        let mut phase5 = stored.phase5;
+        trim_replay_cache(&mut phase5.request_results);
+        let mut phase6 = stored.phase6;
+        trim_replay_cache(&mut phase6.auth_link_results);
+        trim_replay_cache(&mut phase6.auth_refresh_results);
+        trim_replay_cache(&mut phase6.auth_revoke_results);
+        trim_replay_cache(&mut phase6.moderation_results);
+        trim_replay_cache(&mut phase6.moderation_last_report_ticks);
+        trim_replay_cache(&mut phase6.request_results);
+        phase6.audits.truncate(MAX_REPLAY_CACHE);
         if phase4.animals.is_empty() {
             phase4.animals = super::phase4::fresh_animals();
         }
@@ -166,8 +197,7 @@ impl RepositoryState {
                     now.saturating_add(config.lease_duration_seconds.max(1));
             }
         }
-        let sessions = stored
-            .phase6
+        let sessions = phase6
             .sessions
             .iter()
             .filter(|(_, session)| !session.revoked && session.expires_at_tick > stored.tick)
@@ -197,7 +227,7 @@ impl RepositoryState {
             next_token: stored.next_token.max(1),
             next_trade: stored.next_trade.max(1),
             next_notice: stored.next_notice.max(1),
-            identities: stored.identities,
+            identities,
             sessions,
             plots: if stored.plots.is_empty() {
                 super::world::farm_plots()
@@ -208,10 +238,10 @@ impl RepositoryState {
             chat_history: trim_queue(stored.chat_history, MAX_CHAT_HISTORY),
             notices: trim_queue(stored.notices, MAX_NOTICES),
             trades: stored.trades,
-            phase3: stored.phase3,
+            phase3,
             phase4,
-            phase5: stored.phase5,
-            phase6: stored.phase6,
+            phase5,
+            phase6,
         }
     }
 

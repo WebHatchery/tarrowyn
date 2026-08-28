@@ -109,7 +109,15 @@ fn persistence_failure_degrades_operator_readiness() {
 
 #[test]
 fn replay_caches_are_trimmed_on_the_world_tick() {
-    let repository = WorldRepository::new(ServerConfig::default());
+    let backup_path = std::env::temp_dir().join(format!(
+        "tarrowyn-replay-cache-backup-{}.json",
+        std::process::id()
+    ));
+    let repository = WorldRepository::new(ServerConfig {
+        backup_path: Some(backup_path.to_string_lossy().into_owned()),
+        backup_interval_ticks: 1,
+        ..ServerConfig::default()
+    });
     let session = repository
         .guest_session(GuestSessionRequest {
             client_key: Some("replay-cache-limit".to_owned()),
@@ -162,7 +170,67 @@ fn replay_caches_are_trimmed_on_the_world_tick() {
     assert!(identity.movement_results.len() <= 512);
     assert!(identity.chat_results.len() <= 512);
     assert!(state.phase6.request_results.len() <= 512);
+    drop(state);
+    let backup: serde_json::Value =
+        serde_json::from_slice(&std::fs::read(&backup_path).unwrap()).unwrap();
+    assert!(
+        backup["identities"]["replay-cache-limit"]["movement_results"]
+            .as_object()
+            .unwrap()
+            .len()
+            <= 512
+    );
+    assert!(
+        backup["phase6"]["request_results"]
+            .as_object()
+            .unwrap()
+            .len()
+            <= 512
+    );
+
+    let mut oversized = backup;
+    let movement_results = oversized["identities"]["replay-cache-limit"]["movement_results"]
+        .as_object_mut()
+        .unwrap();
+    for index in 0..513 {
+        movement_results.insert(
+            format!("loaded-{index}"),
+            serde_json::json!({
+                "request_id": format!("loaded-{index}"),
+                "accepted": false,
+                "position": { "x": 8, "y": 6 },
+                "reason": null,
+            }),
+        );
+    }
+    let request_results = oversized["phase6"]["request_results"]
+        .as_object_mut()
+        .unwrap();
+    for index in 0..513 {
+        request_results.insert(
+            format!("loaded-repair-{index}"),
+            serde_json::json!({
+                "request_id": format!("loaded-repair-{index}"),
+                "audit_id": format!("loaded-audit-{index}"),
+                "accepted": false,
+                "summary": "",
+                "reason": null,
+            }),
+        );
+    }
+    std::fs::write(&backup_path, serde_json::to_vec_pretty(&oversized).unwrap()).unwrap();
+    let loaded = WorldRepository::new(ServerConfig {
+        persistence_path: Some(backup_path.to_string_lossy().into_owned()),
+        ..ServerConfig::default()
+    });
+    let loaded_state = loaded.state.lock().unwrap();
+    let loaded_identity = loaded_state.identities.get("replay-cache-limit").unwrap();
+    assert!(loaded_identity.movement_results.len() <= 512);
+    assert!(loaded_state.phase6.request_results.len() <= 512);
+    drop(loaded_state);
+    drop(loaded);
     let _ = session;
+    let _ = std::fs::remove_file(backup_path);
 }
 
 #[test]
