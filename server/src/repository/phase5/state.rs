@@ -43,45 +43,33 @@ impl Default for Phase5State {
 
 pub(crate) fn fresh(_config: &ServerConfig) -> Phase5State {
     let locations = vec![
-        LocationRecord {
-            location_id: "hearth".to_owned(),
-            name: "The Hearth".to_owned(),
-            kind: LocationKind::Settlement,
-            position: Position { x: 8, y: 6 },
-            role: "Established farming and civic settlement".to_owned(),
-            resources: vec!["wheat".to_owned(), "seeds".to_owned()],
-            services: vec![
-                "town hall".to_owned(),
-                "market".to_owned(),
-                "healer".to_owned(),
-            ],
-            condition: 76,
-            access_note: "The open settlement is the reliable entry point for new players."
-                .to_owned(),
-        },
-        LocationRecord {
-            location_id: "whisperwood-outpost".to_owned(),
-            name: "Whisperwood Watch".to_owned(),
-            kind: LocationKind::Outpost,
-            position: Position { x: 12, y: 4 },
-            role: "Frontier watch, timber, and iron salvage".to_owned(),
-            resources: vec!["timber".to_owned(), "iron salvage".to_owned()],
-            services: vec!["scout vacancy".to_owned(), "frontier contracts".to_owned()],
-            condition: 38,
-            access_note: "A pioneer can enter through a watch, repair, or caravan role.".to_owned(),
-        },
-        LocationRecord {
-            location_id: "saltmere".to_owned(),
-            name: "Saltmere Landing".to_owned(),
-            kind: LocationKind::Settlement,
-            position: Position { x: 3, y: 9 },
-            role: "Stone, ferry work, and wetland herbs".to_owned(),
-            resources: vec!["stone".to_owned(), "bandages".to_owned()],
-            services: vec!["boat service".to_owned(), "stonecutting".to_owned()],
-            condition: 62,
-            access_note: "The landing is open to carriers and a service vacancy even when busy."
-                .to_owned(),
-        },
+        location(
+            "hearth",
+            "The Hearth",
+            LocationKind::Settlement,
+            Position { x: 8, y: 6 },
+            &["town hall", "market", "healer"],
+            76,
+            "The open settlement is the reliable entry point for new players.",
+        ),
+        location(
+            "whisperwood-outpost",
+            "Whisperwood Watch",
+            LocationKind::Outpost,
+            Position { x: 12, y: 4 },
+            &["scout vacancy", "frontier contracts"],
+            38,
+            "A pioneer can enter through a watch, repair, or caravan role.",
+        ),
+        location(
+            "saltmere",
+            "Saltmere Landing",
+            LocationKind::Settlement,
+            Position { x: 3, y: 9 },
+            &["boat service", "stonecutting"],
+            62,
+            "The landing is open to carriers and a service vacancy even when busy.",
+        ),
     ];
     let routes = vec![
         route(
@@ -211,6 +199,29 @@ pub(crate) fn fresh(_config: &ServerConfig) -> Phase5State {
             history: vec!["Regional opportunity recorded before departure.".to_owned()],
         }],
         request_results: HashMap::new(),
+    }
+}
+
+fn location(
+    id: &str,
+    name: &str,
+    kind: LocationKind,
+    position: Position,
+    services: &[&str],
+    condition: u8,
+    access_note: &str,
+) -> LocationRecord {
+    let profile = crate::content::region_location_profile(id);
+    LocationRecord {
+        location_id: id.to_owned(),
+        name: name.to_owned(),
+        kind,
+        position,
+        role: profile.role,
+        resources: profile.resources,
+        services: services.iter().map(|value| (*value).to_owned()).collect(),
+        condition,
+        access_note: access_note.to_owned(),
     }
 }
 

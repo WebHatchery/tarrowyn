@@ -77,3 +77,13 @@ fn route_profiles_follow_the_validated_region_manifest() {
     assert_eq!(ferry.origin, "hearth");
     assert_eq!(ferry.destination, "saltmere");
 }
+
+#[test]
+fn location_profiles_follow_the_validated_region_manifest() {
+    let watch = super::region_location_profile("whisperwood-outpost");
+    assert_eq!(watch.role, "frontier");
+    assert_eq!(
+        watch.resources,
+        vec!["timber".to_owned(), "iron salvage".to_owned()]
+    );
+}

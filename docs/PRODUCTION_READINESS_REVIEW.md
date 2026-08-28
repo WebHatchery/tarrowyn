@@ -36,8 +36,8 @@ pipeline. The current validator protects the canonical manifests and their
 identifiers, and server planting, regional event seeding, settlement supply
 projections, and market base prices consume validated
 crop/event/settlement/item content; route topology and season labels also
-consume the region manifest. Each new live simulation consumer still needs its
-own fixture and compatibility test before that content is treated as
-runtime-authoritative.
+consume the region manifest, as do location roles and resources. Each new live
+simulation consumer still needs its own fixture and compatibility test before
+that content is treated as runtime-authoritative.
 New content must preserve newcomer access, fallback services, and searchable
 chronicle history.

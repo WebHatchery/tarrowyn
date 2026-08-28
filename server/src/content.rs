@@ -158,6 +158,12 @@ pub(crate) struct RegionRouteProfile {
     pub(crate) destination: String,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct RegionLocationProfile {
+    pub(crate) role: String,
+    pub(crate) resources: Vec<String>,
+}
+
 pub fn validate() -> Result<(), String> {
     let schema: ContentSchemaManifest =
         serde_json::from_str(include_str!("../../assets/data/content_schema.json"))
@@ -291,6 +297,18 @@ pub(crate) fn region_route_profile(route_id: &str) -> RegionRouteProfile {
         transport: route.transport.clone(),
         origin: route.origin.clone(),
         destination: route.destination.clone(),
+    }
+}
+
+pub(crate) fn region_location_profile(location_id: &str) -> RegionLocationProfile {
+    let location = region_catalog()
+        .locations
+        .iter()
+        .find(|location| location.id == location_id)
+        .expect("validated region catalog must contain the requested location");
+    RegionLocationProfile {
+        role: location.role.clone(),
+        resources: location.resources.clone(),
     }
 }
 
