@@ -16,6 +16,9 @@ current regional and operations state.
 Mutation replay caches are bounded to 512 entries per scope during world ticks,
 covering identity and phase command results so long sessions do not grow them
 without limit.
+The release validator also parses the canonical action, crop, item, event,
+settlement, region, calendar, and game-config manifests with typed schemas and
+cross-reference checks; duplicate IDs and incompatible records fail startup.
 The Phase 5 fixture verifies that travel, market, event, household, identity,
 refresh, and revocation state survive the authoritative repository boundary.
 The selected MySQL bridge now has a checked-in migration, startup pool/migration

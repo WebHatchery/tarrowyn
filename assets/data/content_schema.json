@@ -1,5 +1,14 @@
 {
   "schema_version": 1,
-  "required_manifests": ["region.json", "settlements.json", "events.json", "items.json"],
+  "required_manifests": [
+    "game_config.json",
+    "actions.json",
+    "crops.json",
+    "events.json",
+    "items.json",
+    "region.json",
+    "settlements.json",
+    "skills.json"
+  ],
   "compatibility": "IDs are append-only after publication; removals require a migration record."
 }
