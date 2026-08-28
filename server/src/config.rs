@@ -1,5 +1,8 @@
 use std::time::Duration;
 
+#[cfg(test)]
+mod tests;
+
 #[derive(Debug, Clone)]
 pub struct ServerConfig {
     pub bind_addr: String,
@@ -54,7 +57,7 @@ impl Default for ServerConfig {
             world_height: 11,
             day_length_seconds: 4_800.0,
             tick_interval: Duration::from_millis(250),
-            world_seconds_per_tick: 1.0,
+            world_seconds_per_tick: 0.25,
             session_ttl_seconds: 30,
             movement_cooldown_ticks: 1,
             chat_max_length: 160,
@@ -86,6 +89,10 @@ impl Default for ServerConfig {
 impl ServerConfig {
     pub fn from_env() -> Self {
         let defaults = Self::default();
+        let tick_interval = Duration::from_millis(env_u64(
+            "TARROWYN_TICK_MS",
+            defaults.tick_interval.as_millis() as u64,
+        ));
         Self {
             bind_addr: env_string("TARROWYN_SERVER_ADDR", defaults.bind_addr),
             db_driver: env_string("DB_DRIVER", defaults.db_driver),
@@ -97,13 +104,10 @@ impl ServerConfig {
             world_width: env_u32("TARROWYN_WORLD_WIDTH", defaults.world_width),
             world_height: env_u32("TARROWYN_WORLD_HEIGHT", defaults.world_height),
             day_length_seconds: env_f32("TARROWYN_DAY_LENGTH_SECONDS", defaults.day_length_seconds),
-            tick_interval: Duration::from_millis(env_u64(
-                "TARROWYN_TICK_MS",
-                defaults.tick_interval.as_millis() as u64,
-            )),
+            tick_interval,
             world_seconds_per_tick: env_f32(
                 "TARROWYN_WORLD_SECONDS_PER_TICK",
-                defaults.world_seconds_per_tick,
+                tick_interval.as_secs_f32().max(0.001),
             ),
             session_ttl_seconds: env_u32(
                 "TARROWYN_SESSION_TTL_SECONDS",
