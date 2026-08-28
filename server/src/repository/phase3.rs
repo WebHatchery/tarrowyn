@@ -349,6 +349,7 @@ impl WorldRepository {
             .phase3
             .request_results
             .insert(cache_key, Phase3Response::Contract(response.clone()));
+        record_command_outcome(&mut state, response.accepted);
         self.persist(&state);
         Ok(ApiResponse {
             meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
@@ -460,6 +461,7 @@ impl WorldRepository {
             .phase3
             .request_results
             .insert(cache_key, Phase3Response::Combat(response.clone()));
+        record_command_outcome(&mut state, response.accepted);
         self.persist(&state);
         Ok(ApiResponse {
             meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
@@ -560,6 +562,7 @@ impl WorldRepository {
             .phase3
             .request_results
             .insert(cache_key, Phase3Response::Recovery(response.clone()));
+        record_command_outcome(&mut state, response.accepted);
         self.persist(&state);
         Ok(ApiResponse {
             meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),

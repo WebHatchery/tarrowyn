@@ -208,6 +208,7 @@ impl WorldRepository {
             .phase6
             .auth_link_results
             .insert(cache_key, response.clone());
+        record_command_outcome(&mut state, true);
         self.persist(&state);
         Ok(ApiResponse {
             meta: meta(
@@ -282,6 +283,7 @@ impl WorldRepository {
             .phase6
             .auth_refresh_results
             .insert(cache_key, response.clone());
+        record_command_outcome(&mut state, true);
         self.persist(&state);
         Ok(ApiResponse {
             meta: meta(
@@ -358,6 +360,7 @@ impl WorldRepository {
             .phase6
             .auth_revoke_results
             .insert(format!("{}:{}", key, request.request_id), response.clone());
+        record_command_outcome(&mut state, true);
         self.persist(&state);
         Ok(ApiResponse {
             meta: meta(
@@ -462,6 +465,7 @@ impl WorldRepository {
             reason,
         };
         state.phase6.request_results.insert(cache, response.clone());
+        record_command_outcome(&mut state, response.accepted);
         self.persist(&state);
         Ok(ApiResponse {
             meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),

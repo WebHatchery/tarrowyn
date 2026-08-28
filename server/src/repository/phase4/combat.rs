@@ -285,6 +285,7 @@ impl super::super::WorldRepository {
             .phase4
             .request_results
             .insert(cache, super::Phase4Response::Combat(response.clone()));
+        super::super::record_command_outcome(&mut state, response.accepted);
         self.persist(&state);
         Ok(ApiResponse {
             meta: super::super::meta(state.tick, Some(request.request_id), Some(state.cursor)),

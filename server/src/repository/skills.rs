@@ -531,6 +531,7 @@ fn finish_skill_action(
         cache,
         super::phase4::Phase4Response::Skill(response.clone()),
     );
+    record_command_outcome(state, response.accepted);
     repository.persist(state);
     Ok(ApiResponse {
         meta: meta(

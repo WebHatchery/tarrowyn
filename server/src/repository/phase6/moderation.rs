@@ -71,6 +71,7 @@ impl WorldRepository {
             .phase6
             .moderation_last_report_ticks
             .insert(key, report_tick);
+        super::super::record_command_outcome(&mut state, true);
         self.persist(&state);
         Ok(ApiResponse {
             meta: meta(

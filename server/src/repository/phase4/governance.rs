@@ -291,6 +291,7 @@ fn finish(
         .phase4
         .request_results
         .insert(cache, super::Phase4Response::Governance(response.clone()));
+    super::super::record_command_outcome(state, response.accepted);
     repository.persist(state);
     Ok(ApiResponse {
         meta: super::super::meta(state.tick, Some(request_id), Some(state.cursor)),

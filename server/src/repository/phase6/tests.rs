@@ -3,7 +3,7 @@ use super::super::ServerConfig;
 use super::super::WorldRepository;
 use super::backup::write;
 use std::fs;
-use tarrowyn_protocol::GuestSessionRequest;
+use tarrowyn_protocol::{GuestSessionRequest, MovementIntent};
 
 #[test]
 fn backup_replaces_the_snapshot_as_one_complete_json_file() {
@@ -60,4 +60,31 @@ fn operational_metrics_require_a_configured_support_operator() {
     assert_eq!(error.status, 403);
     assert_eq!(error.error.code, "support_operator_required");
     assert!(repository.ops_metrics(&operator.account_token).is_ok());
+
+    repository
+        .movement(
+            &player.account_token,
+            MovementIntent {
+                request_id: "metrics-accepted".to_owned(),
+                dx: 0,
+                dy: 1,
+            },
+        )
+        .unwrap();
+    repository
+        .movement(
+            &player.account_token,
+            MovementIntent {
+                request_id: "metrics-rejected".to_owned(),
+                dx: 2,
+                dy: 0,
+            },
+        )
+        .unwrap();
+    let metrics = repository
+        .ops_metrics(&operator.account_token)
+        .unwrap()
+        .data;
+    assert!(metrics.completed_commands >= 1);
+    assert!(metrics.rejected_commands >= 1);
 }

@@ -259,6 +259,7 @@ impl WorldRepository {
             .expect("identity exists")
             .farming_results
             .insert(request_id.clone(), response.clone());
+        record_command_outcome(state, response.accepted);
         self.persist(state);
         Ok(ApiResponse {
             meta: meta(state.tick, Some(request_id), Some(state.cursor)),

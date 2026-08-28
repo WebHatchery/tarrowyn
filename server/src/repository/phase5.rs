@@ -196,6 +196,7 @@ impl WorldRepository {
             .phase5
             .request_results
             .insert(cache_key, Phase5Response::Route(response.clone()));
+        record_command_outcome(&mut state, response.accepted);
         self.persist(&state);
         Ok(ApiResponse {
             meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
@@ -243,6 +244,7 @@ impl WorldRepository {
                         reason = Some("Choose a visible route before starting travel.".to_owned());
                         let response =
                             travel_response(&mut state, &key, request, None, false, reason);
+                        record_command_outcome(&mut state, false);
                         self.persist(&state);
                         return response;
                     };
@@ -262,6 +264,7 @@ impl WorldRepository {
                         );
                         let response =
                             travel_response(&mut state, &key, request, None, false, reason);
+                        record_command_outcome(&mut state, false);
                         self.persist(&state);
                         return response;
                     };
@@ -302,6 +305,7 @@ impl WorldRepository {
                 let Some(mut travel) = current_travel else {
                     reason = Some("There is no journey to interrupt.".to_owned());
                     let response = travel_response(&mut state, &key, request, None, false, reason);
+                    record_command_outcome(&mut state, false);
                     self.persist(&state);
                     return response;
                 };
@@ -331,6 +335,7 @@ impl WorldRepository {
                 let Some(mut travel) = current_travel else {
                     reason = Some("There is no interrupted journey to recover.".to_owned());
                     let response = travel_response(&mut state, &key, request, None, false, reason);
+                    record_command_outcome(&mut state, false);
                     self.persist(&state);
                     return response;
                 };
@@ -361,6 +366,7 @@ impl WorldRepository {
             .phase5
             .request_results
             .insert(cache_key, Phase5Response::Travel(response.clone()));
+        record_command_outcome(&mut state, response.accepted);
         self.persist(&state);
         Ok(ApiResponse {
             meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
@@ -429,6 +435,7 @@ impl WorldRepository {
             .phase5
             .request_results
             .insert(cache_key, Phase5Response::Market(response.clone()));
+        record_command_outcome(&mut state, response.accepted);
         self.persist(&state);
         Ok(ApiResponse {
             meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
@@ -502,6 +509,7 @@ impl WorldRepository {
             .phase5
             .request_results
             .insert(cache_key, Phase5Response::Event(response.clone()));
+        record_command_outcome(&mut state, response.accepted);
         self.persist(&state);
         Ok(ApiResponse {
             meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),

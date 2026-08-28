@@ -348,6 +348,7 @@ impl WorldRepository {
                     .expect("identity exists")
                     .movement_results
                     .insert(intent.request_id.clone(), response.clone());
+                record_command_outcome(&mut state, response.accepted);
                 self.persist(&state);
                 return Ok(ApiResponse {
                     meta: meta(state.tick, Some(intent.request_id), Some(cursor)),
@@ -361,6 +362,7 @@ impl WorldRepository {
             .expect("identity exists")
             .movement_results
             .insert(intent.request_id.clone(), response.clone());
+        record_command_outcome(&mut state, response.accepted);
         self.persist(&state);
         Ok(ApiResponse {
             meta: meta(state.tick, Some(intent.request_id), Some(state.cursor)),
@@ -484,6 +486,7 @@ impl WorldRepository {
             .expect("identity exists")
             .chat_results
             .insert(request.request_id.clone(), response.clone());
+        record_command_outcome(&mut state, response.accepted);
         self.persist(&state);
         Ok(ApiResponse {
             meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
@@ -538,6 +541,15 @@ impl WorldRepository {
             eprintln!("Tarrowyn persistence write failed: {error}");
         }
     }
+}
+
+pub(super) fn record_command_outcome(state: &mut RepositoryState, accepted: bool) {
+    let counter = if accepted {
+        &mut state.phase6.completed_commands
+    } else {
+        &mut state.phase6.rejected_commands
+    };
+    *counter = counter.saturating_add(1);
 }
 
 fn authenticate(

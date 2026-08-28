@@ -72,6 +72,7 @@ impl WorldRepository {
             .expect("identity exists")
             .trade_results
             .insert(request.request_id.clone(), response.clone());
+        record_command_outcome(&mut state, response.accepted);
         self.persist(&state);
         Ok(ApiResponse {
             meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
