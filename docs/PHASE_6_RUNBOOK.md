@@ -30,14 +30,16 @@ For a configured local MySQL preview, run:
 .\scripts\verify_mysql.ps1
 ```
 
-The script uses a separate HTTP port and temporary JSON backup, adds one uniquely
-named guest identity to the configured preview world, checks the migration and
-animal projection, replays one chat request, restarts the server, and then uses
-`mysqldump.exe` and `mysql.exe` to restore into a generated temporary database.
-It also submits eight overlapping retries of one chat request and requires a
-single cached result. It validates the restored world and identity index before
-dropping that generated database and removing its temporary files. It does not
-reset or delete the configured database.
+The script uses a separate HTTP port and temporary JSON backup, adds uniquely
+named guest and linked production identities to the configured preview world,
+checks the migration and animal projection, and replays chat, account-link,
+refresh, revoke, and moderation requests. It submits eight overlapping retries
+of one chat request and requires a single cached result, then restarts the
+server and checks persisted auth-revoke and moderation replay results. Finally,
+it uses `mysqldump.exe` and `mysql.exe` to restore into a generated temporary
+database. It validates the restored world and identity index before dropping
+that generated database and removing its temporary files. It does not reset or
+delete the configured database.
 
 ## Deploy, rollback, and maintenance
 
