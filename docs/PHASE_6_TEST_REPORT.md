@@ -40,7 +40,9 @@ failover.
 Representative checks cover unsupported identity providers, bounded provider
 subjects, empty repair notes, request-ID validation, idempotent regional
 mutations, expired/revoked access, refresh rotation, chat limits, and the
-protected no-PvP law response. Moderation reports are queued and audit-linked.
+protected no-PvP law response. Chat metadata, direct trades, claims, governance,
+moderation reports, and support repairs are audit-linked without copying chat
+text into the audit stream. Moderation reports are queued and audit-linked.
 The provider secret and TLS termination remain deployment concerns and are not
 stored in the repository.
 

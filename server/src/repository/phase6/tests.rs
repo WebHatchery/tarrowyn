@@ -3,7 +3,10 @@ use super::super::ServerConfig;
 use super::super::WorldRepository;
 use super::backup::write;
 use std::fs;
-use tarrowyn_protocol::{GuestSessionRequest, MovementIntent};
+use tarrowyn_protocol::{
+    ChatRequest, ClaimLifecycleAction, ClaimLifecycleRequest, GovernanceAction, GovernanceRequest,
+    GuestSessionRequest, MovementIntent, TradeAction, TradeBundle, TradeRequest,
+};
 
 #[test]
 fn backup_replaces_the_snapshot_as_one_complete_json_file() {
@@ -87,4 +90,85 @@ fn operational_metrics_require_a_configured_support_operator() {
         .data;
     assert!(metrics.completed_commands >= 1);
     assert!(metrics.rejected_commands >= 1);
+}
+
+#[test]
+fn player_social_economy_and_governance_commands_are_audited() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let actor = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("audit-actor".to_owned()),
+            reset: false,
+        })
+        .unwrap()
+        .data;
+    let recipient = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("audit-recipient".to_owned()),
+            reset: false,
+        })
+        .unwrap()
+        .data;
+
+    repository
+        .chat(
+            &actor.account_token,
+            ChatRequest {
+                request_id: "audit-chat".to_owned(),
+                channel: "settlement".to_owned(),
+                text: "A useful meeting note.".to_owned(),
+            },
+        )
+        .unwrap();
+    repository
+        .trade(
+            &actor.account_token,
+            TradeRequest {
+                request_id: "audit-trade".to_owned(),
+                action: TradeAction::Create,
+                trade_id: None,
+                recipient_account_id: Some(recipient.account_id.clone()),
+                offer: Some(TradeBundle::default()),
+                request: Some(TradeBundle::default()),
+            },
+        )
+        .unwrap();
+    repository
+        .claim_lifecycle(
+            &actor.account_token,
+            ClaimLifecycleRequest {
+                request_id: "audit-claim".to_owned(),
+                action: ClaimLifecycleAction::Request,
+                claim_id: None,
+                target_account_id: None,
+            },
+        )
+        .unwrap();
+    repository
+        .governance(
+            &actor.account_token,
+            GovernanceRequest {
+                request_id: "audit-governance".to_owned(),
+                action: GovernanceAction::ClaimOffice,
+                office_id: Some("steward".to_owned()),
+                proposal_id: None,
+                public_action: None,
+                target: None,
+                cost: None,
+                tax_rate_percent: None,
+            },
+        )
+        .unwrap();
+
+    let state = repository.state.lock().unwrap();
+    let actions: Vec<_> = state
+        .phase6
+        .audits
+        .iter()
+        .map(|record| record.action.as_str())
+        .collect();
+    assert!(actions.contains(&"chat.send"));
+    assert!(actions.contains(&"trade.create"));
+    assert!(actions.contains(&"claim.lifecycle"));
+    assert!(actions.contains(&"governance.action"));
 }

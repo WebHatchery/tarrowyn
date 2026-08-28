@@ -55,6 +55,12 @@ impl WorldRepository {
                 data: previous,
             });
         }
+        let account_id = state
+            .identities
+            .get(&identity_key)
+            .expect("identity exists")
+            .account_id
+            .clone();
         let response = match request.action {
             TradeAction::Create => create_trade(&mut state, &self.config, &identity_key, &request),
             TradeAction::Review => review_trade(&state, &identity_key, &request),
@@ -72,6 +78,20 @@ impl WorldRepository {
             .expect("identity exists")
             .trade_results
             .insert(request.request_id.clone(), response.clone());
+        let target = response
+            .trade
+            .as_ref()
+            .map(|trade| trade.trade_id.as_str())
+            .unwrap_or("unresolved-trade");
+        let action = format!("trade.{:?}", request.action).to_ascii_lowercase();
+        super::phase6::audit_command(
+            &mut state,
+            &account_id,
+            &action,
+            target,
+            response.accepted,
+            "A direct player-trade command was recorded in the settlement audit stream.",
+        );
         record_command_outcome(&mut state, response.accepted);
         self.persist(&state);
         Ok(ApiResponse {

@@ -501,6 +501,20 @@ impl WorldRepository {
             .expect("identity exists")
             .chat_results
             .insert(request.request_id.clone(), response.clone());
+        let actor = state
+            .identities
+            .get(&key)
+            .expect("identity exists")
+            .account_id
+            .clone();
+        phase6::audit_command(
+            &mut state,
+            &actor,
+            "chat.send",
+            channel,
+            response.accepted,
+            "Chat metadata was recorded without retaining message text in the audit stream.",
+        );
         record_command_outcome(&mut state, response.accepted);
         self.persist(&state);
         Ok(ApiResponse {

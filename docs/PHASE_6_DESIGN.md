@@ -20,8 +20,9 @@ preserving an anonymised chronicle entry where required for world continuity.
 
 All mutation endpoints validate bounded request IDs, use server authorization,
 and retain idempotent results where retries can happen. Chat has length and
-per-tick limits; trades, claims, governance, moderation, and support repairs
-are recorded in the audit stream. The no-PvP law boundary is still active.
+per-tick limits; chat metadata, trades, claims, governance, moderation, and
+support repairs are recorded in the audit stream without copying private chat
+text into audit notes. The no-PvP law boundary is still active.
 
 ## Persistence, backups, and repair
 

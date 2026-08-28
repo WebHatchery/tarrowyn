@@ -287,6 +287,26 @@ fn finish(
     request_id: String,
     response: GovernanceResponse,
 ) -> Result<ApiResponse<GovernanceResponse>, super::super::RepositoryError> {
+    let actor = cache
+        .strip_prefix("phase4:")
+        .and_then(|value| value.split_once(':'))
+        .map(|(account, _)| account)
+        .unwrap_or("unknown-account")
+        .to_owned();
+    let target = response
+        .governance
+        .proposals
+        .last()
+        .map(|proposal| proposal.proposal_id.clone())
+        .unwrap_or_else(|| request_id.clone());
+    super::super::phase6::audit_command(
+        state,
+        &actor,
+        "governance.action",
+        &target,
+        response.accepted,
+        "A bounded settlement-governance command was recorded in the audit stream.",
+    );
     state
         .phase4
         .request_results

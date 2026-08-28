@@ -289,6 +289,25 @@ fn finish(
     request_id: String,
     response: ClaimLifecycleResponse,
 ) -> Result<ApiResponse<ClaimLifecycleResponse>, super::super::RepositoryError> {
+    let actor = cache
+        .strip_prefix("phase4:")
+        .and_then(|value| value.split_once(':'))
+        .map(|(account, _)| account)
+        .unwrap_or("unknown-account")
+        .to_owned();
+    let target = response
+        .claim
+        .as_ref()
+        .map(|claim| claim.claim_id.clone())
+        .unwrap_or_else(|| request_id.clone());
+    super::super::phase6::audit_command(
+        state,
+        &actor,
+        "claim.lifecycle",
+        &target,
+        response.accepted,
+        "A land-right command was recorded in the settlement audit stream.",
+    );
     state
         .phase4
         .request_results
