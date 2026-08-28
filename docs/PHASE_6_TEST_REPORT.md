@@ -69,6 +69,8 @@ priority in the visible status line and that degraded readiness without a
 message still gives the player a tap-to-reconnect instruction. The health
 request is started with the guest connection attempt, so maintenance guidance
 can appear before the authenticated state request succeeds.
+The shared protocol tests also reject a response whose protocol version does
+not match the client before endpoint data can be projected.
 The selected MySQL bridge now has a checked-in migration, startup pool/migration
 failure handling, transactional snapshot/index writes, and driver-selection
 tests. The configured local preview MySQL service passed

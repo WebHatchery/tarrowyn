@@ -23,6 +23,25 @@ fn response_metadata_is_versioned_and_can_carry_request_and_cursor() {
 }
 
 #[test]
+fn response_deserialization_rejects_a_deployment_protocol_mismatch() {
+    let json = serde_json::json!({
+        "meta": {
+            "protocol_version": "5",
+            "server_tick": 12
+        },
+        "data": {
+            "status": "ok",
+            "service": "tarrowyn-server",
+            "protocol_version": "5"
+        }
+    });
+    let error = serde_json::from_value::<ApiResponse<HealthResponse>>(json)
+        .expect_err("a mismatched deployment response must fail closed")
+        .to_string();
+    assert!(error.contains("unsupported Tarrowyn protocol version `5`"));
+}
+
+#[test]
 fn chat_contract_preserves_bounded_message_fields() {
     let request = ChatRequest {
         request_id: "chat-1".to_owned(),

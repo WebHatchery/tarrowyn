@@ -156,7 +156,9 @@ Suggested production-facing additions include:
 The client must handle session expiry, maintenance, deployment mismatch,
 rate-limiting, moderation responses, restore-era cursor invalidation, and
 regional handoff. It must never present a locally cached success as an
-authoritative reward.
+authoritative reward. Shared response decoding rejects a protocol-version
+mismatch before any endpoint projection can be applied; the client surfaces
+that failure through its visible recovery state and `Reconnect` control.
 
 ## Acceptance test
 

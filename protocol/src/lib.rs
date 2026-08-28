@@ -1,6 +1,6 @@
 //! Versioned wire types shared by the Tarrowyn client and development server.
 
-use serde::{Deserialize, Serialize};
+use serde::{de, Deserialize, Serialize};
 
 mod phase3;
 pub use phase3::*;
@@ -38,10 +38,38 @@ impl ApiMeta {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Serialize, PartialEq)]
 pub struct ApiResponse<T> {
     pub meta: ApiMeta,
     pub data: T,
+}
+
+impl<'de, T> Deserialize<'de> for ApiResponse<T>
+where
+    T: Deserialize<'de>,
+{
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: de::Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        struct WireResponse<T> {
+            meta: ApiMeta,
+            data: T,
+        }
+
+        let response = WireResponse::deserialize(deserializer)?;
+        if response.meta.protocol_version != PROTOCOL_VERSION {
+            return Err(de::Error::custom(format!(
+                "unsupported Tarrowyn protocol version `{}`; expected `{}`",
+                response.meta.protocol_version, PROTOCOL_VERSION
+            )));
+        }
+        Ok(Self {
+            meta: response.meta,
+            data: response.data,
+        })
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
