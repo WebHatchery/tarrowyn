@@ -12,8 +12,10 @@ use tarrowyn_protocol::{
 };
 
 mod logic;
+mod market;
 mod state;
 use logic::*;
+pub(super) use market::reconcile_market_order;
 pub(super) use state::{fresh, Phase5Response, Phase5State};
 
 const REGION_ID: &str = "hearthlands";

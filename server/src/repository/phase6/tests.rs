@@ -5,9 +5,9 @@ use super::backup::write;
 use std::fs;
 use tarrowyn_protocol::{
     AccountDeletionRequest, AuthLinkRequest, ChatRequest, ClaimLifecycleAction,
-    ClaimLifecycleRequest, GovernanceAction, GovernanceRequest, GuestSessionRequest,
-    MovementIntent, SupportRepairAction, SupportRepairRequest, TradeAction, TradeBundle,
-    TradeRequest,
+    ClaimLifecycleRequest, CommodityKind, GovernanceAction, GovernanceRequest, GuestSessionRequest,
+    MarketOrderAction, MarketOrderRequest, MarketOrderStatus, MovementIntent, SupportRepairAction,
+    SupportRepairRequest, TradeAction, TradeBundle, TradeRequest,
 };
 
 mod long_session;
@@ -422,6 +422,121 @@ fn support_repairs_restore_claim_access_and_merge_household_history() {
             .unwrap()
             .data,
         merged
+    );
+}
+
+#[test]
+fn support_repair_restores_failed_market_escrow_once() {
+    let repository = WorldRepository::new(ServerConfig {
+        support_operator_accounts: vec!["dev-account-1".to_owned()],
+        ..ServerConfig::default()
+    });
+    let operator = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("repair-trade-operator".to_owned()),
+            reset: false,
+        })
+        .unwrap()
+        .data;
+    let before_escrow = {
+        let state = repository.state.lock().unwrap();
+        state
+            .identities
+            .get("repair-trade-operator")
+            .expect("operator identity exists")
+            .inventory
+            .seeds
+    };
+    let created = repository
+        .market_order(
+            &operator.account_token,
+            MarketOrderRequest {
+                request_id: "repair-trade-create".to_owned(),
+                action: MarketOrderAction::Create,
+                order_id: None,
+                destination_location_id: Some("whisperwood-outpost".to_owned()),
+                commodity: Some(CommodityKind::Seeds),
+                quantity: Some(2),
+            },
+        )
+        .unwrap()
+        .data;
+    let order_id = created.order.expect("market order created").order_id;
+    {
+        let mut state = repository.state.lock().unwrap();
+        state
+            .phase5
+            .market_orders
+            .iter_mut()
+            .find(|order| order.order_id == order_id)
+            .expect("market order remains recorded")
+            .status = MarketOrderStatus::Failed;
+    }
+
+    let repair_request = SupportRepairRequest {
+        request_id: "repair-failed-trade".to_owned(),
+        action: SupportRepairAction::ReconcileTrade,
+        account_id: Some(operator.account_id.clone()),
+        target_id: Some(order_id.clone()),
+        note: "Restore escrow from an expired failed shipment.".to_owned(),
+    };
+    let repaired = repository
+        .support_repair(&operator.account_token, repair_request.clone())
+        .unwrap()
+        .data;
+    assert!(repaired.accepted);
+    {
+        let state = repository.state.lock().unwrap();
+        let identity = state
+            .identities
+            .get("repair-trade-operator")
+            .expect("operator identity remains present");
+        assert_eq!(identity.inventory.seeds, before_escrow);
+        let order = state
+            .phase5
+            .market_orders
+            .iter()
+            .find(|order| order.order_id == order_id)
+            .expect("repaired order remains recorded");
+        assert_eq!(order.status, MarketOrderStatus::Cancelled);
+        assert_eq!(order.settled_tick, Some(state.tick));
+        assert_eq!(state.phase5.cursor, state.cursor);
+    }
+    assert_eq!(
+        repository
+            .support_repair(&operator.account_token, repair_request)
+            .unwrap()
+            .data,
+        repaired
+    );
+
+    let second_attempt = repository
+        .support_repair(
+            &operator.account_token,
+            SupportRepairRequest {
+                request_id: "repair-failed-trade-second-attempt".to_owned(),
+                action: SupportRepairAction::ReconcileTrade,
+                account_id: Some(operator.account_id),
+                target_id: Some(order_id),
+                note: "Confirm a closed shipment cannot be refunded twice.".to_owned(),
+            },
+        )
+        .unwrap()
+        .data;
+    assert!(!second_attempt.accepted);
+    assert!(second_attempt
+        .reason
+        .as_deref()
+        .is_some_and(|reason| reason.contains("open or failed")));
+    let state = repository.state.lock().unwrap();
+    assert_eq!(
+        state
+            .identities
+            .get("repair-trade-operator")
+            .expect("operator identity remains present")
+            .inventory
+            .seeds,
+        before_escrow
     );
 }
 

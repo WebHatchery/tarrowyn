@@ -115,8 +115,9 @@ transactional bridge. `scripts/verify_mysql.ps1` covers the local migration,
 restart, duplicate-request, backup, and native dump/restore portion of that
 gate; target-environment failover, concurrency, and rollback drills remain
 explicit. For a stuck journey use `ClearStuckTravel`, for a duplicate or invalid
-inventory use `NormalizeInventory`, and for an open failed shipment use
-`ReconcileTrade`. For a lost access flag on an active, non-expired claim, use
+inventory use `NormalizeInventory`, and for an open or failed shipment use
+`ReconcileTrade`; the operation restores the origin escrow before closing the
+order. For a lost access flag on an active, non-expired claim, use
 `RestoreClaim` with the target account and claim ID; it never extends the lease
 or assigns ownership. For duplicated regional household records, use
 `MergeHousehold` with the regional household ID; it retains distinct history

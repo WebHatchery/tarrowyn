@@ -54,9 +54,10 @@ impl WorldRepository {
         let (accepted, summary, reason) = match request.action {
             SupportRepairAction::ClearStuckTravel => clear_stuck_travel(&mut state, target_key),
             SupportRepairAction::NormalizeInventory => normalize_inventory(&mut state, target_key),
-            SupportRepairAction::ReconcileTrade => {
-                reconcile_trade(&mut state, request.target_id.as_deref())
-            }
+            SupportRepairAction::ReconcileTrade => super::super::phase5::reconcile_market_order(
+                &mut state,
+                request.target_id.as_deref(),
+            ),
             SupportRepairAction::RestoreClaim => {
                 restore_claim(&mut state, &target_account, request.target_id.as_deref())
             }
@@ -134,36 +135,6 @@ fn normalize_inventory(
     (
         true,
         "Inventory values were normalised to the documented support ceiling.".to_owned(),
-        None,
-    )
-}
-
-fn reconcile_trade(
-    state: &mut RepositoryState,
-    target_id: Option<&str>,
-) -> (bool, String, Option<String>) {
-    let Some(order_id) = target_id else {
-        return (
-            false,
-            String::new(),
-            Some("A market order ID is required.".to_owned()),
-        );
-    };
-    let Some(order) = state.phase5.market_orders.iter_mut().find(|order| {
-        order.order_id == order_id
-            && matches!(order.status, tarrowyn_protocol::MarketOrderStatus::Open)
-    }) else {
-        return (
-            false,
-            String::new(),
-            Some("No open market order needs reconciliation.".to_owned()),
-        );
-    };
-    order.status = tarrowyn_protocol::MarketOrderStatus::Cancelled;
-    (
-        true,
-        "The open order was cancelled; its audit trail remains available for refund review."
-            .to_owned(),
         None,
     )
 }

@@ -104,6 +104,9 @@ records and cursor, and excludes session tokens and provider subjects. Support
 repair fixtures now prove an active claim's access flag can be restored without
 extending its lease, and duplicate regional household records can be merged
 while retaining history; both operations remain replay-safe and audited.
+The failed-shipment repair fixture also proves that `ReconcileTrade` restores
+the owner's escrow, closes the failed order, records the regional repair, and
+returns the same response on a replay without paying the escrow twice.
 The provider secret and TLS termination remain deployment concerns and are not
 stored in the repository.
 

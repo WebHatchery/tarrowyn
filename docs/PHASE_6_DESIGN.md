@@ -82,6 +82,9 @@ normalisation, trade reconciliation, active-claim access restoration, duplicate
 regional-household merging, and moderation resolution. Claim restoration never
 extends a lease or changes ownership. Household merging retains distinct
 history entries and rejects conflicting identity or same-tick status records.
+Trade reconciliation is owned by the market authority: it accepts only open or
+failed orders, restores the original origin escrow to the owner or regional
+stock, then closes the order so a second request cannot refund it twice.
 Unsupported repairs return a clear reason rather than guessing at state. Every
 repair carries an operator note and audit ID.
 The allowlisted `GET /v1/support/account?account_id=...` view exposes the
