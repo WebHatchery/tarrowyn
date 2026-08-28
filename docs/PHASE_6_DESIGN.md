@@ -25,7 +25,7 @@ are recorded in the audit stream. The no-PvP law boundary is still active.
 
 ## Persistence, backups, and repair
 
-Storage version 16 adds persisted auth-link, auth-refresh, and auth-revoke replay results
+Storage version 17 adds persisted auth-link, auth-refresh, auth-revoke, and moderation-report replay results
 alongside the persisted Bellweather animal condition and daily care state,
 the reposition opening and wind spark,
 field-tool condition, and real-time lease timestamps

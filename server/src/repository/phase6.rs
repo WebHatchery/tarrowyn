@@ -8,11 +8,12 @@ use std::collections::{HashMap, VecDeque};
 use tarrowyn_protocol::{
     AccountResponse, ApiResponse, AuditRecord, AuthLinkRequest, AuthLinkResponse,
     AuthRefreshRequest, AuthRefreshResponse, AuthRevokeRequest, AuthRevokeResponse, AuthSession,
-    ChronicleSearchResponse, ModerationReportRequest, ModerationReportResponse, OpsHealthResponse,
-    OpsMetricsResponse, SupportRepairAction, SupportRepairRequest, SupportRepairResponse,
+    ChronicleSearchResponse, ModerationReportResponse, OpsHealthResponse, OpsMetricsResponse,
+    SupportRepairAction, SupportRepairRequest, SupportRepairResponse,
 };
 
 mod backup;
+mod moderation;
 
 const IDENTITY_PROVIDER: &str = "webhatchery-identity-oidc";
 const PRIVACY_POLICY_VERSION: &str = "2026-08-19";
@@ -51,6 +52,8 @@ pub(super) struct Phase6State {
     pub(super) auth_revoke_results: HashMap<String, AuthRevokeResponse>,
     pub(super) audits: VecDeque<AuditRecord>,
     pub(super) reports: HashMap<String, ModerationReportResponse>,
+    #[serde(default)]
+    pub(super) moderation_results: HashMap<String, ModerationReportResponse>,
     pub(super) request_results: HashMap<String, SupportRepairResponse>,
     pub(super) last_backup_tick: Option<u64>,
     pub(super) last_backup_path: Option<String>,
@@ -76,6 +79,7 @@ pub(super) fn fresh(_config: &ServerConfig) -> Phase6State {
         auth_revoke_results: HashMap::new(),
         audits: VecDeque::new(),
         reports: HashMap::new(),
+        moderation_results: HashMap::new(),
         request_results: HashMap::new(),
         last_backup_tick: None,
         last_backup_path: None,
@@ -467,55 +471,6 @@ impl WorldRepository {
         })
     }
 
-    pub fn moderation_report(
-        &self,
-        token: &str,
-        request: ModerationReportRequest,
-    ) -> Result<ApiResponse<ModerationReportResponse>, RepositoryError> {
-        let mut state = self.state.lock().expect("world repository lock poisoned");
-        let key = authenticate(&mut state, token, &self.config)?;
-        validate_request_id(&request.request_id)?;
-        if request.category.trim().is_empty() || request.note.trim().is_empty() {
-            return Err(RepositoryError::new(
-                400,
-                "invalid_report",
-                "A moderation category and note are required.",
-            ));
-        }
-        let report_id = format!("report-{}", state.phase6.next_audit_id);
-        state.phase6.next_audit_id = state.phase6.next_audit_id.saturating_add(1);
-        let response = ModerationReportResponse {
-            request_id: request.request_id,
-            accepted: true,
-            report_id: report_id.clone(),
-            status: "queued".to_owned(),
-            reason: None,
-        };
-        state
-            .phase6
-            .reports
-            .insert(report_id.clone(), response.clone());
-        let actor = state
-            .identities
-            .get(&key)
-            .expect("identity exists")
-            .account_id
-            .clone();
-        audit(
-            &mut state,
-            &actor,
-            "moderation.report",
-            request.target_account_id.as_deref().unwrap_or("message"),
-            "accepted",
-            &request.note,
-        );
-        self.persist(&state);
-        Ok(ApiResponse {
-            meta: meta(state.tick, None, Some(state.cursor)),
-            data: response,
-        })
-    }
-
     pub fn ops_health(&self) -> ApiResponse<OpsHealthResponse> {
         let state = self.state.lock().expect("world repository lock poisoned");
         ApiResponse {
@@ -628,6 +583,7 @@ pub(super) fn phase6_tick(state: &mut RepositoryState, config: &ServerConfig) {
     trim_replay_cache(&mut state.phase6.auth_link_results);
     trim_replay_cache(&mut state.phase6.auth_refresh_results);
     trim_replay_cache(&mut state.phase6.auth_revoke_results);
+    trim_replay_cache(&mut state.phase6.moderation_results);
     state.phase6.audits.truncate(512);
 }
 
