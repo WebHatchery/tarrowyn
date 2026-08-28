@@ -240,6 +240,25 @@ try {
         $sessions += New-GuestSession "phase6-load-$runId-$index" $true
     }
     $headers = @{ Authorization = "Bearer $($sessions[0].data.account_token)" }
+    $support = Invoke-RestMethod -Method Get `
+        -Uri "http://$ServerAddress/v1/support/account?account_id=$($sessions[0].data.account_id)" `
+        -Headers $headers
+    Assert-True ($support.data.account.account_id -eq $sessions[0].data.account_id) "the allowlisted support view returned the wrong account"
+    Assert-True ($support.data.account.character_id -eq $sessions[0].data.character_id) "the support view returned the wrong character boundary"
+    Assert-True ($support.data.event_cursor -ge 0) "the support view omitted its event cursor"
+    foreach ($secretField in @("account_token", "refresh_token", "provider_subject")) {
+        Assert-True ($support.data.PSObject.Properties.Name -notcontains $secretField) "the support view exposed $secretField"
+        Assert-True ($support.data.account.PSObject.Properties.Name -notcontains $secretField) "the support account exposed $secretField"
+    }
+    $ordinarySupportForbidden = $false
+    try {
+        Invoke-RestMethod -Method Get `
+            -Uri "http://$ServerAddress/v1/support/account?account_id=$($sessions[0].data.account_id)" `
+            -Headers @{ Authorization = "Bearer $($sessions[1].data.account_token)" }
+    } catch {
+        $ordinarySupportForbidden = $_.Exception.Response.StatusCode.value__ -eq 403
+    }
+    Assert-True $ordinarySupportForbidden "an ordinary player could read the support account view"
     $seed = Invoke-PostJson "/v1/events/region" `
         @{ request_id = "phase6-load-$runId-event"; action = "seed" } $headers
     Assert-True $seed.data.accepted "the regional event seed was rejected"

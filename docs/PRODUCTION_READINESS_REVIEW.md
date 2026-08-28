@@ -46,6 +46,9 @@ GDD's several-hundred-player direction; the supported release target remains
 The standalone JSON restore-on-a-copy drill also passed: it loaded the generated
 backup, confirmed readiness and a replacement backup, ran the regional Phase 5
 tests, and preserved the active state file.
+The live Phase 6 journey now also proves the allowlisted support-account HTTP
+view, its character and cursor boundary, secret-free response shape, and the
+ordinary-player 403 boundary.
 
 After launch, content operations should add new routes, farm plots, crops, contracts,
 events, households, and settlement opportunities through the validated JSON

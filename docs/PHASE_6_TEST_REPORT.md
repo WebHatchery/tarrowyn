@@ -136,6 +136,9 @@ The standalone `scripts/phase6_failure_drill.ps1` also passed on the same date:
 it loaded the generated JSON backup into an isolated temporary server, confirmed
 readiness and a fresh backup, ran the regional Phase 5 tests, and left the active
 state untouched.
+The live Phase 6 load journey also reads the allowlisted support-account view,
+checks its character and event-cursor boundary, asserts that access and refresh
+credentials are absent, and confirms an ordinary player receives HTTP 403.
 
 ## Long-session gate and remaining risks
 
