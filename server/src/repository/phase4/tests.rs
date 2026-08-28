@@ -150,7 +150,6 @@ fn settlement_tax_is_bounded_daily_and_recorded_in_the_public_ledger() {
 #[test]
 fn land_rights_complete_the_lifecycle_without_touching_character_state() {
     let repo = WorldRepository::new(ServerConfig {
-        lease_duration_ticks: 2,
         claim_reclaim_grace_ticks: 1,
         ..ServerConfig::default()
     });
@@ -243,6 +242,64 @@ fn land_rights_complete_the_lifecycle_without_touching_character_state() {
         tarrowyn_protocol::ClaimLifecycleStatus::Reclaimed
     );
     assert_eq!(repo.inventory(&one.account_token).unwrap().data.gold, 12);
+}
+
+#[test]
+fn lease_expiry_uses_real_time_instead_of_the_accelerated_world_clock() {
+    let repo = WorldRepository::new(ServerConfig {
+        day_length_seconds: 1.0,
+        world_seconds_per_tick: 10_000.0,
+        ..ServerConfig::default()
+    });
+    let session = guest(&repo, "phase4-real-lease");
+    let requested = repo
+        .claim_lifecycle(
+            &session.account_token,
+            ClaimLifecycleRequest {
+                request_id: "real-request".to_owned(),
+                action: ClaimLifecycleAction::Request,
+                claim_id: None,
+                target_account_id: None,
+            },
+        )
+        .unwrap()
+        .data;
+    let claim_id = requested.claim.unwrap().claim_id;
+    let approved = repo
+        .claim_lifecycle(
+            &session.account_token,
+            ClaimLifecycleRequest {
+                request_id: "real-approve".to_owned(),
+                action: ClaimLifecycleAction::Approve,
+                claim_id: Some(claim_id.clone()),
+                target_account_id: None,
+            },
+        )
+        .unwrap()
+        .data
+        .claim
+        .unwrap();
+    let ninety_days = 90 * 24 * 60 * 60;
+    assert_eq!(approved.lease_days, 90);
+    assert_eq!(
+        approved.expires_at_unix_seconds - approved.started_at_unix_seconds,
+        ninety_days
+    );
+
+    for _ in 0..5 {
+        repo.tick();
+    }
+    let claims = repo.claims(&session.account_token).unwrap().data;
+    assert_eq!(claims.lease_duration_days, 90);
+    let claim = claims
+        .claims
+        .into_iter()
+        .find(|claim| claim.claim_id == claim_id)
+        .unwrap();
+    assert_eq!(
+        claim.status,
+        tarrowyn_protocol::ClaimLifecycleStatus::Active
+    );
 }
 
 #[test]

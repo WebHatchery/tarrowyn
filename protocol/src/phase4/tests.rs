@@ -41,6 +41,7 @@ fn phase_four_claims_and_knowledge_round_trip() {
         claims: ClaimsResponse {
             claims: Vec::new(),
             available_plots: vec![Position { x: 2, y: 8 }],
+            lease_duration_days: 90,
             cursor: 4,
         },
         reason: None,

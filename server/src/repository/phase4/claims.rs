@@ -13,9 +13,11 @@ impl super::super::WorldRepository {
         let mut state = self.state.lock().expect("world repository lock poisoned");
         super::super::expire_sessions(&mut state, &self.config);
         super::super::authenticate(&mut state, token, &self.config)?;
+        tick(&mut state, &self.config);
+        self.persist(&state);
         Ok(ApiResponse {
             meta: super::super::meta(state.tick, None, Some(state.cursor)),
-            data: claims_view(&state),
+            data: claims_view(&state, &self.config),
         })
     }
 
@@ -38,11 +40,12 @@ impl super::super::WorldRepository {
                 data: response.clone(),
             });
         }
+        tick(&mut state, &self.config);
         let mut response = ClaimLifecycleResponse {
             request_id: request.request_id.clone(),
             accepted: false,
             claim: None,
-            claims: claims_view(&state),
+            claims: claims_view(&state, &self.config),
             reason: None,
         };
         match request.action {
@@ -59,9 +62,11 @@ impl super::super::WorldRepository {
                         owner_account_id: Some(actor_id.clone()),
                         owner_name: Some(actor_name.clone()),
                         position,
-                        lease_days: 8,
+                        lease_days: super::lease_duration_days(&self.config),
                         started_tick: state.tick,
                         expires_tick: state.tick,
+                        started_at_unix_seconds: 0,
+                        expires_at_unix_seconds: 0,
                         last_active_tick: state.tick,
                         status: ClaimLifecycleStatus::Requested,
                         approved_by: None,
@@ -109,10 +114,15 @@ impl super::super::WorldRepository {
                     response.reason = Some("That lease is not awaiting approval.".to_owned());
                 } else {
                     let tick = state.tick;
+                    let started_at = super::unix_time_seconds();
                     let claim = &mut state.phase4.claims[index];
                     claim.status = ClaimLifecycleStatus::Active;
                     claim.approved_by = Some(actor_id.clone());
-                    claim.expires_tick = tick.saturating_add(self.config.lease_duration_ticks);
+                    claim.lease_days = super::lease_duration_days(&self.config);
+                    claim.started_at_unix_seconds = started_at;
+                    claim.expires_at_unix_seconds =
+                        started_at.saturating_add(self.config.lease_duration_seconds.max(1));
+                    claim.expires_tick = tick;
                     claim.building_access = true;
                     claim.inspection_note =
                         "Active recognised land right; renewal and transfer are recorded."
@@ -138,13 +148,19 @@ impl super::super::WorldRepository {
                     response.reason = Some("Only an active lease can be renewed.".to_owned());
                 } else {
                     let tick = state.tick;
+                    let now = super::unix_time_seconds();
                     let claim = &mut state.phase4.claims[index];
                     claim.status = ClaimLifecycleStatus::Renewed;
                     claim.last_active_tick = tick;
-                    claim.expires_tick = claim
-                        .expires_tick
-                        .max(tick)
-                        .saturating_add(self.config.lease_duration_ticks);
+                    claim.lease_days = super::lease_duration_days(&self.config);
+                    if claim.expires_at_unix_seconds == 0 {
+                        claim.started_at_unix_seconds = now;
+                    }
+                    claim.expires_at_unix_seconds = claim
+                        .expires_at_unix_seconds
+                        .max(now)
+                        .saturating_add(self.config.lease_duration_seconds.max(1));
+                    claim.expires_tick = tick;
                     response.claim = Some(claim.clone());
                     response.accepted = true;
                     record(&mut state, "lease renewed", "A land right is kept in good standing", "The registry extended a lease without changing the character or stored-goods ledger.");
@@ -261,7 +277,7 @@ impl super::super::WorldRepository {
                 }
             }
         }
-        response.claims = claims_view(&state);
+        response.claims = claims_view(&state, &self.config);
         finish(self, &mut state, cache, request.request_id, response)
     }
 }
@@ -284,10 +300,14 @@ fn finish(
     })
 }
 
-fn claims_view(state: &super::super::models::RepositoryState) -> ClaimsResponse {
+fn claims_view(
+    state: &super::super::models::RepositoryState,
+    config: &ServerConfig,
+) -> ClaimsResponse {
     ClaimsResponse {
         claims: state.phase4.claims.clone(),
         available_plots: state.phase4.available_plots.clone(),
+        lease_duration_days: super::lease_duration_days(config),
         cursor: state.cursor,
     }
 }
@@ -329,6 +349,7 @@ fn find_claim<'a>(
 }
 
 pub(super) fn tick(state: &mut super::super::models::RepositoryState, config: &ServerConfig) {
+    let now = super::unix_time_seconds();
     let mut expired = Vec::new();
     for claim in &mut state.phase4.claims {
         if matches!(
@@ -337,10 +358,12 @@ pub(super) fn tick(state: &mut super::super::models::RepositoryState, config: &S
                 | ClaimLifecycleStatus::Renewed
                 | ClaimLifecycleStatus::Transferred
                 | ClaimLifecycleStatus::Inherited
-        ) && state.tick >= claim.expires_tick
+        ) && claim.expires_at_unix_seconds > 0
+            && now >= claim.expires_at_unix_seconds
         {
             claim.status = ClaimLifecycleStatus::Expired;
             claim.building_access = false;
+            claim.last_active_tick = state.tick;
             claim.inspection_note = "The lease expired; access is closed while the registry waits before reclaiming it.".to_owned();
             expired.push(claim.claim_id.clone());
         }

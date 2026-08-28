@@ -16,7 +16,13 @@ pub(super) fn render(client: &Phase4Client) -> String {
     let registry = client
         .claims
         .as_ref()
-        .map(|claims| format!("{} plots available", claims.available_plots.len()))
+        .map(|claims| {
+            let days = claims.lease_duration_days.max(1);
+            format!(
+                "{} plots available • {days}-day real leases",
+                claims.available_plots.len()
+            )
+        })
         .unwrap_or_else(|| "Registry loading".to_owned());
     let orders = client
         .professions

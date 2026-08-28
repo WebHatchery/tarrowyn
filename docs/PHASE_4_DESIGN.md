@@ -1,6 +1,6 @@
 # Phase 4 design lock — The Enduring Society
 
-Status: implemented in protocol version 4 and storage version 8.
+Status: implemented in protocol version 4 and storage version 9.
 
 This record closes the open choices identified before Phase 4 work. The rules
 are deliberately bounded: one settlement, a small public treasury, a few
@@ -48,6 +48,13 @@ homestead demonstration. A claim moves through requested, active, renewed,
 transferred or inherited, abandoned, expired, and reclaimed states. Building
 access is a claim property; the identity, character progression, and protected
 stored goods are never deleted by expiry or reclamation.
+
+An approved lease lasts 90 real days (the prototype's explicit three-real-month
+boundary), stored as Unix timestamps rather than accelerated world ticks. The
+world clock may advance through seasons and years without shortening the lease.
+Expiry closes building access and starts the configured visible reclamation
+grace; the expiry transition resets that grace window so an expired claim is not
+reclaimed in the same tick.
 
 The registry exposes three available plots at start. Abandoned or expired plots
 return after the configured grace period, which gives late players a visible
@@ -119,7 +126,7 @@ multi-turn loop.
 
 ## Persistence and migration
 
-The repository storage version is now 8. `StoredState.phase4` is serde-defaulted
+The repository storage version is now 9. `StoredState.phase4` is serde-defaulted
 so Phase 1–3 documents without the field load a fresh, safe Phase 4 society.
 Existing identities, inventory, plots, Phase 3 claims, events, and chronicle
 entries are retained. New request caches use stable account/request keys and

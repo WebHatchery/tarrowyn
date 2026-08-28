@@ -136,6 +136,24 @@ impl RepositoryState {
         if phase4.governance.taxation.is_none() {
             phase4.governance.taxation = Some(super::phase4::default_tax_policy());
         }
+        let lease_days = super::phase4::lease_duration_days(config);
+        let now = super::phase4::unix_time_seconds();
+        for claim in &mut phase4.claims {
+            claim.lease_days = lease_days;
+            if claim.expires_at_unix_seconds == 0
+                && matches!(
+                    claim.status,
+                    tarrowyn_protocol::ClaimLifecycleStatus::Active
+                        | tarrowyn_protocol::ClaimLifecycleStatus::Renewed
+                        | tarrowyn_protocol::ClaimLifecycleStatus::Transferred
+                        | tarrowyn_protocol::ClaimLifecycleStatus::Inherited
+                )
+            {
+                claim.started_at_unix_seconds = now;
+                claim.expires_at_unix_seconds =
+                    now.saturating_add(config.lease_duration_seconds.max(1));
+            }
+        }
         Self {
             tick: stored.tick,
             clock: WorldClock {

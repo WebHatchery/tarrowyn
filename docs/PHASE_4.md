@@ -46,6 +46,8 @@ impact before adding durable state.
 - Extend the Phase 3 homestead lease into a complete lifecycle: request,
   approval, renewal, transfer or inheritance, abandonment, reclamation, and
   inspection.
+- Keep approved leases at three real months (90 real days), independent of the
+  accelerated in-game clock, with a visible expiry and reclamation grace.
 - Separate recognised land rights from stored inventory and personal
   progression. An expired claim may change access to a building without
   deleting a character or silently destroying protected goods.

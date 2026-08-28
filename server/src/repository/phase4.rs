@@ -2,6 +2,7 @@ use super::models::RepositoryState;
 use crate::config::ServerConfig;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::time::{SystemTime, UNIX_EPOCH};
 use tarrowyn_protocol::{
     Capability, ClaimLifecycleResponse, ClaimRecord, GovernanceResponse, GovernanceState,
     HouseholdRecord, InfrastructureRecord, KnowledgeItem, KnowledgeResponse, LocalCombatResponse,
@@ -224,6 +225,17 @@ pub(super) fn default_tax_policy() -> TaxPolicy {
             "A mayor may set a rate from 0% through 10%; the public ledger keeps receipts."
                 .to_owned(),
     }
+}
+
+pub(super) fn unix_time_seconds() -> u64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|duration| duration.as_secs())
+        .unwrap_or(0)
+}
+
+pub(super) fn lease_duration_days(config: &ServerConfig) -> u32 {
+    (config.lease_duration_seconds / (24 * 60 * 60)).max(1) as u32
 }
 
 fn office(id: &str, kind: OfficeKind, title: &str, authority: &str) -> OfficeRecord {

@@ -233,6 +233,10 @@ pub struct ClaimRecord {
     pub lease_days: u32,
     pub started_tick: u64,
     pub expires_tick: u64,
+    #[serde(default)]
+    pub started_at_unix_seconds: u64,
+    #[serde(default)]
+    pub expires_at_unix_seconds: u64,
     pub last_active_tick: u64,
     pub status: ClaimLifecycleStatus,
     pub approved_by: Option<String>,
@@ -245,6 +249,8 @@ pub struct ClaimRecord {
 pub struct ClaimsResponse {
     pub claims: Vec<ClaimRecord>,
     pub available_plots: Vec<Position>,
+    #[serde(default)]
+    pub lease_duration_days: u32,
     pub cursor: u64,
 }
 

@@ -11,7 +11,7 @@ use tarrowyn_protocol::{
     WorldTile, MAX_CHAT_MESSAGE_LENGTH, MAX_TRADE_ITEMS, PROTOCOL_VERSION,
 };
 
-pub(super) const STORAGE_VERSION: u32 = 8;
+pub(super) const STORAGE_VERSION: u32 = 9;
 const MAX_EVENTS: usize = 2048;
 const MAX_CHAT_HISTORY: usize = 64;
 const MAX_NOTICES: usize = 32;

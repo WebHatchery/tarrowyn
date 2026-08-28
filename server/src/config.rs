@@ -23,7 +23,7 @@ pub struct ServerConfig {
     pub trade_expiry_ticks: u64,
     pub claim_reclaim_ticks: u64,
     pub claim_reclaim_grace_ticks: u64,
-    pub lease_duration_ticks: u64,
+    pub lease_duration_seconds: u64,
     pub governance_inactivity_ticks: u64,
     pub household_decision_interval_ticks: u64,
     pub expedition_min_food: u32,
@@ -62,7 +62,7 @@ impl Default for ServerConfig {
             trade_expiry_ticks: 240,
             claim_reclaim_ticks: 480,
             claim_reclaim_grace_ticks: 4,
-            lease_duration_ticks: 96,
+            lease_duration_seconds: 90 * 24 * 60 * 60,
             governance_inactivity_ticks: 48,
             household_decision_interval_ticks: 4,
             expedition_min_food: 6,
@@ -124,9 +124,9 @@ impl ServerConfig {
                 "TARROWYN_CLAIM_RECLAIM_GRACE_TICKS",
                 defaults.claim_reclaim_grace_ticks,
             ),
-            lease_duration_ticks: env_u64(
-                "TARROWYN_LEASE_DURATION_TICKS",
-                defaults.lease_duration_ticks,
+            lease_duration_seconds: env_u64(
+                "TARROWYN_LEASE_DURATION_SECONDS",
+                defaults.lease_duration_seconds,
             ),
             governance_inactivity_ticks: env_u64(
                 "TARROWYN_GOVERNANCE_INACTIVITY_TICKS",
