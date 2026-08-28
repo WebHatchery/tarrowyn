@@ -18,7 +18,7 @@ reloads the authoritative state from cursor zero while keeping the road open.
 
 The measured scope is deliberately regional: one worker, 24 concurrent-client
 target, bounded queues, and selectable JSON/MySQL persistence. The local Phase 6
-mixed-load drill passed with 24 clients, three rounds, 624 requests, and 4,578.51
+mixed-load drill passed with 24 clients, three rounds, 624 requests, and 4,693.53
 ms wall time, including backup and restart recovery. The accelerated long-session
 fixture also crosses all four development seasons while checking lease, tax,
 market, household, chronicle, and newcomer continuity. Season labels also come
@@ -46,8 +46,8 @@ allowlist, but took 82,299.85 ms for 2,500 requests. That result is retained as
 capacity evidence against promoting the one-worker snapshot bridge to the
 GDD's several-hundred-player direction; the supported release target remains
 24 clients.
-The latest 24-client baseline additionally recorded 56.97 MB of server working
-set after load and 2,720.28 ms from worker stop through restart readiness. These
+The latest 24-client baseline additionally recorded 57.14 MB of server working
+set after load and 2,730.84 ms from worker stop through restart readiness. These
 local measurements inform the target-environment gate but are not production
 memory or recovery SLOs.
 The standalone JSON restore-on-a-copy drill also passed: it loaded the generated

@@ -57,6 +57,8 @@ markets, and travel, including a deliberate invalid movement rejection probe.
 It verifies the allowlisted support-account view exposes the expected character
 and event cursor without access, refresh, or provider secrets, and that an
 ordinary player receives HTTP 403 for the same view.
+It also sends deliberately ahead cursors to both event endpoints and requires
+the structured HTTP 409 `cursor_ahead` response before starting the mixed load.
 It also checks price pressure, scarce goods, NPC fallback, abandoned claims,
 declining settlements, newcomer access, and alert fields in operator metrics,
 then proves ordinary players cannot read that endpoint.

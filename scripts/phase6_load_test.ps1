@@ -106,6 +106,35 @@ function Assert-ForbiddenGet([string]$path, [hashtable]$headers, [string]$messag
     Assert-True $forbidden $message
 }
 
+function Assert-CursorAheadGet([string]$path, [hashtable]$headers, [string]$message) {
+    $status = 0
+    $body = $null
+    try {
+        Invoke-RestMethod -Method Get -Uri "http://$ServerAddress$path" -Headers $headers
+    } catch {
+        $response = $_.Exception.Response
+        $body = $_.ErrorDetails.Message
+        if ($null -ne $response) {
+            $status = [int]$response.StatusCode
+            if (-not [string]::IsNullOrWhiteSpace($body)) {
+                # PowerShell 7 disposes HttpResponseMessage content before catch.
+            } elseif ($response -is [System.Net.Http.HttpResponseMessage]) {
+                $body = $response.Content.ReadAsStringAsync().GetAwaiter().GetResult()
+            } else {
+                $reader = New-Object System.IO.StreamReader($response.GetResponseStream())
+                try { $body = $reader.ReadToEnd() } finally { $reader.Dispose() }
+            }
+        }
+    }
+    $error = $null
+    if ($null -ne $body) {
+        try { $error = $body | ConvertFrom-Json } catch { }
+    }
+    $cursorAhead = $status -eq 409 -and $null -ne $error `
+        -and $error.error.code -eq "cursor_ahead"
+    Assert-True $cursorAhead $message
+}
+
 function Invoke-MixedClientLoad {
     param(
         [string]$Token,
@@ -275,6 +304,10 @@ try {
     $ordinaryHeaders = @{ Authorization = "Bearer $($sessions[1].data.account_token)" }
     Assert-ForbiddenGet "/v1/support/account?account_id=$($sessions[0].data.account_id)" `
         $ordinaryHeaders "an ordinary player could read the support account view"
+    Assert-CursorAheadGet "/v1/events?since=999999999" $headers `
+        "the shared event endpoint did not expose its cursor_ahead boundary"
+    Assert-CursorAheadGet "/v1/events/region?since=999999999" $headers `
+        "the regional event endpoint did not expose its cursor_ahead boundary"
     $seed = Invoke-PostJson "/v1/events/region" `
         @{ request_id = "phase6-load-$runId-event"; action = "seed" } $headers
     Assert-True $seed.data.accepted "the regional event seed was rejected"
