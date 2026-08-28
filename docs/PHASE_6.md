@@ -87,7 +87,10 @@ requests but raise the configured `market_backlog` alert after open orders pass
 32; when that one alert is explicitly allowed, both runs complete backup,
 arrival, metrics, restart, and recovery checks. The several-hundred-player zone
 goal therefore remains an explicit scale and topology gate, not an implied
-property of the current one-worker preview.
+property of the current one-worker preview. A 250-client boundary run also
+completed those checks with the warning allowlisted, but required 82,299.85 ms
+for 2,500 requests; that result is capacity evidence against promoting the
+current one-worker snapshot bridge to the several-hundred-player direction.
 
 ### Long-term world and content operations
 

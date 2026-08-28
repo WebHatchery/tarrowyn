@@ -54,6 +54,9 @@ For the local regional load and restart drill, run:
 The default run starts an isolated JSON worker on port 8799, creates 24 clients,
 and performs three mixed rounds across state, cursorable events, movement, chat,
 markets, and travel, including a deliberate invalid movement rejection probe.
+It verifies the allowlisted support-account view exposes the expected character
+and event cursor without access, refresh, or provider secrets, and that an
+ordinary player receives HTTP 403 for the same view.
 It measures the mixed-load wall time, checks scheduled
 backup and operator metrics, waits for server-owned travel arrival, restarts the
 worker, and verifies the travelled location. The script removes its temporary
