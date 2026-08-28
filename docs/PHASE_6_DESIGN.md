@@ -34,7 +34,9 @@ the regional state,
 production session/audit records, and
 the per-character skill ledger while retaining defaults for Phase 1–6 files.
 The repository now has two selectable backends: JSON with atomic temporary-file
-replacement for deterministic fixtures, and MySQL with the checked-in
+replacement for deterministic fixtures. A configured JSON snapshot that cannot
+be read or parsed fails closed without being replaced by a fresh world. MySQL
+uses the checked-in
 `0001_initial_world.sql` migration. The MySQL bridge stores the versioned
 authoritative snapshot and a transactional account/character index; it keeps
 the existing protocol and repository rules intact while the schema is being

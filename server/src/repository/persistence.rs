@@ -35,7 +35,7 @@ impl PersistenceBackend {
         config: &ServerConfig,
     ) -> Result<(Self, Option<RepositoryState>), PersistenceBackendError> {
         match config.db_driver.trim().to_ascii_lowercase().as_str() {
-            "json" => Ok((Self::Json, load_state(config))),
+            "json" => Ok((Self::Json, load_state(config)?)),
             "mysql" => {
                 let store = MysqlStore::open(config)?;
                 let state = store.load(config)?;
@@ -59,10 +59,25 @@ impl PersistenceBackend {
     }
 }
 
-pub(super) fn load_state(config: &ServerConfig) -> Option<RepositoryState> {
-    let bytes = fs::read(config.persistence_path.as_deref()?).ok()?;
-    let stored: StoredState = serde_json::from_slice(&bytes).ok()?;
-    Some(RepositoryState::from_stored(stored, config))
+pub(super) fn load_state(
+    config: &ServerConfig,
+) -> Result<Option<RepositoryState>, PersistenceBackendError> {
+    let Some(path) = config.persistence_path.as_deref() else {
+        return Ok(None);
+    };
+    let bytes = match fs::read(path) {
+        Ok(bytes) => bytes,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(None),
+        Err(_) => {
+            return Err(PersistenceBackendError::new(
+                "the JSON world snapshot could not be read",
+            ));
+        }
+    };
+    let stored: StoredState = serde_json::from_slice(&bytes).map_err(|_| {
+        PersistenceBackendError::new("the JSON world snapshot contains invalid state JSON")
+    })?;
+    Ok(Some(RepositoryState::from_stored(stored, config)))
 }
 
 fn persist_json(
