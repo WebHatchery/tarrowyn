@@ -11,6 +11,10 @@ pub enum MonsterKind {
 #[serde(rename_all = "snake_case")]
 pub enum WeaponKind {
     IronSword,
+    Spear,
+    Axe,
+    Bow,
+    Shield,
     ImprovisedClub,
 }
 
@@ -18,6 +22,10 @@ impl WeaponKind {
     pub fn label(self) -> &'static str {
         match self {
             Self::IronSword => "iron sword",
+            Self::Spear => "spear",
+            Self::Axe => "axe",
+            Self::Bow => "bow",
+            Self::Shield => "shield",
             Self::ImprovisedClub => "improvised club",
         }
     }
@@ -25,7 +33,28 @@ impl WeaponKind {
     pub fn damage(self) -> u8 {
         match self {
             Self::IronSword => 3,
-            Self::ImprovisedClub => 1,
+            Self::Spear | Self::Axe | Self::Bow => 2,
+            Self::Shield | Self::ImprovisedClub => 1,
+        }
+    }
+
+    pub fn skill_id(self) -> &'static str {
+        match self {
+            Self::IronSword => "sword-fighting",
+            Self::Spear => "spear-fighting",
+            Self::Axe => "axe-fighting",
+            Self::Bow => "bow-fighting",
+            Self::Shield => "shield-use",
+            Self::ImprovisedClub => "unarmed-fighting",
+        }
+    }
+
+    pub fn weapon_fighting_family(self) -> Option<&'static str> {
+        match self {
+            Self::IronSword => Some("sword"),
+            Self::Spear => Some("spear"),
+            Self::Axe => Some("axe"),
+            Self::Bow | Self::Shield | Self::ImprovisedClub => None,
         }
     }
 }

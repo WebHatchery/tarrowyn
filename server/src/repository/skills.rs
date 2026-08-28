@@ -417,11 +417,9 @@ pub(super) fn record_qualifying_event(state: &mut RepositoryState, key: &str, ev
 }
 
 pub(super) fn record_weapon_defeat(state: &mut RepositoryState, key: &str, weapon: WeaponKind) {
-    let family = match weapon {
-        WeaponKind::IronSword => "sword",
-        WeaponKind::ImprovisedClub => "unarmed",
-    };
-    record_qualifying_event(state, key, &format!("weapon_defeats:{family}"));
+    if let Some(family) = weapon.weapon_fighting_family() {
+        record_qualifying_event(state, key, &format!("weapon_defeats:{family}"));
+    }
 }
 
 fn discover_eligible(state: &mut RepositoryState, key: &str) {

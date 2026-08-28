@@ -1,5 +1,7 @@
 use super::*;
-use tarrowyn_protocol::{ProfessionAction, SkillAction, SkillStatus, SkillView, SkillsResponse};
+use tarrowyn_protocol::{
+    ProfessionAction, SkillAction, SkillStatus, SkillView, SkillsResponse, WeaponKind,
+};
 
 #[test]
 fn crafting_challenge_moves_across_a_wide_target() {
@@ -49,4 +51,19 @@ fn practice_button_queues_the_next_unstarted_root() {
     };
     assert_eq!(request.action, SkillAction::Practice);
     assert_eq!(request.skill_id.as_deref(), Some("fishing"));
+}
+
+#[test]
+fn local_fight_cycles_through_readable_weapon_families() {
+    assert_eq!(next_combat_weapon(None), WeaponKind::IronSword);
+    assert_eq!(
+        next_combat_weapon(Some(WeaponKind::IronSword)),
+        WeaponKind::Spear
+    );
+    assert_eq!(next_combat_weapon(Some(WeaponKind::Spear)), WeaponKind::Axe);
+    assert_eq!(next_combat_weapon(Some(WeaponKind::Axe)), WeaponKind::Bow);
+    assert_eq!(
+        next_combat_weapon(Some(WeaponKind::Bow)),
+        WeaponKind::Shield
+    );
 }

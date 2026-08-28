@@ -78,13 +78,18 @@ impl super::super::WorldRepository {
                     combat.status = LocalCombatStatus::Engaged;
                     combat.weapon = request.weapon;
                     response.accepted = true;
-                    response.prompt = "The encounter is ready. Tap STRIKE or RETREAT.".to_owned();
+                    response.prompt = format!(
+                        "The encounter is ready with the {}. Tap STRIKE or RETREAT.",
+                        request.weapon.label()
+                    );
                 } else {
                     combat.status = LocalCombatStatus::Engaged;
                     combat.weapon = request.weapon;
                     response.accepted = true;
-                    response.prompt =
-                        "The local threat is watching. Tap STRIKE or RETREAT.".to_owned();
+                    response.prompt = format!(
+                        "The local threat is watching your {}. Tap STRIKE or RETREAT.",
+                        request.weapon.label()
+                    );
                 }
             }
             LocalCombatAction::Retreat => {
@@ -138,10 +143,7 @@ impl super::super::WorldRepository {
                         super::super::skills::record_practice(
                             &mut state,
                             &key,
-                            match request.weapon {
-                                WeaponKind::IronSword => "sword-fighting",
-                                WeaponKind::ImprovisedClub => "unarmed-fighting",
-                            },
+                            request.weapon.skill_id(),
                         );
                         super::super::skills::record_weapon_defeat(
                             &mut state,
@@ -158,7 +160,11 @@ impl super::super::WorldRepository {
                                 combat.turn
                             ),
                         );
-                    } else if request.weapon == WeaponKind::ImprovisedClub || combat.turn > 2 {
+                    } else if matches!(
+                        request.weapon,
+                        WeaponKind::ImprovisedClub | WeaponKind::Shield
+                    ) || combat.turn > 2
+                    {
                         combat.player_health = combat.player_health.saturating_sub(1);
                         if combat.player_health == 0 {
                             combat.status = LocalCombatStatus::KnockedOut;
@@ -179,7 +185,10 @@ impl super::super::WorldRepository {
                         }
                     } else {
                         response.accepted = true;
-                        response.prompt = "Your weapon lands cleanly. The threat is still standing; choose STRIKE or RETREAT.".to_owned();
+                        response.prompt = format!(
+                            "Your {} lands cleanly. The threat is still standing; choose STRIKE or RETREAT.",
+                            request.weapon.label()
+                        );
                     }
                 }
             }

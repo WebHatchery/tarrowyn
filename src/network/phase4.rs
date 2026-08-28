@@ -8,7 +8,7 @@ use tarrowyn_protocol::{
     KnowledgeRequest, KnowledgeResponse, LocalCombatAction, LocalCombatRequest,
     LocalCombatResponse, LocalCombatState, ProfessionAction, ProfessionKind, ProfessionRequest,
     ProfessionResponse, ProfessionsResponse, SkillAction, SkillRequest, SkillResponse, SkillStatus,
-    SkillsResponse,
+    SkillsResponse, WeaponKind,
 };
 
 enum Phase4Command {
@@ -504,7 +504,7 @@ impl Phase4Client {
             .push_back(Phase4Command::Combat(LocalCombatRequest {
                 request_id,
                 action,
-                weapon: tarrowyn_protocol::WeaponKind::IronSword,
+                weapon: next_combat_weapon(self.combat.as_ref().map(|combat| combat.weapon)),
             }));
     }
 
@@ -660,6 +660,18 @@ fn advance_crafting(challenge: &mut Option<CraftingChallenge>, dt: f32) {
     } else if challenge.progress <= 0.0 {
         challenge.progress = 0.0;
         challenge.direction = 1.0;
+    }
+}
+
+fn next_combat_weapon(current: Option<WeaponKind>) -> WeaponKind {
+    match current {
+        None => WeaponKind::IronSword,
+        Some(WeaponKind::IronSword) => WeaponKind::Spear,
+        Some(WeaponKind::Spear) => WeaponKind::Axe,
+        Some(WeaponKind::Axe) => WeaponKind::Bow,
+        Some(WeaponKind::Bow) => WeaponKind::Shield,
+        Some(WeaponKind::Shield) => WeaponKind::ImprovisedClub,
+        Some(WeaponKind::ImprovisedClub) => WeaponKind::IronSword,
     }
 }
 
