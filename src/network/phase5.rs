@@ -3,12 +3,12 @@
 use super::*;
 use serde::Deserialize;
 use tarrowyn_protocol::{
-    AccountResponse, ApiResponse, AuthLinkRequest, AuthLinkResponse, AuthRevokeResponse,
-    GuestSessionResponse, LawBoundaryResponse, MarketOrderAction, MarketOrderRequest,
-    MarketSnapshot, ModerationReportRequest, ModerationReportResponse, RegionSnapshot,
-    RegionalEventAction, RegionalEventRequest, RegionalEventResponse, RegionalEventsResponse,
-    RouteAction, RouteRequest, RouteResponse, SettlementsResponse, TravelAction, TravelRequest,
-    TravelResponse, TravelStatus,
+    AccountResponse, ApiResponse, AuthLinkRequest, AuthLinkResponse, AuthRefreshResponse,
+    AuthRevokeResponse, AuthSession, GuestSessionResponse, LawBoundaryResponse, MarketOrderAction,
+    MarketOrderRequest, MarketSnapshot, ModerationReportRequest, ModerationReportResponse,
+    RegionSnapshot, RegionalEventAction, RegionalEventRequest, RegionalEventResponse,
+    RegionalEventsResponse, RouteAction, RouteRequest, RouteResponse, SettlementsResponse,
+    TravelAction, TravelRequest, TravelResponse, TravelStatus,
 };
 
 enum Phase5Command {
@@ -40,6 +40,7 @@ pub(super) struct Phase5Client {
     pending_events: Option<Pending<ApiResponse<RegionalEventsResponse>>>,
     pending_law: Option<Pending<ApiResponse<LawBoundaryResponse>>>,
     pending_account: Option<Pending<ApiResponse<AccountResponse>>>,
+    pending_refresh: Option<Pending<ApiResponse<AuthRefreshResponse>>>,
     pending_command: Option<Pending<ApiResponse<Phase5CommandResponse>>>,
     commands: VecDeque<Phase5Command>,
     region: Option<RegionSnapshot>,
@@ -49,9 +50,12 @@ pub(super) struct Phase5Client {
     law: Option<LawBoundaryResponse>,
     account: Option<AccountResponse>,
     linked_account: Option<AuthLinkResponse>,
+    refreshed_session: Option<AuthSession>,
+    refresh_token: Option<String>,
     logged_out: bool,
     own_account_id: Option<String>,
     refresh_timer: f32,
+    auth_refresh_timer: f32,
     next_request_id: u64,
 }
 
@@ -64,6 +68,7 @@ impl Phase5Client {
             pending_events: None,
             pending_law: None,
             pending_account: None,
+            pending_refresh: None,
             pending_command: None,
             commands: VecDeque::new(),
             region: None,
@@ -73,9 +78,12 @@ impl Phase5Client {
             law: None,
             account: None,
             linked_account: None,
+            refreshed_session: None,
+            refresh_token: None,
             logged_out: false,
             own_account_id: None,
             refresh_timer: 0.0,
+            auth_refresh_timer: f32::MAX,
             next_request_id: 1,
         }
     }
@@ -95,6 +103,7 @@ impl Phase5Client {
             return;
         }
         self.refresh_timer = (self.refresh_timer - dt.max(0.0)).max(0.0);
+        self.auth_refresh_timer = (self.auth_refresh_timer - dt.max(0.0)).max(0.0);
         poll(
             &mut self.pending_region,
             dt,
@@ -137,6 +146,7 @@ impl Phase5Client {
             notices,
             "account boundary",
         );
+        self.poll_refresh(dt, api, notices);
         if let Some(result) = self
             .pending_command
             .as_mut()
@@ -155,6 +165,19 @@ impl Phase5Client {
     }
 
     fn dispatch(&mut self, api: &mut HttpClient) {
+        if self.pending_refresh.is_none() && self.auth_refresh_timer <= 0.0 {
+            if let Some(refresh_token) = self.refresh_token.clone() {
+                let request_id = self.next_id();
+                self.pending_refresh = Some(api.post_json(
+                    "/v1/auth/refresh",
+                    &tarrowyn_protocol::AuthRefreshRequest {
+                        request_id,
+                        refresh_token,
+                    },
+                ));
+                self.auth_refresh_timer = f32::MAX;
+            }
+        }
         if self.refresh_timer <= 0.0 {
             if self.pending_region.is_none() {
                 self.pending_region = Some(api.get("/v1/region"));
@@ -384,6 +407,8 @@ impl Phase5Client {
             ),
             Phase5CommandResponse::Link(response) => {
                 api.set_bearer_token(Some(&response.session.account_token));
+                self.refresh_token = Some(response.session.refresh_token.clone());
+                self.auth_refresh_timer = refresh_delay(response.session.expires_in_seconds);
                 self.linked_account = Some(response.clone());
                 self.account = None;
                 notices.push(NetworkNotice::Success(
@@ -399,7 +424,12 @@ impl Phase5Client {
                 self.pending_events = None;
                 self.pending_law = None;
                 self.pending_account = None;
+                self.pending_refresh = None;
                 self.commands.clear();
+                self.account = None;
+                self.refresh_token = None;
+                self.refreshed_session = None;
+                self.auth_refresh_timer = f32::MAX;
                 notices.push(NetworkNotice::Info(format!(
                     "{} session(s) revoked; tap Reconnect to return safely.",
                     response.revoked_sessions
@@ -422,12 +452,16 @@ impl Phase5Client {
         self.pending_events = None;
         self.pending_law = None;
         self.pending_account = None;
+        self.pending_refresh = None;
         self.pending_command = None;
         self.commands.clear();
         self.account = None;
         self.linked_account = None;
+        self.refreshed_session = None;
+        self.refresh_token = None;
         self.logged_out = false;
         self.refresh_timer = 0.0;
+        self.auth_refresh_timer = f32::MAX;
     }
 
     pub(super) fn take_linked_account(
@@ -447,6 +481,10 @@ impl Phase5Client {
 
     pub(super) fn take_logged_out(&mut self) -> bool {
         std::mem::take(&mut self.logged_out)
+    }
+
+    pub(super) fn take_refreshed_session(&mut self) -> Option<AuthSession> {
+        self.refreshed_session.take()
     }
 
     pub(super) fn summary(&self) -> String {
@@ -517,6 +555,52 @@ impl Phase5Client {
         let id = format!("phase5-ui-{}", self.next_request_id);
         self.next_request_id = self.next_request_id.saturating_add(1);
         id
+    }
+}
+
+fn refresh_delay(expires_in_seconds: u32) -> f32 {
+    (expires_in_seconds as f32 * 0.75).max(1.0)
+}
+
+impl Phase5Client {
+    fn poll_refresh(&mut self, dt: f32, api: &mut HttpClient, notices: &mut Vec<NetworkNotice>) {
+        let result = self
+            .pending_refresh
+            .as_mut()
+            .and_then(|pending| pending.poll_timed(dt, REQUEST_TIMEOUT_SECONDS));
+        let Some(result) = result else { return };
+        self.pending_refresh = None;
+        match result {
+            Ok(response) => {
+                let session = response.data.session;
+                api.set_bearer_token(Some(&session.account_token));
+                self.refresh_token = Some(session.refresh_token.clone());
+                self.auth_refresh_timer = refresh_delay(session.expires_in_seconds);
+                self.refreshed_session = Some(session);
+                notices.push(NetworkNotice::Success(
+                    "The production session was refreshed safely.".to_owned(),
+                ));
+            }
+            Err(error) => {
+                self.pending_region = None;
+                self.pending_settlements = None;
+                self.pending_market = None;
+                self.pending_events = None;
+                self.pending_law = None;
+                self.pending_account = None;
+                self.pending_command = None;
+                self.commands.clear();
+                self.account = None;
+                self.refresh_token = None;
+                self.auth_refresh_timer = f32::MAX;
+                self.refresh_timer = f32::MAX;
+                self.logged_out = true;
+                notices.push(NetworkNotice::Warning(format!(
+                    "The production session could not be refreshed: {}; provider sign-in is required.",
+                    short_error(&error)
+                )));
+            }
+        }
     }
 }
 

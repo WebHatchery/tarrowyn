@@ -376,6 +376,12 @@ impl OnlineClient {
         if let Some(account) = self.phase4.take_linked_account(self.client_key.as_deref()) {
             self.account = Some(account);
         }
+        if let Some(session) = self.phase4.take_refreshed_session() {
+            if let Some(account) = self.account.as_mut() {
+                account.account_token = session.account_token;
+                account.expires_in_seconds = session.expires_in_seconds;
+            }
+        }
         if self.phase4.take_logged_out() {
             self.account = None;
             self.api.set_bearer_token(None);

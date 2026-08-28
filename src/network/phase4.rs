@@ -3,8 +3,8 @@ use super::{NetworkNotice, OnlineClient, REQUEST_TIMEOUT_SECONDS};
 use macroquad_toolkit::net::{HttpClient, Pending};
 use std::collections::VecDeque;
 use tarrowyn_protocol::{
-    ApiResponse, ClaimLifecycleAction, ClaimLifecycleRequest, ClaimsResponse, GovernanceAction,
-    GovernanceRequest, GovernanceResponse, GovernanceState, GuestSessionResponse,
+    ApiResponse, AuthSession, ClaimLifecycleAction, ClaimLifecycleRequest, ClaimsResponse,
+    GovernanceAction, GovernanceRequest, GovernanceResponse, GovernanceState, GuestSessionResponse,
     HouseholdsResponse, KnowledgeAction, KnowledgeRequest, KnowledgeResponse, LocalCombatAction,
     LocalCombatRequest, LocalCombatResponse, LocalCombatState, ProfessionAction, ProfessionKind,
     ProfessionRequest, ProfessionResponse, ProfessionsResponse, SkillAction, SkillRequest,
@@ -666,6 +666,10 @@ impl Phase4Client {
 
     pub(super) fn take_logged_out(&mut self) -> bool {
         self.regional.take_logged_out()
+    }
+
+    pub(super) fn take_refreshed_session(&mut self) -> Option<AuthSession> {
+        self.regional.take_refreshed_session()
     }
 }
 
