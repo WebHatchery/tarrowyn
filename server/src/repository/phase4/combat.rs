@@ -123,6 +123,30 @@ impl super::super::WorldRepository {
                             .to_owned();
                 }
             }
+            LocalCombatAction::UseItem => {
+                if combat.status != LocalCombatStatus::Engaged {
+                    response.reason =
+                        Some("Prepare the local encounter before using a bandage.".to_owned());
+                } else if combat.player_health >= 2 {
+                    response.reason = Some("A bandage is only needed after an injury.".to_owned());
+                } else {
+                    let identity = state.identities.get_mut(&key).expect("identity exists");
+                    if identity.inventory.bandages == 0 {
+                        response.reason = Some(
+                            "The bandage pouch is empty; commission or trade for another."
+                                .to_owned(),
+                        );
+                    } else {
+                        identity.inventory.bandages -= 1;
+                        combat.player_health = combat.player_health.saturating_add(1).min(2);
+                        combat.turn = combat.turn.saturating_add(1);
+                        response.accepted = true;
+                        response.prompt =
+                            "The bandage closes the injury. Choose STRIKE, GUARD, or RETREAT."
+                                .to_owned();
+                    }
+                }
+            }
             LocalCombatAction::Strike | LocalCombatAction::Technique => {
                 if combat.status != LocalCombatStatus::Engaged {
                     response.reason =

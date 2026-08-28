@@ -205,11 +205,13 @@ pub struct Inventory {
     pub turnips: u32,
     pub moonberries: u32,
     pub seeds: u32,
+    #[serde(default)]
+    pub bandages: u32,
 }
 
 impl Inventory {
     pub fn total_items(self) -> u32 {
-        self.wheat + self.turnips + self.moonberries + self.seeds
+        self.wheat + self.turnips + self.moonberries + self.seeds + self.bandages
     }
 }
 

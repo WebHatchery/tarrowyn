@@ -127,6 +127,7 @@ impl WorldRepository {
                     reputation: 0,
                     inventory: Inventory {
                         seeds: self.config.starting_seeds,
+                        bandages: 1,
                         ..Inventory::default()
                     },
                     seeds_planted: 0,

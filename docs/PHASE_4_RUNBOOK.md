@@ -85,7 +85,8 @@ In the online client, use only visible controls:
 5. Tap `Households` and read the service clue before changing road or service
    conditions.
 6. Walk near Whisperwood, tap `Local fight`, and use the visible buttons to
-   prepare, try the first-exchange `Technique`, then strike or guard. Tap the
+   prepare, try the first-exchange `Technique`, then strike or guard. Use
+   `Bandage` after the weaker weapon path causes an injury, and tap the
    existing `Recover` control after a knockout.
 
 `Reconnect` is the recovery path for timeouts and rejected commands; no step in

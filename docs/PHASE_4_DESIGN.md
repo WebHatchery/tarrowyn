@@ -129,13 +129,14 @@ bounded and has no birth, death, marriage, or generational persistence.
 
 ## Combat and recovery
 
-The local encounter has prepare, strike, weapon technique, guard, and retreat
-intents. Iron sword, spear, axe, bow, shield, and improvised club are explicit
-weapon choices with different readable damage and recovery profiles; the
-visible Local fight control cycles through them, while Technique spends the
-first exchange on a weapon-specific opening and Guard sends an explicit
-defensive intent. The server records the matching root practice and
-sword/spear/axe qualifying history. The threat has bounded health,
+The local encounter has prepare, strike, weapon technique, guard, item use, and
+retreat intents. Iron sword, spear, axe, bow, shield, and improvised club are
+explicit weapon choices with different readable damage and recovery profiles;
+the visible Local fight control cycles through them, while Technique spends the
+first exchange on a weapon-specific opening, Guard sends an explicit defensive
+intent, and Bandage consumes one carried bandage to restore one injury point.
+The server records the matching root practice and sword/spear/axe qualifying
+history. The threat has bounded health,
 the player has bounded health and injuries, and knockout returns the character
 to the Hearth. Stored property is always safe. At most one carried seed is
 shown as the risk, and the recovery cost is visible before a recovery choice.

@@ -132,15 +132,16 @@ pub(super) fn draw_sidebar(
         ("technique", "Technique"),
         ("recover", "Recover"),
         ("claim", "Claim"),
+        ("item", "Bandage"),
     ]
     .iter()
     .enumerate()
     {
         if virtual_button(
             Rect::new(
-                content.x + index as f32 * 73.0,
+                content.x + index as f32 * 61.0,
                 content.y + 379.0,
-                69.0,
+                56.0,
                 24.0,
             ),
             label,

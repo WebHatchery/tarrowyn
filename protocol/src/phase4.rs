@@ -483,6 +483,7 @@ pub enum LocalCombatAction {
     Strike,
     Technique,
     Guard,
+    UseItem,
     Retreat,
 }
 

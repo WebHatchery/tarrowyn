@@ -151,7 +151,7 @@ impl Game {
                     .as_ref()
                     .map(|player| {
                         format!(
-                            "Gold {}  Skill {}  Reputation {}\nRank {} • {} credentials\nField tool {}/3 • {} • pests {}/2\nWheat {}  Turnips {}  Moonberries {}  Seeds {}",
+                            "Gold {}  Skill {}  Reputation {}\nRank {} • {} credentials\nField tool {}/3 • {} • pests {}/2\nWheat {}  Turnips {}  Moonberries {}  Seeds {} • Bandages {}",
                             player.gold,
                             player.skill,
                             player.reputation,
@@ -163,7 +163,8 @@ impl Game {
                             player.inventory.wheat,
                             player.inventory.turnips,
                             player.inventory.moonberries,
-                            player.inventory.seeds
+                            player.inventory.seeds,
+                            player.inventory.bandages
                         )
                     })
                     .unwrap_or_else(|| "Waiting for the persistent player ledger…".to_owned());
@@ -470,7 +471,7 @@ impl Game {
                 "chronicle" => client.refresh_tavern(),
                 "practice" => client.queue_phase4("practice"),
                 "town-hall" | "tax-rate" | "registry" | "order" | "knowledge" | "households"
-                | "local-fight" | "technique" | "guard" => client.queue_phase4(id),
+                | "local-fight" | "technique" | "guard" | "item" => client.queue_phase4(id),
                 "crafting-timing" => client.queue_crafting_timing(),
                 "school" => {
                     let own = client
