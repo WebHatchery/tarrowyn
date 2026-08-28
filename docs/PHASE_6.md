@@ -31,8 +31,10 @@ gates.
 
 ### Production persistence and recovery
 
-- Move the repository behind the selected production database or storage
-  service while preserving explicit migrations and protocol compatibility.
+- Move the repository behind the selected MySQL database while preserving
+  explicit migrations and protocol compatibility. Preview configuration uses
+  the ignored `.env.preview` contract; production credentials come from the
+  deployment secret manager.
 - Add scheduled backups, point-in-time or equivalent recovery, restore drills,
   integrity checks, and an operator-visible record of the last successful
   backup.

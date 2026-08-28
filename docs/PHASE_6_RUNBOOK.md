@@ -12,6 +12,15 @@ Configuration is environment-specific. Set `TARROWYN_STATE_PATH`,
 `TARROWYN_REFRESH_TTL_SECONDS`, and the identity-gateway deployment secret in
 the secret manager. Keep development guests on a separate state path.
 
+MySQL is the selected shared-world database. Local preview uses the ignored
+`.env.preview` file with `DB_DRIVER=mysql`, `DB_HOST`, `DB_PORT`,
+`DB_DATABASE`, `DB_USERNAME`, and `DB_PASSWORD`. Never commit that file or copy
+it into a release artifact. Production injects the same variables from its
+secret manager. The current JSON-backed release candidate does not consume
+this database contract yet; do not deploy it as a public multi-worker service
+until the MySQL repository, migrations, backup, restore, and rollback checks
+are implemented and pass.
+
 ## Deploy, rollback, and maintenance
 
 1. Check `/v1/ops/health` and the last backup tick.

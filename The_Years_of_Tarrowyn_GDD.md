@@ -15,6 +15,7 @@
 | Working title | Locked for project | The Years of Tarrowyn |
 | Genre | Locked | Cozy slow-burn 2D MMORPG / persistent fantasy society |
 | Technology | Locked | Rust; separate authoritative server and client from the first slice |
+| Database | Locked | MySQL; preview connection settings come from ignored `.env.preview` configuration |
 | Progression | Direction locked | Classless, horizontal skill mastery with hidden skill mergers; no conventional global level |
 | Skill teaching | Direction locked | Players can form schools, share discoveries, and unlock direct teaching through teaching expertise |
 | World time | Locked | 80 real minutes per in-game day; season and year scale deferred |
@@ -474,9 +475,28 @@ The first playable build must already have a separate multiplayer server and cli
 
 The server should be authoritative for world state, time, characters, inventory, trades, skills, crops, NPC state, and persistence.
 
+### Database
+
+MySQL is the selected durable database for shared preview and production worlds. The server repository must use explicit schema migrations, transactions for multi-record mutations, connection pooling, indexed authoritative identifiers, and backup-and-restore procedures appropriate to MySQL.
+
+Local preview connection settings live in the ignored `.env.preview` file using this contract:
+
+```dotenv
+DB_DRIVER=mysql
+DB_HOST=localhost
+DB_PORT=3306
+DB_DATABASE=tarrowyn
+DB_USERNAME=
+DB_PASSWORD=
+```
+
+The blank username and password in documentation are placeholders, not defaults. Credentials must never be committed, bundled with the client, printed in player-visible errors, or copied into browser artifacts. Production supplies the same settings through its secret-management environment rather than a committed file.
+
+The existing versioned JSON repository remains a development and migration source until the MySQL repository is implemented and passes migration, concurrency, backup, restore, and rollback validation. Selecting MySQL does not by itself make the current backend production-ready.
+
 ### Deliberately Unselected Technology
 
-Networking library, rendering framework, database, protocol, deployment target, authentication provider, and hosting architecture are not yet locked. These should be chosen to suit the smallest slice rather than assumed by the design.
+Networking library, rendering framework, protocol, deployment target, authentication provider, and hosting architecture are not yet locked. These should be chosen to suit the smallest slice rather than assumed by the design.
 
 ## 18. Smallest Multiplayer Slice
 

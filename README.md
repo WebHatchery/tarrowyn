@@ -82,6 +82,27 @@ client key resolves the durable account and character again after a restart.
 The storage version is part of the document so future migrations can be added
 without changing the protocol boundary.
 
+## Preview database decision
+
+MySQL is the selected durable database for shared preview and production
+worlds. The ignored `.env.preview` file carries the local preview contract:
+
+```dotenv
+DB_DRIVER=mysql
+DB_HOST=localhost
+DB_PORT=3306
+DB_DATABASE=tarrowyn
+DB_USERNAME=
+DB_PASSWORD=
+```
+
+Credentials remain local and must not be committed or included in browser or
+Windows packages. The current server code still uses its versioned JSON
+repository; selecting MySQL records the destination but does not claim that
+the repository migration is complete. Public deployment remains blocked until
+the MySQL implementation, schema migrations, concurrent-write tests, backups,
+restore drill, and rollback path pass.
+
 The shared `protocol/` crate is versioned at protocol `6`. Every successful or
 error response carries protocol version and server tick metadata; cursor-based
 event responses additionally carry the event cursor. The development server
@@ -120,5 +141,5 @@ cargo clippy --workspace --all-targets --all-features -- -D warnings
 The Phase 5 and Phase 6 design decisions, playthrough, test report, operator
 runbook, and production-readiness review are recorded in `docs/`. The current
 release candidate intentionally retains the JSON repository as a single-worker
-deployment shape; the readiness review records the managed-database migration
+deployment shape; the readiness review records the MySQL repository migration
 and public identity-gateway work that must precede public access.
