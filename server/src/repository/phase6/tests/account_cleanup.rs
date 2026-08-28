@@ -54,6 +54,18 @@ fn account_deletion_removes_phase4_and_phase5_replay_payloads() {
         )
         .unwrap();
     repository
+        .practice_skill(
+            &linked.session.account_token,
+            SkillRequest {
+                request_id: "replay-cleanup-skill".to_owned(),
+                action: SkillAction::Practice,
+                lesson_id: None,
+                skill_id: Some("fishing".to_owned()),
+                target_account_id: None,
+            },
+        )
+        .unwrap();
+    repository
         .market_order(
             &linked.session.account_token,
             MarketOrderRequest {
@@ -86,6 +98,11 @@ fn account_deletion_removes_phase4_and_phase5_replay_payloads() {
         .request_results
         .keys()
         .any(|key| key.starts_with(&format!("phase4:{account_id}:"))));
+    assert!(!state
+        .phase4
+        .request_results
+        .keys()
+        .any(|key| key.starts_with(&format!("skill-practice:{account_id}:"))));
     assert!(!state
         .phase5
         .request_results

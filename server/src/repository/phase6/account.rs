@@ -51,6 +51,17 @@ pub(super) fn migrate_guest_account_references(
     }
 }
 
+pub(super) fn is_phase4_replay_key_for_account(key: &str, account_id: &str) -> bool {
+    [
+        "phase4:",
+        "skill-practice:",
+        "skill-lesson-begin:",
+        "skill-lesson-complete:",
+    ]
+    .iter()
+    .any(|prefix| key.starts_with(&format!("{prefix}{account_id}:")))
+}
+
 fn migrate_phase4_replay_caches(
     state: &mut RepositoryState,
     old_account_id: &str,
