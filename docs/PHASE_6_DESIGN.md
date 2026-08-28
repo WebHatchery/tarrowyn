@@ -43,11 +43,13 @@ authoritative snapshot and a transactional account/character index; it keeps
 the existing protocol and repository rules intact while the schema is being
 proven against a live environment.
 The server writes a scheduled backup to the configured backup path and reports
-the last successful tick through `/v1/ops/health`. Restore drills validate the
-backup as JSON before serving it as a named state path; a restore is never an
-in-place destructive command. Both JSON and MySQL refuse a snapshot from a
-newer server version, preventing an older rollback binary from overwriting
-unknown durable fields.
+the last successful tick through `/v1/ops/health`. A failed authoritative write
+degrades operator readiness and adds a safe persistence alert; raw storage
+errors remain in server logs rather than crossing the API boundary. Restore
+drills validate the backup as JSON before serving it as a named state path; a
+restore is never an in-place destructive command. Both JSON and MySQL refuse a
+snapshot from a newer server version, preventing an older rollback binary from
+overwriting unknown durable fields.
 
 The remaining persistence gate is deliberately explicit: run the MySQL
 migration and restart/duplicate-request/partial-write tests against the target
@@ -76,9 +78,9 @@ separate fixture state path and must not share production data.
 `/health` remains a simple process check. `/v1/ops/health` is a readiness and
 integrity check. Authenticated `/v1/ops/metrics` reports sessions, accounts,
 regional visibility, event backlog, open orders, travel recovery load, command
-rejections, and tick latency. Alerts are raised for integrity failures, market
-backlog, and interrupted-travel backlog. Slow clients receive bounded,
-cursorable projections and do not own the world tick.
+rejections, and tick latency. Alerts are raised for persistence write failures,
+integrity failures, market backlog, and interrupted-travel backlog. Slow clients
+receive bounded, cursorable projections and do not own the world tick.
 
 ## Scale, calendar, and legacy
 

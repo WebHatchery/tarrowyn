@@ -475,20 +475,30 @@ impl WorldRepository {
 
     pub fn ops_health(&self) -> ApiResponse<OpsHealthResponse> {
         let state = self.state.lock().expect("world repository lock poisoned");
+        let persistence_failed = *self
+            .persistence_failed
+            .lock()
+            .expect("persistence status lock poisoned");
+        let integrity_ok = integrity_ok(&state);
+        let ready = integrity_ok && !persistence_failed;
         ApiResponse {
             meta: meta(state.tick, None, Some(state.cursor)),
             data: OpsHealthResponse {
-                status: if integrity_ok(&state) {
+                status: if ready {
                     "ok".to_owned()
                 } else {
                     "degraded".to_owned()
                 },
-                ready: integrity_ok(&state),
+                ready,
                 storage_version: super::STORAGE_VERSION,
                 protocol_version: PROTOCOL_VERSION.to_owned(),
                 last_backup_tick: state.phase6.last_backup_tick,
                 last_backup_path: state.phase6.last_backup_path.clone(),
-                integrity_ok: integrity_ok(&state),
+                integrity_ok,
+                persistence_error: persistence_failed.then(|| {
+                    "The latest authoritative persistence write failed; inspect server logs before admitting traffic."
+                        .to_owned()
+                }),
                 maintenance_message: self.config.maintenance_message.clone(),
             },
         }
@@ -513,6 +523,10 @@ impl WorldRepository {
                 "A configured support operator account is required for operational metrics.",
             ));
         }
+        let persistence_failed = *self
+            .persistence_failed
+            .lock()
+            .expect("persistence status lock poisoned");
         Ok(ApiResponse {
             meta: meta(state.tick, None, Some(state.cursor)),
             data: OpsMetricsResponse {
@@ -550,7 +564,7 @@ impl WorldRepository {
                 rejected_commands: state.phase6.rejected_commands,
                 completed_commands: state.phase6.completed_commands,
                 average_tick_ms: self.config.tick_interval.as_millis() as u32,
-                alert_flags: alert_flags(&state),
+                alert_flags: alert_flags(&state, persistence_failed),
             },
         })
     }
@@ -726,8 +740,11 @@ fn integrity_ok(state: &RepositoryState) -> bool {
             .all(|settlement| settlement.food <= 100 && settlement.safety <= 100)
 }
 
-fn alert_flags(state: &RepositoryState) -> Vec<String> {
+fn alert_flags(state: &RepositoryState, persistence_failed: bool) -> Vec<String> {
     let mut flags = Vec::new();
+    if persistence_failed {
+        flags.push("persistence_write_failed".to_owned());
+    }
     if !integrity_ok(state) {
         flags.push("integrity_check_failed".to_owned());
     }

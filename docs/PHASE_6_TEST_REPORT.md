@@ -3,8 +3,9 @@
 ## Design and persistence gate
 
 The workspace has a versioned storage document, atomic replacement, scheduled
-backup metadata, integrity readiness, production session records, audit records,
-and a support repair API. Storage version 19 also persists chat, movement, and auth replay results,
+backup metadata, integrity readiness, operator persistence-failure readiness,
+production session records, audit records, and a support repair API. Storage
+version 19 also persists chat, movement, and auth replay results,
 alongside field-tool condition,
 real-time lease timestamps, and public tax receipts,
 the per-character skill ledger, Bellweather animal condition, and daily care
@@ -45,8 +46,8 @@ stored in the repository.
 The accepted regional target is 24 connected clients, 50 open orders, and a
 250 ms tick. The repository's bounded projections and event cursors avoid
 broadcasting every regional entity to every client. The release scripts
-exercise concurrent fixture requests, backup parsing, server readiness, and
-restore-on-a-copy. Node-failure and clock-restart behavior are reconciled by
+exercise concurrent fixture requests, backup parsing, persistence-failure
+readiness, and restore-on-a-copy. Node-failure and clock-restart behavior are reconciled by
 the durable travel/order/event cursors; a duplicate request returns its cached
 result instead of paying twice.
 

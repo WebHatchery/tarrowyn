@@ -72,6 +72,39 @@ fn newer_json_snapshot_fails_closed_without_downgrading_the_file() {
 }
 
 #[test]
+fn persistence_failure_degrades_operator_readiness() {
+    let state_path = std::env::temp_dir().join(format!(
+        "tarrowyn-persistence-failure-{}.json",
+        std::process::id()
+    ));
+    let repository = WorldRepository::new(ServerConfig {
+        persistence_path: Some(state_path.to_string_lossy().into_owned()),
+        backup_path: None,
+        ..ServerConfig::default()
+    });
+    std::fs::remove_file(&state_path).unwrap();
+    std::fs::create_dir(&state_path).unwrap();
+
+    repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("persistence-failure".to_owned()),
+            reset: false,
+        })
+        .unwrap();
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert_eq!(health.status, "degraded");
+    assert!(health.integrity_ok);
+    assert!(health
+        .persistence_error
+        .as_deref()
+        .is_some_and(|message| message.contains("persistence write failed")));
+
+    let _ = std::fs::remove_dir(&state_path);
+}
+
+#[test]
 fn chat_and_movement_replays_survive_repository_restart() {
     let path =
         std::env::temp_dir().join(format!("tarrowyn-core-replay-{}.json", std::process::id()));

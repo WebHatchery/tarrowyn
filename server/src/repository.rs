@@ -60,6 +60,7 @@ pub struct WorldRepository {
     config: ServerConfig,
     storage: PersistenceBackend,
     state: Mutex<RepositoryState>,
+    persistence_failed: Mutex<bool>,
 }
 
 impl WorldRepository {
@@ -75,6 +76,7 @@ impl WorldRepository {
             config,
             storage,
             state: Mutex::new(state),
+            persistence_failed: Mutex::new(false),
         };
         let mut state = repository
             .state
@@ -550,8 +552,20 @@ impl WorldRepository {
     }
 
     fn persist(&self, state: &RepositoryState) {
-        if let Err(error) = self.storage.persist(state, &self.config) {
-            eprintln!("Tarrowyn persistence write failed: {error}");
+        match self.storage.persist(state, &self.config) {
+            Ok(()) => {
+                *self
+                    .persistence_failed
+                    .lock()
+                    .expect("persistence status lock poisoned") = false;
+            }
+            Err(error) => {
+                eprintln!("Tarrowyn persistence write failed: {error}");
+                *self
+                    .persistence_failed
+                    .lock()
+                    .expect("persistence status lock poisoned") = true;
+            }
         }
     }
 }
