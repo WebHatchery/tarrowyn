@@ -24,6 +24,7 @@
 | NPCs | Launch locked | Fixed NPCs; family simulation, aging, migration, and career changes deferred |
 | Land | Locked | Renewable three-real-month leases rather than permanent first-come ownership |
 | Frontier | Direction locked | Player-led pioneer expeditions and new settlements |
+| Regional history | Direction locked | Recent chronicle display with durable searchable archive and deletion-safe public records |
 | Combat | Direction locked | Real-time action-bar combat; melee attacks and spells are explicit skill uses |
 | PvP | Launch locked | No launch PvP; criminal play is a future option only if it cannot spoil non-participants' play |
 | Zone population | Direction locked | Several hundred concurrent players per zone instance |
@@ -493,6 +494,17 @@ DB_PASSWORD=
 The blank username and password in documentation are placeholders, not defaults. Credentials must never be committed, bundled with the client, printed in player-visible errors, or copied into browser artifacts. Production supplies the same settings through its secret-management environment rather than a committed file.
 
 The existing versioned JSON repository remains a development and migration source until the MySQL repository is implemented and passes migration, concurrency, backup, restore, and rollback validation. Selecting MySQL does not by itself make the current backend production-ready.
+
+### Regional Chronicle
+
+The regional chronicle is server-owned public history. The normal settlement
+view keeps a bounded recent window and a compact archive summary so the client
+remains readable after years of events. Entries that leave the recent window
+are retained in a durable append-only archive and remain searchable through an
+authenticated history endpoint; old achievements are not removed merely to
+keep the player-facing feed small. Account deletion anonymises matching names
+in recent entries, archived entries, and retained event records while leaving
+the public event's historical shape intact.
 
 ### Deliberately Unselected Technology
 
