@@ -18,7 +18,11 @@ account identifiers minimised. Payment-free gameplay has no payment data. An
 authenticated deletion request is durably queued and executed on the next
 authoritative tick; it removes the provider mapping, sessions, character-private
 state, and private support records while preserving anonymised public history
-where required for world continuity.
+where required for world continuity. The online client exposes this boundary
+through a visible Delete control; it only arms and sends the bounded request
+after the account projection identifies a linked production account. The first
+tap arms the action and the second tap sends it. A scheduled deletion clears
+the client session and returns the player to the visible Reconnect path.
 
 All mutation endpoints validate bounded request IDs and 64 KiB JSON request
 bodies, use server authorization, and retain idempotent results where retries

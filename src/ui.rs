@@ -69,6 +69,7 @@ pub struct UiContext<'a> {
     pub opportunities: &'a [OpportunitySignal],
     pub phase4_summary: &'a str,
     pub phase5_summary: &'a str,
+    pub account_deletion_armed: bool,
     pub crafting: Option<CraftingView>,
     pub knocked_out: bool,
     pub ui: &'a VirtualUi,

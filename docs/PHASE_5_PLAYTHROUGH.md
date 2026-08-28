@@ -18,5 +18,6 @@ interval advanced. `/v1/law` returned the protected no-PvP boundary.
 The server tests cover travel interruption/recovery, market settlement,
 regional event cursor recovery, household history, OIDC-style guest linking,
 session refresh, and revocation. The browser-facing touch pass uses the
-visible Travel, Recover, Market, Event, Account, Logout, Report, and Reconnect
-controls; no keyboard command is required.
+visible Travel, Recover, Market, Event, Account, Logout, Report, Delete, and
+Reconnect controls; linked-account deletion requires two visible taps and
+returns to Reconnect; no keyboard command is required.

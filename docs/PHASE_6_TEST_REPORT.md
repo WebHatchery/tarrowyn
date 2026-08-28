@@ -23,6 +23,10 @@ The server crop-rotation regression confirms planting follows the validated
 crop manifest rather than a separate hard-coded order.
 The Phase 5 fixture verifies that travel, market, event, household, identity,
 refresh, and revocation state survive the authoritative repository boundary.
+The client Phase 5 tests verify that a linked account's visible deletion
+control requires two taps, a development guest cannot arm deletion, and the
+deletion response is decoded as its dedicated command rather than the
+ambiguous market response.
 The selected MySQL bridge now has a checked-in migration, startup pool/migration
 failure handling, transactional snapshot/index writes, and driver-selection
 tests. The configured local preview MySQL service passed

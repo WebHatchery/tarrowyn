@@ -296,6 +296,14 @@ pub(super) fn draw_sidebar(
         ("account", "Account"),
         ("logout", "Logout"),
         ("report", "Report"),
+        (
+            "delete-account",
+            if ctx.account_deletion_armed {
+                "Tap again"
+            } else {
+                "Delete"
+            },
+        ),
     ]
     .iter()
     .enumerate()

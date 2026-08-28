@@ -7,7 +7,9 @@ measured tick metrics, operational alert visibility, backup-failure visibility,
 economy/population monitoring, content validation, and touch recovery are present;
 and the
 calendar, topology, law, privacy, legacy, and operational decisions are
-written down.
+written down. The player-facing privacy path now includes a visible,
+two-tap linked-account deletion control that clears the session and exposes
+Reconnect after the server schedules the authoritative deletion tick.
 
 The measured scope is deliberately regional: one worker, 24 concurrent-client
 target, bounded queues, and selectable JSON/MySQL persistence. The local Phase 6

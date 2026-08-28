@@ -3,12 +3,12 @@
 use super::*;
 use serde::Deserialize;
 use tarrowyn_protocol::{
-    AccountResponse, ApiResponse, AuthLinkRequest, AuthLinkResponse, AuthRefreshResponse,
-    AuthRevokeResponse, AuthSession, GuestSessionResponse, LawBoundaryResponse, MarketOrderAction,
-    MarketOrderRequest, MarketSnapshot, ModerationReportRequest, ModerationReportResponse,
-    RegionSnapshot, RegionalEventAction, RegionalEventRequest, RegionalEventResponse,
-    RegionalEventsResponse, RouteAction, RouteRequest, RouteResponse, SettlementsResponse,
-    TravelAction, TravelRequest, TravelResponse, TravelStatus,
+    AccountDeletionRequest, AccountDeletionResponse, AccountResponse, ApiResponse, AuthLinkRequest,
+    AuthLinkResponse, AuthRefreshResponse, AuthRevokeResponse, AuthSession, GuestSessionResponse,
+    LawBoundaryResponse, MarketOrderAction, MarketOrderRequest, MarketSnapshot,
+    ModerationReportRequest, ModerationReportResponse, RegionSnapshot, RegionalEventAction,
+    RegionalEventRequest, RegionalEventResponse, RegionalEventsResponse, RouteAction, RouteRequest,
+    RouteResponse, SettlementsResponse, TravelAction, TravelRequest, TravelResponse, TravelStatus,
 };
 
 enum Phase5Command {
@@ -19,6 +19,7 @@ enum Phase5Command {
     Link(AuthLinkRequest),
     Revoke(tarrowyn_protocol::AuthRevokeRequest),
     Report(ModerationReportRequest),
+    Delete(AccountDeletionRequest),
 }
 
 #[derive(Deserialize)]
@@ -26,6 +27,7 @@ enum Phase5Command {
 enum Phase5CommandResponse {
     Travel(TravelResponse),
     Route(RouteResponse),
+    Delete(AccountDeletionResponse),
     Market(tarrowyn_protocol::MarketOrderResponse),
     Event(RegionalEventResponse),
     Link(AuthLinkResponse),
@@ -53,6 +55,7 @@ pub(super) struct Phase5Client {
     refreshed_session: Option<AuthSession>,
     refresh_token: Option<String>,
     logged_out: bool,
+    deletion_armed: bool,
     own_account_id: Option<String>,
     refresh_timer: f32,
     auth_refresh_timer: f32,
@@ -81,6 +84,7 @@ impl Phase5Client {
             refreshed_session: None,
             refresh_token: None,
             logged_out: false,
+            deletion_armed: false,
             own_account_id: None,
             refresh_timer: 0.0,
             auth_refresh_timer: f32::MAX,
@@ -211,6 +215,7 @@ impl Phase5Client {
                     Phase5Command::Report(request) => {
                         api.post_json("/v1/moderation/report", &request)
                     }
+                    Phase5Command::Delete(request) => api.post_json("/v1/account/delete", &request),
                 });
             }
         }
@@ -250,6 +255,25 @@ impl Phase5Client {
                     category: "player_report".to_owned(),
                     note: "Report submitted from the visible touch control.".to_owned(),
                 })),
+            "delete-account" => {
+                let Some(account) = self
+                    .account
+                    .as_ref()
+                    .filter(|account| !account.guest_fixture)
+                else {
+                    return;
+                };
+                if self.deletion_armed {
+                    self.deletion_armed = false;
+                    self.commands
+                        .push_back(Phase5Command::Delete(AccountDeletionRequest {
+                            request_id,
+                            account_id: account.account_id.clone(),
+                        }));
+                } else {
+                    self.deletion_armed = true;
+                }
+            }
             "route-repair" => self.commands.push_back(Phase5Command::Route(RouteRequest {
                 request_id,
                 route_id: "north-pack-road".to_owned(),
@@ -417,6 +441,7 @@ impl Phase5Client {
                 ));
             }
             Phase5CommandResponse::Revoke(response) => {
+                self.deletion_armed = false;
                 self.logged_out = true;
                 self.pending_region = None;
                 self.pending_settlements = None;
@@ -441,6 +466,36 @@ impl Phase5Client {
                 "The moderation report is queued with an audit ID.",
                 notices,
             ),
+            Phase5CommandResponse::Delete(response) => {
+                self.deletion_armed = false;
+                if response.accepted {
+                    self.logged_out = true;
+                    self.pending_region = None;
+                    self.pending_settlements = None;
+                    self.pending_market = None;
+                    self.pending_events = None;
+                    self.pending_law = None;
+                    self.pending_account = None;
+                    self.pending_refresh = None;
+                    self.commands.clear();
+                    self.account = None;
+                    self.refresh_token = None;
+                    self.refreshed_session = None;
+                    self.auth_refresh_timer = f32::MAX;
+                    api.set_bearer_token(None);
+                    notices.push(NetworkNotice::Success(
+                        "Account deletion is scheduled; tap Reconnect to return as a new guest."
+                            .to_owned(),
+                    ));
+                } else {
+                    phase5_notice(
+                        false,
+                        response.reason,
+                        "The account deletion request was accepted.",
+                        notices,
+                    );
+                }
+            }
         }
         self.refresh_timer = if self.logged_out { f32::MAX } else { 0.0 };
     }
@@ -460,6 +515,7 @@ impl Phase5Client {
         self.refreshed_session = None;
         self.refresh_token = None;
         self.logged_out = false;
+        self.deletion_armed = false;
         self.refresh_timer = 0.0;
         self.auth_refresh_timer = f32::MAX;
     }
@@ -481,6 +537,10 @@ impl Phase5Client {
 
     pub(super) fn take_logged_out(&mut self) -> bool {
         std::mem::take(&mut self.logged_out)
+    }
+
+    pub(super) fn deletion_armed(&self) -> bool {
+        self.deletion_armed
     }
 
     pub(super) fn take_refreshed_session(&mut self) -> Option<AuthSession> {
@@ -594,6 +654,7 @@ impl Phase5Client {
                 self.refresh_token = None;
                 self.auth_refresh_timer = f32::MAX;
                 self.refresh_timer = f32::MAX;
+                self.deletion_armed = false;
                 self.logged_out = true;
                 notices.push(NetworkNotice::Warning(format!(
                     "The production session could not be refreshed: {}; provider sign-in is required.",
@@ -653,5 +714,9 @@ impl OnlineClient {
     }
     pub(crate) fn phase5_summary(&self) -> String {
         self.phase4.region_summary()
+    }
+
+    pub(crate) fn account_deletion_armed(&self) -> bool {
+        self.phase4.deletion_armed()
     }
 }

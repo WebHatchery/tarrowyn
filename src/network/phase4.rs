@@ -668,6 +668,10 @@ impl Phase4Client {
         self.regional.take_logged_out()
     }
 
+    pub(super) fn deletion_armed(&self) -> bool {
+        self.regional.deletion_armed()
+    }
+
     pub(super) fn take_refreshed_session(&mut self) -> Option<AuthSession> {
         self.regional.take_refreshed_session()
     }

@@ -209,6 +209,7 @@ impl Game {
                     opportunities: &client.projection.opportunities,
                     phase4_summary: &client.phase4_summary(),
                     phase5_summary: &client.phase5_summary(),
+                    account_deletion_armed: client.account_deletion_armed(),
                     crafting: client.crafting_view(),
                     knocked_out: client
                         .projection
@@ -256,6 +257,7 @@ impl Game {
                     phase4_summary: "Phase 4 ledgers are available only on the shared road.",
                     phase5_summary:
                         "Regional map and production account are available on the shared road.",
+                    account_deletion_armed: false,
                     crafting: None,
                     knocked_out: false,
                     ui: &virtual_ui,
@@ -502,7 +504,7 @@ impl Game {
                     }
                 }
                 "travel" | "recover-travel" | "market-region" | "region-event" | "account"
-                | "logout" | "report" => client.queue_phase5(id),
+                | "logout" | "report" | "delete-account" => client.queue_phase5(id),
                 _ => self.notifications.warning(format!("Unknown action: {id}")),
             }
             return;
