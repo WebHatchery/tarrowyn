@@ -96,6 +96,16 @@ function Invoke-PostJson([string]$path, [hashtable]$body, [hashtable]$headers) {
         -Body ($body | ConvertTo-Json -Compress)
 }
 
+function Assert-ForbiddenGet([string]$path, [hashtable]$headers, [string]$message) {
+    $forbidden = $false
+    try {
+        Invoke-RestMethod -Method Get -Uri "http://$ServerAddress$path" -Headers $headers
+    } catch {
+        $forbidden = $_.Exception.Response.StatusCode.value__ -eq 403
+    }
+    Assert-True $forbidden $message
+}
+
 function Invoke-MixedClientLoad {
     param(
         [string]$Token,
@@ -262,15 +272,9 @@ try {
         Assert-True ($support.data.PSObject.Properties.Name -notcontains $secretField) "the support view exposed $secretField"
         Assert-True ($support.data.account.PSObject.Properties.Name -notcontains $secretField) "the support account exposed $secretField"
     }
-    $ordinarySupportForbidden = $false
-    try {
-        Invoke-RestMethod -Method Get `
-            -Uri "http://$ServerAddress/v1/support/account?account_id=$($sessions[0].data.account_id)" `
-            -Headers @{ Authorization = "Bearer $($sessions[1].data.account_token)" }
-    } catch {
-        $ordinarySupportForbidden = $_.Exception.Response.StatusCode.value__ -eq 403
-    }
-    Assert-True $ordinarySupportForbidden "an ordinary player could read the support account view"
+    $ordinaryHeaders = @{ Authorization = "Bearer $($sessions[1].data.account_token)" }
+    Assert-ForbiddenGet "/v1/support/account?account_id=$($sessions[0].data.account_id)" `
+        $ordinaryHeaders "an ordinary player could read the support account view"
     $seed = Invoke-PostJson "/v1/events/region" `
         @{ request_id = "phase6-load-$runId-event"; action = "seed" } $headers
     Assert-True $seed.data.accepted "the regional event seed was rejected"
@@ -287,6 +291,13 @@ try {
     Assert-True ($metrics.data.server_tick -gt 0) "the operational tick metric did not advance"
     Assert-True ($metrics.data.completed_commands -gt 0) "completed command metrics did not advance"
     Assert-True ($metrics.data.rejected_commands -gt 0) "rejected command metrics did not advance"
+    foreach ($metricField in @(
+        "average_price_index_percent", "scarce_goods_count", "npc_fallback_households",
+        "abandoned_claims", "declining_settlements", "newcomer_access", "alert_flags"
+    )) {
+        Assert-True ($null -ne $metrics.data.$metricField) "the operational metrics omitted $metricField"
+    }
+    Assert-ForbiddenGet "/v1/ops/metrics" $ordinaryHeaders "an ordinary player could read operational metrics"
     $alertFlags = @($metrics.data.alert_flags)
     $unexpectedAlertFlags = @($alertFlags | Where-Object { $AllowedAlertFlags -notcontains $_ })
     Assert-True ($unexpectedAlertFlags.Count -eq 0) ("the mixed load raised unexpected alerts: " + ($unexpectedAlertFlags -join ", "))

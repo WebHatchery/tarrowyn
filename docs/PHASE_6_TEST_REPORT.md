@@ -145,6 +145,11 @@ state untouched.
 The live Phase 6 load journey also reads the allowlisted support-account view,
 checks its character and event-cursor boundary, asserts that access and refresh
 credentials are absent, and confirms an ordinary player receives HTTP 403.
+It also verifies the economy and population monitoring fields in the operator
+metrics response and confirms those metrics remain operator-only. The harness
+records server working set and stop/start-to-readiness recovery alongside the
+mixed-load wall time; the latest 24-client baseline measured 56.97 MB and
+2,720.28 ms.
 
 ## Long-session gate and remaining risks
 

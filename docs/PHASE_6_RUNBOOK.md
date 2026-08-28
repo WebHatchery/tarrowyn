@@ -57,6 +57,9 @@ markets, and travel, including a deliberate invalid movement rejection probe.
 It verifies the allowlisted support-account view exposes the expected character
 and event cursor without access, refresh, or provider secrets, and that an
 ordinary player receives HTTP 403 for the same view.
+It also checks price pressure, scarce goods, NPC fallback, abandoned claims,
+declining settlements, newcomer access, and alert fields in operator metrics,
+then proves ordinary players cannot read that endpoint.
 It measures the mixed-load wall time and server working set, checks scheduled
 backup and operator metrics, waits for server-owned travel arrival, restarts the
 worker, times restart-to-readiness recovery, and verifies the travelled location.
