@@ -2,9 +2,10 @@ use super::super::WorldRepository;
 use crate::ServerConfig;
 use std::time::Duration;
 use tarrowyn_protocol::{
-    AuthLinkRequest, AuthRefreshRequest, AuthRevokeRequest, GuestSessionRequest, MarketOrderAction,
-    MarketOrderRequest, ModerationReportRequest, RegionalEventAction, RegionalEventRequest,
-    RouteAction, RouteRequest, TravelAction, TravelRequest,
+    AuthLinkRequest, AuthRefreshRequest, AuthRevokeRequest, ClaimAction, ClaimRequest,
+    GuestSessionRequest, MarketOrderAction, MarketOrderRequest, ModerationReportRequest,
+    RegionalEventAction, RegionalEventRequest, RouteAction, RouteRequest, TravelAction,
+    TravelRequest,
 };
 
 fn guest(repository: &WorldRepository, key: &str) -> tarrowyn_protocol::GuestSessionResponse {
@@ -285,6 +286,60 @@ fn regional_mutation_replays_survive_repository_restart() {
             .unwrap()
             .data,
         seeded
+    );
+    let _ = std::fs::remove_file(path);
+}
+
+#[test]
+fn rejected_regional_mutations_replay_after_repository_restart() {
+    let path = std::env::temp_dir().join(format!(
+        "tarrowyn-rejected-replay-{}.json",
+        std::process::id()
+    ));
+    let config = ServerConfig {
+        persistence_path: Some(path.to_string_lossy().into_owned()),
+        tick_interval: Duration::from_millis(1),
+        ..ServerConfig::default()
+    };
+    let first = WorldRepository::new(config.clone());
+    let first_session = guest(&first, "phase5-rejected-replay");
+    let claim_request = ClaimRequest {
+        request_id: "restart-rejected-claim".to_owned(),
+        action: ClaimAction::Renew,
+    };
+    let rejected_claim = first
+        .claim(&first_session.account_token, claim_request.clone())
+        .unwrap()
+        .data;
+    assert!(!rejected_claim.accepted);
+    let travel_request = TravelRequest {
+        request_id: "restart-rejected-travel".to_owned(),
+        action: TravelAction::Interrupt,
+        route_id: None,
+        travel_id: None,
+    };
+    let rejected_travel = first
+        .travel(&first_session.account_token, travel_request.clone())
+        .unwrap()
+        .data;
+    assert!(!rejected_travel.accepted);
+    drop(first);
+
+    let second = WorldRepository::new(config);
+    let second_session = guest(&second, "phase5-rejected-replay");
+    assert_eq!(
+        second
+            .claim(&second_session.account_token, claim_request)
+            .unwrap()
+            .data,
+        rejected_claim
+    );
+    assert_eq!(
+        second
+            .travel(&second_session.account_token, travel_request)
+            .unwrap()
+            .data,
+        rejected_travel
     );
     let _ = std::fs::remove_file(path);
 }

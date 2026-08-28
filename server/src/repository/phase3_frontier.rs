@@ -76,6 +76,7 @@ impl WorldRepository {
                         .phase3
                         .request_results
                         .insert(cache_key, Phase3Response::Claim(response.clone()));
+                    self.persist(&state);
                     return Ok(ApiResponse {
                         meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
                         data: response,
@@ -207,6 +208,7 @@ impl WorldRepository {
                         .phase3
                         .request_results
                         .insert(cache_key, Phase3Response::Expedition(response.clone()));
+                    self.persist(&state);
                     return Ok(ApiResponse {
                         meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
                         data: response,
@@ -218,6 +220,7 @@ impl WorldRepository {
                         .phase3
                         .request_results
                         .insert(cache_key, Phase3Response::Expedition(response.clone()));
+                    self.persist(&state);
                     return Ok(ApiResponse {
                         meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
                         data: response,
@@ -248,6 +251,7 @@ impl WorldRepository {
                         .phase3
                         .request_results
                         .insert(cache_key, Phase3Response::Expedition(response.clone()));
+                    self.persist(&state);
                     return Ok(ApiResponse {
                         meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
                         data: response,
@@ -277,6 +281,7 @@ impl WorldRepository {
                         .phase3
                         .request_results
                         .insert(cache_key, Phase3Response::Expedition(response.clone()));
+                    self.persist(&state);
                     return Ok(ApiResponse {
                         meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
                         data: response,
@@ -313,6 +318,7 @@ impl WorldRepository {
                         .phase3
                         .request_results
                         .insert(cache_key, Phase3Response::Expedition(response.clone()));
+                    self.persist(&state);
                     return Ok(ApiResponse {
                         meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
                         data: response,

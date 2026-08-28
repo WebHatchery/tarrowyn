@@ -241,7 +241,10 @@ impl WorldRepository {
                 } else {
                     let Some(route_id) = request.route_id.as_deref() else {
                         reason = Some("Choose a visible route before starting travel.".to_owned());
-                        return travel_response(&mut state, &key, request, None, false, reason);
+                        let response =
+                            travel_response(&mut state, &key, request, None, false, reason);
+                        self.persist(&state);
+                        return response;
                     };
                     let Some(route) = state
                         .phase5
@@ -257,7 +260,10 @@ impl WorldRepository {
                             "That route does not depart from the player's current location."
                                 .to_owned(),
                         );
-                        return travel_response(&mut state, &key, request, None, false, reason);
+                        let response =
+                            travel_response(&mut state, &key, request, None, false, reason);
+                        self.persist(&state);
+                        return response;
                     };
                     if route.status == RouteStatus::Closed {
                         reason = Some(
@@ -295,7 +301,9 @@ impl WorldRepository {
             TravelAction::Interrupt => {
                 let Some(mut travel) = current_travel else {
                     reason = Some("There is no journey to interrupt.".to_owned());
-                    return travel_response(&mut state, &key, request, None, false, reason);
+                    let response = travel_response(&mut state, &key, request, None, false, reason);
+                    self.persist(&state);
+                    return response;
                 };
                 {
                     if travel.status != TravelStatus::Travelling {
@@ -322,7 +330,9 @@ impl WorldRepository {
             TravelAction::Resume | TravelAction::Recover => {
                 let Some(mut travel) = current_travel else {
                     reason = Some("There is no interrupted journey to recover.".to_owned());
-                    return travel_response(&mut state, &key, request, None, false, reason);
+                    let response = travel_response(&mut state, &key, request, None, false, reason);
+                    self.persist(&state);
+                    return response;
                 };
                 {
                     if travel.status != TravelStatus::Interrupted {
