@@ -99,6 +99,11 @@ The complete order loop is:
    requesting role. A missing timing value remains compatible with older
    clients and receives the neutral midpoint.
 
+The server derives the profession, service label, material escrow, reward, and
+benefit from the validated recipe manifest. Optional client fields remain
+accepted for older clients, but a conflicting profession is rejected and a
+custom service label cannot change the authoritative order.
+
 The first discoverable knowledge is the Moonberry trellis method. It can be
 discovered, written into the guild archive, taught to another account, and
 applied. A teaching action must name another recognised player and records
