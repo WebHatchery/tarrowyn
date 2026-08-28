@@ -67,6 +67,27 @@ pub struct AdventurerContract {
     pub available_at_tick: u64,
 }
 
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum AdventurerRank {
+    #[default]
+    Unproven,
+    Trailhand,
+    Pathfinder,
+    RoadWarden,
+}
+
+impl AdventurerRank {
+    pub fn label(self) -> &'static str {
+        match self {
+            Self::Unproven => "Unproven",
+            Self::Trailhand => "Trailhand",
+            Self::Pathfinder => "Pathfinder",
+            Self::RoadWarden => "Road Warden",
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum ContractAction {

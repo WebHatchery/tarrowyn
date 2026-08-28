@@ -49,6 +49,15 @@ NPCs are fallback capacity and story participants, not exact replacements for a
 missing human profession. Their decisions remain server-owned and are recorded
 as world events.
 
+### Adventurer credentials
+
+The frontier projection now exposes a bounded rank earned from varied evidence,
+not a global level: a completed Brambleback watch grants the Trailhand
+credential, a successful pioneer expedition advances a participating player to
+Pathfinder, and sustained Hearth standing plus repeated watch reports can earn
+Road Warden. The rank and earned credentials are derived by the server and
+appear in every player projection; they do not grant raw combat power.
+
 ### History, claims, and the frontier
 
 - Record settlement events such as founding work, major threats, arrivals,

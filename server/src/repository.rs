@@ -17,6 +17,7 @@ const MAX_CHAT_HISTORY: usize = 64;
 const MAX_NOTICES: usize = 32;
 const MAX_TRADES: usize = 128;
 
+mod adventurer;
 mod farming;
 mod models;
 mod mysql;
@@ -202,7 +203,7 @@ impl WorldRepository {
         let mut state = self.state.lock().expect("world repository lock poisoned");
         expire_sessions(&mut state, &self.config);
         let key = authenticate(&mut state, token, &self.config)?;
-        let player = player_projection(state.identities.get(&key).expect("identity exists"));
+        let player = player_projection(&state, &key);
         let world = snapshot(&state, &self.config, sorted_presences(&state));
         Ok(ApiResponse {
             meta: meta(state.tick, None, Some(state.cursor)),
@@ -221,7 +222,7 @@ impl WorldRepository {
         let key = authenticate(&mut state, token, &self.config)?;
         Ok(ApiResponse {
             meta: meta(state.tick, None, Some(state.cursor)),
-            data: player_projection(state.identities.get(&key).expect("identity exists")),
+            data: player_projection(&state, &key),
         })
     }
 
@@ -597,7 +598,9 @@ fn presence(identity: &Identity, last_seen_tick: u64, online: bool) -> PlayerPre
         online,
     }
 }
-fn player_projection(identity: &Identity) -> PlayerProjection {
+pub(super) fn player_projection(state: &RepositoryState, key: &str) -> PlayerProjection {
+    let identity = state.identities.get(key).expect("identity exists");
+    let (adventurer_rank, adventurer_credentials) = adventurer::profile(state, key);
     PlayerProjection {
         account_id: identity.account_id.clone(),
         character_id: identity.character_id.clone(),
@@ -606,6 +609,8 @@ fn player_projection(identity: &Identity) -> PlayerProjection {
         gold: identity.gold,
         skill: identity.skill,
         reputation: identity.reputation,
+        adventurer_rank,
+        adventurer_credentials,
         inventory: identity.inventory,
         weapon: identity.weapon,
         knocked_out: identity.knocked_out,

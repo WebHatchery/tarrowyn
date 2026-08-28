@@ -288,7 +288,7 @@ impl WorldRepository {
             .get(token)
             .map(|session| session.expires_at_tick)
             .unwrap_or_else(|| state.tick.saturating_add(self.config.session_ttl_ticks()));
-        Ok(ApiResponse { meta: meta(state.tick, None, Some(state.cursor)), data: AccountResponse { account_id: identity.account_id.clone(), provider: production.map(|account| account.provider.clone()).unwrap_or_else(|| "development-guest".to_owned()), character_id: identity.character_id.clone(), display_name: identity.display_name.clone(), guest_fixture: production.is_none(), privacy_policy_version: PRIVACY_POLICY_VERSION.to_owned(), retention_note: "Account identity is retained until deletion; chat reports are retained for 90 days; settlement history is retained as public world history with account identifiers minimised.".to_owned(), session_expires_at_tick: expires, character: player_projection(identity) } })
+        Ok(ApiResponse { meta: meta(state.tick, None, Some(state.cursor)), data: AccountResponse { account_id: identity.account_id.clone(), provider: production.map(|account| account.provider.clone()).unwrap_or_else(|| "development-guest".to_owned()), character_id: identity.character_id.clone(), display_name: identity.display_name.clone(), guest_fixture: production.is_none(), privacy_policy_version: PRIVACY_POLICY_VERSION.to_owned(), retention_note: "Account identity is retained until deletion; chat reports are retained for 90 days; settlement history is retained as public world history with account identifiers minimised.".to_owned(), session_expires_at_tick: expires, character: super::player_projection(&state, &key) } })
     }
 
     pub fn support_repair(

@@ -37,12 +37,7 @@ impl WorldRepository {
             accepted: false,
             action: request.action,
             plot: None,
-            player: player_projection(
-                state
-                    .identities
-                    .get(&identity_key)
-                    .expect("identity exists"),
-            ),
+            player: player_projection(&state, &identity_key),
             reason: None,
         };
         let Some(plot_index) = state
@@ -67,12 +62,7 @@ impl WorldRepository {
         response.accepted = result.0;
         response.reason = result.1;
         response.plot = Some(state.plots[plot_index]);
-        response.player = player_projection(
-            state
-                .identities
-                .get(&identity_key)
-                .expect("identity exists"),
-        );
+        response.player = player_projection(&state, &identity_key);
         if response.accepted {
             super::skills::record_practice(&mut state, &identity_key, "crop-tending");
             let plot = state.plots[plot_index];

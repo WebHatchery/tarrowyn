@@ -624,21 +624,7 @@ pub(super) fn cache_key(account: &str, request_id: &str) -> String {
 }
 
 fn projection_for(state: &RepositoryState, key: &str) -> PlayerProjection {
-    let identity = state.identities.get(key).expect("identity exists");
-    PlayerProjection {
-        account_id: identity.account_id.clone(),
-        character_id: identity.character_id.clone(),
-        display_name: identity.display_name.clone(),
-        position: identity.position,
-        gold: identity.gold,
-        skill: identity.skill,
-        reputation: identity.reputation,
-        inventory: identity.inventory,
-        weapon: identity.weapon,
-        knocked_out: identity.knocked_out,
-        injuries: identity.injuries,
-        recovery_cost: identity.recovery_cost,
-    }
+    super::player_projection(state, key)
 }
 
 fn contract_view(state: &RepositoryState, key: &str) -> AdventurerContract {

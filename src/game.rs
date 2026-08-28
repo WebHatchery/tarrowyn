@@ -151,10 +151,12 @@ impl Game {
                     .as_ref()
                     .map(|player| {
                         format!(
-                            "Gold {}  Skill {}  Reputation {}\nWheat {}  Turnips {}  Moonberries {}  Seeds {}",
+                            "Gold {}  Skill {}  Reputation {}\nRank {} • {} credentials\nWheat {}  Turnips {}  Moonberries {}  Seeds {}",
                             player.gold,
                             player.skill,
                             player.reputation,
+                            player.adventurer_rank.label(),
+                            player.adventurer_credentials.len(),
                             player.inventory.wheat,
                             player.inventory.turnips,
                             player.inventory.moonberries,

@@ -218,6 +218,10 @@ pub struct PlayerProjection {
     pub gold: u32,
     pub skill: u32,
     pub reputation: u32,
+    #[serde(default)]
+    pub adventurer_rank: AdventurerRank,
+    #[serde(default)]
+    pub adventurer_credentials: Vec<String>,
     pub inventory: Inventory,
     #[serde(default = "default_weapon")]
     pub weapon: WeaponKind,

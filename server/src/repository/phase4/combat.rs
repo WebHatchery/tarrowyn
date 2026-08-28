@@ -53,9 +53,7 @@ impl super::super::WorldRepository {
             request_id: request.request_id.clone(),
             accepted: false,
             combat: combat.clone(),
-            player: super::super::player_projection(
-                state.identities.get(&key).expect("identity exists"),
-            ),
+            player: super::super::player_projection(&state, &key),
             prompt: "Tap PREPARE before choosing a weapon; stored property is safe.".to_owned(),
             reason: None,
         };
@@ -188,8 +186,7 @@ impl super::super::WorldRepository {
         }
         state.phase4.combat.insert(key.clone(), combat.clone());
         response.combat = combat;
-        response.player =
-            super::super::player_projection(state.identities.get(&key).expect("identity exists"));
+        response.player = super::super::player_projection(&state, &key);
         state
             .phase4
             .request_results
