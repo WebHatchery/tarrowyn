@@ -6,7 +6,7 @@ use tarrowyn_protocol::{
     Capability, ClaimLifecycleResponse, ClaimRecord, GovernanceResponse, GovernanceState,
     HouseholdRecord, InfrastructureRecord, KnowledgeItem, KnowledgeResponse, LocalCombatResponse,
     LocalCombatState, MaterialStock, OfficeKind, OfficeRecord, ProfessionProfile,
-    ProfessionResponse, ServiceOrder,
+    ProfessionResponse, ServiceOrder, SkillResponse,
 };
 
 mod claims;
@@ -25,6 +25,7 @@ pub(super) enum Phase4Response {
     Profession(ProfessionResponse),
     Knowledge(KnowledgeResponse),
     Combat(LocalCombatResponse),
+    Skill(SkillResponse),
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

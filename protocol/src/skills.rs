@@ -26,6 +26,20 @@ impl SkillFamily {
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
+pub enum SkillAction {
+    Teach,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct SkillRequest {
+    pub request_id: String,
+    pub action: SkillAction,
+    pub skill_id: Option<String>,
+    pub target_account_id: Option<String>,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
 pub enum SkillStatus {
     Available,
     Practising,
@@ -51,3 +65,17 @@ pub struct SkillsResponse {
     pub skills: Vec<SkillView>,
     pub cursor: u64,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct SkillResponse {
+    pub request_id: String,
+    pub accepted: bool,
+    pub skill_id: Option<String>,
+    pub target_account_id: Option<String>,
+    pub skills: SkillsResponse,
+    pub message: String,
+    pub reason: Option<String>,
+}
+
+#[cfg(test)]
+mod tests;

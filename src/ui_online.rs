@@ -151,32 +151,34 @@ pub(super) fn draw_sidebar(
         }
     }
 
-    if virtual_button(
-        Rect::new(content.x, content.y + 408.0, 122.0, 24.0),
-        "Pioneer",
-        ctx.connection == ConnectionState::Online && !ctx.knocked_out,
-        ButtonTone::Primary,
-        mouse,
-    ) {
-        actions.push(UiAction::Interact("expedition".to_owned()));
-    }
-    if virtual_button(
-        Rect::new(content.x + 130.0, content.y + 408.0, 122.0, 24.0),
-        "Chronicle",
-        ctx.connection == ConnectionState::Online,
-        ButtonTone::Secondary,
-        mouse,
-    ) {
-        actions.push(UiAction::Interact("chronicle".to_owned()));
-    }
-    if virtual_button(
-        Rect::new(content.x + 260.0, content.y + 408.0, 122.0, 24.0),
-        "Say hello",
-        ctx.connection == ConnectionState::Online,
-        ButtonTone::Secondary,
-        mouse,
-    ) {
-        actions.push(UiAction::QuickChat("Meet at the Hearth".to_owned()));
+    for (index, (id, label, tone)) in [
+        ("expedition", "Pioneer", ButtonTone::Primary),
+        ("chronicle", "Chronicle", ButtonTone::Secondary),
+        ("say-hello", "Say hello", ButtonTone::Secondary),
+        ("school", "School", ButtonTone::Primary),
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        if virtual_button(
+            Rect::new(
+                content.x + index as f32 * 92.0,
+                content.y + 408.0,
+                86.0,
+                24.0,
+            ),
+            label,
+            ctx.connection == ConnectionState::Online
+                && (!ctx.knocked_out || matches!(id, "chronicle" | "say-hello")),
+            tone,
+            mouse,
+        ) {
+            if id == "say-hello" {
+                actions.push(UiAction::QuickChat("Meet at the Hearth".to_owned()));
+            } else {
+                actions.push(UiAction::Interact(id.to_owned()));
+            }
+        }
     }
 
     if virtual_button(

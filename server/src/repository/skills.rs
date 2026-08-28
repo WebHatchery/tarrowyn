@@ -6,7 +6,8 @@ use serde::Deserialize;
 use std::collections::HashSet;
 use std::sync::OnceLock;
 use tarrowyn_protocol::{
-    ApiResponse, SkillFamily, SkillStatus, SkillView, SkillsResponse, WeaponKind,
+    ApiResponse, SkillFamily, SkillRequest, SkillResponse, SkillStatus, SkillView, SkillsResponse,
+    WeaponKind,
 };
 
 const SKILLS_JSON: &str = include_str!("../../../assets/data/skills.json");
@@ -17,7 +18,7 @@ struct SkillManifest {
     skills: Vec<SkillDefinition>,
 }
 
-#[derive(Debug, Deserialize)]
+#[derive(Debug, Clone, Deserialize)]
 struct SkillDefinition {
     id: String,
     name: String,
@@ -109,19 +110,195 @@ impl WorldRepository {
         let mut state = self.state.lock().expect("world repository lock poisoned");
         expire_sessions(&mut state, &self.config);
         let key = authenticate(&mut state, token, &self.config)?;
-        let identity = state.identities.get(&key).expect("identity exists");
-        let skills = catalog()
+        Ok(ApiResponse {
+            meta: meta(state.tick, None, Some(state.cursor)),
+            data: skills_view(&state, &key),
+        })
+    }
+
+    pub fn teach_skill(
+        &self,
+        token: &str,
+        request: SkillRequest,
+    ) -> Result<ApiResponse<SkillResponse>, RepositoryError> {
+        let mut state = self.state.lock().expect("world repository lock poisoned");
+        expire_sessions(&mut state, &self.config);
+        let key = authenticate(&mut state, token, &self.config)?;
+        super::phase4::validate_request_id(&request.request_id)?;
+        let actor_account = super::phase4::account_id(&state, &key);
+        let cache = format!("skill-teach:{actor_account}:{}", request.request_id);
+        if let Some(super::phase4::Phase4Response::Skill(response)) =
+            state.phase4.request_results.get(&cache)
+        {
+            return Ok(ApiResponse {
+                meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
+                data: response.clone(),
+            });
+        }
+        let mut response = SkillResponse {
+            request_id: request.request_id.clone(),
+            accepted: false,
+            skill_id: request.skill_id.clone(),
+            target_account_id: request.target_account_id.clone(),
+            skills: skills_view(&state, &key),
+            message: "A school lesson needs a mastered discipline and a willing neighbour."
+                .to_owned(),
+            reason: None,
+        };
+        let Some(skill_id) = request.skill_id.as_deref() else {
+            response.reason = Some("Name the mastered skill to teach.".to_owned());
+            return finish_teaching(self, &mut state, cache, response);
+        };
+        let Some(target_account) = request.target_account_id.as_deref() else {
+            response.reason = Some("Teaching needs a receiving account.".to_owned());
+            return finish_teaching(self, &mut state, cache, response);
+        };
+        let Some(target_key) = super::phase4::key_for_account(&state, target_account) else {
+            response.reason =
+                Some("The receiving player must have a recognised account.".to_owned());
+            return finish_teaching(self, &mut state, cache, response);
+        };
+        if target_key == key {
+            response.reason =
+                Some("A school lesson needs another player to receive it.".to_owned());
+            return finish_teaching(self, &mut state, cache, response);
+        }
+        let target_online = state
+            .sessions
+            .values()
+            .any(|session| session.identity_key == target_key);
+        if !target_online {
+            response.reason =
+                Some("The receiving player must be present for the lesson.".to_owned());
+            return finish_teaching(self, &mut state, cache, response);
+        }
+        let teacher_position = state
+            .identities
+            .get(&key)
+            .expect("identity exists")
+            .position;
+        let target_position = state
+            .identities
+            .get(&target_key)
+            .expect("target identity exists")
+            .position;
+        if teacher_position != target_position {
+            response.reason =
+                Some("Stand beside the receiving player to demonstrate the skill.".to_owned());
+            return finish_teaching(self, &mut state, cache, response);
+        }
+        let Some(definition) = catalog()
+            .skills
+            .iter()
+            .find(|skill| skill.id == skill_id)
+            .cloned()
+        else {
+            response.reason =
+                Some("That skill is not part of the current school catalogue.".to_owned());
+            return finish_teaching(self, &mut state, cache, response);
+        };
+        if !definition.directly_teachable {
+            response.reason = Some("That discipline is not directly teachable.".to_owned());
+            return finish_teaching(self, &mut state, cache, response);
+        }
+        let teacher_skills = &state.identities.get(&key).expect("identity exists").skills;
+        if mastery(teacher_skills, skill_id) < 5 {
+            response.reason =
+                Some("Master the discipline before offering it as a lesson.".to_owned());
+            return finish_teaching(self, &mut state, cache, response);
+        }
+        if mastery(teacher_skills, "teaching") < definition.depth {
+            response.reason = Some(format!(
+                "Teaching mastery must reach depth {} before this lesson can be formal.",
+                definition.depth
+            ));
+            return finish_teaching(self, &mut state, cache, response);
+        }
+        let learner_practises_root = state
+            .identities
+            .get(&target_key)
+            .expect("target identity exists")
+            .skills
+            .practice
+            .contains_key(skill_id);
+        let learner_knows_discovery = state
+            .identities
+            .get(&target_key)
+            .expect("target identity exists")
+            .skills
+            .known
+            .iter()
+            .any(|known| known == skill_id);
+        if definition.depth == 1 && learner_practises_root {
+            response.reason =
+                Some("The learner must practise this discipline before another lesson.".to_owned());
+            return finish_teaching(self, &mut state, cache, response);
+        }
+        if definition.depth > 1 && learner_knows_discovery {
+            response.reason = Some("The learner already carries that discovery.".to_owned());
+            return finish_teaching(self, &mut state, cache, response);
+        }
+        if definition.depth == 1 {
+            record_practice(&mut state, &target_key, skill_id);
+        } else {
+            state
+                .identities
+                .get_mut(&target_key)
+                .expect("target identity exists")
+                .skills
+                .known
+                .push(skill_id.to_owned());
+        }
+        response.accepted = true;
+        response.message = format!(
+            "{} demonstrated {}; the learner still needs to practise it.",
+            super::phase4::account_name(&state, &key),
+            definition.name
+        );
+        super::phase4::record(
+            &mut state,
+            "school lesson",
+            "A mastered discipline crosses between neighbours",
+            &format!(
+                "A nearby player received a formal {} lesson.",
+                definition.name
+            ),
+        );
+        response.skills = skills_view(&state, &key);
+        finish_teaching(self, &mut state, cache, response)
+    }
+}
+
+fn finish_teaching(
+    repository: &WorldRepository,
+    state: &mut RepositoryState,
+    cache: String,
+    response: SkillResponse,
+) -> Result<ApiResponse<SkillResponse>, RepositoryError> {
+    state.phase4.request_results.insert(
+        cache,
+        super::phase4::Phase4Response::Skill(response.clone()),
+    );
+    repository.persist(state);
+    Ok(ApiResponse {
+        meta: meta(
+            state.tick,
+            Some(response.request_id.clone()),
+            Some(state.cursor),
+        ),
+        data: response,
+    })
+}
+
+fn skills_view(state: &RepositoryState, key: &str) -> SkillsResponse {
+    let identity = state.identities.get(key).expect("identity exists");
+    SkillsResponse {
+        skills: catalog()
             .skills
             .iter()
             .map(|definition| skill_view(&identity.skills, definition))
-            .collect();
-        Ok(ApiResponse {
-            meta: meta(state.tick, None, Some(state.cursor)),
-            data: SkillsResponse {
-                skills,
-                cursor: state.cursor,
-            },
-        })
+            .collect(),
+        cursor: state.cursor,
     }
 }
 

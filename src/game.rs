@@ -467,6 +467,27 @@ impl Game {
                     client.queue_phase4(id)
                 }
                 "crafting-timing" => client.queue_crafting_timing(),
+                "school" => {
+                    let own = client
+                        .account
+                        .as_ref()
+                        .map(|account| account.account_id.as_str());
+                    let target = client
+                        .projection
+                        .players
+                        .iter()
+                        .find(|player| Some(player.account_id.as_str()) != own)
+                        .map(|player| player.account_id.clone());
+                    match target {
+                        Some(target) if client.queue_skill_teach(&target) => {}
+                        Some(_) => self
+                            .notifications
+                            .warning("Master a discipline before offering a school lesson."),
+                        None => self
+                            .notifications
+                            .warning("Another nearby player must be present for a school lesson."),
+                    }
+                }
                 "travel" | "recover-travel" | "market-region" | "region-event" | "account"
                 | "logout" | "report" => client.queue_phase5(id),
                 _ => self.notifications.warning(format!("Unknown action: {id}")),

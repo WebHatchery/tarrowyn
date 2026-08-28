@@ -67,6 +67,22 @@ practice in the Teaching root only after the transfer succeeds. The server owns
 all discovery and transfer checks; the client only shows the resulting
 projection.
 
+Formal school lessons use `POST /v1/skills`. A teacher must have mastered the
+subject and have Teaching mastery at least equal to its depth; the learner must
+be present beside the teacher. A root lesson starts one practice, while an
+advanced lesson grants only the discovery and leaves mastery and all personal
+requirements to the learner. The current client offers mastered roots through
+the visible School control; the server remains the authority for future school
+membership, tuition, halls, and advanced lesson policy.
+
+Formal school lessons use `POST /v1/skills`. A teacher must have mastered the
+subject and have Teaching mastery at least equal to its depth; the learner must
+be present beside the teacher. A root lesson starts one practice, while an
+advanced lesson grants only the discovery and leaves mastery and all personal
+requirements to the learner. The current client offers mastered roots through
+the visible School control; the server remains the authority for future school
+membership, tuition, halls, and advanced lesson policy.
+
 ## Households and local life
 
 The Bellweather household has a miller and an herbal healer. Their work is

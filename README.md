@@ -125,8 +125,9 @@ orders, knowledge, household, and local-combat endpoints. Phase 5 adds
 `/v1/auth/link`, `/v1/auth/refresh`, `/v1/auth/revoke`, `/v1/account`,
 `/v1/support/repair`, `/v1/moderation/report`, `/v1/ops/health`,
 `/v1/ops/metrics`, `/v1/chronicle/search`, and `/v1/skills`; the latter exposes
-the server-owned root catalogue, vague merger hints, and authoritative
-per-character mastery. See the Phase 5 and Phase 6 runbooks.
+the server-owned root catalogue, vague merger hints, authoritative
+per-character mastery, and a touchable school lesson action for qualified
+nearby players. See the Phase 5 and Phase 6 runbooks.
 
 ## Phase 5 and 6 release validation
 

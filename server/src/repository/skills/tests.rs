@@ -1,6 +1,6 @@
 use super::*;
 use crate::{ServerConfig, WorldRepository};
-use tarrowyn_protocol::{GuestSessionRequest, SkillStatus};
+use tarrowyn_protocol::{GuestSessionRequest, SkillAction, SkillRequest, SkillStatus};
 
 fn guest(repository: &WorldRepository, client_key: &str) -> String {
     repository
@@ -89,4 +89,64 @@ fn practice_is_persistent_and_complete_discoveries_are_authoritative() {
         .unwrap();
     assert_eq!(weapon.status, SkillStatus::Discovered);
     assert!(response.data.cursor > 0);
+}
+
+#[test]
+fn a_nearby_master_can_teach_a_root_once() {
+    let repository = WorldRepository::new(ServerConfig {
+        backup_path: None,
+        ..ServerConfig::default()
+    });
+    let teacher = repository.guest_session(GuestSessionRequest {
+        client_key: Some("school-teacher".to_owned()),
+        reset: false,
+    });
+    let learner = repository.guest_session(GuestSessionRequest {
+        client_key: Some("school-learner".to_owned()),
+        reset: false,
+    });
+    {
+        let mut state = repository.state.lock().expect("state lock");
+        for _ in 0..16 {
+            record_practice(&mut state, &teacher.data.client_key, "sword-fighting");
+        }
+        record_practice(&mut state, &teacher.data.client_key, "teaching");
+    }
+    let lesson = repository
+        .teach_skill(
+            &teacher.data.account_token,
+            SkillRequest {
+                request_id: "school-lesson".to_owned(),
+                action: SkillAction::Teach,
+                skill_id: Some("sword-fighting".to_owned()),
+                target_account_id: Some(learner.data.account_id.clone()),
+            },
+        )
+        .unwrap()
+        .data;
+    assert!(lesson.accepted);
+    let learner_sword = repository
+        .skills(&learner.data.account_token)
+        .unwrap()
+        .data
+        .skills
+        .into_iter()
+        .find(|skill| skill.skill_id == "sword-fighting")
+        .unwrap();
+    assert_eq!(learner_sword.mastery, 1);
+    assert!(
+        !repository
+            .teach_skill(
+                &teacher.data.account_token,
+                SkillRequest {
+                    request_id: "school-lesson-again".to_owned(),
+                    action: SkillAction::Teach,
+                    skill_id: Some("sword-fighting".to_owned()),
+                    target_account_id: Some(learner.data.account_id.clone()),
+                },
+            )
+            .unwrap()
+            .data
+            .accepted
+    );
 }

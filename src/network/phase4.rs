@@ -7,7 +7,8 @@ use tarrowyn_protocol::{
     GovernanceRequest, GovernanceResponse, GovernanceState, HouseholdsResponse, KnowledgeAction,
     KnowledgeRequest, KnowledgeResponse, LocalCombatAction, LocalCombatRequest,
     LocalCombatResponse, LocalCombatState, ProfessionAction, ProfessionKind, ProfessionRequest,
-    ProfessionResponse, ProfessionsResponse, SkillStatus, SkillsResponse,
+    ProfessionResponse, ProfessionsResponse, SkillAction, SkillRequest, SkillResponse, SkillStatus,
+    SkillsResponse,
 };
 
 enum Phase4Command {
@@ -16,6 +17,7 @@ enum Phase4Command {
     Profession(ProfessionRequest),
     Knowledge(KnowledgeRequest),
     Combat(LocalCombatRequest),
+    Skill(SkillRequest),
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -26,6 +28,7 @@ enum Phase4CommandResponse {
     Profession(ProfessionResponse),
     Knowledge(KnowledgeResponse),
     Combat(LocalCombatResponse),
+    Skill(SkillResponse),
 }
 
 pub(super) struct Phase4Client {
@@ -219,6 +222,7 @@ impl Phase4Client {
                     }
                     Phase4Command::Knowledge(request) => api.post_json("/v1/knowledge", &request),
                     Phase4Command::Combat(request) => api.post_json("/v1/combat/local", &request),
+                    Phase4Command::Skill(request) => api.post_json("/v1/skills", &request),
                 });
             }
         }
@@ -453,6 +457,23 @@ impl Phase4Client {
             }));
     }
 
+    pub(super) fn queue_school(&mut self, request_id: String, target_account_id: String) -> bool {
+        let Some(skill) = self.skills.as_ref().and_then(|skills| {
+            skills.skills.iter().find(|skill| {
+                skill.depth == 1 && skill.mastery >= 5 && skill.skill_id != "teaching"
+            })
+        }) else {
+            return false;
+        };
+        self.commands.push_back(Phase4Command::Skill(SkillRequest {
+            request_id,
+            action: SkillAction::Teach,
+            skill_id: Some(skill.skill_id.clone()),
+            target_account_id: Some(target_account_id),
+        }));
+        true
+    }
+
     fn queue_combat(&mut self, request_id: String) {
         let action = match self.combat.as_ref().map(|combat| combat.status) {
             Some(tarrowyn_protocol::LocalCombatStatus::Engaged) => LocalCombatAction::Strike,
@@ -513,6 +534,11 @@ impl Phase4Client {
                     &response.prompt,
                     notices,
                 );
+            }
+            Phase4CommandResponse::Skill(response) => {
+                let message = response.message.clone();
+                self.skills = Some(response.skills);
+                phase4_notice(response.accepted, response.reason, &message, notices);
             }
         }
     }
@@ -696,5 +722,14 @@ impl OnlineClient {
             self.status_message =
                 "Crafting result sent; waiting for the workshop ledger…".to_owned();
         }
+    }
+
+    pub(crate) fn queue_skill_teach(&mut self, target_account_id: &str) -> bool {
+        if self.state != super::ConnectionState::Online {
+            return false;
+        }
+        let request_id = self.next_request_id("school");
+        self.phase4
+            .queue_school(request_id, target_account_id.to_owned())
     }
 }

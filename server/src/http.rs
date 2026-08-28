@@ -10,7 +10,7 @@ use tarrowyn_protocol::{
     ExpeditionRequest, FarmingRequest, GovernanceAction, GovernanceRequest, KnowledgeAction,
     KnowledgeRequest, LocalCombatRequest, MarketOrderRequest, ModerationReportRequest,
     MovementIntent, ProfessionRequest, RecoveryRequest, RegionalEventRequest, RouteRequest,
-    SupportRepairRequest, TradeRequest, TravelRequest, PROTOCOL_VERSION,
+    SkillRequest, SupportRepairRequest, TradeRequest, TravelRequest, PROTOCOL_VERSION,
 };
 use tiny_http::{Header, Method, Request, Response, Server, StatusCode};
 
@@ -98,6 +98,12 @@ fn handle_request(mut request: Request, repository: Arc<WorldRepository>) {
         (Method::Get, "/v1/skills") => {
             authenticated(&request, &repository, |token| repository.skills(token))
         }
+        (Method::Post, "/v1/skills") => match read_json::<SkillRequest>(&mut request) {
+            Ok(body) => authenticated(&request, &repository, |token| {
+                repository.teach_skill(token, body)
+            }),
+            Err(error) => error_response(400, "invalid_json", error, repository.health().meta),
+        },
         (Method::Post, "/v1/movement") => match read_json::<MovementIntent>(&mut request) {
             Ok(body) => authenticated(&request, &repository, |token| {
                 repository.movement(token, body)
