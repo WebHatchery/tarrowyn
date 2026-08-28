@@ -286,6 +286,14 @@ impl WorldRepository {
             .is_some_and(|last| {
                 state.tick.saturating_sub(last) < self.config.movement_cooldown_ticks
             });
+        let travel_locked = state.phase5.travel.get(&key).is_some_and(|travel| {
+            matches!(
+                travel.status,
+                tarrowyn_protocol::TravelStatus::Travelling
+                    | tarrowyn_protocol::TravelStatus::Interrupted
+                    | tarrowyn_protocol::TravelStatus::Recovering
+            )
+        });
         let mut response = MovementResponse {
             request_id: intent.request_id.clone(),
             accepted: false,
@@ -296,6 +304,11 @@ impl WorldRepository {
             response.reason = Some("Movement must be one cardinal step.".to_owned());
         } else if limited {
             response.reason = Some("Movement is arriving too quickly.".to_owned());
+        } else if travel_locked {
+            response.reason = Some(
+                "Your journey is on the regional ledger; tap Recover or wait for arrival before walking."
+                    .to_owned(),
+            );
         } else {
             let next = Position {
                 x: current.x + intent.dx,
