@@ -1,5 +1,8 @@
 use super::super::models::RepositoryState;
-use tarrowyn_protocol::{FrontierEvent, TradeOffer, WorldEvent};
+use tarrowyn_protocol::{
+    ClaimRecord, FrontierEvent, GovernanceState, KnowledgeItem, ServiceOrder, SkillLesson,
+    TradeOffer, WorldEvent,
+};
 
 pub(super) fn migrate_guest_account_references(
     state: &mut RepositoryState,
@@ -13,6 +16,7 @@ pub(super) fn migrate_guest_account_references(
     }
 
     migrate_identity_replay_caches(state, old_account_id, new_account_id, new_display_name);
+    migrate_phase4_replay_caches(state, old_account_id, new_account_id, new_display_name);
     for trade in state.trades.values_mut() {
         migrate_trade(trade, old_account_id, new_account_id, new_display_name);
     }
@@ -44,6 +48,95 @@ pub(super) fn migrate_guest_account_references(
     for audit in &mut state.phase6.audits {
         replace_id(&mut audit.actor_account_id, old_account_id, new_account_id);
         replace_id(&mut audit.target, old_account_id, new_account_id);
+    }
+}
+
+fn migrate_phase4_replay_caches(
+    state: &mut RepositoryState,
+    old_account_id: &str,
+    new_account_id: &str,
+    new_display_name: &str,
+) {
+    let prefixes = [
+        format!("phase4:{old_account_id}:"),
+        format!("skill-practice:{old_account_id}:"),
+        format!("skill-lesson-begin:{old_account_id}:"),
+        format!("skill-lesson-complete:{old_account_id}:"),
+    ];
+    let mut migrated = std::collections::HashMap::new();
+    for (key, mut response) in std::mem::take(&mut state.phase4.request_results) {
+        let replacement = prefixes.iter().find_map(|prefix| {
+            key.strip_prefix(prefix).map(|suffix| {
+                format!(
+                    "{}{}",
+                    prefix.replacen(old_account_id, new_account_id, 1),
+                    suffix
+                )
+            })
+        });
+        if let Some(replacement) = replacement {
+            migrate_phase4_response(
+                &mut response,
+                old_account_id,
+                new_account_id,
+                new_display_name,
+            );
+            migrated.insert(replacement, response);
+        } else {
+            migrated.insert(key, response);
+        }
+    }
+    state.phase4.request_results = migrated;
+}
+
+fn migrate_phase4_response(
+    response: &mut super::super::phase4::Phase4Response,
+    old_account_id: &str,
+    new_account_id: &str,
+    new_display_name: &str,
+) {
+    match response {
+        super::super::phase4::Phase4Response::Governance(response) => migrate_governance(
+            &mut response.governance,
+            old_account_id,
+            new_account_id,
+            new_display_name,
+        ),
+        super::super::phase4::Phase4Response::Claim(response) => {
+            if let Some(claim) = response.claim.as_mut() {
+                migrate_claim(claim, old_account_id, new_account_id, new_display_name);
+            }
+            for claim in &mut response.claims.claims {
+                migrate_claim(claim, old_account_id, new_account_id, new_display_name);
+            }
+        }
+        super::super::phase4::Phase4Response::Profession(response) => {
+            if let Some(order) = response.order.as_mut() {
+                migrate_service_order(order, old_account_id, new_account_id, new_display_name);
+            }
+            for order in &mut response.professions.orders {
+                migrate_service_order(order, old_account_id, new_account_id, new_display_name);
+            }
+        }
+        super::super::phase4::Phase4Response::Knowledge(response) => {
+            for item in &mut response.knowledge.items {
+                migrate_knowledge_item(item, old_account_id, new_account_id);
+            }
+        }
+        super::super::phase4::Phase4Response::Combat(response) => migrate_player(
+            &mut response.player,
+            old_account_id,
+            new_account_id,
+            new_display_name,
+        ),
+        super::super::phase4::Phase4Response::Skill(response) => {
+            if let Some(lesson) = response.lesson.as_mut() {
+                migrate_lesson(lesson, old_account_id, new_account_id, new_display_name);
+            }
+            for lesson in &mut response.skills.lessons {
+                migrate_lesson(lesson, old_account_id, new_account_id, new_display_name);
+            }
+        }
     }
 }
 
@@ -170,19 +263,51 @@ fn migrate_phase4(
     new_display_name: &str,
 ) {
     for claim in &mut state.phase4.claims {
-        if claim.owner_account_id.as_deref() == Some(old_account_id) {
-            claim.owner_account_id = Some(new_account_id.to_owned());
-            claim.owner_name = Some(new_display_name.to_owned());
-        }
-        replace_option_id(&mut claim.approved_by, old_account_id, new_account_id);
+        migrate_claim(claim, old_account_id, new_account_id, new_display_name);
     }
-    for office in &mut state.phase4.governance.offices {
+    migrate_governance(
+        &mut state.phase4.governance,
+        old_account_id,
+        new_account_id,
+        new_display_name,
+    );
+    for order in &mut state.phase4.orders {
+        migrate_service_order(order, old_account_id, new_account_id, new_display_name);
+    }
+    for lesson in &mut state.phase4.lessons {
+        migrate_lesson(lesson, old_account_id, new_account_id, new_display_name);
+    }
+    for item in &mut state.phase4.knowledge {
+        migrate_knowledge_item(item, old_account_id, new_account_id);
+    }
+}
+
+fn migrate_claim(
+    claim: &mut ClaimRecord,
+    old_account_id: &str,
+    new_account_id: &str,
+    new_display_name: &str,
+) {
+    if claim.owner_account_id.as_deref() == Some(old_account_id) {
+        claim.owner_account_id = Some(new_account_id.to_owned());
+        claim.owner_name = Some(new_display_name.to_owned());
+    }
+    replace_option_id(&mut claim.approved_by, old_account_id, new_account_id);
+}
+
+fn migrate_governance(
+    governance: &mut GovernanceState,
+    old_account_id: &str,
+    new_account_id: &str,
+    new_display_name: &str,
+) {
+    for office in &mut governance.offices {
         if office.holder_account_id.as_deref() == Some(old_account_id) {
             office.holder_account_id = Some(new_account_id.to_owned());
             office.holder_name = Some(new_display_name.to_owned());
         }
     }
-    for proposal in &mut state.phase4.governance.proposals {
+    for proposal in &mut governance.proposals {
         if replace_id(
             &mut proposal.proposer_account_id,
             old_account_id,
@@ -192,7 +317,7 @@ fn migrate_phase4(
         }
         replace_option_id(&mut proposal.approved_by, old_account_id, new_account_id);
     }
-    for decision in &mut state.phase4.governance.decisions {
+    for decision in &mut governance.decisions {
         if replace_id(
             &mut decision.actor_account_id,
             old_account_id,
@@ -201,7 +326,7 @@ fn migrate_phase4(
             decision.actor_name = new_display_name.to_owned();
         }
     }
-    for receipt in &mut state.phase4.governance.tax_ledger {
+    for receipt in &mut governance.tax_ledger {
         if replace_id(
             &mut receipt.payer_account_id,
             old_account_id,
@@ -210,43 +335,56 @@ fn migrate_phase4(
             receipt.payer_name = new_display_name.to_owned();
         }
     }
-    if let Some(policy) = state.phase4.governance.taxation.as_mut() {
+    if let Some(policy) = governance.taxation.as_mut() {
         replace_id(&mut policy.payer, old_account_id, new_account_id);
         replace_id(&mut policy.recipient, old_account_id, new_account_id);
     }
-    for order in &mut state.phase4.orders {
-        if replace_id(
-            &mut order.requester_account_id,
-            old_account_id,
-            new_account_id,
-        ) {
-            order.requester_name = new_display_name.to_owned();
-        }
-        if order.provider_account_id.as_deref() == Some(old_account_id) {
-            order.provider_account_id = Some(new_account_id.to_owned());
-            order.provider_name = Some(new_display_name.to_owned());
-        }
+}
+
+fn migrate_service_order(
+    order: &mut ServiceOrder,
+    old_account_id: &str,
+    new_account_id: &str,
+    new_display_name: &str,
+) {
+    if replace_id(
+        &mut order.requester_account_id,
+        old_account_id,
+        new_account_id,
+    ) {
+        order.requester_name = new_display_name.to_owned();
     }
-    for lesson in &mut state.phase4.lessons {
-        if replace_id(
-            &mut lesson.teacher_account_id,
-            old_account_id,
-            new_account_id,
-        ) {
-            lesson.teacher_name = new_display_name.to_owned();
-        }
-        if replace_id(
-            &mut lesson.learner_account_id,
-            old_account_id,
-            new_account_id,
-        ) {
-            lesson.learner_name = new_display_name.to_owned();
-        }
+    if order.provider_account_id.as_deref() == Some(old_account_id) {
+        order.provider_account_id = Some(new_account_id.to_owned());
+        order.provider_name = Some(new_display_name.to_owned());
     }
-    for item in &mut state.phase4.knowledge {
-        for account_id in &mut item.discovered_by {
-            replace_id(account_id, old_account_id, new_account_id);
-        }
+}
+
+fn migrate_knowledge_item(item: &mut KnowledgeItem, old_account_id: &str, new_account_id: &str) {
+    for account_id in &mut item.discovered_by {
+        replace_id(account_id, old_account_id, new_account_id);
+    }
+}
+
+fn migrate_lesson(
+    lesson: &mut SkillLesson,
+    old_account_id: &str,
+    new_account_id: &str,
+    new_display_name: &str,
+) {
+    if replace_id(
+        &mut lesson.teacher_account_id,
+        old_account_id,
+        new_account_id,
+    ) {
+        lesson.teacher_name = new_display_name.to_owned();
+    }
+    if replace_id(
+        &mut lesson.learner_account_id,
+        old_account_id,
+        new_account_id,
+    ) {
+        lesson.learner_name = new_display_name.to_owned();
     }
 }
 
