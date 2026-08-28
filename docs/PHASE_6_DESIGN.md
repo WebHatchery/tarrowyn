@@ -94,7 +94,9 @@ order, and settlement projections consume their manifest supply profiles.
 Market base prices also consume the item manifest, which now covers every
 traded commodity. Wiring the remaining manifests into their live simulation
 consumers remains content expansion work rather than an implicit promise of
-the current fixtures.
+the current fixtures. Regional season labels now also follow the validated
+calendar sequence and season length; the configured real-time day length still
+belongs to the server deployment boundary.
 
 ## Hosting and observability
 

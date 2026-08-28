@@ -16,7 +16,9 @@ target, bounded queues, and selectable JSON/MySQL persistence. The local Phase 6
 mixed-load drill passed with 24 clients, three rounds, 552 requests, and 4,479.15
 ms wall time, including backup and restart recovery. The accelerated long-session
 fixture also crosses all four development seasons while checking lease, tax,
-market, household, chronicle, and newcomer continuity. The MySQL backend applies
+market, household, chronicle, and newcomer continuity. Season labels also come
+from the validated region calendar; the configured real-time day length remains
+an explicit deployment setting. The MySQL backend applies
 an explicit migration and writes the authoritative snapshot
 and identity index transactionally. Public launch remains blocked until the
 deployment owner runs that backend against the target database, proves

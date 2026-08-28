@@ -582,11 +582,5 @@ pub(super) fn price_notes(state: &RepositoryState, location: &str) -> Vec<String
     .collect()
 }
 pub(super) fn season(day: u32) -> String {
-    match (day.saturating_sub(1) / 14) % 4 {
-        0 => "thaw",
-        1 => "greenrise",
-        2 => "harvest",
-        _ => "deepwinter",
-    }
-    .to_owned()
+    crate::content::season_for_day(day)
 }

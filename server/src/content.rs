@@ -104,6 +104,7 @@ struct SettlementsManifest {
 }
 
 static SETTLEMENT_CATALOG: OnceLock<Vec<SettlementManifest>> = OnceLock::new();
+static REGION_CATALOG: OnceLock<RegionManifest> = OnceLock::new();
 
 #[derive(Debug, Deserialize)]
 struct SettlementManifest {
@@ -264,6 +265,21 @@ pub(crate) fn item_base_price(item_id: &str) -> u32 {
         .find(|item| item.id == item_id)
         .map(|item| item.base_price)
         .expect("validated item catalog must contain the requested item")
+}
+
+pub(crate) fn season_for_day(day: u32) -> String {
+    let region = REGION_CATALOG.get_or_init(|| {
+        let region: RegionManifest =
+            serde_json::from_str(include_str!("../../assets/data/region.json"))
+                .expect("region content JSON must be valid");
+        if region.calendar.season_days == 0 || region.calendar.seasons.is_empty() {
+            panic!("region content must define a non-empty calendar");
+        }
+        region
+    });
+    let season_index = (day.saturating_sub(1) / region.calendar.season_days) as usize
+        % region.calendar.seasons.len();
+    region.calendar.seasons[season_index].clone()
 }
 
 fn validate_schema(schema: &ContentSchemaManifest) -> Result<(), String> {

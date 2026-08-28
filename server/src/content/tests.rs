@@ -60,3 +60,12 @@ fn market_prices_follow_the_validated_item_manifest() {
     assert_eq!(super::item_base_price("moonberries"), 6);
     assert_eq!(super::item_base_price("bandages"), 7);
 }
+
+#[test]
+fn season_labels_follow_the_validated_region_calendar() {
+    assert_eq!(super::season_for_day(1), "thaw");
+    assert_eq!(super::season_for_day(15), "greenrise");
+    assert_eq!(super::season_for_day(29), "harvest");
+    assert_eq!(super::season_for_day(43), "deepwinter");
+    assert_eq!(super::season_for_day(57), "thaw");
+}
