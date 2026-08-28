@@ -42,8 +42,16 @@ fn server_event_seed_template_follows_the_validated_manifest() {
 }
 
 #[test]
-fn settlement_supply_profiles_follow_the_validated_manifest() {
-    let hearth = super::settlement_supply_profile("hearth-settlement");
+fn settlement_profiles_follow_the_validated_manifest() {
+    let hearth = super::settlement_profile("hearth-settlement");
+    assert_eq!(hearth.name, "The Hearth");
+    assert_eq!(hearth.population, 36);
+    assert_eq!(
+        hearth.condition,
+        tarrowyn_protocol::SettlementCondition::Stable
+    );
+    assert_eq!(hearth.vacancies[0], "caravan quartermaster");
+    assert_eq!(hearth.price_index_percent, 108);
     assert_eq!(
         hearth.abundant,
         vec!["wheat".to_owned(), "seeds".to_owned()]

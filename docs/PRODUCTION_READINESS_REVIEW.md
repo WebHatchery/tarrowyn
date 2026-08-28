@@ -35,7 +35,8 @@ events, households, and settlement opportunities through the validated JSON
 pipeline. The current validator protects the canonical manifests and their
 identifiers, and server planting, regional event seeding, settlement supply
 projections, and market base prices consume validated
-crop/event/settlement/item content. The repeatable Brambleback contract and
+crop/event/settlement/item content. Settlement condition and opportunity
+profiles also consume validated settlement content. The repeatable Brambleback contract and
 launch wilderness threat consume validated contract/threat content, while
 route topology, season labels, and location roles/resources consume validated
 region content. Opportunity and regional household projections consume

@@ -3,7 +3,7 @@
 use serde::Deserialize;
 use std::collections::HashSet;
 use std::sync::OnceLock;
-use tarrowyn_protocol::CropKind;
+use tarrowyn_protocol::{CropKind, SettlementCondition};
 
 mod frontier;
 mod households;
@@ -119,14 +119,41 @@ static REGION_CATALOG: OnceLock<RegionManifest> = OnceLock::new();
 struct SettlementManifest {
     id: String,
     location: String,
+    name: String,
+    population: u32,
+    food: u8,
+    safety: u8,
+    infrastructure: u8,
+    industry: u8,
+    governance: u8,
+    player_activity: u8,
+    condition: String,
+    milestones: Vec<String>,
+    vacancies: Vec<String>,
+    demand: Vec<String>,
     abundant: Vec<String>,
     scarce: Vec<String>,
+    price_index_percent: u16,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) struct SettlementSupplyProfile {
+pub(crate) struct SettlementProfile {
+    pub(crate) name: String,
+    pub(crate) location: String,
+    pub(crate) population: u32,
+    pub(crate) food: u8,
+    pub(crate) safety: u8,
+    pub(crate) infrastructure: u8,
+    pub(crate) industry: u8,
+    pub(crate) governance: u8,
+    pub(crate) player_activity: u8,
+    pub(crate) condition: SettlementCondition,
+    pub(crate) milestones: Vec<String>,
+    pub(crate) vacancies: Vec<String>,
+    pub(crate) demand: Vec<String>,
     pub(crate) abundant: Vec<String>,
     pub(crate) scarce: Vec<String>,
+    pub(crate) price_index_percent: u16,
 }
 
 #[derive(Debug, Deserialize)]
@@ -250,29 +277,43 @@ pub(crate) fn regional_event_template(event_index: u64) -> EventTemplate {
     }
 }
 
-pub(crate) fn settlement_supply_profile(settlement_id: &str) -> SettlementSupplyProfile {
+pub(crate) fn settlement_profile(settlement_id: &str) -> SettlementProfile {
     let settlements = SETTLEMENT_CATALOG.get_or_init(|| {
         let settlements: SettlementsManifest =
             serde_json::from_str(include_str!("../../assets/data/settlements.json"))
                 .expect("settlements content JSON must be valid");
-        validate_id_list(
-            "settlement",
-            settlements
-                .settlements
-                .iter()
-                .map(|settlement| settlement.id.as_str())
-                .collect(),
-        )
-        .expect("settlements content IDs must be valid");
+        validate_settlements(&settlements, region_catalog())
+            .expect("settlements content must satisfy its schema");
         settlements.settlements
     });
     let settlement = settlements
         .iter()
         .find(|settlement| settlement.id == settlement_id)
         .expect("validated settlement catalog must contain the requested settlement");
-    SettlementSupplyProfile {
+    SettlementProfile {
+        name: settlement.name.clone(),
+        location: settlement.location.clone(),
+        population: settlement.population,
+        food: settlement.food,
+        safety: settlement.safety,
+        infrastructure: settlement.infrastructure,
+        industry: settlement.industry,
+        governance: settlement.governance,
+        player_activity: settlement.player_activity,
+        condition: match settlement.condition.as_str() {
+            "flourishing" => SettlementCondition::Flourishing,
+            "stable" => SettlementCondition::Stable,
+            "strained" => SettlementCondition::Strained,
+            "quiet" => SettlementCondition::Quiet,
+            "recovering" => SettlementCondition::Recovering,
+            _ => panic!("validated settlement catalog contains an unsupported condition"),
+        },
+        milestones: settlement.milestones.clone(),
+        vacancies: settlement.vacancies.clone(),
+        demand: settlement.demand.clone(),
         abundant: settlement.abundant.clone(),
         scarce: settlement.scarce.clone(),
+        price_index_percent: settlement.price_index_percent,
     }
 }
 
@@ -563,12 +604,48 @@ fn validate_settlements(
     if settlements.settlements.is_empty()
         || settlements.settlements.iter().any(|settlement| {
             settlement.location.trim().is_empty()
+                || settlement.name.trim().is_empty()
+                || settlement.population == 0
+                || settlement.food > 100
+                || settlement.safety > 100
+                || settlement.infrastructure > 100
+                || settlement.industry > 100
+                || settlement.governance > 100
+                || settlement.player_activity > 100
+                || !matches!(
+                    settlement.condition.as_str(),
+                    "flourishing" | "stable" | "strained" | "quiet" | "recovering"
+                )
+                || settlement.milestones.is_empty()
+                || settlement
+                    .milestones
+                    .iter()
+                    .any(|milestone| milestone.trim().is_empty())
+                || settlement.vacancies.is_empty()
+                || settlement
+                    .vacancies
+                    .iter()
+                    .any(|vacancy| vacancy.trim().is_empty())
+                || settlement.demand.is_empty()
+                || settlement
+                    .demand
+                    .iter()
+                    .any(|demand| demand.trim().is_empty())
                 || settlement.abundant.is_empty()
+                || settlement
+                    .abundant
+                    .iter()
+                    .any(|good| good.trim().is_empty())
                 || settlement.scarce.is_empty()
+                || settlement.scarce.iter().any(|good| good.trim().is_empty())
+                || settlement.price_index_percent == 0
                 || !location_ids.contains(settlement.location.as_str())
         })
     {
-        return Err("settlements need unique IDs, known locations, and supply notes".to_owned());
+        return Err(
+            "settlements need complete conditions, opportunities, known locations, and supply notes"
+                .to_owned(),
+        );
     }
     Ok(())
 }

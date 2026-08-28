@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use tarrowyn_protocol::{
     LocationKind, LocationRecord, MarketOrder, MarketOrderResponse, Position, RegionalEvent,
     RegionalEventResponse, RegionalHousehold, RouteRecord, RouteResponse, RouteStatus,
-    SettlementCondition, SettlementProjection, TravelResponse, TravelState,
+    SettlementProjection, TravelResponse, TravelState,
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -111,57 +111,9 @@ pub(crate) fn fresh(_config: &ServerConfig) -> Phase5State {
         ),
     ];
     let settlements = vec![
-        settlement(
-            "hearth-settlement",
-            "The Hearth",
-            "hearth",
-            36,
-            72,
-            70,
-            80,
-            62,
-            80,
-            65,
-            SettlementCondition::Stable,
-            &["shared fields endure", "town hall keeps public records"],
-            &["caravan quartermaster", "field-tool repair"],
-            &["bandages", "stone"],
-            108,
-        ),
-        settlement(
-            "whisperwood-settlement",
-            "Whisperwood Watch",
-            "whisperwood-outpost",
-            8,
-            42,
-            36,
-            38,
-            74,
-            42,
-            14,
-            SettlementCondition::Quiet,
-            &["the first watchtower stands"],
-            &["bridge warden", "healer", "wood hauler"],
-            &["food", "bandages", "tools"],
-            126,
-        ),
-        settlement(
-            "saltmere-settlement",
-            "Saltmere Landing",
-            "saltmere",
-            18,
-            61,
-            76,
-            65,
-            38,
-            60,
-            24,
-            SettlementCondition::Stable,
-            &["the ferry ledger is open"],
-            &["ferry hand", "herbal gatherer"],
-            &["seeds", "timber"],
-            94,
-        ),
+        settlement("hearth-settlement"),
+        settlement("whisperwood-settlement"),
+        settlement("saltmere-settlement"),
     ];
     let mut stock = HashMap::new();
     for (location, commodity, quantity) in [
@@ -257,43 +209,26 @@ fn route(
     }
 }
 
-#[allow(clippy::too_many_arguments)]
-fn settlement(
-    id: &str,
-    name: &str,
-    location: &str,
-    population: u32,
-    food: u8,
-    safety: u8,
-    infrastructure: u8,
-    industry: u8,
-    governance: u8,
-    activity: u8,
-    condition: SettlementCondition,
-    milestones: &[&str],
-    vacancies: &[&str],
-    demand: &[&str],
-    price: u16,
-) -> SettlementProjection {
-    let supply = crate::content::settlement_supply_profile(id);
+fn settlement(id: &str) -> SettlementProjection {
+    let profile = crate::content::settlement_profile(id);
     SettlementProjection {
         settlement_id: id.to_owned(),
-        name: name.to_owned(),
-        location_id: location.to_owned(),
-        population,
-        food,
-        safety,
-        infrastructure,
-        industry,
-        governance,
-        player_activity: activity,
-        condition,
-        milestones: milestones.iter().map(|value| (*value).to_owned()).collect(),
-        vacancies: vacancies.iter().map(|value| (*value).to_owned()).collect(),
-        demand: demand.iter().map(|value| (*value).to_owned()).collect(),
-        abundant_goods: supply.abundant,
-        scarce_goods: supply.scarce,
-        price_index_percent: price,
+        name: profile.name,
+        location_id: profile.location,
+        population: profile.population,
+        food: profile.food,
+        safety: profile.safety,
+        infrastructure: profile.infrastructure,
+        industry: profile.industry,
+        governance: profile.governance,
+        player_activity: profile.player_activity,
+        condition: profile.condition,
+        milestones: profile.milestones,
+        vacancies: profile.vacancies,
+        demand: profile.demand,
+        abundant_goods: profile.abundant,
+        scarce_goods: profile.scarce,
+        price_index_percent: profile.price_index_percent,
         chronicle: Vec::new(),
         recovery_opportunity: None,
     }

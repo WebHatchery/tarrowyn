@@ -24,8 +24,9 @@ crop manifest rather than a separate hard-coded order.
 The server event-template regression confirms regional event seeding follows
 the validated event manifest, including its narrative, effects, and
 intervention options.
-The settlement supply regression confirms abundant and scarce goods in the
-authoritative projections follow the validated settlement manifest.
+The settlement profile regression confirms condition, milestones, vacancies,
+demand, prices, and abundant/scarce goods in the authoritative projections
+follow the validated settlement manifest.
 The market price regression confirms every traded commodity's base price
 comes from the validated item manifest.
 The calendar regression confirms regional season labels follow the validated

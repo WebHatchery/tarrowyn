@@ -1,7 +1,61 @@
 {
   "settlements": [
-    {"id": "hearth-settlement", "location": "hearth", "abundant": ["wheat", "seeds"], "scarce": ["timber", "bandages"]},
-    {"id": "whisperwood-settlement", "location": "whisperwood-outpost", "abundant": ["timber", "iron salvage"], "scarce": ["seeds", "stone"]},
-    {"id": "saltmere-settlement", "location": "saltmere", "abundant": ["stone", "bandages"], "scarce": ["wheat", "tools"]}
+    {
+      "id": "hearth-settlement",
+      "location": "hearth",
+      "name": "The Hearth",
+      "population": 36,
+      "food": 72,
+      "safety": 70,
+      "infrastructure": 80,
+      "industry": 62,
+      "governance": 80,
+      "player_activity": 65,
+      "condition": "stable",
+      "milestones": ["shared fields endure", "town hall keeps public records"],
+      "vacancies": ["caravan quartermaster", "field-tool repair"],
+      "demand": ["bandages", "stone"],
+      "abundant": ["wheat", "seeds"],
+      "scarce": ["timber", "bandages"],
+      "price_index_percent": 108
+    },
+    {
+      "id": "whisperwood-settlement",
+      "location": "whisperwood-outpost",
+      "name": "Whisperwood Watch",
+      "population": 8,
+      "food": 42,
+      "safety": 36,
+      "infrastructure": 38,
+      "industry": 74,
+      "governance": 42,
+      "player_activity": 14,
+      "condition": "quiet",
+      "milestones": ["the first watchtower stands"],
+      "vacancies": ["bridge warden", "healer", "wood hauler"],
+      "demand": ["food", "bandages", "tools"],
+      "abundant": ["timber", "iron salvage"],
+      "scarce": ["seeds", "stone"],
+      "price_index_percent": 126
+    },
+    {
+      "id": "saltmere-settlement",
+      "location": "saltmere",
+      "name": "Saltmere Landing",
+      "population": 18,
+      "food": 61,
+      "safety": 76,
+      "infrastructure": 65,
+      "industry": 38,
+      "governance": 60,
+      "player_activity": 24,
+      "condition": "stable",
+      "milestones": ["the ferry ledger is open"],
+      "vacancies": ["ferry hand", "herbal gatherer"],
+      "demand": ["seeds", "timber"],
+      "abundant": ["stone", "bandages"],
+      "scarce": ["wheat", "tools"],
+      "price_index_percent": 94
+    }
   ]
 }
