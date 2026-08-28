@@ -23,6 +23,10 @@ pub(super) use state::{fresh, Phase5Response, Phase5State};
 const REGION_ID: &str = "hearthlands";
 const INTEREST_RADIUS: u32 = 12;
 
+pub(super) fn is_request_cache_for_identity(key: &str, identity_key: &str) -> bool {
+    key.starts_with(&format!("phase5:{identity_key}:"))
+}
+
 impl WorldRepository {
     pub fn region(&self, token: &str) -> Result<ApiResponse<RegionSnapshot>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");

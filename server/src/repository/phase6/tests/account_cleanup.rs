@@ -1,8 +1,8 @@
 use super::*;
 use tarrowyn_protocol::{
-    AccountDeletionRequest, AuthLinkRequest, GuestSessionRequest, MarketOrderAction,
-    MarketOrderRequest, ProfessionAction, ProfessionKind, ProfessionRequest, SkillAction,
-    SkillRequest,
+    AccountDeletionRequest, AuthLinkRequest, ClaimLifecycleAction, ClaimLifecycleRequest,
+    GuestSessionRequest, KnowledgeAction, KnowledgeRequest, MarketOrderAction, MarketOrderRequest,
+    ProfessionAction, ProfessionKind, ProfessionRequest, SkillAction, SkillRequest,
 };
 
 #[test]
@@ -65,6 +65,50 @@ fn account_deletion_removes_phase4_and_phase5_replay_payloads() {
             },
         )
         .unwrap();
+    let claim = repository
+        .claim_lifecycle(
+            &linked.session.account_token,
+            ClaimLifecycleRequest {
+                request_id: "replay-cleanup-claim-request".to_owned(),
+                action: ClaimLifecycleAction::Request,
+                claim_id: None,
+                target_account_id: None,
+            },
+        )
+        .unwrap()
+        .data
+        .claim
+        .expect("the account should receive a claim before deletion");
+    assert!(
+        repository
+            .claim_lifecycle(
+                &linked.session.account_token,
+                ClaimLifecycleRequest {
+                    request_id: "replay-cleanup-claim-approve".to_owned(),
+                    action: ClaimLifecycleAction::Approve,
+                    claim_id: Some(claim.claim_id),
+                    target_account_id: None,
+                },
+            )
+            .unwrap()
+            .data
+            .accepted
+    );
+    assert!(
+        repository
+            .knowledge(
+                &linked.session.account_token,
+                KnowledgeRequest {
+                    request_id: "replay-cleanup-knowledge".to_owned(),
+                    action: KnowledgeAction::Discover,
+                    knowledge_id: Some("moonberry-tending".to_owned()),
+                    target_account_id: None,
+                },
+            )
+            .unwrap()
+            .data
+            .accepted
+    );
     repository
         .market_order(
             &linked.session.account_token,
@@ -103,11 +147,21 @@ fn account_deletion_removes_phase4_and_phase5_replay_payloads() {
         .request_results
         .keys()
         .any(|key| key.starts_with(&format!("skill-practice:{account_id}:"))));
+    assert!(state
+        .phase4
+        .claims
+        .iter()
+        .all(|claim| { claim.approved_by.as_deref() != Some(account_id.as_str()) }));
+    assert!(state
+        .phase4
+        .knowledge
+        .iter()
+        .all(|item| !item.discovered_by.iter().any(|id| id == &account_id)));
     assert!(!state
         .phase5
         .request_results
         .keys()
-        .any(|key| key.starts_with(&format!("{identity_key}:"))));
+        .any(|key| key.starts_with(&format!("phase5:{identity_key}:"))));
 }
 
 #[test]

@@ -49,7 +49,10 @@ its local collision map.
 ## Guest reset and protocol versioning
 
 Guest sessions are stable when the same `client_key` is sent again. A reset
-creates a fresh development account and character for that key:
+creates a fresh development account and character for that key. The reset also
+clears the old guest's private progression and replay caches, releases its
+travel and land ownership, and closes its unsettled development orders; public
+chronicle history remains a world fixture:
 
 ```powershell
 $body = '{"client_key":"desk-one","reset":true}'

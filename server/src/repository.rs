@@ -28,6 +28,7 @@ mod phase3_frontier;
 mod phase4;
 mod phase5;
 mod phase6;
+mod reset;
 mod session;
 mod skills;
 mod trades;
@@ -141,6 +142,9 @@ impl WorldRepository {
                 "production_identity_required",
                 "This character is linked to a production identity; provider sign-in is required.",
             ));
+        }
+        if request.reset {
+            reset::reset_guest(&mut state, &client_key);
         }
         if request.reset || !state.identities.contains_key(&client_key) {
             let number = state.next_guest;

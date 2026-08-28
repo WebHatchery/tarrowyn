@@ -68,10 +68,9 @@ fn erase_account(state: &mut RepositoryState, request: &PendingAccountDeletion) 
     state.phase4.request_results.retain(|key, _| {
         !super::account::is_phase4_replay_key_for_account(key, &request.account_id)
     });
-    state
-        .phase5
-        .request_results
-        .retain(|key, _| !key.starts_with(&format!("{}:", request.identity_key)));
+    state.phase5.request_results.retain(|key, _| {
+        !super::super::phase5::is_request_cache_for_identity(key, &request.identity_key)
+    });
 
     erase_private_phase4_state(state, request);
     state.trades.retain(|_, trade| {
@@ -141,6 +140,9 @@ fn erase_private_phase4_state(state: &mut RepositoryState, request: &PendingAcco
             if !state.phase4.available_plots.contains(&claim.position) {
                 state.phase4.available_plots.push(claim.position);
             }
+        }
+        if claim.approved_by.as_deref() == Some(request.account_id.as_str()) {
+            claim.approved_by = None;
         }
     }
     for office in &mut state.phase4.governance.offices {
@@ -224,6 +226,10 @@ fn erase_private_phase4_state(state: &mut RepositoryState, request: &PendingAcco
                 order.status = ServiceOrderStatus::Cancelled;
             }
         }
+    }
+    for item in &mut state.phase4.knowledge {
+        item.discovered_by
+            .retain(|account_id| account_id != &request.account_id);
     }
 }
 

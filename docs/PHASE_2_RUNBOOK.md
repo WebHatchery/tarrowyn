@@ -16,7 +16,9 @@ characters, farm plots, inventories, bounded tavern history, trades, and the
 cursor-addressable event history. Sessions and bearer tokens are deliberately
 not persisted. Repeating the same guest `client_key` creates a fresh session
 for the same durable character; using `reset: true` creates a new development
-identity.
+identity and clears the prior guest's private farming, trade, travel,
+profession, and replay state before the replacement session is issued. Public
+world history remains part of the development fixture.
 
 The current repository storage version is `12`. JSON migrations read older
 documents through serde defaults and write the upgraded document. The MySQL
