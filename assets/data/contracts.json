@@ -1,0 +1,12 @@
+{
+  "contracts": [
+    {
+      "id": "brambleback-watch",
+      "title": "Brambleback watch",
+      "description": "Scout Whisperwood Edge, return with three signs, and report at the tavern.",
+      "target": "brambleback",
+      "required_progress": 3,
+      "reward_gold": 6
+    }
+  ]
+}

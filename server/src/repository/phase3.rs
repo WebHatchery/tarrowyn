@@ -309,16 +309,24 @@ impl WorldRepository {
                             .contracts
                             .get_mut(&key)
                             .expect("contract exists");
-                        progress.progress = progress.progress.saturating_add(1).min(3);
+                        let required_progress =
+                            crate::content::contract_template(CONTRACT_ID).required_progress;
+                        progress.progress =
+                            progress.progress.saturating_add(1).min(required_progress);
                         response.accepted = true;
                         super::skills::record_practice(&mut state, &key, "navigation");
                     }
                 }
                 ContractAction::Report
-                    if current.status == ContractStatus::Accepted && current.progress >= 3 =>
+                    if current.status == ContractStatus::Accepted
+                        && current.progress
+                            >= crate::content::contract_template(CONTRACT_ID).required_progress =>
                 {
                     super::skills::record_practice(&mut state, &key, "survival");
-                    let reward = current.completion_count.saturating_add(1) * 2 + 4;
+                    let template = crate::content::contract_template(CONTRACT_ID);
+                    let reward = template
+                        .reward_gold
+                        .saturating_add(current.completion_count.saturating_mul(2));
                     let identity = state.identities.get_mut(&key).expect("identity exists");
                     identity.gold = identity.gold.saturating_add(reward);
                     identity.skill = identity.skill.saturating_add(1);
@@ -631,6 +639,7 @@ fn projection_for(state: &RepositoryState, key: &str) -> PlayerProjection {
 }
 
 fn contract_view(state: &RepositoryState, key: &str) -> AdventurerContract {
+    let template = crate::content::contract_template(CONTRACT_ID);
     let progress = state
         .phase3
         .contracts
@@ -643,14 +652,15 @@ fn contract_view(state: &RepositoryState, key: &str) -> AdventurerContract {
             available_at_tick: 0,
         });
     AdventurerContract {
-        contract_id: CONTRACT_ID.to_owned(),
-        title: "Brambleback watch".to_owned(),
-        description: "Scout Whisperwood Edge, return with three signs, and report at the tavern."
-            .to_owned(),
-        target: MonsterKind::Brambleback,
+        contract_id: template.id,
+        title: template.title,
+        description: template.description,
+        target: template.target,
         progress: progress.progress,
-        required_progress: 3,
-        reward_gold: progress.completion_count.saturating_add(1) * 2 + 4,
+        required_progress: template.required_progress,
+        reward_gold: template
+            .reward_gold
+            .saturating_add(progress.completion_count.saturating_mul(2)),
         status: progress.status,
         completion_count: progress.completion_count,
         available_at_tick: progress.available_at_tick,

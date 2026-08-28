@@ -99,7 +99,9 @@ calendar sequence and season length; the configured real-time day length still
 belongs to the server deployment boundary. Route transport and endpoint
 topology, plus location roles and resources, now follow the validated region
 manifest; names, services, positions, and route tuning remain authored
-fixtures until the richer schemas are introduced.
+fixtures until the richer schemas are introduced. The repeatable Brambleback
+contract now consumes a typed contract manifest for its narrative, target,
+required progress, and reward curve.
 
 ## Hosting and observability
 

@@ -87,3 +87,12 @@ fn location_profiles_follow_the_validated_region_manifest() {
         vec!["timber".to_owned(), "iron salvage".to_owned()]
     );
 }
+
+#[test]
+fn contract_templates_follow_the_validated_manifest() {
+    let contract = super::contract_template("brambleback-watch");
+    assert_eq!(contract.title, "Brambleback watch");
+    assert_eq!(contract.target, tarrowyn_protocol::MonsterKind::Brambleback);
+    assert_eq!(contract.required_progress, 3);
+    assert_eq!(contract.reward_gold, 6);
+}

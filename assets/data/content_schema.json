@@ -4,6 +4,7 @@
     "game_config.json",
     "actions.json",
     "crops.json",
+    "contracts.json",
     "events.json",
     "items.json",
     "region.json",
