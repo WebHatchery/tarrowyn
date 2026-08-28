@@ -397,12 +397,7 @@ impl WorldRepository {
             .expect("identity exists")
             .account_id
             .clone();
-        if !self
-            .config
-            .support_operator_accounts
-            .iter()
-            .any(|account_id| account_id == &actor)
-        {
+        if !is_support_operator(&self.config, &actor) {
             return Err(RepositoryError::new(
                 403,
                 "support_operator_required",
@@ -500,7 +495,20 @@ impl WorldRepository {
         token: &str,
     ) -> Result<ApiResponse<OpsMetricsResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        authenticate(&mut state, token, &self.config)?;
+        let key = authenticate(&mut state, token, &self.config)?;
+        let account = state
+            .identities
+            .get(&key)
+            .expect("identity exists")
+            .account_id
+            .clone();
+        if !is_support_operator(&self.config, &account) {
+            return Err(RepositoryError::new(
+                403,
+                "support_operator_required",
+                "A configured support operator account is required for operational metrics.",
+            ));
+        }
         Ok(ApiResponse {
             meta: meta(state.tick, None, Some(state.cursor)),
             data: OpsMetricsResponse {
@@ -598,6 +606,13 @@ fn trim_replay_cache<T>(cache: &mut HashMap<String, T>) {
         };
         cache.remove(&key);
     }
+}
+
+fn is_support_operator(config: &ServerConfig, account_id: &str) -> bool {
+    config
+        .support_operator_accounts
+        .iter()
+        .any(|operator| operator == account_id)
 }
 
 fn stable_fingerprint(value: &str) -> u64 {
