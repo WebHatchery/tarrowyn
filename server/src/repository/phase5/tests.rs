@@ -253,16 +253,19 @@ fn oidc_link_refresh_and_revoke_keep_character_boundary() {
     let refreshed_retry = repository.auth_refresh(refresh_request).unwrap().data;
     assert_eq!(refreshed_retry, refreshed);
     assert!(repository.account(&refreshed.session.account_token).is_ok());
+    let revoke_request = AuthRevokeRequest {
+        request_id: "revoke".to_owned(),
+        revoke_all: true,
+    };
     let revoked = repository
-        .auth_revoke(
-            &refreshed.session.account_token,
-            AuthRevokeRequest {
-                request_id: "revoke".to_owned(),
-                revoke_all: true,
-            },
-        )
+        .auth_revoke(&refreshed.session.account_token, revoke_request.clone())
         .unwrap()
         .data;
+    let revoked_retry = repository
+        .auth_revoke(&refreshed.session.account_token, revoke_request)
+        .unwrap()
+        .data;
+    assert_eq!(revoked_retry, revoked);
     assert!(revoked.revoked_sessions >= 1);
     assert!(repository
         .account(&refreshed.session.account_token)
@@ -348,7 +351,7 @@ fn auth_replay_results_survive_repository_restart() {
     let refreshed = first.auth_refresh(refresh_request.clone()).unwrap().data;
     drop(first);
 
-    let second = WorldRepository::new(config);
+    let second = WorldRepository::new(config.clone());
     let linked_after_restart = second
         .auth_link(&refreshed.session.account_token, link_request)
         .unwrap()
@@ -359,6 +362,22 @@ fn auth_replay_results_survive_repository_restart() {
     assert!(second
         .account(&refreshed_after_restart.session.account_token)
         .is_ok());
+    let revoke_request = AuthRevokeRequest {
+        request_id: "restart-revoke".to_owned(),
+        revoke_all: true,
+    };
+    let revoked = second
+        .auth_revoke(&refreshed.session.account_token, revoke_request.clone())
+        .unwrap()
+        .data;
+    drop(second);
+
+    let third = WorldRepository::new(config);
+    let revoked_after_restart = third
+        .auth_revoke(&refreshed.session.account_token, revoke_request)
+        .unwrap()
+        .data;
+    assert_eq!(revoked_after_restart, revoked);
     let _ = std::fs::remove_file(path);
 }
 

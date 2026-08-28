@@ -5,14 +5,14 @@ use super::*;
 use crate::config::ServerConfig;
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, VecDeque};
-use std::fs;
-use std::path::Path;
 use tarrowyn_protocol::{
     AccountResponse, ApiResponse, AuditRecord, AuthLinkRequest, AuthLinkResponse,
     AuthRefreshRequest, AuthRefreshResponse, AuthRevokeRequest, AuthRevokeResponse, AuthSession,
     ChronicleSearchResponse, ModerationReportRequest, ModerationReportResponse, OpsHealthResponse,
     OpsMetricsResponse, SupportRepairAction, SupportRepairRequest, SupportRepairResponse,
 };
+
+mod backup;
 
 const IDENTITY_PROVIDER: &str = "webhatchery-identity-oidc";
 const PRIVACY_POLICY_VERSION: &str = "2026-08-19";
@@ -47,6 +47,8 @@ pub(super) struct Phase6State {
     pub(super) auth_link_results: HashMap<String, AuthLinkResponse>,
     #[serde(default)]
     pub(super) auth_refresh_results: HashMap<String, AuthRefreshResponse>,
+    #[serde(default)]
+    pub(super) auth_revoke_results: HashMap<String, AuthRevokeResponse>,
     pub(super) audits: VecDeque<AuditRecord>,
     pub(super) reports: HashMap<String, ModerationReportResponse>,
     pub(super) request_results: HashMap<String, SupportRepairResponse>,
@@ -71,6 +73,7 @@ pub(super) fn fresh(_config: &ServerConfig) -> Phase6State {
         sessions: HashMap::new(),
         auth_link_results: HashMap::new(),
         auth_refresh_results: HashMap::new(),
+        auth_revoke_results: HashMap::new(),
         audits: VecDeque::new(),
         reports: HashMap::new(),
         request_results: HashMap::new(),
@@ -289,8 +292,28 @@ impl WorldRepository {
         request: AuthRevokeRequest,
     ) -> Result<ApiResponse<AuthRevokeResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        let key = authenticate(&mut state, token, &self.config)?;
         validate_request_id(&request.request_id)?;
+        let identity_hint = state
+            .sessions
+            .get(token)
+            .map(|session| session.identity_key.clone())
+            .or_else(|| {
+                state
+                    .phase6
+                    .sessions
+                    .get(token)
+                    .map(|session| session.identity_key.clone())
+            });
+        if let Some(identity_key) = identity_hint.as_deref() {
+            let cache_key = format!("{}:{}", identity_key, request.request_id);
+            if let Some(previous) = state.phase6.auth_revoke_results.get(&cache_key).cloned() {
+                return Ok(ApiResponse {
+                    meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
+                    data: previous,
+                });
+            }
+        }
+        let key = authenticate(&mut state, token, &self.config)?;
         let account = state
             .identities
             .get(&key)
@@ -320,6 +343,14 @@ impl WorldRepository {
             "accepted",
             "An access session was revoked by the account boundary.",
         );
+        let response = AuthRevokeResponse {
+            request_id: request.request_id.clone(),
+            revoked_sessions: tokens.len() as u32,
+        };
+        state
+            .phase6
+            .auth_revoke_results
+            .insert(format!("{}:{}", key, request.request_id), response.clone());
         self.persist(&state);
         Ok(ApiResponse {
             meta: meta(
@@ -327,10 +358,7 @@ impl WorldRepository {
                 Some(request.request_id.clone()),
                 Some(state.cursor),
             ),
-            data: AuthRevokeResponse {
-                request_id: request.request_id,
-                revoked_sessions: tokens.len() as u32,
-            },
+            data: response,
         })
     }
 
@@ -595,10 +623,11 @@ impl WorldRepository {
 
 pub(super) fn phase6_tick(state: &mut RepositoryState, config: &ServerConfig) {
     if config.backup_interval_ticks > 0 && state.tick.is_multiple_of(config.backup_interval_ticks) {
-        write_backup(state, config);
+        backup::write(state, config);
     }
     trim_replay_cache(&mut state.phase6.auth_link_results);
     trim_replay_cache(&mut state.phase6.auth_refresh_results);
+    trim_replay_cache(&mut state.phase6.auth_revoke_results);
     state.phase6.audits.truncate(512);
 }
 
@@ -746,45 +775,6 @@ fn alert_flags(state: &RepositoryState) -> Vec<String> {
         flags.push("travel_recovery_backlog".to_owned());
     }
     flags
-}
-
-fn write_backup(state: &mut RepositoryState, config: &ServerConfig) {
-    let Some(path) = config
-        .backup_path
-        .as_deref()
-        .or(config.persistence_path.as_deref())
-    else {
-        return;
-    };
-    let backup_path = if config.backup_path.is_some() {
-        path.to_owned()
-    } else {
-        format!("{path}.backup")
-    };
-    let Ok(data) = serde_json::to_vec_pretty(&state.to_stored()) else {
-        return;
-    };
-    let path = Path::new(&backup_path);
-    if let Some(parent) = path.parent() {
-        if fs::create_dir_all(parent).is_err() {
-            return;
-        }
-    }
-    let temporary_path = path.with_extension(format!(
-        "{}-{}",
-        path.extension()
-            .and_then(|extension| extension.to_str())
-            .unwrap_or("backup"),
-        std::process::id()
-    ));
-    if fs::write(&temporary_path, data).is_ok()
-        && super::persistence::replace_file(&temporary_path, path).is_ok()
-    {
-        state.phase6.last_backup_tick = Some(state.tick);
-        state.phase6.last_backup_path = Some(backup_path);
-    } else {
-        let _ = fs::remove_file(temporary_path);
-    }
 }
 
 #[cfg(test)]

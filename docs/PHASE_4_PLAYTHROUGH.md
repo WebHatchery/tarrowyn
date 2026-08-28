@@ -45,7 +45,7 @@ in [`PHASE_4_RUNBOOK.md`](PHASE_4_RUNBOOK.md).
 
 Every mutating fixture is request-idempotent and returns the same result when
 the request is retried. The repository persists Phase 4 alongside the Phase 3
-world document at storage version 15. Loading a document without `phase4`
+world document at storage version 16. Loading a document without `phase4`
 creates safe defaults while retaining the existing account and world records.
 The complete automated proof is `cargo test --workspace`; the browser-facing
 publisher proof remains `publish.ps1`.

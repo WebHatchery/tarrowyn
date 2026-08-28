@@ -1,6 +1,6 @@
 use super::super::models::{RepositoryState, StoredState};
 use super::super::ServerConfig;
-use super::write_backup;
+use super::backup::write;
 use std::fs;
 
 #[test]
@@ -21,7 +21,7 @@ fn backup_replaces_the_snapshot_as_one_complete_json_file() {
     let mut state = RepositoryState::fresh(&config);
     state.tick = 7;
 
-    write_backup(&mut state, &config);
+    write(&mut state, &config);
 
     let bytes = fs::read(&path).expect("backup should be written");
     let stored: StoredState = serde_json::from_slice(&bytes).expect("backup should be complete");

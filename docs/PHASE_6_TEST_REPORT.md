@@ -4,7 +4,7 @@
 
 The workspace has a versioned storage document, atomic replacement, scheduled
 backup metadata, integrity readiness, production session records, audit records,
-and a support repair API. Storage version 15 also persists auth replay results,
+and a support repair API. Storage version 16 also persists auth replay results,
 alongside field-tool condition,
 real-time lease timestamps, and public tax receipts,
 the per-character skill ledger, Bellweather animal condition, and daily care
@@ -16,7 +16,7 @@ refresh, and revocation state survive the authoritative repository boundary.
 The selected MySQL bridge now has a checked-in migration, startup pool/migration
 failure handling, transactional snapshot/index writes, and driver-selection
 tests. The configured local preview MySQL service passed
-`scripts/verify_mysql.ps1`: storage version 15 readiness, authoritative animal
+`scripts/verify_mysql.ps1`: storage version 16 readiness, authoritative animal
 state, duplicate-request replay, concurrent duplicate replay, temporary backup
 creation, and identity/state persistence across a server restart all
 succeeded. It then restored a native
