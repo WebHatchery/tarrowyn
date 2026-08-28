@@ -40,3 +40,16 @@ fn server_event_seed_template_follows_the_validated_manifest() {
     assert_eq!(event.intervention_options[0], "repair ferry markers");
     assert_eq!(super::regional_event_template(1).id, "river-thaw");
 }
+
+#[test]
+fn settlement_supply_profiles_follow_the_validated_manifest() {
+    let hearth = super::settlement_supply_profile("hearth-settlement");
+    assert_eq!(
+        hearth.abundant,
+        vec!["wheat".to_owned(), "seeds".to_owned()]
+    );
+    assert_eq!(
+        hearth.scarce,
+        vec!["timber".to_owned(), "bandages".to_owned()]
+    );
+}

@@ -100,12 +100,20 @@ struct SettlementsManifest {
     settlements: Vec<SettlementManifest>,
 }
 
+static SETTLEMENT_CATALOG: OnceLock<Vec<SettlementManifest>> = OnceLock::new();
+
 #[derive(Debug, Deserialize)]
 struct SettlementManifest {
     id: String,
     location: String,
     abundant: Vec<String>,
     scarce: Vec<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct SettlementSupplyProfile {
+    pub(crate) abundant: Vec<String>,
+    pub(crate) scarce: Vec<String>,
 }
 
 #[derive(Debug, Deserialize)]
@@ -211,6 +219,32 @@ pub(crate) fn regional_event_template(event_index: u64) -> EventTemplate {
         effects: event.effects.clone(),
         cause: event.cause.clone(),
         intervention_options: event.intervention_options.clone(),
+    }
+}
+
+pub(crate) fn settlement_supply_profile(settlement_id: &str) -> SettlementSupplyProfile {
+    let settlements = SETTLEMENT_CATALOG.get_or_init(|| {
+        let settlements: SettlementsManifest =
+            serde_json::from_str(include_str!("../../assets/data/settlements.json"))
+                .expect("settlements content JSON must be valid");
+        validate_id_list(
+            "settlement",
+            settlements
+                .settlements
+                .iter()
+                .map(|settlement| settlement.id.as_str())
+                .collect(),
+        )
+        .expect("settlements content IDs must be valid");
+        settlements.settlements
+    });
+    let settlement = settlements
+        .iter()
+        .find(|settlement| settlement.id == settlement_id)
+        .expect("validated settlement catalog must contain the requested settlement");
+    SettlementSupplyProfile {
+        abundant: settlement.abundant.clone(),
+        scarce: settlement.scarce.clone(),
     }
 }
 

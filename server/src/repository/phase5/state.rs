@@ -146,8 +146,6 @@ pub(crate) fn fresh(_config: &ServerConfig) -> Phase5State {
             &["shared fields endure", "town hall keeps public records"],
             &["caravan quartermaster", "field-tool repair"],
             &["bandages", "stone"],
-            &["wheat", "seeds"],
-            &["timber", "bandages"],
             108,
         ),
         settlement(
@@ -165,8 +163,6 @@ pub(crate) fn fresh(_config: &ServerConfig) -> Phase5State {
             &["the first watchtower stands"],
             &["bridge warden", "healer", "wood hauler"],
             &["food", "bandages", "tools"],
-            &["timber", "iron salvage"],
-            &["seeds", "stone"],
             126,
         ),
         settlement(
@@ -184,8 +180,6 @@ pub(crate) fn fresh(_config: &ServerConfig) -> Phase5State {
             &["the ferry ledger is open"],
             &["ferry hand", "herbal gatherer"],
             &["seeds", "timber"],
-            &["stone", "bandages"],
-            &["wheat", "tools"],
             94,
         ),
     ];
@@ -279,10 +273,9 @@ fn settlement(
     milestones: &[&str],
     vacancies: &[&str],
     demand: &[&str],
-    abundant: &[&str],
-    scarce: &[&str],
     price: u16,
 ) -> SettlementProjection {
+    let supply = crate::content::settlement_supply_profile(id);
     SettlementProjection {
         settlement_id: id.to_owned(),
         name: name.to_owned(),
@@ -298,8 +291,8 @@ fn settlement(
         milestones: milestones.iter().map(|value| (*value).to_owned()).collect(),
         vacancies: vacancies.iter().map(|value| (*value).to_owned()).collect(),
         demand: demand.iter().map(|value| (*value).to_owned()).collect(),
-        abundant_goods: abundant.iter().map(|value| (*value).to_owned()).collect(),
-        scarce_goods: scarce.iter().map(|value| (*value).to_owned()).collect(),
+        abundant_goods: supply.abundant,
+        scarce_goods: supply.scarce,
         price_index_percent: price,
         chronicle: Vec::new(),
         recovery_opportunity: None,
