@@ -44,6 +44,45 @@ fn catalogue_exposes_direct_roots_and_hides_advanced_recipe_details() {
 }
 
 #[test]
+fn a_root_can_begin_through_an_idempotent_first_practice() {
+    let repository = WorldRepository::new(ServerConfig {
+        backup_path: None,
+        ..ServerConfig::default()
+    });
+    let session = repository.guest_session(GuestSessionRequest {
+        client_key: Some("skills-first-practice".to_owned()),
+        reset: false,
+    });
+    let request = SkillRequest {
+        request_id: "practice-fishing".to_owned(),
+        action: SkillAction::Practice,
+        skill_id: Some("fishing".to_owned()),
+        target_account_id: None,
+    };
+    let first = repository
+        .practice_skill(&session.data.account_token, request.clone())
+        .unwrap()
+        .data;
+    assert!(first.accepted);
+    assert!(first.message.contains("Fishing"));
+    let retry = repository
+        .practice_skill(&session.data.account_token, request)
+        .unwrap()
+        .data;
+    assert_eq!(retry, first);
+    let fishing = repository
+        .skills(&session.data.account_token)
+        .unwrap()
+        .data
+        .skills
+        .into_iter()
+        .find(|skill| skill.skill_id == "fishing")
+        .unwrap();
+    assert_eq!(fishing.mastery, 1);
+    assert_eq!(fishing.status, SkillStatus::Practising);
+}
+
+#[test]
 fn practice_is_persistent_and_complete_discoveries_are_authoritative() {
     let repository = WorldRepository::new(ServerConfig {
         backup_path: None,

@@ -154,17 +154,18 @@ pub(super) fn draw_sidebar(
     for (index, (id, label, tone)) in [
         ("expedition", "Pioneer", ButtonTone::Primary),
         ("chronicle", "Chronicle", ButtonTone::Secondary),
-        ("say-hello", "Say hello", ButtonTone::Secondary),
+        ("say-hello", "Hello", ButtonTone::Secondary),
         ("school", "School", ButtonTone::Primary),
+        ("practice", "Practice", ButtonTone::Positive),
     ]
     .into_iter()
     .enumerate()
     {
         if virtual_button(
             Rect::new(
-                content.x + index as f32 * 92.0,
+                content.x + index as f32 * 73.0,
                 content.y + 408.0,
-                86.0,
+                69.0,
                 24.0,
             ),
             label,

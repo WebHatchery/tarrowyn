@@ -75,13 +75,12 @@ requirements to the learner. The current client offers mastered roots through
 the visible School control; the server remains the authority for future school
 membership, tuition, halls, and advanced lesson policy.
 
-Formal school lessons use `POST /v1/skills`. A teacher must have mastered the
-subject and have Teaching mastery at least equal to its depth; the learner must
-be present beside the teacher. A root lesson starts one practice, while an
-advanced lesson grants only the discovery and leaves mastery and all personal
-requirements to the learner. The current client offers mastered roots through
-the visible School control; the server remains the authority for future school
-membership, tuition, halls, and advanced lesson policy.
+Every depth-one catalogue entry also has a dependable first-practice path. A
+visible Practice control selects the next unstarted root and sends
+`SkillAction::Practice`; the server records it in the same ledger used by
+farming, travel, combat, trade, and profession activity. This is an entry
+path, not a replacement for the richer tools, worksites, encounters, and
+teachers that later raise mastery.
 
 ## Households and local life
 

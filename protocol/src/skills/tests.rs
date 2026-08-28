@@ -12,3 +12,16 @@ fn school_requests_use_an_explicit_touchable_action() {
     assert!(encoded.contains("\"action\":\"teach\""));
     assert!(encoded.contains("sword-fighting"));
 }
+
+#[test]
+fn root_practice_requests_keep_the_entry_skill_explicit() {
+    let request = SkillRequest {
+        request_id: "practice-1".to_owned(),
+        action: SkillAction::Practice,
+        skill_id: Some("fishing".to_owned()),
+        target_account_id: None,
+    };
+    let encoded = serde_json::to_string(&request).expect("practice request should encode");
+    assert!(encoded.contains("\"action\":\"practice\""));
+    assert!(encoded.contains("\"skill_id\":\"fishing\""));
+}

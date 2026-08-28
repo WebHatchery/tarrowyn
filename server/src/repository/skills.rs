@@ -116,6 +116,82 @@ impl WorldRepository {
         })
     }
 
+    pub fn practice_skill(
+        &self,
+        token: &str,
+        request: SkillRequest,
+    ) -> Result<ApiResponse<SkillResponse>, RepositoryError> {
+        let mut state = self.state.lock().expect("world repository lock poisoned");
+        expire_sessions(&mut state, &self.config);
+        let key = authenticate(&mut state, token, &self.config)?;
+        super::phase4::validate_request_id(&request.request_id)?;
+        let actor_account = super::phase4::account_id(&state, &key);
+        let cache = format!("skill-practice:{actor_account}:{}", request.request_id);
+        if let Some(super::phase4::Phase4Response::Skill(response)) =
+            state.phase4.request_results.get(&cache)
+        {
+            return Ok(ApiResponse {
+                meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
+                data: response.clone(),
+            });
+        }
+        let mut response = SkillResponse {
+            request_id: request.request_id.clone(),
+            accepted: false,
+            skill_id: request.skill_id.clone(),
+            target_account_id: None,
+            skills: skills_view(&state, &key),
+            message: "Choose a depth-one discipline and take its first practical step.".to_owned(),
+            reason: None,
+        };
+        let Some(skill_id) = request.skill_id.as_deref() else {
+            response.reason = Some("Name the discipline for this first practice.".to_owned());
+            return finish_skill_action(self, &mut state, cache, response);
+        };
+        let Some(definition) = catalog()
+            .skills
+            .iter()
+            .find(|skill| skill.id == skill_id)
+            .cloned()
+        else {
+            response.reason = Some("That discipline is not in the current catalogue.".to_owned());
+            return finish_skill_action(self, &mut state, cache, response);
+        };
+        if definition.depth != 1 || definition.practice_key.as_deref() != Some(skill_id) {
+            response.reason = Some(
+                "Advanced disciplines emerge from play; choose a depth-one practice instead."
+                    .to_owned(),
+            );
+            return finish_skill_action(self, &mut state, cache, response);
+        }
+        let previous_practice = state
+            .identities
+            .get(&key)
+            .expect("identity exists")
+            .skills
+            .practice
+            .get(skill_id)
+            .copied()
+            .unwrap_or(0);
+        let actor_name = super::phase4::account_name(&state, &key);
+        record_practice(&mut state, &key, skill_id);
+        if previous_practice == 0 {
+            super::phase4::record(
+                &mut state,
+                "skill practice",
+                "A new discipline begins at the first step",
+                &format!(
+                    "{} began studying {} through its dependable entry path.",
+                    actor_name, definition.name
+                ),
+            );
+        }
+        response.accepted = true;
+        response.message = format!("You began {}. {}", definition.name, definition.entry_hint);
+        response.skills = skills_view(&state, &key);
+        finish_skill_action(self, &mut state, cache, response)
+    }
+
     pub fn teach_skill(
         &self,
         token: &str,
@@ -147,21 +223,21 @@ impl WorldRepository {
         };
         let Some(skill_id) = request.skill_id.as_deref() else {
             response.reason = Some("Name the mastered skill to teach.".to_owned());
-            return finish_teaching(self, &mut state, cache, response);
+            return finish_skill_action(self, &mut state, cache, response);
         };
         let Some(target_account) = request.target_account_id.as_deref() else {
             response.reason = Some("Teaching needs a receiving account.".to_owned());
-            return finish_teaching(self, &mut state, cache, response);
+            return finish_skill_action(self, &mut state, cache, response);
         };
         let Some(target_key) = super::phase4::key_for_account(&state, target_account) else {
             response.reason =
                 Some("The receiving player must have a recognised account.".to_owned());
-            return finish_teaching(self, &mut state, cache, response);
+            return finish_skill_action(self, &mut state, cache, response);
         };
         if target_key == key {
             response.reason =
                 Some("A school lesson needs another player to receive it.".to_owned());
-            return finish_teaching(self, &mut state, cache, response);
+            return finish_skill_action(self, &mut state, cache, response);
         }
         let target_online = state
             .sessions
@@ -170,7 +246,7 @@ impl WorldRepository {
         if !target_online {
             response.reason =
                 Some("The receiving player must be present for the lesson.".to_owned());
-            return finish_teaching(self, &mut state, cache, response);
+            return finish_skill_action(self, &mut state, cache, response);
         }
         let teacher_position = state
             .identities
@@ -185,7 +261,7 @@ impl WorldRepository {
         if teacher_position != target_position {
             response.reason =
                 Some("Stand beside the receiving player to demonstrate the skill.".to_owned());
-            return finish_teaching(self, &mut state, cache, response);
+            return finish_skill_action(self, &mut state, cache, response);
         }
         let Some(definition) = catalog()
             .skills
@@ -195,24 +271,24 @@ impl WorldRepository {
         else {
             response.reason =
                 Some("That skill is not part of the current school catalogue.".to_owned());
-            return finish_teaching(self, &mut state, cache, response);
+            return finish_skill_action(self, &mut state, cache, response);
         };
         if !definition.directly_teachable {
             response.reason = Some("That discipline is not directly teachable.".to_owned());
-            return finish_teaching(self, &mut state, cache, response);
+            return finish_skill_action(self, &mut state, cache, response);
         }
         let teacher_skills = &state.identities.get(&key).expect("identity exists").skills;
         if mastery(teacher_skills, skill_id) < 5 {
             response.reason =
                 Some("Master the discipline before offering it as a lesson.".to_owned());
-            return finish_teaching(self, &mut state, cache, response);
+            return finish_skill_action(self, &mut state, cache, response);
         }
         if mastery(teacher_skills, "teaching") < definition.depth {
             response.reason = Some(format!(
                 "Teaching mastery must reach depth {} before this lesson can be formal.",
                 definition.depth
             ));
-            return finish_teaching(self, &mut state, cache, response);
+            return finish_skill_action(self, &mut state, cache, response);
         }
         let learner_practises_root = state
             .identities
@@ -232,11 +308,11 @@ impl WorldRepository {
         if definition.depth == 1 && learner_practises_root {
             response.reason =
                 Some("The learner must practise this discipline before another lesson.".to_owned());
-            return finish_teaching(self, &mut state, cache, response);
+            return finish_skill_action(self, &mut state, cache, response);
         }
         if definition.depth > 1 && learner_knows_discovery {
             response.reason = Some("The learner already carries that discovery.".to_owned());
-            return finish_teaching(self, &mut state, cache, response);
+            return finish_skill_action(self, &mut state, cache, response);
         }
         if definition.depth == 1 {
             record_practice(&mut state, &target_key, skill_id);
@@ -265,11 +341,11 @@ impl WorldRepository {
             ),
         );
         response.skills = skills_view(&state, &key);
-        finish_teaching(self, &mut state, cache, response)
+        finish_skill_action(self, &mut state, cache, response)
     }
 }
 
-fn finish_teaching(
+fn finish_skill_action(
     repository: &WorldRepository,
     state: &mut RepositoryState,
     cache: String,

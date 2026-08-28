@@ -1,5 +1,5 @@
 use super::*;
-use tarrowyn_protocol::ProfessionAction;
+use tarrowyn_protocol::{ProfessionAction, SkillAction, SkillStatus, SkillView, SkillsResponse};
 
 #[test]
 fn crafting_challenge_moves_across_a_wide_target() {
@@ -25,4 +25,28 @@ fn crafting_tap_becomes_a_bounded_completion_request() {
     assert_eq!(request.action, ProfessionAction::CompleteOrder);
     assert_eq!(request.order_id.as_deref(), Some("service-order-2"));
     assert!(request.timing_score.is_some_and(|score| score <= 100));
+}
+
+#[test]
+fn practice_button_queues_the_next_unstarted_root() {
+    let mut client = Phase4Client::new();
+    client.skills = Some(SkillsResponse {
+        skills: vec![SkillView {
+            skill_id: "fishing".to_owned(),
+            name: "Fishing".to_owned(),
+            family: tarrowyn_protocol::SkillFamily::Gathering,
+            depth: 1,
+            mastery: 0,
+            status: SkillStatus::Available,
+            description: "Read water.".to_owned(),
+            entry_hint: "Make a first catch.".to_owned(),
+        }],
+        cursor: 0,
+    });
+    client.queue_cycle("practice", "practice-1".to_owned());
+    let Some(Phase4Command::Skill(request)) = client.commands.pop_front() else {
+        panic!("practice should queue a skill request");
+    };
+    assert_eq!(request.action, SkillAction::Practice);
+    assert_eq!(request.skill_id.as_deref(), Some("fishing"));
 }

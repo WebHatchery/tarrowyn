@@ -235,6 +235,9 @@ impl Phase4Client {
             "order" => self.queue_order(request_id),
             "knowledge" => self.queue_knowledge(request_id),
             "local-fight" => self.queue_combat(request_id),
+            "practice" => {
+                self.queue_skill_practice(request_id);
+            }
             "households" => self.pending_households = None,
             _ => {}
         }
@@ -472,6 +475,23 @@ impl Phase4Client {
             target_account_id: Some(target_account_id),
         }));
         true
+    }
+
+    fn queue_skill_practice(&mut self, request_id: String) {
+        let Some(skill) = self.skills.as_ref().and_then(|skills| {
+            skills
+                .skills
+                .iter()
+                .find(|skill| skill.depth == 1 && skill.status == SkillStatus::Available)
+        }) else {
+            return;
+        };
+        self.commands.push_back(Phase4Command::Skill(SkillRequest {
+            request_id,
+            action: SkillAction::Practice,
+            skill_id: Some(skill.skill_id.clone()),
+            target_account_id: None,
+        }));
     }
 
     fn queue_combat(&mut self, request_id: String) {
