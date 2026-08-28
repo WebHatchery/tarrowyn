@@ -129,6 +129,7 @@ impl WorldRepository {
         }
         animal.condition = animal.max_condition;
         animal.last_cared_tick = state.tick;
+        animal.last_cared_day = state.clock.day;
         state
             .identities
             .get_mut(identity_key)

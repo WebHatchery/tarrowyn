@@ -264,6 +264,8 @@ pub struct FarmAnimal {
     pub max_condition: u8,
     #[serde(default)]
     pub last_cared_tick: u64,
+    #[serde(default)]
+    pub last_cared_day: u32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]

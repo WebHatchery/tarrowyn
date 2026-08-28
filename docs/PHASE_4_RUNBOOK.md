@@ -31,7 +31,8 @@ Remove-Item -LiteralPath "dist/tarrowyn-phase4-state.json" -ErrorAction Silently
 An existing Phase 1–3 JSON state may be reused directly. The missing `phase4`
 field migrates to the default governance, infrastructure, claim, profession,
 knowledge, household, and local-combat records. A migrated identity keeps its
-character, inventory, gold, crops, Phase 3 claim, and chronicle.
+character, inventory, gold, crops, Phase 3 claim, chronicle, and the default
+Bellweather animal record.
 
 Useful deterministic settings for quick checks are:
 

@@ -10,7 +10,7 @@ use tarrowyn_protocol::{
     WorldEvent, WorldSnapshot, MAX_CHAT_MESSAGE_LENGTH, MAX_TRADE_ITEMS, PROTOCOL_VERSION,
 };
 
-pub(super) const STORAGE_VERSION: u32 = 13;
+pub(super) const STORAGE_VERSION: u32 = 14;
 const MAX_EVENTS: usize = 2048;
 const MAX_CHAT_HISTORY: usize = 64;
 const MAX_NOTICES: usize = 32;
@@ -489,10 +489,14 @@ impl WorldRepository {
     pub fn tick(&self) {
         let mut state = self.state.lock().expect("world repository lock poisoned");
         state.tick += 1;
+        let previous_day = state.clock.day;
         state.clock.seconds += self.config.world_seconds_per_tick.max(0.0);
         while state.clock.seconds >= state.clock.day_length_seconds.max(1.0) {
             state.clock.seconds -= state.clock.day_length_seconds.max(1.0);
             state.clock.day += 1;
+        }
+        if state.clock.day != previous_day {
+            phase4::day_rollover(&mut state);
         }
         world::grow_plots(&mut state, &self.config);
         trades::expire_trades(&mut state);

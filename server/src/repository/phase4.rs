@@ -218,6 +218,7 @@ pub(super) fn fresh_animals() -> Vec<FarmAnimal> {
         condition: 2,
         max_condition: 3,
         last_cared_tick: 0,
+        last_cared_day: 1,
     }]
 }
 
@@ -360,6 +361,14 @@ pub(super) fn phase4_tick(state: &mut RepositoryState, config: &ServerConfig) {
     households::tick(state, config);
     super::phase5::phase5_tick(state, config);
     super::phase6::phase6_tick(state, config);
+}
+
+pub(super) fn day_rollover(state: &mut RepositoryState) {
+    for animal in &mut state.phase4.animals {
+        if animal.last_cared_day < state.clock.day {
+            animal.condition = animal.condition.saturating_sub(1);
+        }
+    }
 }
 
 pub(super) fn prune_school_lessons(state: &mut RepositoryState) {

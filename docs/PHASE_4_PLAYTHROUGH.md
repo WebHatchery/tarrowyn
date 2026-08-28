@@ -26,8 +26,9 @@ in [`PHASE_4_RUNBOOK.md`](PHASE_4_RUNBOOK.md).
    unattended growth pulse loses bounded quality under pressure, while recent
    tending protects the pulse; the same ledger shows the field-tool condition.
 6. Bellweather, the shared-field goat, appears in the world projection at
-   condition 2/3. The first character taps Care beside the fields, restores
-   the animal to 3/3, and records Animal Husbandry practice.
+   condition 2/3. After a shared-day rollover it falls to 1/3; the first
+   character taps Care beside the fields, restores the animal to 3/3, and
+   records Animal Husbandry practice.
 7. The first character discovers the Moonberry trellis method and teaches it
    to the Provider. The Provider applies it from its own server-owned knowledge
    list.
@@ -44,7 +45,7 @@ in [`PHASE_4_RUNBOOK.md`](PHASE_4_RUNBOOK.md).
 
 Every mutating fixture is request-idempotent and returns the same result when
 the request is retried. The repository persists Phase 4 alongside the Phase 3
-world document at storage version 13. Loading a document without `phase4`
+world document at storage version 14. Loading a document without `phase4`
 creates safe defaults while retaining the existing account and world records.
 The complete automated proof is `cargo test --workspace`; the browser-facing
 publisher proof remains `publish.ps1`.

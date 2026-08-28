@@ -4,9 +4,10 @@
 
 The workspace has a versioned storage document, atomic replacement, scheduled
 backup metadata, integrity readiness, production session records, audit records,
-and a support repair API. Storage version 13 also persists field-tool condition,
+and a support repair API. Storage version 14 also persists field-tool condition,
 real-time lease timestamps, and public tax receipts,
-the per-character skill ledger and Bellweather animal condition, and loads older documents through serde defaults. A Phase 1–4
+the per-character skill ledger, Bellweather animal condition, and daily care
+state, and loads older documents through serde defaults. A Phase 1–4
 document without Phase 5/6 fields loads through serde defaults and receives the
 current regional and operations state.
 The Phase 5 fixture verifies that travel, market, event, household, identity,
