@@ -42,6 +42,7 @@ impl Default for Phase5State {
 }
 
 pub(crate) fn fresh(_config: &ServerConfig) -> Phase5State {
+    let household = crate::content::regional_household_template("household-maren");
     let locations = vec![
         location(
             "hearth",
@@ -186,17 +187,16 @@ pub(crate) fn fresh(_config: &ServerConfig) -> Phase5State {
         stock,
         events: Vec::new(),
         households: vec![RegionalHousehold {
-            household_id: "household-maren-region".to_owned(),
-            household_name: "The Maren household".to_owned(),
-            origin_location_id: "saltmere".to_owned(),
-            destination_location_id: Some("hearth".to_owned()),
-            status: "considering".to_owned(),
-            reason: "The Hearth has open repair demand while Saltmere has spare ferry hands."
-                .to_owned(),
-            service: "mending and travelling tool repair".to_owned(),
+            household_id: household.household_id,
+            household_name: household.household_name,
+            origin_location_id: household.origin_location_id,
+            destination_location_id: household.destination_location_id,
+            status: household.status,
+            reason: household.reason,
+            service: household.service,
             departure_tick: None,
             arrival_tick: None,
-            history: vec!["Regional opportunity recorded before departure.".to_owned()],
+            history: household.history,
         }],
         request_results: HashMap::new(),
     }

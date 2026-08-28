@@ -6,8 +6,10 @@ use std::sync::OnceLock;
 use tarrowyn_protocol::CropKind;
 
 mod frontier;
+mod households;
 
 pub(crate) use frontier::{contract_template, threat_template};
+pub(crate) use households::{opportunity_template, regional_household_template};
 
 const REQUIRED_MANIFESTS: &[&str] = &[
     "game_config.json",
@@ -18,6 +20,7 @@ const REQUIRED_MANIFESTS: &[&str] = &[
     "items.json",
     "threats.json",
     "region.json",
+    "households.json",
     "settlements.json",
     "skills.json",
 ];
@@ -203,6 +206,7 @@ pub fn validate() -> Result<(), String> {
     validate_events(&events)?;
     validate_items(&items)?;
     validate_region(&region)?;
+    households::validate(&region)?;
     validate_settlements(&settlements, &region)?;
     crate::repository::validate_skill_catalog()?;
     Ok(())

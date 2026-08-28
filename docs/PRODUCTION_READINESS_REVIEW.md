@@ -38,7 +38,8 @@ projections, and market base prices consume validated
 crop/event/settlement/item content. The repeatable Brambleback contract and
 launch wilderness threat consume validated contract/threat content, while
 route topology, season labels, and location roles/resources consume validated
-region content. Each new live
+region content. Opportunity and regional household projections consume
+validated household content. Each new live
 simulation consumer still needs its own fixture and compatibility test before
 that content is treated as runtime-authoritative.
 New content must preserve newcomer access, fallback services, and searchable

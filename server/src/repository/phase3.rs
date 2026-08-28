@@ -7,10 +7,9 @@ use tarrowyn_protocol::{
     AdventurerContract, ChronicleEntry, ChronicleResponse, ClaimResponse, ClaimStatus,
     CombatAction, CombatOutcome, CombatRequest, CombatResponse, ContractAction, ContractRequest,
     ContractResponse, ContractStatus, ContractsResponse, Expedition, ExpeditionMember,
-    ExpeditionResponse, ExpeditionRole, ExpeditionStatus, FrontierEvent, HouseholdMember,
-    HouseholdStatus, LandClaim, OpportunitiesResponse, OpportunitySignal, PlayerProjection,
-    Position, RecoveryChoice, RecoveryRequest, RecoveryResponse, WeaponKind, WildernessZone,
-    WorldEvent,
+    ExpeditionResponse, ExpeditionRole, ExpeditionStatus, FrontierEvent, HouseholdStatus,
+    LandClaim, OpportunitiesResponse, OpportunitySignal, PlayerProjection, Position,
+    RecoveryChoice, RecoveryRequest, RecoveryResponse, WeaponKind, WildernessZone, WorldEvent,
 };
 
 const MAX_CHRONICLE: usize = 64;
@@ -51,6 +50,7 @@ pub(super) struct Phase3State {
 impl Default for Phase3State {
     fn default() -> Self {
         let threat = crate::content::threat_template("whisperwood-edge");
+        let household = crate::content::opportunity_template("household-maren");
         Self {
             next_event_id: 1,
             zone: WildernessZone {
@@ -67,25 +67,15 @@ impl Default for Phase3State {
             },
             contracts: HashMap::new(),
             households: vec![OpportunitySignal {
-                household_id: "household-maren".to_owned(),
-                household_name: "The Maren household".to_owned(),
-                members: vec![
-                    HouseholdMember {
-                        name: "Maren".to_owned(),
-                        occupation: "mender".to_owned(),
-                    },
-                    HouseholdMember {
-                        name: "Pell".to_owned(),
-                        occupation: "travelling tinker".to_owned(),
-                    },
-                ],
-                occupation: "mender and travelling tinker".to_owned(),
-                home_settlement: "Rillmarket".to_owned(),
-                opportunity_score: 48,
-                status: HouseholdStatus::Travelling,
-                service: "limited tool repair".to_owned(),
-                clue: "A mender is asking whether the Hearth can keep a road crew supplied."
-                    .to_owned(),
+                household_id: household.household_id,
+                household_name: household.household_name,
+                members: household.members,
+                occupation: household.occupation,
+                home_settlement: household.home_settlement,
+                opportunity_score: household.opportunity_score,
+                status: household.status,
+                service: household.service,
+                clue: household.clue,
             }],
             unmet_demand_ticks: 0,
             poor_condition_ticks: 0,

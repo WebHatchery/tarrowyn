@@ -103,7 +103,9 @@ fixtures until the richer schemas are introduced. The repeatable Brambleback
 contract now consumes a typed contract manifest for its narrative, target,
 required progress, and reward curve. The launch wilderness threat now consumes
 a typed threat manifest for its identity, monster, position, health, risk
-modifier, resource demand, and rumour.
+modifier, resource demand, and rumour. The Maren opportunity and regional
+household projections now share a typed household manifest for members,
+movement, service, reasons, and history.
 
 ## Hosting and observability
 

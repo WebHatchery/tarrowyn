@@ -1,0 +1,26 @@
+{
+  "households": [
+    {
+      "id": "household-maren",
+      "opportunity_id": "household-maren",
+      "regional_id": "household-maren-region",
+      "name": "The Maren household",
+      "members": [
+        {"name": "Maren", "occupation": "mender"},
+        {"name": "Pell", "occupation": "travelling tinker"}
+      ],
+      "occupation": "mender and travelling tinker",
+      "home_settlement": "Rillmarket",
+      "opportunity_score": 48,
+      "opportunity_status": "travelling",
+      "service": "limited tool repair",
+      "clue": "A mender is asking whether the Hearth can keep a road crew supplied.",
+      "origin_location_id": "saltmere",
+      "destination_location_id": "hearth",
+      "regional_status": "considering",
+      "reason": "The Hearth has open repair demand while Saltmere has spare ferry hands.",
+      "regional_service": "mending and travelling tool repair",
+      "history": ["Regional opportunity recorded before departure."]
+    }
+  ]
+}

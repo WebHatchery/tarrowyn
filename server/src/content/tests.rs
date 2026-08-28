@@ -106,3 +106,21 @@ fn threat_templates_follow_the_validated_manifest() {
     assert_eq!(threat.position, tarrowyn_protocol::Position { x: 12, y: 4 });
     assert_eq!(threat.price_modifier_percent, 20);
 }
+
+#[test]
+fn household_templates_follow_the_validated_manifest() {
+    let opportunity = super::opportunity_template("household-maren");
+    assert_eq!(opportunity.household_id, "household-maren");
+    assert_eq!(opportunity.members.len(), 2);
+    assert_eq!(
+        opportunity.status,
+        tarrowyn_protocol::HouseholdStatus::Travelling
+    );
+    assert_eq!(opportunity.opportunity_score, 48);
+
+    let regional = super::regional_household_template("household-maren");
+    assert_eq!(regional.household_id, "household-maren-region");
+    assert_eq!(regional.origin_location_id, "saltmere");
+    assert_eq!(regional.destination_location_id.as_deref(), Some("hearth"));
+    assert_eq!(regional.status, "considering");
+}
