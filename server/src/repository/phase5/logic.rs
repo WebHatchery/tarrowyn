@@ -538,15 +538,7 @@ pub(super) fn stock_key(location: &str, commodity: &str) -> String {
     format!("{location}:{commodity}")
 }
 pub(super) fn base_price(commodity: CommodityKind) -> u32 {
-    match commodity {
-        CommodityKind::Wheat => 3,
-        CommodityKind::Turnips => 4,
-        CommodityKind::Moonberries => 6,
-        CommodityKind::Seeds => 2,
-        CommodityKind::Timber => 5,
-        CommodityKind::Stone => 4,
-        CommodityKind::Bandages => 7,
-    }
+    crate::content::item_base_price(commodity.label())
 }
 pub(super) fn stock_notes(state: &RepositoryState, location: &str) -> Vec<String> {
     ["timber", "stone", "bandages", "seeds"]

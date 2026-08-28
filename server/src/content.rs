@@ -61,11 +61,14 @@ struct ItemsManifest {
     items: Vec<ItemManifest>,
 }
 
+static ITEM_CATALOG: OnceLock<Vec<ItemManifest>> = OnceLock::new();
+
 #[derive(Debug, Deserialize)]
 struct ItemManifest {
     id: String,
     kind: String,
     sink: String,
+    base_price: u32,
 }
 
 #[derive(Debug, Deserialize)]
@@ -248,6 +251,21 @@ pub(crate) fn settlement_supply_profile(settlement_id: &str) -> SettlementSupply
     }
 }
 
+pub(crate) fn item_base_price(item_id: &str) -> u32 {
+    let items = ITEM_CATALOG.get_or_init(|| {
+        let items: ItemsManifest =
+            serde_json::from_str(include_str!("../../assets/data/items.json"))
+                .expect("items content JSON must be valid");
+        validate_items(&items).expect("items content must satisfy its schema");
+        items.items
+    });
+    items
+        .iter()
+        .find(|item| item.id == item_id)
+        .map(|item| item.base_price)
+        .expect("validated item catalog must contain the requested item")
+}
+
 fn validate_schema(schema: &ContentSchemaManifest) -> Result<(), String> {
     if schema.schema_version == 0 || schema.compatibility.trim().is_empty() {
         return Err("content schema needs a positive version and compatibility rule".to_owned());
@@ -379,12 +397,11 @@ fn validate_items(items: &ItemsManifest) -> Result<(), String> {
         items.items.iter().map(|item| item.id.as_str()).collect(),
     )?;
     if items.items.is_empty()
-        || items
-            .items
-            .iter()
-            .any(|item| item.kind.trim().is_empty() || item.sink.trim().is_empty())
+        || items.items.iter().any(|item| {
+            item.kind.trim().is_empty() || item.sink.trim().is_empty() || item.base_price == 0
+        })
     {
-        return Err("items need IDs, kinds, and economic sinks".to_owned());
+        return Err("items need IDs, kinds, economic sinks, and positive base prices".to_owned());
     }
     Ok(())
 }

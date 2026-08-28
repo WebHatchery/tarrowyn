@@ -53,3 +53,10 @@ fn settlement_supply_profiles_follow_the_validated_manifest() {
         vec!["timber".to_owned(), "bandages".to_owned()]
     );
 }
+
+#[test]
+fn market_prices_follow_the_validated_item_manifest() {
+    assert_eq!(super::item_base_price("seeds"), 2);
+    assert_eq!(super::item_base_price("moonberries"), 6);
+    assert_eq!(super::item_base_price("bandages"), 7);
+}

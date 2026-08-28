@@ -1,9 +1,11 @@
 {
   "items": [
-    {"id": "wheat", "kind": "food", "sink": "settlement demand"},
-    {"id": "seeds", "kind": "farming", "sink": "planting"},
-    {"id": "timber", "kind": "material", "sink": "route repair"},
-    {"id": "stone", "kind": "material", "sink": "bridge maintenance"},
-    {"id": "bandages", "kind": "service", "sink": "household recovery"}
+    {"id": "wheat", "kind": "food", "sink": "settlement demand", "base_price": 3},
+    {"id": "turnips", "kind": "food", "sink": "settlement demand", "base_price": 4},
+    {"id": "moonberries", "kind": "food", "sink": "specialist demand", "base_price": 6},
+    {"id": "seeds", "kind": "farming", "sink": "planting", "base_price": 2},
+    {"id": "timber", "kind": "material", "sink": "route repair", "base_price": 5},
+    {"id": "stone", "kind": "material", "sink": "bridge maintenance", "base_price": 4},
+    {"id": "bandages", "kind": "service", "sink": "household recovery", "base_price": 7}
   ]
 }
