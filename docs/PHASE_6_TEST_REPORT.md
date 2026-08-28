@@ -30,8 +30,9 @@ result instead of paying twice.
 
 ## Long-session gate and remaining risks
 
-The fixed 180-second day, 14-day season, and 56-day year are recorded in the
-Phase 5 and Phase 6 decision records. Settlement condition, route maintenance,
+The fixed 80-minute day is recorded in the GDD and Phase 5/6 decision records;
+the 14-day season and 56-day year remain explicitly labelled development
+fixtures pending pacing validation. Settlement condition, route maintenance,
 market sinks, household movement, decline recovery, and chronicle search are
 data-bearing surfaces. The remaining release risk is that the current JSON
 repository is a single-worker release candidate rather than a managed

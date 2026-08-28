@@ -15,7 +15,7 @@ without claiming that the MMO systems already exist.
   fields, forest edge, and water collision.
 - Player movement through visible on-screen controls, map taps, and optional
   keyboard input.
-- An accelerated 180-second day, simple crop stages, a tavern rumour, and
+- An accelerated 80-minute day, simple crop stages, a tavern rumour, and
   lightweight local progression (gold, skill, reputation, and satchel contents).
 - Toolkit save slots with versioned save data and migration structure.
 - Deterministic screenshot capture for visual verification.

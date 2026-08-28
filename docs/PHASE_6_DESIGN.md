@@ -64,10 +64,11 @@ client. This is a regional target, not a promise of unlimited concurrency.
 The topology boundary is the region worker; a later deployment may split
 workers only after ownership and cursor handoff are tested.
 
-The calendar is fixed at 180 real seconds per day, 14 days per season, and 56
-days per year. It changes crop growth, leases, household decisions, migration,
-prices, and history labels through data-driven calendar fields. Essential
-services stay open during seasonal pressure.
+The calendar uses the GDD's locked 80 real minutes per day. Seasons and years
+remain deferred for pacing validation; the current 14-day season and 56-day
+year values are development fixtures only. The calendar changes crop growth,
+leases, household decisions, migration, prices, and history labels through
+data-driven fields. Essential services stay open during seasonal pressure.
 
 Optional generational legacy play is deferred and not selected. Combat defeat
 never causes permanent character death or an automatic legacy transition.

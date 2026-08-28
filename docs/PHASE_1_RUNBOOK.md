@@ -12,7 +12,7 @@ cargo run -p tarrowyn-server
 
 It listens on `127.0.0.1:8787` by default. The process owns one background
 tick loop. The default tick is 250 ms and advances the accelerated world clock
-by one world second, so a 180-second in-game day lasts 45 real seconds.
+by one world second, so an 80-minute in-game day lasts 20 real minutes.
 
 Useful server configuration variables are:
 
@@ -21,7 +21,7 @@ Useful server configuration variables are:
 | `TARROWYN_SERVER_ADDR` | `127.0.0.1:8787` | Bind address. |
 | `TARROWYN_TICK_MS` | `250` | Server tick interval. |
 | `TARROWYN_WORLD_SECONDS_PER_TICK` | `1` | Accelerated clock step. |
-| `TARROWYN_DAY_LENGTH_SECONDS` | `180` | World day length. |
+| `TARROWYN_DAY_LENGTH_SECONDS` | `4800` | World day length (80 real minutes). |
 | `TARROWYN_SESSION_TTL_SECONDS` | `30` | Guest session expiry window. |
 | `TARROWYN_CHAT_MAX_LENGTH` | `160` | Server chat bound. |
 

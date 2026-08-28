@@ -35,8 +35,9 @@ stock notes are exposed as telemetry. A failed order is marked `Failed` rather
 than silently destroying the escrow record; support can reconcile it.
 
 The real-time calendar is locked before leases or crop promises depend on it:
-one game day is 180 real seconds, a season is 14 game days, and a year is four
-seasons (56 game days). Phase 5 names the seasons thaw, greenrise, harvest, and
+one game day is 80 real minutes. The 14-day season and four-season year (56
+game days) remain development fixtures pending pacing validation. Phase 5 names
+the seasons thaw, greenrise, harvest, and
 deepwinter. Seasons change opportunity and route pressure but do not close
 essential services. Phase 6 owns the long-session calendar compatibility check.
 

@@ -38,7 +38,7 @@ impl Default for ServerConfig {
             bind_addr: "127.0.0.1:8787".to_owned(),
             world_width: 18,
             world_height: 11,
-            day_length_seconds: 180.0,
+            day_length_seconds: 4_800.0,
             tick_interval: Duration::from_millis(250),
             world_seconds_per_tick: 1.0,
             session_ttl_seconds: 30,

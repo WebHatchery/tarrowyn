@@ -1,7 +1,7 @@
 {
   "region_id": "hearthlands",
   "calendar": {
-    "day_seconds": 180,
+    "day_seconds": 4800,
     "season_days": 14,
     "year_days": 56,
     "seasons": ["thaw", "greenrise", "harvest", "deepwinter"]
