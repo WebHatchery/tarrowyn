@@ -8,9 +8,9 @@ use tarrowyn_protocol::{
     CombatAction, CombatOutcome, CombatRequest, CombatResponse, ContractAction, ContractRequest,
     ContractResponse, ContractStatus, ContractsResponse, Expedition, ExpeditionMember,
     ExpeditionResponse, ExpeditionRole, ExpeditionStatus, FrontierEvent, HouseholdMember,
-    HouseholdStatus, LandClaim, MonsterKind, OpportunitiesResponse, OpportunitySignal,
-    PlayerProjection, Position, RecoveryChoice, RecoveryRequest, RecoveryResponse, WeaponKind,
-    WildernessZone, WorldEvent,
+    HouseholdStatus, LandClaim, OpportunitiesResponse, OpportunitySignal, PlayerProjection,
+    Position, RecoveryChoice, RecoveryRequest, RecoveryResponse, WeaponKind, WildernessZone,
+    WorldEvent,
 };
 
 const MAX_CHRONICLE: usize = 64;
@@ -50,19 +50,20 @@ pub(super) struct Phase3State {
 
 impl Default for Phase3State {
     fn default() -> Self {
+        let threat = crate::content::threat_template("whisperwood-edge");
         Self {
             next_event_id: 1,
             zone: WildernessZone {
-                zone_id: "whisperwood-edge".to_owned(),
-                name: "Whisperwood Edge".to_owned(),
-                monster: MonsterKind::Brambleback,
-                monster_health: 3,
+                zone_id: threat.id,
+                name: threat.name,
+                monster: threat.monster,
+                monster_health: threat.monster_health,
                 threat_active: true,
                 road_open: false,
-                position: Position { x: 12, y: 4 },
-                price_modifier_percent: 20,
-                resource_demand: "iron, bandages, and sturdy tools".to_owned(),
-                rumour: "A Brambleback has made the north road costly to cross.".to_owned(),
+                position: threat.position,
+                price_modifier_percent: threat.price_modifier_percent,
+                resource_demand: threat.resource_demand,
+                rumour: threat.rumour,
             },
             contracts: HashMap::new(),
             households: vec![OpportunitySignal {

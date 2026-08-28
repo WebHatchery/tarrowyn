@@ -96,3 +96,13 @@ fn contract_templates_follow_the_validated_manifest() {
     assert_eq!(contract.required_progress, 3);
     assert_eq!(contract.reward_gold, 6);
 }
+
+#[test]
+fn threat_templates_follow_the_validated_manifest() {
+    let threat = super::threat_template("whisperwood-edge");
+    assert_eq!(threat.name, "Whisperwood Edge");
+    assert_eq!(threat.monster, tarrowyn_protocol::MonsterKind::Brambleback);
+    assert_eq!(threat.monster_health, 3);
+    assert_eq!(threat.position, tarrowyn_protocol::Position { x: 12, y: 4 });
+    assert_eq!(threat.price_modifier_percent, 20);
+}

@@ -7,6 +7,7 @@
     "contracts.json",
     "events.json",
     "items.json",
+    "threats.json",
     "region.json",
     "settlements.json",
     "skills.json"

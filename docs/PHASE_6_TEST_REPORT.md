@@ -36,6 +36,8 @@ The location-profile regression confirms authoritative location roles and
 resources follow the validated region manifest.
 The contract-template regression confirms the repeatable Brambleback watch
 uses the validated contract manifest for its target and progression contract.
+The threat-template regression confirms the launch wilderness threat follows
+the validated threat manifest for its monster, position, health, and risk.
 The Phase 5 fixture verifies that travel, market, event, household, identity,
 refresh, and revocation state survive the authoritative repository boundary.
 The client Phase 5 tests verify that a linked account's visible deletion

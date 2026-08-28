@@ -3,7 +3,7 @@
 use serde::Deserialize;
 use std::collections::HashSet;
 use std::sync::OnceLock;
-use tarrowyn_protocol::{CropKind, MonsterKind};
+use tarrowyn_protocol::{CropKind, MonsterKind, Position};
 
 const REQUIRED_MANIFESTS: &[&str] = &[
     "game_config.json",
@@ -12,6 +12,7 @@ const REQUIRED_MANIFESTS: &[&str] = &[
     "contracts.json",
     "events.json",
     "items.json",
+    "threats.json",
     "region.json",
     "settlements.json",
     "skills.json",
@@ -77,6 +78,37 @@ pub(crate) struct ContractTemplate {
     pub(crate) target: MonsterKind,
     pub(crate) required_progress: u8,
     pub(crate) reward_gold: u32,
+}
+
+#[derive(Debug, Deserialize)]
+struct ThreatsManifest {
+    threats: Vec<ThreatManifest>,
+}
+
+static THREAT_CATALOG: OnceLock<Vec<ThreatManifest>> = OnceLock::new();
+
+#[derive(Debug, Deserialize)]
+struct ThreatManifest {
+    id: String,
+    name: String,
+    monster: String,
+    monster_health: u8,
+    position: Position,
+    price_modifier_percent: i16,
+    resource_demand: String,
+    rumour: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct ThreatTemplate {
+    pub(crate) id: String,
+    pub(crate) name: String,
+    pub(crate) monster: MonsterKind,
+    pub(crate) monster_health: u8,
+    pub(crate) position: Position,
+    pub(crate) price_modifier_percent: i16,
+    pub(crate) resource_demand: String,
+    pub(crate) rumour: String,
 }
 
 const CROPS_JSON: &str = include_str!("../../assets/data/crops.json");
@@ -213,6 +245,9 @@ pub fn validate() -> Result<(), String> {
             .map_err(|error| format!("events JSON is invalid: {error}"))?;
     let items: ItemsManifest = serde_json::from_str(include_str!("../../assets/data/items.json"))
         .map_err(|error| format!("items JSON is invalid: {error}"))?;
+    let threats: ThreatsManifest =
+        serde_json::from_str(include_str!("../../assets/data/threats.json"))
+            .map_err(|error| format!("threats JSON is invalid: {error}"))?;
     let region: RegionManifest =
         serde_json::from_str(include_str!("../../assets/data/region.json"))
             .map_err(|error| format!("region JSON is invalid: {error}"))?;
@@ -227,6 +262,7 @@ pub fn validate() -> Result<(), String> {
     validate_contracts(&contracts)?;
     validate_events(&events)?;
     validate_items(&items)?;
+    validate_threats(&threats)?;
     validate_region(&region)?;
     validate_settlements(&settlements, &region)?;
     crate::repository::validate_skill_catalog()?;
@@ -273,6 +309,33 @@ pub(crate) fn contract_template(contract_id: &str) -> ContractTemplate {
         },
         required_progress: contract.required_progress,
         reward_gold: contract.reward_gold,
+    }
+}
+
+pub(crate) fn threat_template(threat_id: &str) -> ThreatTemplate {
+    let threats = THREAT_CATALOG.get_or_init(|| {
+        let threats: ThreatsManifest =
+            serde_json::from_str(include_str!("../../assets/data/threats.json"))
+                .expect("threats content JSON must be valid");
+        validate_threats(&threats).expect("threats content must satisfy its schema");
+        threats.threats
+    });
+    let threat = threats
+        .iter()
+        .find(|threat| threat.id == threat_id)
+        .expect("validated threat catalog must contain the requested threat");
+    ThreatTemplate {
+        id: threat.id.clone(),
+        name: threat.name.clone(),
+        monster: match threat.monster.as_str() {
+            "brambleback" => MonsterKind::Brambleback,
+            _ => panic!("validated threat catalog contains an unsupported monster"),
+        },
+        monster_health: threat.monster_health,
+        position: threat.position,
+        price_modifier_percent: threat.price_modifier_percent,
+        resource_demand: threat.resource_demand.clone(),
+        rumour: threat.rumour.clone(),
     }
 }
 
@@ -499,6 +562,40 @@ fn validate_contracts(contracts: &ContractsManifest) -> Result<(), String> {
         .any(|contract| contract.id == "brambleback-watch")
     {
         return Err("contracts are missing the launch Brambleback watch".to_owned());
+    }
+    Ok(())
+}
+
+fn validate_threats(threats: &ThreatsManifest) -> Result<(), String> {
+    validate_id_list(
+        "threat",
+        threats
+            .threats
+            .iter()
+            .map(|threat| threat.id.as_str())
+            .collect(),
+    )?;
+    if threats.threats.is_empty()
+        || threats.threats.iter().any(|threat| {
+            threat.name.trim().is_empty()
+                || threat.monster != "brambleback"
+                || threat.monster_health == 0
+                || threat.price_modifier_percent < 0
+                || threat.resource_demand.trim().is_empty()
+                || threat.rumour.trim().is_empty()
+        })
+    {
+        return Err(
+            "threats need IDs, names, a known monster, health, pricing, demand, and rumours"
+                .to_owned(),
+        );
+    }
+    if !threats
+        .threats
+        .iter()
+        .any(|threat| threat.id == "whisperwood-edge")
+    {
+        return Err("threats are missing the launch Whisperwood Edge threat".to_owned());
     }
     Ok(())
 }

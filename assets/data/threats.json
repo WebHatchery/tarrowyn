@@ -1,0 +1,14 @@
+{
+  "threats": [
+    {
+      "id": "whisperwood-edge",
+      "name": "Whisperwood Edge",
+      "monster": "brambleback",
+      "monster_health": 3,
+      "position": {"x": 12, "y": 4},
+      "price_modifier_percent": 20,
+      "resource_demand": "iron, bandages, and sturdy tools",
+      "rumour": "A Brambleback has made the north road costly to cross."
+    }
+  ]
+}

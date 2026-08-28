@@ -101,7 +101,9 @@ topology, plus location roles and resources, now follow the validated region
 manifest; names, services, positions, and route tuning remain authored
 fixtures until the richer schemas are introduced. The repeatable Brambleback
 contract now consumes a typed contract manifest for its narrative, target,
-required progress, and reward curve.
+required progress, and reward curve. The launch wilderness threat now consumes
+a typed threat manifest for its identity, monster, position, health, risk
+modifier, resource demand, and rumour.
 
 ## Hosting and observability
 
