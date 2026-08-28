@@ -4,10 +4,11 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
 use tarrowyn_protocol::{
-    Capability, ClaimLifecycleResponse, ClaimRecord, GovernanceResponse, GovernanceState,
-    HouseholdRecord, InfrastructureRecord, KnowledgeItem, KnowledgeResponse, LocalCombatResponse,
-    LocalCombatState, MaterialStock, OfficeKind, OfficeRecord, ProfessionProfile,
-    ProfessionResponse, ServiceOrder, SkillLesson, SkillResponse, TaxPolicy,
+    Capability, ClaimLifecycleResponse, ClaimRecord, FarmAnimal, FarmAnimalKind,
+    GovernanceResponse, GovernanceState, HouseholdRecord, InfrastructureRecord, KnowledgeItem,
+    KnowledgeResponse, LocalCombatResponse, LocalCombatState, MaterialStock, OfficeKind,
+    OfficeRecord, ProfessionProfile, ProfessionResponse, ServiceOrder, SkillLesson, SkillResponse,
+    TaxPolicy,
 };
 
 mod claims;
@@ -52,6 +53,8 @@ pub(super) struct Phase4State {
     pub(super) knowledge: Vec<KnowledgeItem>,
     pub(super) known_by: HashMap<String, Vec<String>>,
     pub(super) combat: HashMap<String, LocalCombatState>,
+    #[serde(default)]
+    pub(super) animals: Vec<FarmAnimal>,
     #[serde(default)]
     pub(super) lessons: Vec<SkillLesson>,
     pub(super) request_results: HashMap<String, Phase4Response>,
@@ -197,9 +200,25 @@ pub(super) fn fresh(_config: &ServerConfig) -> Phase4State {
         }],
         known_by: HashMap::new(),
         combat: HashMap::new(),
+        animals: fresh_animals(),
         lessons: Vec::new(),
         request_results: HashMap::new(),
     }
+}
+
+pub(super) const FARM_ANIMAL_POSITION: tarrowyn_protocol::Position =
+    tarrowyn_protocol::Position { x: 3, y: 5 };
+
+pub(super) fn fresh_animals() -> Vec<FarmAnimal> {
+    vec![FarmAnimal {
+        animal_id: "bellweather-goat".to_owned(),
+        name: "Bellweather".to_owned(),
+        kind: FarmAnimalKind::Goat,
+        position: FARM_ANIMAL_POSITION,
+        condition: 2,
+        max_condition: 3,
+        last_cared_tick: 0,
+    }]
 }
 
 fn default_next_lesson_id() -> u64 {

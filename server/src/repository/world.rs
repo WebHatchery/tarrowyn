@@ -11,6 +11,7 @@ pub(super) fn farming_notice(action: FarmingAction) -> &'static str {
         FarmingAction::Plant => "A new promise is planted in the shared fields.",
         FarmingAction::Tend => "Someone has tended the fields; the next harvest looks steadier.",
         FarmingAction::Harvest => "A fresh crop reaches the Hearth's stores.",
+        FarmingAction::TendAnimal => "Bellweather the goat is cared for beside the shared fields.",
     }
 }
 

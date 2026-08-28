@@ -6,6 +6,130 @@ use tarrowyn_protocol::{
 };
 
 #[test]
+fn animal_care_is_visible_persistent_and_records_husbandry_practice() {
+    let repo = WorldRepository::new(ServerConfig {
+        movement_cooldown_ticks: 0,
+        ..ServerConfig::default()
+    });
+    let session = guest(&repo, "phase4-animal-care");
+    let before = repo.state(&session.account_token).unwrap().data;
+    assert_eq!(before.world.animals.len(), 1);
+    assert_eq!(before.world.animals[0].name, "Bellweather");
+    assert_eq!(before.player.animal_condition, 2);
+
+    for (index, (dx, dy)) in [(-1, 0), (-1, 0), (-1, 0), (-1, 0), (0, -1)]
+        .into_iter()
+        .enumerate()
+    {
+        repo.movement(
+            &session.account_token,
+            MovementIntent {
+                request_id: format!("animal-move-{index}"),
+                dx,
+                dy,
+            },
+        )
+        .unwrap();
+    }
+    let cared = repo
+        .farming(
+            &session.account_token,
+            FarmingRequest {
+                request_id: "animal-care".to_owned(),
+                action: FarmingAction::TendAnimal,
+                position: tarrowyn_protocol::Position { x: 3, y: 5 },
+            },
+        )
+        .unwrap()
+        .data;
+    assert!(cared.accepted);
+    assert_eq!(cared.animal.as_ref().unwrap().condition, 3);
+    assert_eq!(cared.player.animal_condition, 3);
+    let retry = repo
+        .farming(
+            &session.account_token,
+            FarmingRequest {
+                request_id: "animal-care".to_owned(),
+                action: FarmingAction::TendAnimal,
+                position: tarrowyn_protocol::Position { x: 3, y: 5 },
+            },
+        )
+        .unwrap()
+        .data;
+    assert_eq!(retry, cared);
+    assert_eq!(
+        repo.state(&session.account_token)
+            .unwrap()
+            .data
+            .world
+            .animals[0]
+            .condition,
+        3
+    );
+    assert_eq!(
+        repo.skills(&session.account_token)
+            .unwrap()
+            .data
+            .skills
+            .iter()
+            .find(|skill| skill.skill_id == "animal-husbandry")
+            .unwrap()
+            .mastery,
+        1
+    );
+}
+
+#[test]
+fn animal_condition_survives_repository_restart() {
+    let path = std::env::temp_dir().join(format!(
+        "tarrowyn-phase4-animal-{}.json",
+        std::process::id()
+    ));
+    let path_string = path.to_string_lossy().into_owned();
+    let config = ServerConfig {
+        persistence_path: Some(path_string),
+        movement_cooldown_ticks: 0,
+        ..ServerConfig::default()
+    };
+    {
+        let repo = WorldRepository::new(config.clone());
+        let session = guest(&repo, "phase4-animal-restart");
+        for (index, (dx, dy)) in [(-1, 0), (-1, 0), (-1, 0), (-1, 0), (0, -1)]
+            .into_iter()
+            .enumerate()
+        {
+            repo.movement(
+                &session.account_token,
+                MovementIntent {
+                    request_id: format!("restart-animal-move-{index}"),
+                    dx,
+                    dy,
+                },
+            )
+            .unwrap();
+        }
+        assert!(
+            repo.farming(
+                &session.account_token,
+                FarmingRequest {
+                    request_id: "restart-animal-care".to_owned(),
+                    action: FarmingAction::TendAnimal,
+                    position: tarrowyn_protocol::Position { x: 3, y: 5 },
+                },
+            )
+            .unwrap()
+            .data
+            .accepted
+        );
+    }
+    let reopened = WorldRepository::new(config);
+    let session = guest(&reopened, "phase4-animal-restart");
+    let snapshot = reopened.state(&session.account_token).unwrap().data;
+    assert_eq!(snapshot.world.animals[0].condition, 3);
+    let _ = std::fs::remove_file(path);
+}
+
+#[test]
 fn field_tool_condition_connects_active_farming_to_a_repair_order() {
     let repo = WorldRepository::new(ServerConfig {
         movement_cooldown_ticks: 0,

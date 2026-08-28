@@ -151,7 +151,7 @@ impl Game {
                     .as_ref()
                     .map(|player| {
                         format!(
-                            "Gold {}  Skill {}  Reputation {}\nRank {} • {} credentials\nField tool {}/3 • {} • pests {}/2\nWheat {}  Turnips {}  Moonberries {}  Seeds {} • Bandages {}",
+                            "Gold {}  Skill {}  Reputation {}\nRank {} • {} credentials\nField tool {}/3 • {} • pests {}/2 • Goat {}/{}\nWheat {}  Turnips {}  Moonberries {}  Seeds {} • Bandages {}",
                             player.gold,
                             player.skill,
                             player.reputation,
@@ -160,6 +160,8 @@ impl Game {
                             player.field_tool_condition,
                             player.field_weather.label(),
                             player.field_pest_pressure,
+                            player.animal_condition,
+                            player.animal_max_condition,
                             player.inventory.wheat,
                             player.inventory.turnips,
                             player.inventory.moonberries,
@@ -190,6 +192,7 @@ impl Game {
                     stats: &stats,
                     own_account_id,
                     remote_players: &client.projection.players,
+                    farm_animals: &client.projection.animals,
                     chat: &client.projection.chat,
                     chat_draft: &self.chat_draft,
                     server_tick: client.projection.server_tick,
@@ -235,6 +238,7 @@ impl Game {
                     stats: &stats,
                     own_account_id: None,
                     remote_players: &[],
+                    farm_animals: &[],
                     chat: &[],
                     chat_draft: &self.chat_draft,
                     server_tick: 0,
@@ -429,6 +433,7 @@ impl Game {
                 "plant" => client.queue_farming(FarmingAction::Plant),
                 "tend" => client.queue_farming(FarmingAction::Tend),
                 "harvest" => client.queue_farming(FarmingAction::Harvest),
+                "animal" => client.queue_farming(FarmingAction::TendAnimal),
                 "listen" => client.refresh_tavern(),
                 "trade" => {
                     let own = client

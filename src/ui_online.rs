@@ -48,16 +48,17 @@ pub(super) fn draw_sidebar(
         ("plant", "Plant"),
         ("tend", "Tend"),
         ("harvest", "Harvest"),
-        ("trade", "Trade seed"),
+        ("animal", "Care"),
+        ("trade", "Trade"),
     ]
     .into_iter()
     .enumerate()
     {
         if virtual_button(
             Rect::new(
-                content.x + index as f32 * 88.0,
+                content.x + index as f32 * 73.0,
                 content.y + 226.0,
-                82.0,
+                69.0,
                 27.0,
             ),
             label,

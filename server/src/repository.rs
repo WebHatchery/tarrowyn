@@ -10,7 +10,7 @@ use tarrowyn_protocol::{
     WorldEvent, WorldSnapshot, MAX_CHAT_MESSAGE_LENGTH, MAX_TRADE_ITEMS, PROTOCOL_VERSION,
 };
 
-pub(super) const STORAGE_VERSION: u32 = 12;
+pub(super) const STORAGE_VERSION: u32 = 13;
 const MAX_EVENTS: usize = 2048;
 const MAX_CHAT_HISTORY: usize = 64;
 const MAX_NOTICES: usize = 32;
@@ -615,6 +615,18 @@ pub(super) fn player_projection(state: &RepositoryState, key: &str) -> PlayerPro
         field_tool_condition: identity.field_tool_condition,
         field_weather: world::field_weather_for_day(state.clock.day),
         field_pest_pressure: world::field_pest_pressure_for_day(state.clock.day),
+        animal_condition: state
+            .phase4
+            .animals
+            .first()
+            .map(|animal| animal.condition)
+            .unwrap_or(0),
+        animal_max_condition: state
+            .phase4
+            .animals
+            .first()
+            .map(|animal| animal.max_condition)
+            .unwrap_or(0),
         skill: identity.skill,
         reputation: identity.reputation,
         adventurer_rank,
@@ -638,6 +650,7 @@ fn snapshot(
         clock: state.clock.clone(),
         players,
         plots: state.plots.clone(),
+        animals: state.phase4.animals.clone(),
         tavern_position: Position { x: 8, y: 5 },
         cursor: state.cursor,
         wilderness: Some(state.phase3.zone.clone()),

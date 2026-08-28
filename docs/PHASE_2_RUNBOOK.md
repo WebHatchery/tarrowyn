@@ -33,8 +33,8 @@ returned by the guest-session response.
 
 | Endpoint | Use |
 |---|---|
-| `GET /v1/state` | Atomic player, world, farm-plot, clock, and tavern projection. |
-| `POST /v1/farming/actions` | `plant`, `tend`, or `harvest` with `request_id` and plot position. |
+| `GET /v1/state` | Atomic player, world, farm-plot, animal, clock, and tavern projection. |
+| `POST /v1/farming/actions` | `plant`, `tend`, `harvest`, or `tend_animal` with `request_id` and a nearby position. |
 | `GET /v1/inventory` | Current authoritative inventory, gold, skill, and reputation. |
 | `POST /v1/trades` | `create`, `review`, `accept`, or `cancel` a direct offer. |
 | `GET /v1/trades` | Active and recently completed offers addressed to the player. |

@@ -43,7 +43,9 @@ idempotency key so it cannot duplicate gold, crops, or items.
 
 Implement three data-defined crops from the Phase 0 definitions. A player can
 plant, tend, and harvest a plot only when the server says the character is near
-the plot and has the required seed/tool state. Growth follows the one shared
+the plot and has the required seed/tool state. The Phase 4 farming extension
+also exposes a persistent authored animal-care action beside the shared fields.
+Growth follows the one shared
 server clock and continues while players are offline, while active tending
 improves quality, reliability, or harvest readiness.
 
@@ -87,7 +89,7 @@ must update only from an accepted server projection.
 | Endpoint | Purpose |
 |---|---|
 | `GET /v1/state` | Return the authenticated player projection and current world cursor. |
-| `POST /v1/farming/actions` | Plant, tend, or harvest with an idempotent request ID. |
+| `POST /v1/farming/actions` | Plant, tend, harvest, or care for an animal with an idempotent request ID. |
 | `GET /v1/inventory` | Return authoritative inventory and currency. |
 | `POST /v1/trades` | Create, review, accept, cancel, or expire a direct trade. |
 | `GET /v1/trades` | Return the player’s active and recently completed offers. |

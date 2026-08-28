@@ -1,6 +1,6 @@
 # Phase 4 design lock — The Enduring Society
 
-Status: implemented in protocol version 4 and storage version 12.
+Status: implemented in protocol version 4 and storage version 13.
 
 This record closes the open choices identified before Phase 4 work. The rules
 are deliberately bounded: one settlement, a small public treasury, a few
@@ -77,7 +77,11 @@ server-owned day: clear, dry wind, or heavy rain, alongside pest pressure from
 plot has not been tended recently; recent active tending protects that pulse.
 The current outlook is included in the player projection and the touch ledger,
 so the player can read why tending matters without the client simulating risk.
-Animal care remains a documented follow-up farming slice.
+The shared fields also include Bellweather, an authored goat whose condition is
+persisted in the Phase 4 state. The visible Care control restores its bounded
+condition and records Animal Husbandry practice; the animal appears in the
+world snapshot and farming response. Breeding, herd size, feed, and wider
+animal ecology remain documented follow-up work.
 
 ## Professions and knowledge
 
@@ -149,7 +153,7 @@ multi-turn loop.
 
 ## Persistence and migration
 
-The repository storage version is now 12. `StoredState.phase4` is serde-defaulted
+The repository storage version is now 13. `StoredState.phase4` is serde-defaulted
 so Phase 1–3 documents without the field load a fresh, safe Phase 4 society.
 Existing identities, inventory, plots, Phase 3 claims, events, and chronicle
 entries are retained, and older local-combat records default the new

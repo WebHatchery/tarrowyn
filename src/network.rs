@@ -7,7 +7,7 @@ use macroquad_toolkit::net::{HttpClient, Pending};
 use serde::Serialize;
 use std::collections::VecDeque;
 use tarrowyn_protocol::{
-    ApiResponse, ChatMessage, ChatRequest, ChronicleEntry, EventsResponse, Expedition,
+    ApiResponse, ChatMessage, ChatRequest, ChronicleEntry, EventsResponse, Expedition, FarmAnimal,
     FarmingAction, FarmingRequest, FrontierEvent, GuestSessionRequest, GuestSessionResponse,
     LandClaim, MovementIntent, OpportunitySignal, PlayerPresence, PlayerProjection, StateSnapshot,
     TavernFeedResponse, TradeOffer, TradeRequest, TradeResponse, TradesResponse, WildernessZone,
@@ -22,6 +22,7 @@ mod phase4;
 mod phase5;
 mod requests;
 mod trade_client;
+mod world;
 
 use frontier::FrontierClient;
 pub(crate) use phase4::CraftingView;
@@ -81,6 +82,7 @@ pub struct WorldProjection {
     pub server_tick: u64,
     pub cursor: u64,
     pub player: Option<PlayerProjection>,
+    pub animals: Vec<FarmAnimal>,
     pub feed: TavernFeedResponse,
     pub trades: Vec<TradeOffer>,
     pub wilderness: Option<WildernessZone>,
@@ -104,6 +106,7 @@ impl WorldProjection {
             server_tick: 0,
             cursor: 0,
             player: None,
+            animals: Vec::new(),
             feed: TavernFeedResponse {
                 notices: Vec::new(),
                 rumours: Vec::new(),
@@ -148,6 +151,7 @@ impl WorldProjection {
             reachable: Default::default(),
         };
         self.apply_plots(&snapshot.plots);
+        self.animals = snapshot.animals;
         self.apply_clock(snapshot.clock);
         self.server_tick = server_tick;
         self.cursor = snapshot.cursor;
@@ -245,26 +249,6 @@ impl WorldProjection {
         self.day = clock.day;
         self.day_seconds = clock.seconds;
         self.day_length_seconds = clock.day_length_seconds;
-    }
-
-    fn apply_plots(&mut self, plots: &[tarrowyn_protocol::FarmPlot]) {
-        for plot in plots {
-            self.apply_plot(*plot);
-        }
-    }
-
-    fn apply_plot(&mut self, plot: tarrowyn_protocol::FarmPlot) {
-        let crop = plot.crop.map(|crop| crate::state::CropState {
-            kind: match crop.kind {
-                tarrowyn_protocol::CropKind::Wheat => crate::state::CropKind::Wheat,
-                tarrowyn_protocol::CropKind::Turnip => crate::state::CropKind::Turnip,
-                tarrowyn_protocol::CropKind::Moonberry => crate::state::CropKind::Moonberry,
-            },
-            stage: crop.stage,
-        });
-        self.world
-            .crops
-            .set(TilePos::new(plot.position.x, plot.position.y), crop);
     }
 
     fn push_chat(&mut self, message: ChatMessage) {

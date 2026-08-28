@@ -38,9 +38,43 @@ impl WorldRepository {
             accepted: false,
             action: request.action,
             plot: None,
+            animal: None,
             player: player_projection(&state, &identity_key),
             reason: None,
         };
+        if request.action == FarmingAction::TendAnimal {
+            let Some(animal_index) = state.phase4.animals.iter().position(|animal| {
+                animal.position == request.position
+                    || animal.position.manhattan_distance(request.position) <= 1
+            }) else {
+                response.reason = Some(
+                    "Stand beside the Bellweather goat near the shared fields before caring for it."
+                        .to_owned(),
+                );
+                return self.store_farming_result(&mut state, identity_key, response);
+            };
+            let distance =
+                current.x.abs_diff(request.position.x) + current.y.abs_diff(request.position.y);
+            if distance > 1 {
+                response.reason = Some("Stand beside the animal before caring for it.".to_owned());
+                response.animal = Some(state.phase4.animals[animal_index].clone());
+                return self.store_farming_result(&mut state, identity_key, response);
+            }
+            let result = self.tend_animal(&mut state, &identity_key, animal_index);
+            response.accepted = result.0;
+            response.reason = result.1;
+            response.animal = Some(state.phase4.animals[animal_index].clone());
+            response.player = player_projection(&state, &identity_key);
+            if response.accepted {
+                super::skills::record_practice(&mut state, &identity_key, "animal-husbandry");
+                add_notice(
+                    &mut state,
+                    "fields",
+                    super::world::farming_notice(request.action),
+                );
+            }
+            return self.store_farming_result(&mut state, identity_key, response);
+        }
         let Some(plot_index) = state
             .plots
             .iter()
@@ -59,6 +93,7 @@ impl WorldRepository {
             FarmingAction::Plant => self.plant(&mut state, &identity_key, plot_index),
             FarmingAction::Tend => self.tend(&mut state, &identity_key, plot_index),
             FarmingAction::Harvest => self.harvest(&mut state, &identity_key, plot_index),
+            FarmingAction::TendAnimal => unreachable!("animal care is handled above"),
         };
         response.accepted = result.0;
         response.reason = result.1;
@@ -75,6 +110,31 @@ impl WorldRepository {
             );
         }
         self.store_farming_result(&mut state, identity_key, response)
+    }
+
+    fn tend_animal(
+        &self,
+        state: &mut RepositoryState,
+        identity_key: &str,
+        animal_index: usize,
+    ) -> (bool, Option<String>) {
+        let animal = &mut state.phase4.animals[animal_index];
+        if animal.condition >= animal.max_condition {
+            return (
+                false,
+                Some(
+                    "Bellweather is already thriving; return when the goat needs care.".to_owned(),
+                ),
+            );
+        }
+        animal.condition = animal.max_condition;
+        animal.last_cared_tick = state.tick;
+        state
+            .identities
+            .get_mut(identity_key)
+            .expect("identity exists")
+            .skill += 1;
+        (true, None)
     }
 
     fn plant(

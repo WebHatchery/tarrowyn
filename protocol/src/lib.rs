@@ -142,6 +142,8 @@ pub struct WorldSnapshot {
     #[serde(default)]
     pub plots: Vec<FarmPlot>,
     #[serde(default)]
+    pub animals: Vec<FarmAnimal>,
+    #[serde(default)]
     pub tavern_position: Position,
     pub cursor: u64,
     #[serde(default)]
@@ -238,6 +240,32 @@ pub struct FarmPlot {
     pub crop: Option<CropState>,
 }
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum FarmAnimalKind {
+    Goat,
+}
+
+impl FarmAnimalKind {
+    pub fn label(self) -> &'static str {
+        match self {
+            Self::Goat => "goat",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct FarmAnimal {
+    pub animal_id: String,
+    pub name: String,
+    pub kind: FarmAnimalKind,
+    pub position: Position,
+    pub condition: u8,
+    pub max_condition: u8,
+    #[serde(default)]
+    pub last_cared_tick: u64,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct PlayerProjection {
     pub account_id: String,
@@ -251,6 +279,10 @@ pub struct PlayerProjection {
     pub field_weather: FieldWeather,
     #[serde(default)]
     pub field_pest_pressure: u8,
+    #[serde(default = "default_animal_condition")]
+    pub animal_condition: u8,
+    #[serde(default = "default_animal_condition")]
+    pub animal_max_condition: u8,
     pub skill: u32,
     pub reputation: u32,
     #[serde(default)]
@@ -325,6 +357,7 @@ pub enum FarmingAction {
     Plant,
     Tend,
     Harvest,
+    TendAnimal,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
@@ -341,6 +374,8 @@ pub struct FarmingResponse {
     pub action: FarmingAction,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub plot: Option<FarmPlot>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub animal: Option<FarmAnimal>,
     pub player: PlayerProjection,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub reason: Option<String>,
@@ -480,6 +515,10 @@ fn default_weapon() -> WeaponKind {
 }
 
 fn default_field_tool_condition() -> u8 {
+    3
+}
+
+fn default_animal_condition() -> u8 {
     3
 }
 

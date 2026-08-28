@@ -140,6 +140,9 @@ impl RepositoryState {
 
     pub(crate) fn from_stored(stored: StoredState, config: &ServerConfig) -> Self {
         let mut phase4 = stored.phase4;
+        if phase4.animals.is_empty() {
+            phase4.animals = super::phase4::fresh_animals();
+        }
         if phase4.governance.taxation.is_none() {
             phase4.governance.taxation = Some(super::phase4::default_tax_policy());
         }

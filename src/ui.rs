@@ -52,6 +52,7 @@ pub struct UiContext<'a> {
     pub stats: &'a str,
     pub own_account_id: Option<&'a str>,
     pub remote_players: &'a [RemotePlayer],
+    pub farm_animals: &'a [tarrowyn_protocol::FarmAnimal],
     pub chat: &'a [ChatMessage],
     pub chat_draft: &'a str,
     pub server_tick: u64,
@@ -218,6 +219,13 @@ fn draw_map(ctx: &UiContext<'_>, rect: Rect) {
             draw_crop(crop, tile_rect);
         }
     }
+    for animal in ctx.farm_animals {
+        let tile = TilePos::new(animal.position.x, animal.position.y);
+        let tile_rect = view.tile_rect(tile);
+        if rect.overlaps(&tile_rect) {
+            draw_farm_animal(animal, tile_rect);
+        }
+    }
 
     if ctx.night {
         draw_rectangle(
@@ -329,6 +337,47 @@ fn draw_crop(crop: &CropState, rect: Rect) {
         rect.center().y - 7.0,
         2.0,
         MINT,
+    );
+}
+
+fn draw_farm_animal(animal: &tarrowyn_protocol::FarmAnimal, rect: Rect) {
+    let center = rect.center();
+    let condition_ratio = animal.condition as f32 / animal.max_condition.max(1) as f32;
+    let body = Color::new(0.74, 0.62 + condition_ratio * 0.12, 0.42, 1.0);
+    draw_ellipse(center.x, center.y + 5.0, 10.0, 6.0, 0.0, body);
+    draw_circle_at(center + vec2(5.0, -2.0), 5.0, body);
+    draw_line(
+        center.x + 2.0,
+        center.y - 7.0,
+        center.x + 1.0,
+        center.y - 12.0,
+        2.0,
+        body,
+    );
+    draw_line(
+        center.x + 7.0,
+        center.y - 6.0,
+        center.x + 9.0,
+        center.y - 10.0,
+        2.0,
+        body,
+    );
+    draw_circle_at(
+        center + vec2(7.0, -3.0),
+        1.0,
+        Color::new(0.05, 0.07, 0.07, 1.0),
+    );
+    draw_text_centered_in_box(
+        &format!(
+            "{} {}/{}",
+            animal.name, animal.condition, animal.max_condition
+        ),
+        center.x - 58.0,
+        center.y - 31.0,
+        116.0,
+        13.0,
+        9.0,
+        body,
     );
 }
 
