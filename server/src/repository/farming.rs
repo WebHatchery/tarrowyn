@@ -1,4 +1,5 @@
 use super::*;
+use tarrowyn_protocol::{CropKind, CropState, FarmingAction};
 
 impl WorldRepository {
     pub fn farming(
@@ -67,7 +68,11 @@ impl WorldRepository {
             super::skills::record_practice(&mut state, &identity_key, "crop-tending");
             let plot = state.plots[plot_index];
             push_event(&mut state, WorldEvent::Farming(plot));
-            add_notice(&mut state, "fields", farming_notice(request.action));
+            add_notice(
+                &mut state,
+                "fields",
+                super::world::farming_notice(request.action),
+            );
         }
         self.store_farming_result(&mut state, identity_key, response)
     }

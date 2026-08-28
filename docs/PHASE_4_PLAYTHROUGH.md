@@ -22,13 +22,16 @@ in [`PHASE_4_RUNBOOK.md`](PHASE_4_RUNBOOK.md).
    The Provider learns Carpentry, accepts the order, completes it, receives
    gold and skill progress, and leaves a completed quality record for the
    requesting role.
-5. The first character discovers the Moonberry trellis method and teaches it
+5. The field ledger reports the current weather and pest pressure. An
+   unattended growth pulse loses bounded quality under pressure, while recent
+   tending protects the pulse; the same ledger shows the field-tool condition.
+6. The first character discovers the Moonberry trellis method and teaches it
    to the Provider. The Provider applies it from its own server-owned knowledge
    list.
-6. The Bellweather household remains visible with miller and herbal-healer
+7. The Bellweather household remains visible with miller and herbal-healer
    members, complementary work, needs, service quality, and causal clues. Its
    bounded decision updates on the shared tick.
-7. A character walks to Whisperwood Edge, prepares the local encounter, and
+8. A character walks to Whisperwood Edge, prepares the local encounter, and
    defeats it with two iron-sword strikes. The encounter records bounded health,
    turn count, readable prompts, and stored-property safety. The improvised
    weapon path can instead produce a bounded knockout and the visible recovery
@@ -38,7 +41,7 @@ in [`PHASE_4_RUNBOOK.md`](PHASE_4_RUNBOOK.md).
 
 Every mutating fixture is request-idempotent and returns the same result when
 the request is retried. The repository persists Phase 4 alongside the Phase 3
-world document at storage version 3. Loading a document without `phase4`
+world document at storage version 10. Loading a document without `phase4`
 creates safe defaults while retaining the existing account and world records.
 The complete automated proof is `cargo test --workspace`; the browser-facing
 publisher proof remains `publish.ps1`.

@@ -2,6 +2,7 @@ use super::phase3::Phase3State;
 use super::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use tarrowyn_protocol::FarmPlot;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub(super) struct SkillLedger {
@@ -125,7 +126,7 @@ impl RepositoryState {
             next_notice: 1,
             identities: HashMap::new(),
             sessions: HashMap::new(),
-            plots: farm_plots(),
+            plots: super::world::farm_plots(),
             events: VecDeque::new(),
             chat_history: VecDeque::new(),
             notices: VecDeque::new(),
@@ -176,7 +177,7 @@ impl RepositoryState {
             identities: stored.identities,
             sessions: HashMap::new(),
             plots: if stored.plots.is_empty() {
-                farm_plots()
+                super::world::farm_plots()
             } else {
                 stored.plots
             },

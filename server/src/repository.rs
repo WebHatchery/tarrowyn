@@ -2,13 +2,12 @@ use crate::config::ServerConfig;
 use std::collections::{HashMap, VecDeque};
 use std::sync::Mutex;
 use tarrowyn_protocol::{
-    ApiError, ApiMeta, ApiResponse, ChatMessage, ChatRequest, ChatResponse, CropKind, CropState,
-    EventRecord, EventsResponse, FarmPlot, FarmingAction, FarmingRequest, FarmingResponse,
-    GuestSessionRequest, GuestSessionResponse, HealthResponse, Inventory, MovementIntent,
-    MovementResponse, PlayerPresence, PlayerProjection, Position, StateSnapshot,
-    TavernFeedResponse, TavernNotice, TileKind, TradeAction, TradeBundle, TradeOffer, TradeRequest,
-    TradeResponse, TradeStatus, TradesResponse, WeaponKind, WorldClock, WorldEvent, WorldSnapshot,
-    WorldTile, MAX_CHAT_MESSAGE_LENGTH, MAX_TRADE_ITEMS, PROTOCOL_VERSION,
+    ApiError, ApiMeta, ApiResponse, ChatMessage, ChatRequest, ChatResponse, EventRecord,
+    EventsResponse, FarmingRequest, FarmingResponse, GuestSessionRequest, GuestSessionResponse,
+    HealthResponse, Inventory, MovementIntent, MovementResponse, PlayerPresence, PlayerProjection,
+    Position, StateSnapshot, TavernFeedResponse, TavernNotice, TradeAction, TradeBundle,
+    TradeOffer, TradeRequest, TradeResponse, TradeStatus, TradesResponse, WeaponKind, WorldClock,
+    WorldEvent, WorldSnapshot, MAX_CHAT_MESSAGE_LENGTH, MAX_TRADE_ITEMS, PROTOCOL_VERSION,
 };
 
 pub(super) const STORAGE_VERSION: u32 = 10;
@@ -30,6 +29,7 @@ mod phase5;
 mod phase6;
 mod skills;
 mod trades;
+mod world;
 pub(crate) use skills::validate_catalog as validate_skill_catalog;
 
 use models::{Identity, RepositoryState, Session};
@@ -302,7 +302,7 @@ impl WorldRepository {
                     "The Brambleback has closed the north road; the tavern has posted a contract."
                         .to_owned(),
                 );
-            } else if !tile_at(next, self.config.world_width, self.config.world_height)
+            } else if !world::tile_at(next, self.config.world_width, self.config.world_height)
                 .is_walkable()
             {
                 response.reason = Some("Water blocks that step.".to_owned());
@@ -493,7 +493,7 @@ impl WorldRepository {
             state.clock.seconds -= state.clock.day_length_seconds.max(1.0);
             state.clock.day += 1;
         }
-        grow_plots(&mut state, &self.config);
+        world::grow_plots(&mut state, &self.config);
         trades::expire_trades(&mut state);
         phase3::tick(&mut state, &self.config);
         phase4::phase4_tick(&mut state, &self.config);
@@ -612,6 +612,8 @@ pub(super) fn player_projection(state: &RepositoryState, key: &str) -> PlayerPro
         position: identity.position,
         gold: identity.gold,
         field_tool_condition: identity.field_tool_condition,
+        field_weather: world::field_weather_for_day(state.clock.day),
+        field_pest_pressure: world::field_pest_pressure_for_day(state.clock.day),
         skill: identity.skill,
         reputation: identity.reputation,
         adventurer_rank,
@@ -631,7 +633,7 @@ fn snapshot(
     WorldSnapshot {
         width: config.world_width,
         height: config.world_height,
-        tiles: world_tiles(config.world_width, config.world_height),
+        tiles: world::world_tiles(config.world_width, config.world_height),
         clock: state.clock.clone(),
         players,
         plots: state.plots.clone(),
@@ -688,83 +690,6 @@ fn add_notice(state: &mut RepositoryState, kind: &str, text: &str) {
     }
     state.notices.push_back(notice);
     trim_back(&mut state.notices, MAX_NOTICES);
-}
-fn farming_notice(action: FarmingAction) -> &'static str {
-    match action {
-        FarmingAction::Plant => "A new promise is planted in the shared fields.",
-        FarmingAction::Tend => "Someone has tended the fields; the next harvest looks steadier.",
-        FarmingAction::Harvest => "A fresh crop reaches the Hearth's stores.",
-    }
-}
-
-fn grow_plots(state: &mut RepositoryState, config: &ServerConfig) {
-    let mut changed = Vec::new();
-    for plot in &mut state.plots {
-        let Some(mut crop) = plot.crop else { continue };
-        let age = state.tick.saturating_sub(crop.planted_tick) as f32
-            * config.world_seconds_per_tick.max(0.0);
-        let stage =
-            ((age / config.crop_stage_seconds.max(1.0)).floor() as u8).min(CropState::MATURE_STAGE);
-        if stage > crop.stage {
-            crop.stage = stage;
-            plot.crop = Some(crop);
-            changed.push(*plot);
-        }
-    }
-    for plot in changed {
-        push_event(state, WorldEvent::Farming(plot));
-    }
-}
-
-fn farm_plots() -> Vec<FarmPlot> {
-    (3..6)
-        .flat_map(|x| {
-            (4..6).map(move |y| FarmPlot {
-                position: Position { x, y },
-                crop: None,
-            })
-        })
-        .collect()
-}
-fn world_tiles(width: u32, height: u32) -> Vec<WorldTile> {
-    (0..height)
-        .flat_map(|y| {
-            (0..width).map(move |x| WorldTile {
-                position: Position {
-                    x: x as i32,
-                    y: y as i32,
-                },
-                kind: tile_at(
-                    Position {
-                        x: x as i32,
-                        y: y as i32,
-                    },
-                    width,
-                    height,
-                ),
-            })
-        })
-        .collect()
-}
-fn tile_at(position: Position, width: u32, height: u32) -> TileKind {
-    let x = position.x as u32;
-    let y = position.y as u32;
-    if x >= width || y >= height {
-        return TileKind::Water;
-    }
-    if (x <= 1 && y <= 4) || (x == 16 && (2..=8).contains(&y)) {
-        TileKind::Water
-    } else if ((12..=15).contains(&x) && y <= 4) || ((13..=16).contains(&x) && y >= 8) {
-        TileKind::Forest
-    } else if ((2..16).contains(&x) && y == 6) || (x == 8 && (4..7).contains(&y)) {
-        TileKind::Path
-    } else if (3..6).contains(&x) && (4..6).contains(&y) {
-        TileKind::Field
-    } else if x == 10 && y == 3 {
-        TileKind::Stone
-    } else {
-        TileKind::Meadow
-    }
 }
 fn trim_back<T>(queue: &mut VecDeque<T>, max: usize) {
     while queue.len() > max {

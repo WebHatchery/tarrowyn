@@ -71,6 +71,14 @@ loop supplies the recovery path: a completed order whose service repairs a
 field tool restores the requesting farmer's condition to 3, while the provider
 receives the normal timed-work reward.
 
+The shared field also reports a bounded environmental outlook from the
+server-owned day: clear, dry wind, or heavy rain, alongside pest pressure from
+0 to 2. On a growth pulse, weather and pests can lower crop quality when the
+plot has not been tended recently; recent active tending protects that pulse.
+The current outlook is included in the player projection and the touch ledger,
+so the player can read why tending matters without the client simulating risk.
+Animal care remains a documented follow-up farming slice.
+
 ## Professions and knowledge
 
 Every new character begins with a useful Farmer capability and a small material

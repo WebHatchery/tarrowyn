@@ -162,6 +162,33 @@ pub enum CropKind {
     Moonberry,
 }
 
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum FieldWeather {
+    #[default]
+    Clear,
+    DryWind,
+    HeavyRain,
+}
+
+impl FieldWeather {
+    pub fn label(self) -> &'static str {
+        match self {
+            Self::Clear => "clear",
+            Self::DryWind => "dry wind",
+            Self::HeavyRain => "heavy rain",
+        }
+    }
+
+    pub fn pressure(self) -> u8 {
+        match self {
+            Self::Clear => 0,
+            Self::DryWind => 1,
+            Self::HeavyRain => 2,
+        }
+    }
+}
+
 impl CropKind {
     pub fn value(self) -> u32 {
         match self {
@@ -218,6 +245,10 @@ pub struct PlayerProjection {
     pub gold: u32,
     #[serde(default = "default_field_tool_condition")]
     pub field_tool_condition: u8,
+    #[serde(default)]
+    pub field_weather: FieldWeather,
+    #[serde(default)]
+    pub field_pest_pressure: u8,
     pub skill: u32,
     pub reputation: u32,
     #[serde(default)]
