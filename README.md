@@ -141,6 +141,7 @@ cargo clippy --workspace --all-targets --all-features -- -D warnings
 .\scripts\validate_content.ps1
 .\scripts\phase5_region_soak.ps1
 .\scripts\phase6_failure_drill.ps1 -StatePath <state> -BackupPath <backup>
+.\scripts\verify_mysql.ps1
 .\publish.ps1
 ```
 
@@ -150,3 +151,7 @@ release candidate retains JSON as the deterministic default and keeps the
 MySQL backend as a single-worker snapshot bridge; the readiness review records
 the live database, multi-worker, identity-gateway, and operational drills that
 must precede public access.
+
+`verify_mysql.ps1` is an explicit local-preview check rather than part of the
+default release gate because it requires the ignored `.env.preview` credentials
+and writes one uniquely named guest identity to that configured database.

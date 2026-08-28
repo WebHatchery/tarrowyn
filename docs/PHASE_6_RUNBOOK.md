@@ -22,6 +22,17 @@ the default for deterministic local fixtures; set `DB_DRIVER=mysql` explicitly
 for the shared preview. Do not deploy it as a public multi-worker service
 until the live MySQL, backup, restore, and rollback checks below pass.
 
+For a configured local MySQL preview, run:
+
+```powershell
+.\scripts\verify_mysql.ps1
+```
+
+The script uses a separate HTTP port and temporary JSON backup, adds one uniquely
+named guest identity to the configured preview world, checks the migration and
+animal projection, replays one chat request, restarts the server, and removes
+only its temporary files. It does not reset or delete the configured database.
+
 ## Deploy, rollback, and maintenance
 
 1. Check `/v1/ops/health` and the last backup tick.
@@ -44,8 +55,9 @@ Run `scripts/phase6_failure_drill.ps1` against a copy of the JSON state and
 backup. The drill parses the backup, checks storage version, starts a server on
 a temporary port, and reads `/v1/ops/health`; it does not overwrite the active
 world. The MySQL backend currently exposes the same versioned snapshot as a
-transactional bridge, so a target-environment database restore drill remains
-an explicit release gate. For a stuck journey use `ClearStuckTravel`, for a duplicate or invalid
+transactional bridge. `scripts/verify_mysql.ps1` covers the local migration,
+restart, duplicate-request, and backup portion of that gate; a target-environment
+database restore drill remains explicit. For a stuck journey use `ClearStuckTravel`, for a duplicate or invalid
 inventory use `NormalizeInventory`, and for an open failed shipment use
 `ReconcileTrade`. Include the player-facing reason and the support note in the
 ticket. Repeat the same request ID to confirm safe idempotency.

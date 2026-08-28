@@ -14,9 +14,16 @@ The Phase 5 fixture verifies that travel, market, event, household, identity,
 refresh, and revocation state survive the authoritative repository boundary.
 The selected MySQL bridge now has a checked-in migration, startup pool/migration
 failure handling, transactional snapshot/index writes, and driver-selection
-tests. No live MySQL service is available in this workspace, so the migration,
-restart, concurrent-write, backup/restore, and rollback checks remain target-
-environment gates.
+tests. The configured local preview MySQL service passed
+`scripts/verify_mysql.ps1`: storage version 14 readiness, authoritative animal
+state, duplicate-request replay, temporary backup creation, and identity/state
+persistence across a server restart all succeeded. The script uses a unique
+guest key and does not reset or delete the configured database.
+
+The target environment still owns the remaining migration, concurrent-write,
+database-native backup/restore, and rollback gates. The local script exercises
+the JSON backup companion and the single-worker MySQL bridge, not production
+topology or database failover.
 
 ## Security gate
 
