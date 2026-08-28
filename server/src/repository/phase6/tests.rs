@@ -6,7 +6,8 @@ use std::fs;
 use tarrowyn_protocol::{
     AccountDeletionRequest, AuthLinkRequest, ChatRequest, ClaimLifecycleAction,
     ClaimLifecycleRequest, GovernanceAction, GovernanceRequest, GuestSessionRequest,
-    MovementIntent, TradeAction, TradeBundle, TradeRequest,
+    MovementIntent, SupportRepairAction, SupportRepairRequest, TradeAction, TradeBundle,
+    TradeRequest,
 };
 
 mod long_session;
@@ -293,6 +294,135 @@ fn operational_metrics_require_a_configured_support_operator() {
     assert_eq!(metrics.abandoned_claims, 0);
     assert!(metrics.declining_settlements > 0);
     assert!(metrics.newcomer_access);
+}
+
+#[test]
+fn support_repairs_restore_claim_access_and_merge_household_history() {
+    let repository = WorldRepository::new(ServerConfig {
+        backup_path: None,
+        support_operator_accounts: vec!["dev-account-1".to_owned()],
+        ..ServerConfig::default()
+    });
+    let operator = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("repair-operator".to_owned()),
+            reset: false,
+        })
+        .unwrap()
+        .data;
+    let requested = repository
+        .claim_lifecycle(
+            &operator.account_token,
+            ClaimLifecycleRequest {
+                request_id: "repair-claim-request".to_owned(),
+                action: ClaimLifecycleAction::Request,
+                claim_id: None,
+                target_account_id: None,
+            },
+        )
+        .unwrap()
+        .data;
+    let claim_id = requested.claim.unwrap().claim_id;
+    let approved = repository
+        .claim_lifecycle(
+            &operator.account_token,
+            ClaimLifecycleRequest {
+                request_id: "repair-claim-approve".to_owned(),
+                action: ClaimLifecycleAction::Approve,
+                claim_id: Some(claim_id.clone()),
+                target_account_id: None,
+            },
+        )
+        .unwrap()
+        .data
+        .claim
+        .unwrap();
+    let lease_expiry = approved.expires_at_unix_seconds;
+    {
+        let mut state = repository.state.lock().unwrap();
+        let claim = state
+            .phase4
+            .claims
+            .iter_mut()
+            .find(|claim| claim.claim_id == claim_id)
+            .unwrap();
+        claim.building_access = false;
+    }
+    let restore_request = SupportRepairRequest {
+        request_id: "repair-claim-access".to_owned(),
+        action: SupportRepairAction::RestoreClaim,
+        account_id: Some(operator.account_id.clone()),
+        target_id: Some(claim_id.clone()),
+        note: "Restore an active claim whose access flag was lost.".to_owned(),
+    };
+    let restored = repository
+        .support_repair(&operator.account_token, restore_request.clone())
+        .unwrap()
+        .data;
+    assert!(restored.accepted);
+    {
+        let state = repository.state.lock().unwrap();
+        let claim = state
+            .phase4
+            .claims
+            .iter()
+            .find(|claim| claim.claim_id == claim_id)
+            .unwrap();
+        assert!(claim.building_access);
+        assert_eq!(claim.expires_at_unix_seconds, lease_expiry);
+    }
+    assert_eq!(
+        repository
+            .support_repair(&operator.account_token, restore_request)
+            .unwrap()
+            .data,
+        restored
+    );
+
+    let household_id = {
+        let mut state = repository.state.lock().unwrap();
+        let mut duplicate = state.phase5.households[0].clone();
+        duplicate
+            .history
+            .push("Support preserved a duplicate's arrival note.".to_owned());
+        let household_id = duplicate.household_id.clone();
+        state.phase5.households.push(duplicate);
+        household_id
+    };
+    let merge_request = SupportRepairRequest {
+        request_id: "repair-household-merge".to_owned(),
+        action: SupportRepairAction::MergeHousehold,
+        account_id: None,
+        target_id: Some(household_id.clone()),
+        note: "Merge a duplicated regional household record.".to_owned(),
+    };
+    let merged = repository
+        .support_repair(&operator.account_token, merge_request.clone())
+        .unwrap()
+        .data;
+    assert!(merged.accepted);
+    let state = repository.state.lock().unwrap();
+    assert_eq!(
+        state
+            .phase5
+            .households
+            .iter()
+            .filter(|household| household.household_id == household_id)
+            .count(),
+        1
+    );
+    assert!(state.phase5.households[0]
+        .history
+        .iter()
+        .any(|entry| entry.contains("duplicate's arrival note")));
+    drop(state);
+    assert_eq!(
+        repository
+            .support_repair(&operator.account_token, merge_request)
+            .unwrap()
+            .data,
+        merged
+    );
 }
 
 #[test]

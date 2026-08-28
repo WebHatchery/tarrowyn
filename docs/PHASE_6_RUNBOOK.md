@@ -116,8 +116,13 @@ restart, duplicate-request, backup, and native dump/restore portion of that
 gate; target-environment failover, concurrency, and rollback drills remain
 explicit. For a stuck journey use `ClearStuckTravel`, for a duplicate or invalid
 inventory use `NormalizeInventory`, and for an open failed shipment use
-`ReconcileTrade`. Include the player-facing reason and the support note in the
-ticket. Repeat the same request ID to confirm safe idempotency.
+`ReconcileTrade`. For a lost access flag on an active, non-expired claim, use
+`RestoreClaim` with the target account and claim ID; it never extends the lease
+or assigns ownership. For duplicated regional household records, use
+`MergeHousehold` with the regional household ID; it retains distinct history
+entries and refuses conflicting identity or same-tick status records. Include
+the player-facing reason and the support note in the ticket. Repeat the same
+request ID to confirm safe idempotency.
 
 ## Moderation and support
 

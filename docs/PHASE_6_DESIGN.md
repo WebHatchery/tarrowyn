@@ -78,9 +78,12 @@ Repair ownership is explicit. The world authority owns travel, inventory,
 market orders, claims, households, and moderation state. The support surface
 fails closed unless the authenticated account appears in the deployment's
 `TARROWYN_SUPPORT_OPERATOR_ACCOUNTS` allowlist, then accepts repeatable, audited operations for stuck travel, inventory
-normalisation, trade reconciliation, claim handoff, household history, and
-moderation resolution. Unsupported repairs return a clear reason rather than
-guessing at state. Every repair carries an operator note and audit ID.
+normalisation, trade reconciliation, active-claim access restoration, duplicate
+regional-household merging, and moderation resolution. Claim restoration never
+extends a lease or changes ownership. Household merging retains distinct
+history entries and rejects conflicting identity or same-tick status records.
+Unsupported repairs return a clear reason rather than guessing at state. Every
+repair carries an operator note and audit ID.
 The allowlisted `GET /v1/support/account?account_id=...` view exposes the
 target's account and character projection, claims, trades, retained chronicle,
 and current event cursor without returning access tokens, refresh tokens,

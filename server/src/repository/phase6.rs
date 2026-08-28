@@ -16,6 +16,7 @@ mod backup;
 mod deletion;
 mod moderation;
 mod operations;
+mod repair;
 
 use deletion::PendingAccountDeletion;
 
@@ -522,18 +523,97 @@ impl WorldRepository {
             .find(|(_, identity)| identity.account_id == target_account)
             .map(|(key, _)| key.clone());
         let (accepted, summary, reason) = match request.action {
-            SupportRepairAction::ClearStuckTravel => { if let Some(target_key) = target_key { state.phase5.travel.remove(&target_key); if let Some(identity) = state.identities.get_mut(&target_key) { identity.position = crate::content::region_location_profile("hearth").position; } (true, "Stuck travel cleared at the origin with cargo and rewards preserved.".to_owned(), None) } else { (false, String::new(), Some("The target account is not present.".to_owned())) } }
-            SupportRepairAction::NormalizeInventory => { if let Some(target_key) = target_key { if let Some(identity) = state.identities.get_mut(&target_key) { identity.inventory.wheat = identity.inventory.wheat.min(9_999); identity.inventory.turnips = identity.inventory.turnips.min(9_999); identity.inventory.moonberries = identity.inventory.moonberries.min(9_999); identity.inventory.seeds = identity.inventory.seeds.min(9_999); } (true, "Inventory values were normalised to the documented support ceiling.".to_owned(), None) } else { (false, String::new(), Some("The target account is not present.".to_owned())) } }
+            SupportRepairAction::ClearStuckTravel => {
+                if let Some(target_key) = target_key {
+                    state.phase5.travel.remove(&target_key);
+                    if let Some(identity) = state.identities.get_mut(&target_key) {
+                        identity.position =
+                            crate::content::region_location_profile("hearth").position;
+                    }
+                    (
+                        true,
+                        "Stuck travel cleared at the origin with cargo and rewards preserved."
+                            .to_owned(),
+                        None,
+                    )
+                } else {
+                    (
+                        false,
+                        String::new(),
+                        Some("The target account is not present.".to_owned()),
+                    )
+                }
+            }
+            SupportRepairAction::NormalizeInventory => {
+                if let Some(target_key) = target_key {
+                    if let Some(identity) = state.identities.get_mut(&target_key) {
+                        identity.inventory.wheat = identity.inventory.wheat.min(9_999);
+                        identity.inventory.turnips = identity.inventory.turnips.min(9_999);
+                        identity.inventory.moonberries = identity.inventory.moonberries.min(9_999);
+                        identity.inventory.seeds = identity.inventory.seeds.min(9_999);
+                    }
+                    (
+                        true,
+                        "Inventory values were normalised to the documented support ceiling."
+                            .to_owned(),
+                        None,
+                    )
+                } else {
+                    (
+                        false,
+                        String::new(),
+                        Some("The target account is not present.".to_owned()),
+                    )
+                }
+            }
             SupportRepairAction::ReconcileTrade => match request.target_id.as_deref() {
-                None => (false, String::new(), Some("A market order ID is required.".to_owned())),
-                Some(order_id) => match state.phase5.market_orders.iter_mut().find(|order| order.order_id == order_id && matches!(order.status, tarrowyn_protocol::MarketOrderStatus::Open)) {
-                    None => (false, String::new(), Some("No open market order needs reconciliation.".to_owned())),
-                    Some(order) => { order.status = tarrowyn_protocol::MarketOrderStatus::Cancelled; (true, "The open order was cancelled; its audit trail remains available for refund review.".to_owned(), None) }
+                None => (
+                    false,
+                    String::new(),
+                    Some("A market order ID is required.".to_owned()),
+                ),
+                Some(order_id) => match state.phase5.market_orders.iter_mut().find(|order| {
+                    order.order_id == order_id
+                        && matches!(order.status, tarrowyn_protocol::MarketOrderStatus::Open)
+                }) {
+                    None => (
+                        false,
+                        String::new(),
+                        Some("No open market order needs reconciliation.".to_owned()),
+                    ),
+                    Some(order) => {
+                        order.status = tarrowyn_protocol::MarketOrderStatus::Cancelled;
+                        (true, "The open order was cancelled; its audit trail remains available for refund review.".to_owned(), None)
+                    }
                 },
             },
-            SupportRepairAction::RestoreClaim => (true, "Claim repair is recorded for the claim service to reconcile on its next bounded tick.".to_owned(), None),
-            SupportRepairAction::MergeHousehold => (true, "Household repair is recorded without deleting either household history.".to_owned(), None),
-            SupportRepairAction::ResolveModeration => { let report = request.target_id.as_deref().and_then(|id| state.phase6.reports.get_mut(id)); if let Some(report) = report { report.status = "resolved".to_owned(); (true, "Moderation report marked resolved and retained in the audit record.".to_owned(), None) } else { (false, String::new(), Some("That moderation report is not recorded.".to_owned())) } }
+            SupportRepairAction::RestoreClaim => {
+                repair::restore_claim(&mut state, &target_account, request.target_id.as_deref())
+            }
+            SupportRepairAction::MergeHousehold => {
+                repair::merge_household(&mut state, request.target_id.as_deref())
+            }
+            SupportRepairAction::ResolveModeration => {
+                let report = request
+                    .target_id
+                    .as_deref()
+                    .and_then(|id| state.phase6.reports.get_mut(id));
+                if let Some(report) = report {
+                    report.status = "resolved".to_owned();
+                    (
+                        true,
+                        "Moderation report marked resolved and retained in the audit record."
+                            .to_owned(),
+                        None,
+                    )
+                } else {
+                    (
+                        false,
+                        String::new(),
+                        Some("That moderation report is not recorded.".to_owned()),
+                    )
+                }
+            }
         };
         let audit_id = audit(
             &mut state,
