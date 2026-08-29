@@ -266,6 +266,8 @@ Public proposal, governance decision, and tax receipt identifiers now follow
 the same saturation policy, with focused town-hall boundary regressions.
 Professional service-order identifiers now follow the same saturation policy,
 with a focused service-board boundary regression.
+The online client request-ID allocator also saturates at its numeric ceiling,
+with a focused network boundary regression.
 Regional household movement history also keeps its latest 64 entries on runtime
 updates and snapshot load. The full release gate is reserved for the next major
 milestone or a change that crosses subsystem boundaries.

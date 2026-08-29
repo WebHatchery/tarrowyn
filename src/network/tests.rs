@@ -448,6 +448,22 @@ fn trade_success_notice_describes_the_requested_action() {
 }
 
 #[test]
+fn client_request_id_stays_at_the_numeric_ceiling() {
+    let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
+    client.next_request_id = u64::MAX;
+
+    assert_eq!(
+        client.next_request_id("boundary"),
+        format!("boundary-{}", u64::MAX)
+    );
+    assert_eq!(
+        client.next_request_id("boundary"),
+        format!("boundary-{}", u64::MAX)
+    );
+    assert_eq!(client.next_request_id, u64::MAX);
+}
+
+#[test]
 fn transient_low_level_commands_replay_the_same_request_ids() {
     let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
     client.state = ConnectionState::Online;

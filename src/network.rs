@@ -577,7 +577,7 @@ impl OnlineClient {
 
     fn next_request_id(&mut self, prefix: &str) -> String {
         let id = format!("{prefix}-{}", self.next_request_id);
-        self.next_request_id += 1;
+        self.next_request_id = self.next_request_id.saturating_add(1);
         id
     }
 }
