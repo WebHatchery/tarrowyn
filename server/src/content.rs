@@ -522,10 +522,13 @@ fn validate_actions(actions: &[ActionManifest]) -> Result<(), String> {
         || actions.iter().any(|action| {
             action.name.trim().is_empty()
                 || action.description.trim().is_empty()
-                || action.kind.trim().is_empty()
+                || !matches!(
+                    action.kind.as_str(),
+                    "plant" | "tend" | "harvest" | "listen"
+                )
         })
     {
-        return Err("actions need IDs, names, descriptions, and kinds".to_owned());
+        return Err("actions need IDs, names, descriptions, and supported kinds".to_owned());
     }
     Ok(())
 }

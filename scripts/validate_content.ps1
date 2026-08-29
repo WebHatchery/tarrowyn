@@ -98,7 +98,13 @@ if ($gameConfig.world_width -lt 1 -or $gameConfig.world_height -lt 1 -or
     throw "Game config needs positive world, clock, and starting-resource values."
 }
 
-Assert-Records "actions" (Get-Records $manifests["actions.json"] $null "actions") @("name", "description", "kind") @()
+$actionRecords = Get-Records $manifests["actions.json"] $null "actions"
+Assert-Records "actions" $actionRecords @("name", "description", "kind") @()
+if (@($actionRecords | Where-Object {
+        @("plant", "tend", "harvest", "listen") -notcontains [string]$_.kind
+    }).Count -gt 0) {
+    throw "Actions must use a supported protocol kind."
+}
 Assert-Records "crops" (Get-Records $manifests["crops.json"] $null "crops") @("name", "description") @()
 Assert-Records "contracts" (Get-Records $manifests["contracts.json"] "contracts" "contracts") @("title", "description", "target") @()
 $eventRecords = Get-Records $manifests["events.json"] "events" "events"

@@ -16,6 +16,24 @@ fn content_ids_must_be_unique_and_non_empty() {
 }
 
 #[test]
+fn action_kinds_must_match_the_supported_protocol_actions() {
+    let mut actions: Vec<super::ActionManifest> =
+        macroquad_toolkit::data_loader::parse_json_labeled(
+            "actions.json",
+            macroquad_toolkit::include_json_str!("../../../assets/data/actions.json"),
+        )
+        .expect("checked-in actions content should parse");
+    actions
+        .first_mut()
+        .expect("the actions manifest should have a launch record")
+        .kind = "unmapped_action".to_owned();
+
+    let error = super::validate_actions(&actions)
+        .expect_err("an action kind without a protocol action must fail validation");
+    assert!(error.contains("supported kinds"));
+}
+
+#[test]
 fn launch_content_ids_are_required_by_the_runtime_contract() {
     let available = std::collections::HashSet::from(["hearth", "saltmere"]);
     assert!(super::validate_required_ids("location", &available, &["hearth"]).is_ok());
