@@ -339,6 +339,8 @@ Regional settlement views also distinguish recognised claims, free plots, and pu
 
 Settlement condition projections also follow changing route safety, public-work condition, local industry, governance, and activity signals instead of remaining fixed content labels.
 
+The touch client keeps a compact comparison of each settlement's condition and open vacancies beside the local recovery signal, so regional opportunity remains visible without opening a separate desktop-only panel.
+
 ### Decline and Abandonment
 
 Settlements may also shrink. If players leave and no one takes responsibility, businesses can close, NPC families can migrate, infrastructure can deteriorate, and a former town may eventually become an abandoned site.

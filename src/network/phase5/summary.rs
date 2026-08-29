@@ -53,7 +53,16 @@ pub(super) fn render(client: &Phase5Client) -> String {
             settlements
                 .settlements
                 .iter()
-                .map(|settlement| format!("{} {:?}", settlement.name, settlement.condition))
+                .map(|settlement| {
+                    let openings = settlement.vacancies.len();
+                    format!(
+                        "{} {:?} • {} opening{}",
+                        settlement.name,
+                        settlement.condition,
+                        openings,
+                        if openings == 1 { "" } else { "s" }
+                    )
+                })
                 .collect::<Vec<_>>()
                 .join(" • ")
         })

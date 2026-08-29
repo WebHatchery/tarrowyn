@@ -297,11 +297,22 @@ pub(super) fn draw_sidebar(
         top + 416.0,
         TextStyle::new(9.0, dark::TEXT_DIM).params(),
     );
+    let settlement_line = ctx
+        .phase5_summary
+        .lines()
+        .nth(1)
+        .unwrap_or("Settlement comparison loading");
+    draw_ui_text_ex(
+        settlement_line,
+        content.x,
+        top + 431.0,
+        TextStyle::new(8.5, dark::TEXT_DIM).params(),
+    );
     draw_ui_text_ex(
         &chronicle_line,
         content.x,
-        top + 431.0,
-        TextStyle::new(9.0, dark::TEXT_DIM).params(),
+        top + 446.0,
+        TextStyle::new(8.5, dark::TEXT_DIM).params(),
     );
 }
 

@@ -163,30 +163,63 @@ fn regional_summary_shows_local_condition_and_recovery_signal() {
         cursor: 7,
     });
     client.settlements = Some(tarrowyn_protocol::SettlementsResponse {
-        settlements: vec![tarrowyn_protocol::SettlementProjection {
-            settlement_id: "saltmere-settlement".to_owned(),
-            name: "Saltmere Landing".to_owned(),
-            location_id: "saltmere".to_owned(),
-            population: 18,
-            food: 40,
-            safety: 42,
-            infrastructure: 45,
-            industry: 38,
-            governance: 40,
-            player_activity: 10,
-            claim_count: 2,
-            available_plot_count: 3,
-            public_works: vec!["Quay".to_owned(), "Hall".to_owned()],
-            condition: tarrowyn_protocol::SettlementCondition::Strained,
-            milestones: Vec::new(),
-            vacancies: vec!["ferry hand".to_owned()],
-            demand: vec!["timber".to_owned()],
-            abundant_goods: Vec::new(),
-            scarce_goods: Vec::new(),
-            price_index_percent: 120,
-            chronicle: Vec::new(),
-            recovery_opportunity: Some("Repair the ferry route.".to_owned()),
-        }],
+        settlements: vec![
+            tarrowyn_protocol::SettlementProjection {
+                settlement_id: "saltmere-settlement".to_owned(),
+                name: "Saltmere Landing".to_owned(),
+                location_id: "saltmere".to_owned(),
+                population: 18,
+                food: 40,
+                safety: 42,
+                infrastructure: 45,
+                industry: 38,
+                governance: 40,
+                player_activity: 10,
+                claim_count: 2,
+                available_plot_count: 3,
+                public_works: vec!["Quay".to_owned(), "Hall".to_owned()],
+                condition: tarrowyn_protocol::SettlementCondition::Strained,
+                milestones: Vec::new(),
+                vacancies: vec!["ferry hand".to_owned()],
+                demand: vec!["timber".to_owned()],
+                abundant_goods: Vec::new(),
+                scarce_goods: Vec::new(),
+                price_index_percent: 120,
+                chronicle: Vec::new(),
+                recovery_opportunity: Some("Repair the ferry route.".to_owned()),
+            },
+            tarrowyn_protocol::SettlementProjection {
+                settlement_id: "whisperwood-settlement".to_owned(),
+                name: "Whisperwood Watch".to_owned(),
+                location_id: "whisperwood-outpost".to_owned(),
+                population: 8,
+                food: 42,
+                safety: 36,
+                infrastructure: 58,
+                industry: 74,
+                governance: 42,
+                player_activity: 14,
+                claim_count: 0,
+                available_plot_count: 0,
+                public_works: vec!["Watchtower".to_owned()],
+                condition: tarrowyn_protocol::SettlementCondition::Quiet,
+                milestones: Vec::new(),
+                vacancies: vec!["bridge warden".to_owned(), "healer".to_owned()],
+                demand: vec!["food".to_owned()],
+                abundant_goods: Vec::new(),
+                scarce_goods: Vec::new(),
+                price_index_percent: 140,
+                chronicle: vec![tarrowyn_protocol::ChronicleEntry {
+                    event_id: "settlement-history-1".to_owned(),
+                    kind: "settlement".to_owned(),
+                    title: "The watchtower keeps its lamp".to_owned(),
+                    text: "The outpost remembers its first wardens.".to_owned(),
+                    created_tick: 3,
+                    cursor: 3,
+                }],
+                recovery_opportunity: Some("Bring food to the watch.".to_owned()),
+            },
+        ],
         cursor: 7,
     });
 
@@ -197,6 +230,9 @@ fn regional_summary_shows_local_condition_and_recovery_signal() {
     assert!(first_line.contains("2 claims"));
     assert!(first_line.contains("3 free plots"));
     assert!(first_line.contains("2 works"));
+    let comparison = client.summary().lines().nth(1).unwrap().to_owned();
+    assert!(comparison.contains("Saltmere Landing Strained • 1 opening"));
+    assert!(comparison.contains("Whisperwood Watch Quiet • 2 openings"));
 }
 
 fn regional_event(

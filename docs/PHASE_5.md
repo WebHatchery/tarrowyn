@@ -114,8 +114,10 @@ Suggested additions include:
 
 The client needs a touch-capable regional map, travel confirmation and
 recovery controls, route/market views, settlement comparison, event notices,
-and clear boundary/loading states. Crossing a region must not freeze the
-render loop or silently discard an accepted command.
+and clear boundary/loading states. The shared-road sidebar now keeps each
+settlement's condition and open-vacancy count visible beside the local
+recovery signal, while chronicle context remains on the next line. Crossing a
+region must not freeze the render loop or silently discard an accepted command.
 
 ## Acceptance test
 
