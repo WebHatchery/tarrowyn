@@ -23,6 +23,20 @@ pub(super) fn validate_region(
     {
         return Err("region farm plots must be unique, non-empty, and inside the world".to_owned());
     }
+    if region.farm_animal_position.x < 0
+        || region.farm_animal_position.y < 0
+        || region.farm_animal_position.x as u32 >= game_config.world_width
+        || region.farm_animal_position.y as u32 >= game_config.world_height
+        || farm_plot_keys.contains(&(region.farm_animal_position.x, region.farm_animal_position.y))
+        || !region
+            .farm_plots
+            .iter()
+            .any(|plot| region.farm_animal_position.manhattan_distance(*plot) == 1)
+    {
+        return Err(
+            "region farm animal must be inside the world and one tile from a plot".to_owned(),
+        );
+    }
     validate_id_list(
         "location",
         region

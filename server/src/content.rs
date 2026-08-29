@@ -140,6 +140,7 @@ struct RegionManifest {
     region_id: String,
     calendar: CalendarManifest,
     farm_plots: Vec<Position>,
+    farm_animal_position: Position,
     locations: Vec<LocationManifest>,
     routes: Vec<RouteManifest>,
 }
@@ -347,6 +348,10 @@ pub(crate) fn season_for_day(day: u32) -> String {
 
 pub(crate) fn farm_plot_positions() -> Vec<Position> {
     region_catalog().farm_plots.clone()
+}
+
+pub(crate) fn farm_animal_position() -> Position {
+    region_catalog().farm_animal_position
 }
 
 pub(crate) fn region_route_profile(route_id: &str) -> RegionRouteProfile {

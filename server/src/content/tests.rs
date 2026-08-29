@@ -131,6 +131,15 @@ fn farm_plot_positions_follow_the_validated_region_manifest() {
 }
 
 #[test]
+fn farm_animal_position_follows_the_validated_region_manifest() {
+    assert_eq!(
+        super::farm_animal_position(),
+        tarrowyn_protocol::Position { x: 3, y: 8 }
+    );
+    assert!(!super::farm_plot_positions().contains(&super::farm_animal_position()));
+}
+
+#[test]
 fn route_profiles_follow_the_validated_region_manifest() {
     let ferry = super::region_route_profile("saltmere-ferry");
     assert_eq!(ferry.name, "Saltmere ferry");

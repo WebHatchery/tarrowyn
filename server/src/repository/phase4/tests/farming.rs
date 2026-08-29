@@ -28,7 +28,7 @@ fn animal_care_is_visible_persistent_and_records_husbandry_practice() {
         1
     );
 
-    for (index, (dx, dy)) in [(-1, 0), (-1, 0), (-1, 0), (-1, 0), (0, -1)]
+    for (index, (dx, dy)) in [(-1, 0), (-1, 0), (-1, 0), (-1, 0), (-1, 0), (0, 1)]
         .into_iter()
         .enumerate()
     {
@@ -48,7 +48,7 @@ fn animal_care_is_visible_persistent_and_records_husbandry_practice() {
             FarmingRequest {
                 request_id: "animal-care".to_owned(),
                 action: FarmingAction::TendAnimal,
-                position: tarrowyn_protocol::Position { x: 3, y: 5 },
+                position: crate::content::farm_animal_position(),
             },
         )
         .unwrap()
@@ -62,7 +62,7 @@ fn animal_care_is_visible_persistent_and_records_husbandry_practice() {
             FarmingRequest {
                 request_id: "animal-care".to_owned(),
                 action: FarmingAction::TendAnimal,
-                position: tarrowyn_protocol::Position { x: 3, y: 5 },
+                position: crate::content::farm_animal_position(),
             },
         )
         .unwrap()
@@ -105,7 +105,7 @@ fn animal_condition_survives_repository_restart() {
     {
         let repo = WorldRepository::new(config.clone());
         let session = guest(&repo, "phase4-animal-restart");
-        for (index, (dx, dy)) in [(-1, 0), (-1, 0), (-1, 0), (-1, 0), (0, -1)]
+        for (index, (dx, dy)) in [(-1, 0), (-1, 0), (-1, 0), (-1, 0), (-1, 0), (0, 1)]
             .into_iter()
             .enumerate()
         {
@@ -125,7 +125,7 @@ fn animal_condition_survives_repository_restart() {
                 FarmingRequest {
                     request_id: "restart-animal-care".to_owned(),
                     action: FarmingAction::TendAnimal,
-                    position: tarrowyn_protocol::Position { x: 3, y: 5 },
+                    position: crate::content::farm_animal_position(),
                 },
             )
             .unwrap()
@@ -138,6 +138,24 @@ fn animal_condition_survives_repository_restart() {
     let snapshot = reopened.state(&session.account_token).unwrap().data;
     assert_eq!(snapshot.world.animals[0].condition, 3);
     let _ = std::fs::remove_file(path);
+}
+
+#[test]
+fn legacy_bellweather_position_restores_beside_manifest_fields() {
+    let restored = super::super::restore_animals(vec![tarrowyn_protocol::FarmAnimal {
+        animal_id: "bellweather-goat".to_owned(),
+        name: "Bellweather".to_owned(),
+        kind: tarrowyn_protocol::FarmAnimalKind::Goat,
+        position: tarrowyn_protocol::Position { x: 3, y: 5 },
+        condition: 1,
+        max_condition: 3,
+        last_cared_tick: 9,
+        last_cared_day: 2,
+    }]);
+
+    assert_eq!(restored[0].position, crate::content::farm_animal_position());
+    assert_eq!(restored[0].condition, 1);
+    assert_eq!(restored[0].last_cared_tick, 9);
 }
 
 #[test]

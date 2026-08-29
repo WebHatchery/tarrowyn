@@ -209,9 +209,7 @@ impl RepositoryState {
             .retain(|identity_key, _| identities.contains_key(identity_key));
         trim_replay_cache(&mut phase6.request_results);
         super::phase6::trim_audits(&mut phase6.audits);
-        if phase4.animals.is_empty() {
-            phase4.animals = super::phase4::fresh_animals();
-        }
+        phase4.animals = super::phase4::restore_animals(phase4.animals);
         if phase4.governance.taxation.is_none() {
             phase4.governance.taxation = Some(super::phase4::default_tax_policy());
         }

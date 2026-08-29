@@ -117,18 +117,19 @@ try {
     Assert-True ($households.data.households[0].members.Count -eq 2) "the complementary household was not visible"
     $beforeAnimal = Invoke-RestMethod -Method Get -Uri "http://127.0.0.1:8787/v1/state" -Headers $oneHeaders
     Assert-True ($beforeAnimal.data.world.animals.Count -eq 1 -and $beforeAnimal.data.player.animal_condition -eq 2) "Bellweather was not visible at its starting condition"
-    $animalSteps = @(@{ dx = -1; dy = 0 }, @{ dx = -1; dy = 0 }, @{ dx = -1; dy = 0 }, @{ dx = -1; dy = 0 }, @{ dx = 0; dy = -1 })
+    $animalSteps = @(@{ dx = -1; dy = 0 }, @{ dx = -1; dy = 0 }, @{ dx = -1; dy = 0 }, @{ dx = -1; dy = 0 }, @{ dx = -1; dy = 0 }, @{ dx = 0; dy = 1 })
     for ($index = 0; $index -lt $animalSteps.Count; $index++) {
         $move = Post-Json "/v1/movement" @{ request_id = "animal-step-$index"; dx = $animalSteps[$index].dx; dy = $animalSteps[$index].dy } $oneHeaders
         Assert-True $move.data.accepted "the animal-care test could not reach the shared fields"
     }
-    $care = Post-Json "/v1/farming/actions" @{ request_id = "animal-care"; action = "tend_animal"; position = @{ x = 3; y = 5 } } $oneHeaders
+    $care = Post-Json "/v1/farming/actions" @{ request_id = "animal-care"; action = "tend_animal"; position = @{ x = 3; y = 8 } } $oneHeaders
     Assert-True ($care.data.accepted -and $care.data.animal.condition -eq 3 -and $care.data.player.animal_condition -eq 3) "Bellweather care did not restore the authoritative condition"
     $afterAnimal = Invoke-RestMethod -Method Get -Uri "http://127.0.0.1:8787/v1/state" -Headers $oneHeaders
     Assert-True ($afterAnimal.data.world.animals[0].condition -eq 3) "the cared animal was not retained in the world projection"
     $steps = @(
         @{ dx = 1; dy = 0 }, @{ dx = 1; dy = 0 }, @{ dx = 1; dy = 0 },
         @{ dx = 1; dy = 0 }, @{ dx = 1; dy = 0 }, @{ dx = 1; dy = 0 },
+        @{ dx = 1; dy = 0 }, @{ dx = 0; dy = -1 }, @{ dx = 0; dy = -1 },
         @{ dx = 0; dy = -1 }
     )
     for ($index = 0; $index -lt $steps.Count; $index++) {
@@ -136,7 +137,9 @@ try {
         Assert-True $move.data.accepted "the local combat test could not reach Whisperwood"
     }
     $prepared = Post-Json "/v1/combat/local" @{ request_id = "prepare"; action = "prepare"; weapon = "iron_sword" } $oneHeaders
+    Start-Sleep -Milliseconds 100
     $strikeOne = Post-Json "/v1/combat/local" @{ request_id = "strike-one"; action = "strike"; weapon = "iron_sword" } $oneHeaders
+    Start-Sleep -Milliseconds 100
     $strikeTwo = Post-Json "/v1/combat/local" @{ request_id = "strike-two"; action = "strike"; weapon = "iron_sword" } $oneHeaders
     Assert-True ($prepared.data.accepted -and $strikeOne.data.accepted -and $strikeTwo.data.combat.status -eq "victorious") "the local combat loop did not resolve"
 

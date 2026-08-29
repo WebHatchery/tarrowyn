@@ -217,20 +217,32 @@ pub(super) fn retain_recent<T>(records: &mut Vec<T>, max: usize) {
     }
 }
 
-pub(super) const FARM_ANIMAL_POSITION: tarrowyn_protocol::Position =
-    tarrowyn_protocol::Position { x: 3, y: 5 };
-
 pub(super) fn fresh_animals() -> Vec<FarmAnimal> {
     vec![FarmAnimal {
         animal_id: "bellweather-goat".to_owned(),
         name: "Bellweather".to_owned(),
         kind: FarmAnimalKind::Goat,
-        position: FARM_ANIMAL_POSITION,
+        position: crate::content::farm_animal_position(),
         condition: 2,
         max_condition: 3,
         last_cared_tick: 0,
         last_cared_day: 1,
     }]
+}
+
+pub(super) fn restore_animals(mut animals: Vec<FarmAnimal>) -> Vec<FarmAnimal> {
+    if animals.is_empty() {
+        return fresh_animals();
+    }
+    let current_position = crate::content::farm_animal_position();
+    for animal in &mut animals {
+        if animal.animal_id == "bellweather-goat"
+            && animal.position == (tarrowyn_protocol::Position { x: 3, y: 5 })
+        {
+            animal.position = current_position;
+        }
+    }
+    animals
 }
 
 fn default_next_lesson_id() -> u64 {

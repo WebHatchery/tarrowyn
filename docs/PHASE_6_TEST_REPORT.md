@@ -45,6 +45,9 @@ roles, resources, services, and condition follow the validated region manifest.
 The fresh-world farming regression confirms the shared plot projection and
 field tiles initialize from the same validated region plot positions rather
 than a separate legacy grid.
+The authored-animal regression confirms Bellweather's position follows the
+validated region farm position and that the retired saved-world position
+upgrades without changing animal condition or care history.
 The contract-template regression confirms the repeatable Brambleback watch
 uses the validated contract manifest for its target and progression contract.
 The threat-template regression confirms the launch wilderness threat follows
