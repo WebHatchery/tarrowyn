@@ -89,10 +89,13 @@ pub(super) fn update_settlements(state: &mut RepositoryState) {
         } else {
             SettlementCondition::Stable
         };
-        settlement.price_index_percent = (100
-            + (settlement.scarce_goods.len() as u16 * 8)
-            + u16::from(100 - settlement.infrastructure.min(100)))
-        .min(190);
+        let scarcity_pressure = settlement.scarce_goods.len().min(u32::MAX as usize) as u32;
+        let scarcity_pressure = scarcity_pressure.saturating_mul(8);
+        let infrastructure_pressure = u32::from(100 - settlement.infrastructure.min(100));
+        settlement.price_index_percent = 100u32
+            .saturating_add(scarcity_pressure)
+            .saturating_add(infrastructure_pressure)
+            .min(190) as u16;
         if settlement.condition != old {
             transitions.push((settlement.location_id.clone(), old, settlement.condition));
         }

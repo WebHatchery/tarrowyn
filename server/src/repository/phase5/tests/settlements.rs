@@ -113,6 +113,33 @@ fn settlement_projection_rolls_up_nearest_claims_plots_and_public_works() {
     );
 }
 
+#[test]
+fn settlement_price_pressure_clamps_extreme_scarcity_without_wrapping() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    {
+        let mut state = repository.state.lock().unwrap();
+        let settlement = state
+            .phase5
+            .settlements
+            .iter_mut()
+            .find(|settlement| settlement.location_id == "hearth")
+            .unwrap();
+        settlement.scarce_goods = (0..8_192)
+            .map(|index| format!("scarce-good-{index}"))
+            .collect();
+        super::super::settlements::update_settlements(&mut state);
+    }
+
+    let state = repository.state.lock().unwrap();
+    let hearth = state
+        .phase5
+        .settlements
+        .iter()
+        .find(|settlement| settlement.location_id == "hearth")
+        .unwrap();
+    assert_eq!(hearth.price_index_percent, 190);
+}
+
 fn settlement_snapshot(repository: &WorldRepository) -> Vec<SettlementProjection> {
     repository
         .state
