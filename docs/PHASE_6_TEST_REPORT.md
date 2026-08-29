@@ -175,8 +175,9 @@ regional history locality, persisted input boundaries, and numeric boundaries
 each run their targeted repository or protocol test plus formatting and diff
 checks. The numeric checks cover trade receipt, farming counters, skill-merger
 qualification, travel progress, governance upkeep, and settlement scarcity
-projection. The full release gate is reserved for the next major milestone or a
-change that crosses subsystem boundaries.
+projection; the regional price-note projection also saturates malformed
+manifest values. The full release gate is reserved for the next major milestone
+or a change that crosses subsystem boundaries.
 
 The accumulated maintenance batch published successfully through
 `publish.ps1` on 2026-08-29: Windows and WebGL packages built and deployed to
