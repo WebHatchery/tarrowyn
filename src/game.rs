@@ -235,6 +235,13 @@ impl Game {
                         .as_ref()
                         .is_some_and(|player| player.knocked_out),
                     has_open_market_order: client.has_open_market_order(),
+                    can_abandon_claim: client.can_abandon_claim(),
+                    can_transfer_claim: client.can_transfer_claim()
+                        && client.projection.players.iter().any(|player| {
+                            Some(player.account_id.as_str()) != own_account_id
+                                && !player.stale(client.projection.server_tick)
+                                && player.position == client.projection.player_position
+                        }),
                     ui: &virtual_ui,
                 })
             }
@@ -288,6 +295,8 @@ impl Game {
                     storm_magic_unlocked: false,
                     knocked_out: false,
                     has_open_market_order: false,
+                    can_abandon_claim: false,
+                    can_transfer_claim: false,
                     ui: &virtual_ui,
                 })
             }
@@ -578,6 +587,34 @@ impl Game {
                 ),
                 "recover" => client.queue_recovery(tarrowyn_protocol::RecoveryChoice::AskRescuer),
                 "claim" => client.queue_claim_cycle(),
+                "abandon-claim" => client
+                    .queue_claim_action(tarrowyn_protocol::ClaimLifecycleAction::Abandon, None),
+                "transfer-claim" => {
+                    let own = client
+                        .account
+                        .as_ref()
+                        .map(|account| account.account_id.as_str());
+                    let target = client
+                        .projection
+                        .players
+                        .iter()
+                        .find(|player| {
+                            Some(player.account_id.as_str()) != own
+                                && !player.stale(client.projection.server_tick)
+                                && player.position == client.projection.player_position
+                        })
+                        .map(|player| player.account_id.clone());
+                    if let Some(target) = target {
+                        client.queue_claim_action(
+                            tarrowyn_protocol::ClaimLifecycleAction::Transfer,
+                            Some(target),
+                        );
+                    } else {
+                        self.notifications.warning(
+                            "Stand beside another recognised player before transferring a lease.",
+                        );
+                    }
+                }
                 "expedition" => client.queue_expedition_cycle(),
                 "chronicle" => client.refresh_tavern(),
                 "practice" => client.queue_phase4("practice"),

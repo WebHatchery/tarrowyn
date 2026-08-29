@@ -216,6 +216,18 @@ pub(super) fn draw_sidebar(
         &[
             ("town-hall", "Town hall", true, ButtonTone::Primary),
             ("registry", "Registry", true, ButtonTone::Secondary),
+            (
+                "abandon-claim",
+                "Abandon",
+                ctx.can_abandon_claim,
+                ButtonTone::Secondary,
+            ),
+            (
+                "transfer-claim",
+                "Transfer",
+                ctx.can_transfer_claim,
+                ButtonTone::Secondary,
+            ),
             ("order", "Order", true, ButtonTone::Secondary),
             ("tax-rate", "Tax", true, ButtonTone::Secondary),
         ],

@@ -1,6 +1,69 @@
 use super::*;
 
 impl Phase4Client {
+    fn owned_claim(&self) -> Option<&tarrowyn_protocol::ClaimRecord> {
+        let own_account_id = self.own_account_id.as_deref()?;
+        self.claims
+            .as_ref()?
+            .claims
+            .iter()
+            .rev()
+            .find(|claim| claim.owner_account_id.as_deref() == Some(own_account_id))
+    }
+
+    pub(super) fn can_abandon_claim(&self) -> bool {
+        self.owned_claim().is_some_and(|claim| {
+            matches!(
+                claim.status,
+                tarrowyn_protocol::ClaimLifecycleStatus::Requested
+                    | tarrowyn_protocol::ClaimLifecycleStatus::Active
+                    | tarrowyn_protocol::ClaimLifecycleStatus::Renewed
+                    | tarrowyn_protocol::ClaimLifecycleStatus::Transferred
+                    | tarrowyn_protocol::ClaimLifecycleStatus::Inherited
+            )
+        })
+    }
+
+    pub(super) fn can_transfer_claim(&self) -> bool {
+        self.owned_claim().is_some_and(|claim| {
+            matches!(
+                claim.status,
+                tarrowyn_protocol::ClaimLifecycleStatus::Active
+                    | tarrowyn_protocol::ClaimLifecycleStatus::Renewed
+                    | tarrowyn_protocol::ClaimLifecycleStatus::Transferred
+                    | tarrowyn_protocol::ClaimLifecycleStatus::Inherited
+            )
+        })
+    }
+
+    pub(super) fn queue_claim_action(
+        &mut self,
+        request_id: String,
+        action: ClaimLifecycleAction,
+        target_account_id: Option<String>,
+    ) -> bool {
+        let claim_id = self.owned_claim().map(|claim| claim.claim_id.clone());
+        let eligible = match action {
+            ClaimLifecycleAction::Abandon => self.can_abandon_claim(),
+            ClaimLifecycleAction::Transfer | ClaimLifecycleAction::Inherit => {
+                self.can_transfer_claim() && target_account_id.is_some()
+            }
+            _ => false,
+        };
+        if !eligible {
+            return false;
+        }
+        super::super::queue::try_push(
+            &mut self.commands,
+            Phase4Command::Claim(ClaimLifecycleRequest {
+                request_id,
+                action,
+                claim_id,
+                target_account_id,
+            }),
+        )
+    }
+
     pub(super) fn queue_claim(&mut self, request_id: String) {
         let own_account_id = self.own_account_id.as_deref();
         let is_steward = own_account_id.is_some_and(|account_id| {

@@ -165,6 +165,42 @@ fn registry_button_chooses_the_current_account_claim() {
 }
 
 #[test]
+fn lease_controls_queue_abandon_and_visible_transfer_actions() {
+    let mut client = Phase4Client::new();
+    client.own_account_id = Some("account-1".to_owned());
+    client.claims = Some(ClaimsResponse {
+        claims: vec![claim_for_test(
+            "own-lease",
+            Some("account-1"),
+            tarrowyn_protocol::ClaimLifecycleStatus::Active,
+        )],
+        available_plots: Vec::new(),
+        lease_duration_days: 90,
+        cursor: 2,
+    });
+
+    assert!(client.can_abandon_claim());
+    assert!(client.can_transfer_claim());
+    assert!(client.queue_claim_action("abandon-1".to_owned(), ClaimLifecycleAction::Abandon, None,));
+    let Some(Phase4Command::Claim(request)) = client.commands.pop_front() else {
+        panic!("the abandon control should queue the owned lease");
+    };
+    assert_eq!(request.action, ClaimLifecycleAction::Abandon);
+    assert_eq!(request.claim_id.as_deref(), Some("own-lease"));
+
+    assert!(client.queue_claim_action(
+        "transfer-1".to_owned(),
+        ClaimLifecycleAction::Transfer,
+        Some("account-2".to_owned()),
+    ));
+    let Some(Phase4Command::Claim(request)) = client.commands.pop_front() else {
+        panic!("the transfer control should queue the owned lease");
+    };
+    assert_eq!(request.action, ClaimLifecycleAction::Transfer);
+    assert_eq!(request.target_account_id.as_deref(), Some("account-2"));
+}
+
+#[test]
 fn order_button_waits_for_the_account_service_request() {
     let mut client = Phase4Client::new();
     client.own_account_id = Some("account-1".to_owned());

@@ -1,6 +1,6 @@
 use super::CraftingView;
 use crate::network::{ConnectionState, OnlineClient};
-use tarrowyn_protocol::LocalCombatState;
+use tarrowyn_protocol::{ClaimLifecycleAction, LocalCombatState};
 
 impl OnlineClient {
     pub(crate) fn queue_phase4(&mut self, id: &str) {
@@ -16,6 +16,32 @@ impl OnlineClient {
 
     pub(crate) fn phase4_summary(&self) -> String {
         self.phase4.summary()
+    }
+
+    pub(crate) fn can_abandon_claim(&self) -> bool {
+        self.phase4.can_abandon_claim()
+    }
+
+    pub(crate) fn can_transfer_claim(&self) -> bool {
+        self.phase4.can_transfer_claim()
+    }
+
+    pub(crate) fn queue_claim_action(
+        &mut self,
+        action: ClaimLifecycleAction,
+        target_account_id: Option<String>,
+    ) {
+        if self.state == ConnectionState::Online {
+            let request_id = self.next_request_id("claim");
+            if !self
+                .phase4
+                .queue_claim_action(request_id, action, target_account_id)
+            {
+                self.status_message =
+                    "That lease action is not ready; inspect the registry or wait for queue space."
+                        .to_owned();
+            }
+        }
     }
 
     pub(crate) fn crafting_view(&self) -> Option<CraftingView> {
