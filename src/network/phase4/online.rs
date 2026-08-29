@@ -191,7 +191,27 @@ impl OnlineClient {
         queued
     }
 
+    pub(crate) fn queue_skill_practice(&mut self, skill_id: String) {
+        if self.state != ConnectionState::Online {
+            return;
+        }
+        let request_id = self.next_request_id("practice");
+        if !self.phase4.queue_skill_practice_for(request_id, skill_id) {
+            self.status_message =
+                "That discipline is no longer open for practice; refresh the skill ledger."
+                    .to_owned();
+        }
+    }
+
     pub(crate) fn phase5_event_choices(&self) -> &[String] {
         self.phase4.regional_event_choices()
+    }
+
+    pub(crate) fn phase4_skills(&self) -> &[tarrowyn_protocol::SkillView] {
+        self.phase4
+            .skills
+            .as_ref()
+            .map(|skills| skills.skills.as_slice())
+            .unwrap_or(&[])
     }
 }

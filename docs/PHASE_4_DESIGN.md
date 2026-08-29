@@ -160,11 +160,12 @@ the server remains the authority for future school membership, tuition, halls,
 and advanced lesson policy.
 
 Every depth-one catalogue entry also has a dependable first-practice path. A
-visible Practice control selects the next unstarted root and sends
-`SkillAction::Practice`; the server records it in the same ledger used by
-farming, travel, combat, trade, and profession activity. This is an entry
-path, not a replacement for the richer tools, worksites, encounters, and
-teachers that later raise mastery.
+visible Practice control opens a touch chooser containing every available or
+practising root; selecting one sends `SkillAction::Practice` for that exact
+discipline. The server records it in the same ledger used by farming, travel,
+combat, trade, and profession activity. This is an entry path, not a
+replacement for the richer tools, worksites, encounters, and teachers that
+later raise mastery.
 
 ## Households and local life
 

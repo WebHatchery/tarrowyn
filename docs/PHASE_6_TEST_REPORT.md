@@ -199,9 +199,12 @@ deployment artifact from being produced.
 The subsequent focused client checks cover the visible recovery-safe Retreat
 path for both local and frontier combat, the regional inspection's event cause,
 exact touch-selectable intervention choices, and its pending/resolved outcome
-state. These maintenance changes also passed `publish.ps1` with Windows and
-WebGL Preview deployment; no full release gate was rerun because they stayed
-within the established client/UI boundary.
+state. The selected-root practice check also confirms that the touch chooser
+queues the named root rather than silently selecting the first catalogue entry,
+while advanced or mastered skills remain out of that direct-practice list.
+These maintenance changes also passed `publish.ps1` with Windows and WebGL
+Preview deployment; no full release gate was rerun because they stayed within
+the established client/UI boundary.
 
 ## Load and failure gate
 

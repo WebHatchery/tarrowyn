@@ -575,24 +575,52 @@ impl Phase4Client {
     }
 
     fn queue_skill_practice(&mut self, request_id: String) {
-        let Some(skill) = self.skills.as_ref().and_then(|skills| {
+        let Some(skill_id) = self.skills.as_ref().and_then(|skills| {
             skills
                 .skills
                 .iter()
-                .find(|skill| skill.depth == 1 && skill.status == SkillStatus::Available)
+                .find(|skill| {
+                    skill.depth == 1
+                        && matches!(
+                            skill.status,
+                            SkillStatus::Available | SkillStatus::Practising
+                        )
+                })
+                .map(|skill| skill.skill_id.clone())
         }) else {
             return;
         };
+        self.queue_skill_practice_for(request_id, skill_id);
+    }
+
+    pub(super) fn queue_skill_practice_for(
+        &mut self,
+        request_id: String,
+        skill_id: String,
+    ) -> bool {
+        let valid_choice = self.skills.as_ref().is_some_and(|skills| {
+            skills.skills.iter().any(|skill| {
+                skill.skill_id == skill_id
+                    && skill.depth == 1
+                    && matches!(
+                        skill.status,
+                        SkillStatus::Available | SkillStatus::Practising
+                    )
+            })
+        });
+        if !valid_choice {
+            return false;
+        }
         super::queue::try_push(
             &mut self.commands,
             Phase4Command::Skill(SkillRequest {
                 request_id,
                 action: SkillAction::Practice,
                 lesson_id: None,
-                skill_id: Some(skill.skill_id.clone()),
+                skill_id: Some(skill_id),
                 target_account_id: None,
             }),
-        );
+        )
     }
 
     fn apply_command(&mut self, response: Phase4CommandResponse, notices: &mut Vec<NetworkNotice>) {

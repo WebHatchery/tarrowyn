@@ -526,6 +526,104 @@ fn draw_event_choices(panel: Rect, choices: &[String], mouse: Vec2, actions: &mu
     }
 }
 
+pub(super) fn draw_skill_selection(ctx: &UiContext<'_>, mouse: Vec2, actions: &mut Vec<UiAction>) {
+    if !ctx.skill_selection_open {
+        return;
+    }
+    let panel = Rect::new(42.0, 126.0, 780.0, 438.0);
+    draw_surface_with_title(
+        panel,
+        Some("Choose a discipline"),
+        &SurfaceStyle::new(Color::new(0.055, 0.075, 0.09, 0.99))
+            .with_border(1.0, Color::new(0.50, 0.72, 0.62, 0.9))
+            .with_header(42.0, Color::new(0.09, 0.14, 0.15, 1.0))
+            .with_header_divider(1.0, Color::new(0.32, 0.48, 0.50, 0.75)),
+        TextStyle::new(17.0, CREAM),
+    );
+    draw_text_block(
+        "Tap a depth-one practice to begin or continue it. Advanced arts emerge from play and are not direct choices here.",
+        panel.x + 20.0,
+        panel.y + 70.0,
+        panel.w - 40.0,
+        34.0,
+        13.0,
+        2.0,
+        CREAM,
+    );
+    let choices: Vec<_> = ctx
+        .skills
+        .iter()
+        .filter(|skill| skill_practice_choice(skill))
+        .collect();
+    if choices.is_empty() {
+        draw_ui_text_ex(
+            if ctx.skills.is_empty() {
+                "The skill ledger is loading; tap Close and try again shortly."
+            } else {
+                "Every depth-one practice is mastered; advanced discoveries remain in the ledger."
+            },
+            panel.x + 20.0,
+            panel.y + 138.0,
+            TextStyle::new(13.0, dark::TEXT_DIM).params(),
+        );
+    } else {
+        draw_ui_text_ex(
+            &format!("{} depth-one practices available", choices.len()),
+            panel.x + 20.0,
+            panel.y + 133.0,
+            TextStyle::new(11.0, MINT).params(),
+        );
+        draw_skill_choices(panel, &choices, mouse, actions);
+    }
+    if virtual_button(
+        Rect::new(panel.right() - 126.0, panel.bottom() - 42.0, 106.0, 28.0),
+        "Close",
+        true,
+        ButtonTone::Secondary,
+        mouse,
+    ) {
+        actions.push(UiAction::Interact("skill-close".to_owned()));
+    }
+}
+
+fn draw_skill_choices(
+    panel: Rect,
+    choices: &[&tarrowyn_protocol::SkillView],
+    mouse: Vec2,
+    actions: &mut Vec<UiAction>,
+) {
+    let columns = 4;
+    let gap = 4.0;
+    let width = (panel.w - 40.0 - gap * (columns - 1) as f32) / columns as f32;
+    let height = 25.0;
+    for (index, skill) in choices.iter().enumerate() {
+        let column = index % columns;
+        let row = index / columns;
+        if virtual_button(
+            Rect::new(
+                panel.x + 20.0 + column as f32 * (width + gap),
+                panel.y + 148.0 + row as f32 * (height + gap),
+                width,
+                height,
+            ),
+            &skill.name,
+            true,
+            ButtonTone::Primary,
+            mouse,
+        ) {
+            actions.push(UiAction::Practice(skill.skill_id.clone()));
+        }
+    }
+}
+
+fn skill_practice_choice(skill: &tarrowyn_protocol::SkillView) -> bool {
+    skill.depth == 1
+        && matches!(
+            skill.status,
+            tarrowyn_protocol::SkillStatus::Available | tarrowyn_protocol::SkillStatus::Practising
+        )
+}
+
 fn draw_combat_status(ctx: &UiContext<'_>, content: Rect, top: f32) {
     let Some(combat) = ctx.combat else {
         return;

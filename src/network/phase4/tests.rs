@@ -308,6 +308,43 @@ fn practice_button_queues_the_next_unstarted_root() {
 }
 
 #[test]
+fn practice_choice_queues_the_selected_root() {
+    let mut client = Phase4Client::new();
+    client.skills = Some(SkillsResponse {
+        skills: vec![
+            SkillView {
+                skill_id: "fishing".to_owned(),
+                name: "Fishing".to_owned(),
+                family: tarrowyn_protocol::SkillFamily::Gathering,
+                depth: 1,
+                mastery: 0,
+                status: SkillStatus::Available,
+                description: "Read water.".to_owned(),
+                entry_hint: "Make a first catch.".to_owned(),
+            },
+            SkillView {
+                skill_id: "cooking".to_owned(),
+                name: "Cooking".to_owned(),
+                family: tarrowyn_protocol::SkillFamily::Production,
+                depth: 1,
+                mastery: 1,
+                status: SkillStatus::Practising,
+                description: "Prepare useful food.".to_owned(),
+                entry_hint: "Complete a simple recipe.".to_owned(),
+            },
+        ],
+        lessons: Vec::new(),
+        cursor: 0,
+    });
+    assert!(client.queue_skill_practice_for("practice-2".to_owned(), "cooking".to_owned()));
+    let Some(Phase4Command::Skill(request)) = client.commands.pop_front() else {
+        panic!("selected practice should queue a skill request");
+    };
+    assert_eq!(request.action, SkillAction::Practice);
+    assert_eq!(request.skill_id.as_deref(), Some("cooking"));
+}
+
+#[test]
 fn local_fight_cycles_through_readable_weapon_families() {
     assert_eq!(
         super::combat::next_combat_weapon(None),

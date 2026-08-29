@@ -39,6 +39,7 @@ pub struct Game {
     save_slots: Vec<String>,
     chat_draft: String,
     regional_inspection_open: bool,
+    skill_selection_open: bool,
 }
 
 impl Game {
@@ -98,6 +99,7 @@ impl Game {
             save_slots: Vec::new(),
             chat_draft: String::new(),
             regional_inspection_open: false,
+            skill_selection_open: false,
         };
         game.refresh_save_state();
         game
@@ -225,6 +227,9 @@ impl Game {
                     regional_region: client.phase5_region(),
                     regional_inspection: regional_inspection.as_deref(),
                     regional_event_choices: client.phase5_event_choices(),
+                    skills: client.phase4_skills(),
+                    skill_selection_open: self.skill_selection_open
+                        && client.state == ConnectionState::Online,
                     chronicle: &client.projection.chronicle,
                     chronicle_summary: client.projection.chronicle_summary.as_ref(),
                     opportunities: &client.projection.opportunities,
@@ -299,6 +304,8 @@ impl Game {
                     regional_region: None,
                     regional_inspection: None,
                     regional_event_choices: &[],
+                    skills: &[],
+                    skill_selection_open: false,
                     chronicle: &[],
                     chronicle_summary: None,
                     opportunities: &[],
@@ -340,6 +347,7 @@ impl Game {
             UiAction::UseOffline => {
                 self.mode = ClientMode::Offline(GameSession::new(&self.data.config));
                 self.regional_inspection_open = false;
+                self.skill_selection_open = false;
                 self.chat_draft.clear();
                 self.sync_camera(TilePos::new(8, 6));
                 self.notifications
@@ -351,6 +359,7 @@ impl Game {
                     &self.data.config,
                 )));
                 self.regional_inspection_open = false;
+                self.skill_selection_open = false;
                 self.chat_draft.clear();
                 self.sync_camera(TilePos::new(8, 6));
                 self.notifications.info("Connecting to the shared road…");
@@ -358,6 +367,7 @@ impl Game {
             UiAction::Reconnect => match &mut self.mode {
                 ClientMode::Online(client) => {
                     self.regional_inspection_open = false;
+                    self.skill_selection_open = false;
                     if !client.reconnect() {
                         self.notifications
                             .warning("Wait for the reconnect cooldown to finish.");
@@ -369,6 +379,7 @@ impl Game {
                         &self.data.config,
                     )));
                     self.regional_inspection_open = false;
+                    self.skill_selection_open = false;
                     self.sync_camera(TilePos::new(8, 6));
                     self.notifications.info("Connecting to the shared road…");
                 }
@@ -390,6 +401,12 @@ impl Game {
             UiAction::Move(dx, dy) => self.queue_movement(dx, dy),
             UiAction::MoveTo(tile) => self.move_toward(tile),
             UiAction::Interact(id) => self.interact(&id),
+            UiAction::Practice(skill_id) => {
+                self.skill_selection_open = false;
+                if let ClientMode::Online(client) = &mut self.mode {
+                    client.queue_skill_practice(skill_id);
+                }
+            }
             UiAction::RegionalEvent(intervention) => {
                 if let ClientMode::Online(client) = &mut self.mode {
                     client.queue_region_intervention(intervention);
@@ -458,12 +475,25 @@ impl Game {
     fn interact(&mut self, id: &str) {
         if id == "region-details" {
             if matches!(&self.mode, ClientMode::Online(_)) {
+                self.skill_selection_open = false;
                 self.regional_inspection_open = !self.regional_inspection_open;
+            }
+            return;
+        }
+        if id == "skill-close" {
+            self.skill_selection_open = false;
+            return;
+        }
+        if id == "practice" {
+            if matches!(&self.mode, ClientMode::Online(_)) {
+                self.regional_inspection_open = false;
+                self.skill_selection_open = true;
             }
             return;
         }
         if matches!(id, "logout" | "delete-account") {
             self.regional_inspection_open = false;
+            self.skill_selection_open = false;
         }
         if let ClientMode::Online(client) = &mut self.mode {
             match id {
@@ -613,7 +643,6 @@ impl Game {
                 "expedition" => client.queue_expedition_cycle(),
                 "chronicle" => client.refresh_tavern(),
                 "report" => client.queue_report(),
-                "practice" => client.queue_phase4("practice"),
                 "knowledge" => {
                     let own = client
                         .account

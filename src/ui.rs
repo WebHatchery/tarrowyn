@@ -43,6 +43,7 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
     }
     draw_sidebar(&ctx, mouse, &mut actions);
     ui_online::draw_regional_inspection(&ctx, mouse, &mut actions);
+    ui_online::draw_skill_selection(&ctx, mouse, &mut actions);
     if let Some(crafting) = ctx.crafting {
         ui_crafting::draw(crafting, mouse, &mut actions);
         actions
@@ -58,6 +59,12 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
                     UiAction::Interact(id)
                         if matches!(id.as_str(), "region-details" | "route-escort" | "route-improve")
                 )
+        });
+    }
+    if ctx.skill_selection_open {
+        actions.retain(|action| {
+            matches!(action, UiAction::Practice(_))
+                || matches!(action, UiAction::Interact(id) if id == "skill-close")
         });
     }
 

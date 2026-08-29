@@ -127,7 +127,7 @@ orders, knowledge, household, and local-combat endpoints. Phase 5 adds
 `/v1/support/account`, `/v1/support/repair`, `/v1/moderation/report`, `/v1/ops/health`,
 `/v1/ops/metrics`, `/v1/chronicle/search`, and `/v1/skills`; the latter exposes
 the server-owned root catalogue, vague merger hints, authoritative
-per-character mastery, a touchable first-practice action for every root, a
+per-character mastery, a touchable chooser for every available root practice, a
 school lesson action for qualified nearby players, and varied adventurer
 credentials in player projections. See the Phase 5 and Phase 6 runbooks.
 

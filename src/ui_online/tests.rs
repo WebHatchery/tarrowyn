@@ -40,3 +40,35 @@ fn combat_side_control_exposes_retreat_or_contract_by_state() {
         ("retreat", "Retreat")
     );
 }
+
+#[test]
+fn skill_selection_keeps_roots_open_and_advanced_arts_hidden() {
+    let available = tarrowyn_protocol::SkillView {
+        skill_id: "fishing".to_owned(),
+        name: "Fishing".to_owned(),
+        family: tarrowyn_protocol::SkillFamily::Gathering,
+        depth: 1,
+        mastery: 0,
+        status: tarrowyn_protocol::SkillStatus::Available,
+        description: "Read water.".to_owned(),
+        entry_hint: "Make a first catch.".to_owned(),
+    };
+    let practising = tarrowyn_protocol::SkillView {
+        status: tarrowyn_protocol::SkillStatus::Practising,
+        mastery: 2,
+        ..available.clone()
+    };
+    let advanced = tarrowyn_protocol::SkillView {
+        depth: 2,
+        status: tarrowyn_protocol::SkillStatus::Resonating,
+        ..available.clone()
+    };
+    let mastered = tarrowyn_protocol::SkillView {
+        status: tarrowyn_protocol::SkillStatus::Mastered,
+        mastery: 5,
+        ..available
+    };
+    assert!(skill_practice_choice(&practising));
+    assert!(!skill_practice_choice(&advanced));
+    assert!(!skill_practice_choice(&mastered));
+}
