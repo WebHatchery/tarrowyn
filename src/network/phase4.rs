@@ -14,6 +14,7 @@ use tarrowyn_protocol::{
 mod combat;
 mod lifecycle;
 mod recovery;
+mod registry;
 mod summary;
 
 enum Phase4Command {
@@ -336,41 +337,6 @@ impl Phase4Client {
                 target: None,
                 cost: None,
                 tax_rate_percent: Some(next),
-            }));
-    }
-
-    fn queue_claim(&mut self, request_id: String) {
-        let (action, claim_id) = match self.claims.as_ref().and_then(|claims| claims.claims.last())
-        {
-            None => (ClaimLifecycleAction::Request, None),
-            Some(claim) => {
-                let action = match claim.status {
-                    tarrowyn_protocol::ClaimLifecycleStatus::Requested => {
-                        ClaimLifecycleAction::Approve
-                    }
-                    tarrowyn_protocol::ClaimLifecycleStatus::Active
-                    | tarrowyn_protocol::ClaimLifecycleStatus::Renewed
-                    | tarrowyn_protocol::ClaimLifecycleStatus::Transferred
-                    | tarrowyn_protocol::ClaimLifecycleStatus::Inherited => {
-                        ClaimLifecycleAction::Renew
-                    }
-                    tarrowyn_protocol::ClaimLifecycleStatus::Abandoned
-                    | tarrowyn_protocol::ClaimLifecycleStatus::Expired => {
-                        ClaimLifecycleAction::Reclaim
-                    }
-                    tarrowyn_protocol::ClaimLifecycleStatus::Reclaimed => {
-                        ClaimLifecycleAction::Request
-                    }
-                };
-                (action, Some(claim.claim_id.clone()))
-            }
-        };
-        self.commands
-            .push_back(Phase4Command::Claim(ClaimLifecycleRequest {
-                request_id,
-                action,
-                claim_id,
-                target_account_id: None,
             }));
     }
 

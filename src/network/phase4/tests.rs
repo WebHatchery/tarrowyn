@@ -71,6 +71,36 @@ fn crafting_tap_becomes_a_bounded_completion_request() {
 }
 
 #[test]
+fn registry_button_chooses_the_current_account_claim() {
+    let mut client = Phase4Client::new();
+    client.own_account_id = Some("account-1".to_owned());
+    client.claims = Some(ClaimsResponse {
+        claims: vec![
+            claim_for_test(
+                "own-lease",
+                Some("account-1"),
+                tarrowyn_protocol::ClaimLifecycleStatus::Active,
+            ),
+            claim_for_test(
+                "newer-other-lease",
+                Some("account-2"),
+                tarrowyn_protocol::ClaimLifecycleStatus::Active,
+            ),
+        ],
+        available_plots: Vec::new(),
+        lease_duration_days: 90,
+        cursor: 2,
+    });
+
+    client.queue_cycle("registry", "registry-1".to_owned());
+    let Some(Phase4Command::Claim(request)) = client.commands.pop_front() else {
+        panic!("the registry should queue a claim lifecycle request");
+    };
+    assert_eq!(request.action, ClaimLifecycleAction::Renew);
+    assert_eq!(request.claim_id.as_deref(), Some("own-lease"));
+}
+
+#[test]
 fn practice_button_queues_the_next_unstarted_root() {
     let mut client = Phase4Client::new();
     client.skills = Some(SkillsResponse {
@@ -271,4 +301,29 @@ fn school_button_joins_an_open_lesson_for_the_learner() {
     assert_eq!(request.action, SkillAction::CompleteLesson);
     assert_eq!(request.lesson_id.as_deref(), Some("school-lesson-1"));
     assert_eq!(request.target_account_id.as_deref(), Some("teacher-1"));
+}
+
+fn claim_for_test(
+    claim_id: &str,
+    owner_account_id: Option<&str>,
+    status: tarrowyn_protocol::ClaimLifecycleStatus,
+) -> tarrowyn_protocol::ClaimRecord {
+    tarrowyn_protocol::ClaimRecord {
+        claim_id: claim_id.to_owned(),
+        plot_id: format!("plot-{claim_id}"),
+        owner_account_id: owner_account_id.map(str::to_owned),
+        owner_name: owner_account_id.map(|_| "Resident".to_owned()),
+        position: tarrowyn_protocol::Position { x: 1, y: 1 },
+        lease_days: 90,
+        started_tick: 1,
+        expires_tick: 100,
+        started_at_unix_seconds: 1,
+        expires_at_unix_seconds: 100,
+        last_active_tick: 1,
+        status,
+        approved_by: None,
+        building_access: true,
+        protected_goods_policy: "Safe".to_owned(),
+        inspection_note: "Recorded for the test.".to_owned(),
+    }
 }
