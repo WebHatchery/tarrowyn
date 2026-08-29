@@ -516,6 +516,8 @@ The same boundary now rejects future claim activity and a zero reclaim window,
 with two claim-focused regressions.
 Expedition persistence now bounds the outpost and member display text and
 rejects control characters, with two expedition-focused regressions.
+Chronicle persistence now rejects entries dated beyond the authoritative tick,
+with one chronicle-focused regression.
 
 The cross-layer persistence-readiness milestone passed the full release gate on
 2026-08-30 after the core and Phase 3-6 integrity additions: 14 protocol tests,

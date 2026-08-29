@@ -176,3 +176,23 @@ fn malformed_phase3_expedition_member_name_degrades_readiness() {
     assert!(!health.ready);
     assert!(!health.integrity_ok);
 }
+
+#[test]
+fn future_phase3_chronicle_entry_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    seeded_claim(&repository);
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        let future_tick = state.tick.saturating_add(1);
+        state
+            .phase3
+            .chronicle
+            .back_mut()
+            .expect("chronicle entry")
+            .created_tick = future_tick;
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}

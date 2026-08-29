@@ -221,6 +221,7 @@ fn chronicle_entries_ok(state: &RepositoryState) -> bool {
             || entry.kind.trim().is_empty()
             || entry.title.trim().is_empty()
             || entry.text.trim().is_empty()
+            || entry.created_tick > state.tick
             || entry.cursor <= previous_cursor
             || !cursor_in_world(entry.cursor, state.cursor)
         {
