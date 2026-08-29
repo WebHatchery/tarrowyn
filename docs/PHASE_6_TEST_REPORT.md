@@ -421,3 +421,12 @@ map identity, and event cursor state. The cross-subsystem release gate passed on
 2026-08-30: 14 protocol tests, 252 server tests, and 93 client tests, followed
 by asset and code-standard checks, clippy, Windows and WebGL release builds,
 packaging, Preview deployment, and catalog synchronization.
+
+Phase 6 persistence readiness now also rejects broken production-account links,
+orphaned or unmirrored production sessions, malformed audit outcomes, orphaned
+moderation timestamps, invalid replay-cache references, malformed deletion
+queue keys, and inconsistent backup metadata. Five focused regressions cover
+those Phase 6 boundaries. The scoped validation passed on 2026-08-30 with 26
+integrity tests, server-only clippy, and the project publisher's Windows and
+WebGL builds, packaging, Preview deployment, and catalog synchronization; the
+workspace test gate remains reserved for the next major milestone.

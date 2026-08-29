@@ -499,6 +499,7 @@ fn integrity_ok(state: &RepositoryState, config: &ServerConfig) -> bool {
     identity_ids_ok
         && super::phase4_integrity::ok(state)
         && super::persistent_integrity::ok(state, config)
+        && super::production_integrity::ok(state)
         && !state.phase5.locations.is_empty()
         && !state.phase5.routes.is_empty()
         && !state.phase5.settlements.is_empty()
