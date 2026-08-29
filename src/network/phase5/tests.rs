@@ -17,22 +17,40 @@ fn route_repair_button_queues_an_authoritative_repair() {
         season: "thaw".to_owned(),
         calendar_day: 1,
         locations: Vec::new(),
-        routes: vec![RouteRecord {
-            route_id: "north-pack-road".to_owned(),
-            name: "North Pack Road".to_owned(),
-            origin_location_id: "hearth".to_owned(),
-            destination_location_id: "whisperwood-outpost".to_owned(),
-            transport: "pack road".to_owned(),
-            length: 6,
-            risk_percent: 44,
-            condition: 42,
-            capacity: 3,
-            travel_ticks: 6,
-            repair_cost: 4,
-            status: RouteStatus::Threatened,
-            last_action_tick: 0,
-            note: "The road needs a repair crew.".to_owned(),
-        }],
+        routes: vec![
+            RouteRecord {
+                route_id: "north-pack-road".to_owned(),
+                name: "North Pack Road".to_owned(),
+                origin_location_id: "hearth".to_owned(),
+                destination_location_id: "whisperwood-outpost".to_owned(),
+                transport: "pack road".to_owned(),
+                length: 6,
+                risk_percent: 44,
+                condition: 42,
+                capacity: 3,
+                travel_ticks: 6,
+                repair_cost: 4,
+                status: RouteStatus::Threatened,
+                last_action_tick: 0,
+                note: "The road needs a repair crew.".to_owned(),
+            },
+            RouteRecord {
+                route_id: "watch-trail".to_owned(),
+                name: "Watch Trail".to_owned(),
+                origin_location_id: "whisperwood-outpost".to_owned(),
+                destination_location_id: "saltmere".to_owned(),
+                transport: "pack route".to_owned(),
+                length: 9,
+                risk_percent: 34,
+                condition: 55,
+                capacity: 1,
+                travel_ticks: 9,
+                repair_cost: 5,
+                status: RouteStatus::Delayed,
+                last_action_tick: 0,
+                note: "The trail needs a repair crew.".to_owned(),
+            },
+        ],
         visible_settlements: Vec::new(),
         player_location_id: "hearth".to_owned(),
         travel: None,
@@ -46,6 +64,20 @@ fn route_repair_button_queues_an_authoritative_repair() {
         client.commands.front(),
         Some(Phase5Command::Route(request))
             if request.route_id == "north-pack-road"
+                && request.action == RouteAction::Repair
+    ));
+
+    client.commands.clear();
+    client
+        .region
+        .as_mut()
+        .expect("regional projection")
+        .player_location_id = "whisperwood-outpost".to_owned();
+    client.queue_cycle("route-repair");
+    assert!(matches!(
+        client.commands.front(),
+        Some(Phase5Command::Route(request))
+            if request.route_id == "watch-trail"
                 && request.action == RouteAction::Repair
     ));
 }
