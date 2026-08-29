@@ -152,6 +152,12 @@ fn create_trade(
     else {
         return rejected_trade(request, "That player is not known to the settlement.");
     };
+    if !trade_room(&mut state.trades) {
+        return rejected_trade(
+            request,
+            "The trade ledger is full; settle or cancel an existing trade before adding another.",
+        );
+    }
     let trade = TradeOffer {
         trade_id: format!("trade-{}", state.next_trade),
         creator_account_id: creator.account_id.clone(),
@@ -166,7 +172,6 @@ fn create_trade(
     };
     state.next_trade += 1;
     state.trades.insert(trade.trade_id.clone(), trade.clone());
-    trim_map(&mut state.trades, MAX_TRADES);
     accepted_trade(request, trade)
 }
 
@@ -352,12 +357,31 @@ fn identity_key_for_account(state: &RepositoryState, account_id: &str) -> Option
         .map(|(key, _)| key.clone())
 }
 
-fn trim_map<K: Clone + std::hash::Hash + Eq, V>(map: &mut HashMap<K, V>, max: usize) {
-    while map.len() > max {
-        if let Some(key) = map.keys().next().cloned() {
-            map.remove(&key);
-        } else {
-            break;
-        }
+fn trade_room(trades: &mut HashMap<String, TradeOffer>) -> bool {
+    trim_trade_history(trades);
+    if trades.len() < MAX_TRADES {
+        return true;
     }
+
+    let Some(oldest_terminal_id) = oldest_terminal_trade_id(trades) else {
+        return false;
+    };
+    trades.remove(&oldest_terminal_id).is_some()
+}
+
+pub(super) fn trim_trade_history(trades: &mut HashMap<String, TradeOffer>) {
+    while trades.len() > MAX_TRADES {
+        let Some(oldest_terminal_id) = oldest_terminal_trade_id(trades) else {
+            break;
+        };
+        trades.remove(&oldest_terminal_id);
+    }
+}
+
+fn oldest_terminal_trade_id(trades: &HashMap<String, TradeOffer>) -> Option<String> {
+    trades
+        .iter()
+        .filter(|(_, trade)| trade.status != TradeStatus::Pending)
+        .min_by_key(|(_, trade)| trade.created_tick)
+        .map(|(trade_id, _)| trade_id.clone())
 }

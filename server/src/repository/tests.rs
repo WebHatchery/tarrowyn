@@ -12,6 +12,7 @@ mod events;
 mod persistence;
 mod reset;
 mod telemetry;
+mod trade_retention;
 
 fn repo() -> WorldRepository {
     WorldRepository::new(ServerConfig {

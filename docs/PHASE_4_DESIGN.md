@@ -29,6 +29,11 @@ proposals leave room for new work while proposed and approved work remains
 addressable; when every retained slot is active, another proposal is rejected
 without changing the ledger.
 
+The direct-trade ledger retains at most 128 offers. Pending offers remain
+addressable until they are accepted, cancelled, or expired; terminal history is
+evicted oldest-first when room is needed. If all retained offers are still
+pending, a new offer is rejected without changing either player's inventory.
+
 The launch mayoral loop also posts a narrow public settlement tax. The default
 policy charges 5% of carried gold once per world day from recognised players
 within four Manhattan tiles of the Hearth; the policy never removes items and

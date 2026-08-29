@@ -199,6 +199,8 @@ impl RepositoryState {
         if phase4.governance.taxation.is_none() {
             phase4.governance.taxation = Some(super::phase4::default_tax_policy());
         }
+        let mut trades = stored.trades;
+        super::trades::trim_trade_history(&mut trades);
         let lease_days = super::phase4::lease_duration_days(config);
         let now = super::phase4::unix_time_seconds();
         for claim in &mut phase4.claims {
@@ -257,7 +259,7 @@ impl RepositoryState {
             events: trim_queue(stored.events, MAX_EVENTS),
             chat_history: trim_queue(stored.chat_history, MAX_CHAT_HISTORY),
             notices: trim_queue(stored.notices, MAX_NOTICES),
-            trades: stored.trades,
+            trades,
             phase3,
             phase4,
             phase5,
