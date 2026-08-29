@@ -13,13 +13,16 @@ Reconnect after the server schedules the authoritative deletion tick.
 The client also polls readiness and turns configured maintenance or degraded
 health into visible next-step status guidance.
 It preserves structured API error codes through the shared toolkit and, when a
-restore invalidates its event cursor, clears stale history projections and
-reloads the authoritative state from cursor zero while keeping the road open.
+restore or retained-history boundary invalidates its event cursor, clears stale
+history projections and reloads the authoritative state from cursor zero while
+keeping the road open.
 
 The measured scope is deliberately regional: one worker, 24 concurrent-client
 target, bounded queues, and selectable JSON/MySQL persistence. The local Phase 6
-mixed-load drill passed with 24 clients, three rounds, 624 requests, and 4,693.53
-ms wall time, including backup and restart recovery. The accelerated long-session
+mixed-load drill passed with 24 clients, three rounds, 624 requests, and 5,390.96
+ms wall time, including backup and restart recovery. The same drill crossed the
+2,048-record event window and verified `cursor_stale` on both event endpoints.
+The accelerated long-session
 fixture also crosses all four development seasons while checking lease, tax,
 market, household, chronicle, and newcomer continuity. Season labels also come
 from the validated region calendar; the configured real-time day length remains

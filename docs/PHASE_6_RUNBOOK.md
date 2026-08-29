@@ -59,6 +59,9 @@ and event cursor without access, refresh, or provider secrets, and that an
 ordinary player receives HTTP 403 for the same view.
 It also sends deliberately ahead cursors to both event endpoints and requires
 the structured HTTP 409 `cursor_ahead` response before starting the mixed load.
+After the mixed load, it temporarily advances a 1 ms worker past the 2,048
+record retention window and requires structured HTTP 409 `cursor_stale` responses
+from both endpoints before restoring the normal 250 ms cadence and restart check.
 It also checks price pressure, scarce goods, NPC fallback, abandoned claims,
 declining settlements, newcomer access, and alert fields in operator metrics,
 then proves ordinary players cannot read that endpoint.

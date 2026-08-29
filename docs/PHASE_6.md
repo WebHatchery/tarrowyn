@@ -154,21 +154,22 @@ Suggested production-facing additions include:
 | `GET /v1/chronicle/search` | Search or summarise long-lived regional history with access controls. |
 
 The client must handle session expiry, maintenance, deployment mismatch,
-rate-limiting, moderation responses, restore-era cursor invalidation, and
+rate-limiting, moderation responses, restore- or retention-era cursor invalidation, and
 regional handoff. It must never present a locally cached success as an
 authoritative reward. Shared response decoding rejects a protocol-version
 mismatch before any endpoint projection can be applied; the client surfaces
 that failure through its visible recovery state and `Reconnect` control.
 The shared toolkit also preserves structured API error codes across native and
 browser transport paths. When `/v1/events` reports `cursor_ahead` after a
-restore, the client keeps the connection open, clears cursor-derived players,
+restore or `cursor_stale` after the retained window is crossed, the client keeps
+the connection open, clears cursor-derived players,
 chat, feed, chronicle, frontier, and reward projections, cancels stale state
 and chronicle requests, and immediately reloads `/v1/state` plus history from
 cursor zero. This prevents a restored server from being presented with cached
 history or a stale cursor. The embedded regional client follows the same
 boundary for `/v1/events/region`: it advances from the returned cursor, merges
 changed event stages by stable ID, and clears/restarts its regional cache when
-the server reports `cursor_ahead`.
+the server reports `cursor_ahead` or `cursor_stale`.
 
 ## Acceptance test
 
