@@ -1,4 +1,5 @@
 use super::super::{ServerConfig, WorldRepository};
+use tarrowyn_protocol::LocalCombatStatus;
 use tarrowyn_protocol::{ClaimLifecycleAction, ClaimLifecycleRequest};
 use tarrowyn_protocol::{GovernanceAction, GovernanceRequest, GuestSessionRequest, PublicAction};
 use tarrowyn_protocol::{MaterialStock, ProfessionKind, ServiceOrder, ServiceOrderStatus};
@@ -403,6 +404,55 @@ fn malformed_phase4_capability_degrades_readiness() {
             .first_mut()
             .expect("capability")
             .level = 0;
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+fn seeded_phase4_combat(repository: &WorldRepository) -> String {
+    let session = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("phase4-combat-state".to_owned()),
+            reset: false,
+        })
+        .expect("guest session")
+        .data;
+    repository
+        .combat_status(&session.account_token)
+        .expect("combat status");
+    session.client_key
+}
+
+#[test]
+fn out_of_range_phase4_combat_health_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let identity_key = seeded_phase4_combat(&repository);
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state
+            .phase4
+            .combat
+            .get_mut(&identity_key)
+            .expect("combat")
+            .enemy_health = 4;
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
+fn inconsistent_phase4_combat_status_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let identity_key = seeded_phase4_combat(&repository);
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        let combat = state.phase4.combat.get_mut(&identity_key).expect("combat");
+        combat.status = LocalCombatStatus::Victorious;
+        combat.enemy_health = 1;
     }
 
     let health = repository.ops_health().data;

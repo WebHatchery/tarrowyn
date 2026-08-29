@@ -538,6 +538,9 @@ discoverer entries, with two focused knowledge regressions.
 Phase 4 profession profiles now enforce unique professions, valid capability
 levels, aligned capability professions, and bounded capability text, with two
 focused profile regressions.
+Phase 4 local-combat persistence now bounds encounter health, preserves stored
+property safety, and enforces status/health agreement, with two focused combat
+regressions.
 
 The cross-layer persistence-readiness milestone passed the full release gate on
 2026-08-30 after the core and Phase 3-6 integrity additions: 14 protocol tests,

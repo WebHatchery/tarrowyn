@@ -8,6 +8,7 @@ const MAX_HOUSEHOLD_TEXT_CHARS: usize = 80;
 const MAX_HOUSEHOLD_MEMBERS: usize = 20;
 const MAX_KNOWLEDGE_ID_CHARS: usize = 160;
 const MAX_KNOWLEDGE_TEXT_CHARS: usize = 240;
+const MAX_COMBAT_TEXT_CHARS: usize = 160;
 
 pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
     let account_ids: HashSet<&str> = state
@@ -291,6 +292,31 @@ pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
             .animals
             .iter()
             .all(|animal| animal.max_condition > 0 && animal.condition <= animal.max_condition);
+    let combat_ok = state.phase4.combat.values().all(|combat| {
+        bounded_text(&combat.encounter_id, MAX_COMBAT_TEXT_CHARS)
+            && bounded_text(&combat.enemy_name, MAX_COMBAT_TEXT_CHARS)
+            && combat.enemy_health <= 3
+            && combat.player_health <= 2
+            && (1..=3).contains(&combat.injury_limit)
+            && combat.recovery_cost > 0
+            && bounded_text(&combat.carried_risk, MAX_COMBAT_TEXT_CHARS)
+            && combat.stored_property_safe
+            && match combat.status {
+                tarrowyn_protocol::LocalCombatStatus::Ready => {
+                    combat.turn == 0 && combat.enemy_health > 0 && combat.player_health > 0
+                }
+                tarrowyn_protocol::LocalCombatStatus::Engaged => {
+                    combat.enemy_health > 0 && combat.player_health > 0
+                }
+                tarrowyn_protocol::LocalCombatStatus::Victorious => combat.enemy_health == 0,
+                tarrowyn_protocol::LocalCombatStatus::KnockedOut => combat.player_health == 0,
+                tarrowyn_protocol::LocalCombatStatus::Retreated => {
+                    combat.enemy_health > 0 && combat.player_health > 0
+                }
+            }
+            && (!combat.reposition_ready
+                || combat.status == tarrowyn_protocol::LocalCombatStatus::Engaged)
+    });
     let available_plots_ok = unique_positions(
         state
             .phase4
@@ -314,6 +340,7 @@ pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
         && identity_keyed_state_ok
         && profiles_ok
         && animals_ok
+        && combat_ok
         && available_plots_ok
 }
 
