@@ -203,9 +203,13 @@ impl WorldRepository {
             reason,
         };
         if accepted {
+            let locations = [
+                route.origin_location_id.as_str(),
+                route.destination_location_id.as_str(),
+            ];
             record_regional(
                 &mut state,
-                &[current.as_str()],
+                &locations,
                 "route logistics",
                 "A player action changed the route's cost, risk, or capacity.",
             );
