@@ -126,7 +126,11 @@ impl WorldRepository {
                 format!("Use the configured {} provider.", IDENTITY_PROVIDER),
             ));
         }
-        if request.subject.trim().is_empty() || request.subject.len() > 160 {
+        let subject = request.subject.trim().to_owned();
+        if subject.is_empty()
+            || subject.chars().count() > 160
+            || subject.chars().any(char::is_control)
+        {
             return Err(RepositoryError::new(
                 400,
                 "invalid_subject",
@@ -164,9 +168,12 @@ impl WorldRepository {
                 "This guest character is already linked; continue with its existing identity.",
             ));
         }
-        if state.phase6.accounts.values().any(|account| {
-            account.provider == request.provider && account.subject == request.subject
-        }) {
+        if state
+            .phase6
+            .accounts
+            .values()
+            .any(|account| account.provider == request.provider && account.subject == subject)
+        {
             return Err(RepositoryError::new(
                 409,
                 "identity_already_linked",
@@ -177,9 +184,7 @@ impl WorldRepository {
             .phase6
             .accounts
             .values()
-            .find(|account| {
-                account.provider == request.provider && account.subject == request.subject
-            })
+            .find(|account| account.provider == request.provider && account.subject == subject)
             .map(|account| account.account_id.clone())
             .unwrap_or_else(|| {
                 let id = format!("account-{}", state.phase6.next_account_id);
@@ -232,7 +237,7 @@ impl WorldRepository {
             ProductionAccount {
                 account_id: account_id.clone(),
                 provider: request.provider.clone(),
-                subject: request.subject,
+                subject,
                 identity_key: guest_key.clone(),
                 guest_linked: true,
             },

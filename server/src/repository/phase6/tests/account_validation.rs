@@ -35,6 +35,37 @@ fn account_link_rejects_unbounded_or_controlled_display_names() {
 }
 
 #[test]
+fn account_link_rejects_unbounded_or_controlled_provider_subjects() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("account-subject-validation".to_owned()),
+            reset: false,
+        })
+        .expect("guest session")
+        .data;
+
+    for (subject, request_id) in [
+        ("x".repeat(161), "long-subject".to_owned()),
+        ("safe\nsubject".to_owned(), "control-subject".to_owned()),
+    ] {
+        let error = repository
+            .auth_link(
+                &session.account_token,
+                AuthLinkRequest {
+                    request_id,
+                    provider: PROVIDER.to_owned(),
+                    subject,
+                    display_name: None,
+                },
+            )
+            .expect_err("invalid provider subject should be rejected");
+        assert_eq!(error.status, 400);
+        assert_eq!(error.error.code, "invalid_subject");
+    }
+}
+
+#[test]
 fn guest_session_rejects_unbounded_or_controlled_client_keys() {
     let repository = WorldRepository::new(ServerConfig::default());
 
