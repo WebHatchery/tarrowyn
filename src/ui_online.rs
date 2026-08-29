@@ -1,5 +1,5 @@
 use super::*;
-use tarrowyn_protocol::RouteStatus;
+use tarrowyn_protocol::{RouteStatus, TradeStatus};
 
 pub(super) fn draw_sidebar(
     ctx: &UiContext<'_>,
@@ -42,6 +42,19 @@ pub(super) fn draw_sidebar(
 
     draw_combat_status(ctx, content, top);
 
+    let has_pending_trade = ctx.trades.iter().any(|trade| {
+        trade.status == TradeStatus::Pending
+            && ctx.own_account_id.is_some_and(|account_id| {
+                trade.creator_account_id == account_id || trade.recipient_account_id == account_id
+            })
+    });
+    let has_incoming_trade = ctx.trades.iter().any(|trade| {
+        trade.status == TradeStatus::Pending
+            && ctx
+                .own_account_id
+                .is_some_and(|account_id| trade.recipient_account_id == account_id)
+    });
+
     draw_button_row(
         content,
         top + 141.0,
@@ -52,7 +65,18 @@ pub(super) fn draw_sidebar(
             ("tend", "Tend", true, ButtonTone::Positive),
             ("harvest", "Harvest", true, ButtonTone::Positive),
             ("animal", "Care", true, ButtonTone::Positive),
-            ("trade", "Trade", true, ButtonTone::Positive),
+            (
+                "trade",
+                if has_pending_trade { "Review" } else { "Trade" },
+                true,
+                ButtonTone::Positive,
+            ),
+            (
+                "accept-trade",
+                "Accept",
+                has_incoming_trade,
+                ButtonTone::Positive,
+            ),
         ],
         ctx,
         actions,

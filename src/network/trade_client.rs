@@ -1,6 +1,21 @@
 use super::*;
+use tarrowyn_protocol::TradeStatus;
 
 impl OnlineClient {
+    pub(crate) fn pending_trade_for(&self, account_id: &str) -> Option<&TradeOffer> {
+        self.projection.trades.iter().find(|trade| {
+            trade.status == TradeStatus::Pending
+                && (trade.creator_account_id == account_id
+                    || trade.recipient_account_id == account_id)
+        })
+    }
+
+    pub(crate) fn incoming_trade_for(&self, account_id: &str) -> Option<&TradeOffer> {
+        self.projection.trades.iter().find(|trade| {
+            trade.status == TradeStatus::Pending && trade.recipient_account_id == account_id
+        })
+    }
+
     pub fn queue_trade(&mut self, mut request: TradeRequest) {
         if self.state != ConnectionState::Online {
             return;

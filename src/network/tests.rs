@@ -272,3 +272,48 @@ fn trade_backpressure_does_not_claim_pending_confirmation() {
     assert!(client.status_message.contains("trade ledger is busy"));
     assert_eq!(client.trade_queue.len(), super::queue::MAX_PENDING_COMMANDS);
 }
+
+#[test]
+fn trade_projection_selects_pending_and_incoming_offers_for_visible_actions() {
+    let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
+    client.projection.trades = vec![
+        tarrowyn_protocol::TradeOffer {
+            trade_id: "outgoing".to_owned(),
+            creator_account_id: "me".to_owned(),
+            creator_name: "Me".to_owned(),
+            recipient_account_id: "friend".to_owned(),
+            recipient_name: "Friend".to_owned(),
+            offer: Default::default(),
+            request: Default::default(),
+            status: tarrowyn_protocol::TradeStatus::Pending,
+            created_tick: 1,
+            expires_tick: 2,
+        },
+        tarrowyn_protocol::TradeOffer {
+            trade_id: "incoming".to_owned(),
+            creator_account_id: "friend".to_owned(),
+            creator_name: "Friend".to_owned(),
+            recipient_account_id: "me".to_owned(),
+            recipient_name: "Me".to_owned(),
+            offer: Default::default(),
+            request: Default::default(),
+            status: tarrowyn_protocol::TradeStatus::Pending,
+            created_tick: 3,
+            expires_tick: 4,
+        },
+    ];
+
+    assert_eq!(
+        client
+            .pending_trade_for("me")
+            .map(|trade| trade.trade_id.as_str()),
+        Some("outgoing")
+    );
+    assert_eq!(
+        client
+            .incoming_trade_for("me")
+            .map(|trade| trade.trade_id.as_str()),
+        Some("incoming")
+    );
+    assert!(client.pending_trade_for("stranger").is_none());
+}

@@ -205,6 +205,7 @@ impl Game {
                     own_account_id,
                     remote_players: &client.projection.players,
                     farm_animals: &client.projection.animals,
+                    trades: &client.projection.trades,
                     chat: &client.projection.chat,
                     chat_draft: &self.chat_draft,
                     server_tick: client.projection.server_tick,
@@ -259,6 +260,7 @@ impl Game {
                     own_account_id: None,
                     remote_players: &[],
                     farm_animals: &[],
+                    trades: &[],
                     chat: &[],
                     chat_draft: &self.chat_draft,
                     server_tick: 0,
@@ -479,27 +481,68 @@ impl Game {
                         .account
                         .as_ref()
                         .map(|account| account.account_id.as_str());
-                    if let Some(target) = client.projection.players.iter().find(|player| {
-                        Some(player.account_id.as_str()) != own
-                            && !player.stale(client.projection.server_tick)
-                    }) {
+                    let pending_trade_id = own.and_then(|account_id| {
+                        client
+                            .pending_trade_for(account_id)
+                            .map(|trade| trade.trade_id.clone())
+                    });
+                    if let Some(trade_id) = pending_trade_id {
                         client.queue_trade(TradeRequest {
                             request_id: String::new(),
-                            action: TradeAction::Create,
-                            trade_id: None,
-                            recipient_account_id: Some(target.account_id.clone()),
-                            offer: Some(TradeBundle {
-                                seeds: 1,
-                                ..TradeBundle::default()
-                            }),
-                            request: Some(TradeBundle {
-                                gold: 2,
-                                ..TradeBundle::default()
-                            }),
+                            action: TradeAction::Review,
+                            trade_id: Some(trade_id),
+                            recipient_account_id: None,
+                            offer: None,
+                            request: None,
+                        });
+                    } else {
+                        let target = client.projection.players.iter().find(|player| {
+                            Some(player.account_id.as_str()) != own
+                                && !player.stale(client.projection.server_tick)
+                        });
+                        if let Some(target) = target {
+                            client.queue_trade(TradeRequest {
+                                request_id: String::new(),
+                                action: TradeAction::Create,
+                                trade_id: None,
+                                recipient_account_id: Some(target.account_id.clone()),
+                                offer: Some(TradeBundle {
+                                    seeds: 1,
+                                    ..TradeBundle::default()
+                                }),
+                                request: Some(TradeBundle {
+                                    gold: 2,
+                                    ..TradeBundle::default()
+                                }),
+                            });
+                        } else {
+                            self.notifications
+                                .warning("Another player must be present before offering a seed.");
+                        }
+                    }
+                }
+                "accept-trade" => {
+                    let own = client
+                        .account
+                        .as_ref()
+                        .map(|account| account.account_id.as_str());
+                    let incoming_trade_id = own.and_then(|account_id| {
+                        client
+                            .incoming_trade_for(account_id)
+                            .map(|trade| trade.trade_id.clone())
+                    });
+                    if let Some(trade_id) = incoming_trade_id {
+                        client.queue_trade(TradeRequest {
+                            request_id: String::new(),
+                            action: TradeAction::Accept,
+                            trade_id: Some(trade_id),
+                            recipient_account_id: None,
+                            offer: None,
+                            request: None,
                         });
                     } else {
                         self.notifications
-                            .warning("Another player must be present before offering a seed.");
+                            .warning("No pending trade is waiting for this character.");
                     }
                 }
                 "contract" => client.queue_contract_cycle(),

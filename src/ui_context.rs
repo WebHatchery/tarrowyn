@@ -5,7 +5,7 @@ use macroquad_toolkit::grid::TilePos;
 use macroquad_toolkit::ui::VirtualUi;
 use tarrowyn_protocol::{
     ChatMessage, ChronicleEntry, ChronicleSummary, LocalCombatState, OpportunitySignal,
-    RegionSnapshot, TimeOfDay, WildernessZone,
+    RegionSnapshot, TimeOfDay, TradeOffer, WildernessZone,
 };
 
 #[derive(Debug, Clone, PartialEq)]
@@ -38,6 +38,7 @@ pub struct UiContext<'a> {
     pub own_account_id: Option<&'a str>,
     pub remote_players: &'a [RemotePlayer],
     pub farm_animals: &'a [tarrowyn_protocol::FarmAnimal],
+    pub trades: &'a [TradeOffer],
     pub chat: &'a [ChatMessage],
     pub chat_draft: &'a str,
     pub server_tick: u64,
