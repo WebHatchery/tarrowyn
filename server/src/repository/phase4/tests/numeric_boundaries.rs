@@ -22,3 +22,13 @@ fn infrastructure_upkeep_cannot_wrap_into_a_funded_treasury() {
         .iter()
         .all(|record| record.condition == 95));
 }
+
+#[test]
+fn lease_duration_days_saturates_at_the_protocol_ceiling() {
+    let config = ServerConfig {
+        lease_duration_seconds: u64::MAX,
+        ..ServerConfig::default()
+    };
+
+    assert_eq!(super::super::lease_duration_days(&config), u32::MAX);
+}

@@ -266,7 +266,7 @@ pub(super) fn unix_time_seconds() -> u64 {
 }
 
 pub(super) fn lease_duration_days(config: &ServerConfig) -> u32 {
-    (config.lease_duration_seconds / (24 * 60 * 60)).max(1) as u32
+    u32::try_from((config.lease_duration_seconds / (24 * 60 * 60)).max(1)).unwrap_or(u32::MAX)
 }
 
 fn office(id: &str, kind: OfficeKind, title: &str, authority: &str) -> OfficeRecord {
