@@ -6,6 +6,11 @@ use std::collections::HashSet;
 use std::sync::OnceLock;
 use tarrowyn_protocol::SkillFamily;
 
+const MAX_SKILL_ID_CHARS: usize = 160;
+const MAX_SKILL_NAME_CHARS: usize = 120;
+const MAX_SKILL_TEXT_CHARS: usize = 512;
+const MAX_PREREQUISITES: usize = 16;
+
 pub(super) const SKILLS_JSON: &str =
     macroquad_toolkit::include_json_str!("../../../../assets/data/skills.json");
 
@@ -63,14 +68,15 @@ pub(super) fn validate_manifest(manifest: &SkillManifest) -> Result<(), String> 
         .iter()
         .map(|skill| skill.id.as_str())
         .collect();
-    if ids.len() != manifest.skills.len() || ids.iter().any(|id| id.trim().is_empty()) {
+    if ids.len() != manifest.skills.len() || ids.iter().any(|id| !bounded(id, MAX_SKILL_ID_CHARS)) {
         return Err("skill IDs must be unique and non-empty".to_owned());
     }
     for skill in &manifest.skills {
         if !(1..=5).contains(&skill.depth)
-            || skill.name.trim().is_empty()
-            || skill.description.trim().is_empty()
-            || skill.entry_hint.trim().is_empty()
+            || !bounded(&skill.name, MAX_SKILL_NAME_CHARS)
+            || !bounded(&skill.description, MAX_SKILL_TEXT_CHARS)
+            || !bounded(&skill.entry_hint, MAX_SKILL_TEXT_CHARS)
+            || skill.prerequisites.len() > MAX_PREREQUISITES
         {
             return Err(format!(
                 "skill {} has invalid identity, depth, description, or entry hint",
@@ -105,6 +111,40 @@ pub(super) fn validate_manifest(manifest: &SkillManifest) -> Result<(), String> 
         {
             return Err(format!("skill {} names an unknown prerequisite", skill.id));
         }
+        let mut prerequisites = HashSet::new();
+        if skill
+            .prerequisites
+            .iter()
+            .any(|id| !bounded(id, MAX_SKILL_ID_CHARS) || !prerequisites.insert(id.as_str()))
+        {
+            return Err(format!(
+                "skill {} has invalid or duplicate prerequisites",
+                skill.id
+            ));
+        }
+        if skill
+            .practice_key
+            .as_deref()
+            .is_some_and(|key| !bounded(key, MAX_SKILL_ID_CHARS) || !ids.contains(key))
+        {
+            return Err(format!("skill {} names an invalid practice key", skill.id));
+        }
+        if skill
+            .qualifying_event
+            .as_deref()
+            .is_some_and(|event| !bounded(event, MAX_SKILL_ID_CHARS))
+        {
+            return Err(format!(
+                "skill {} names an invalid qualifying event",
+                skill.id
+            ));
+        }
+        if skill.minimum_per_prerequisite == Some(0) {
+            return Err(format!(
+                "skill {} has a zero prerequisite threshold",
+                skill.id
+            ));
+        }
     }
     let mut visited = HashSet::new();
     for skill in &manifest.skills {
@@ -121,6 +161,12 @@ pub(super) fn validate_manifest(manifest: &SkillManifest) -> Result<(), String> 
         }
     }
     Ok(())
+}
+
+fn bounded(value: &str, max_chars: usize) -> bool {
+    !value.trim().is_empty()
+        && value.chars().count() <= max_chars
+        && !value.chars().any(char::is_control)
 }
 
 fn has_prerequisite_cycle(
