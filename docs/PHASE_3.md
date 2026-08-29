@@ -74,7 +74,9 @@ identity boundary clean. Credentials do not grant raw combat power.
   construction materials, safety, and people with complementary skills. Failure
   creates a retreat/recovery story instead of deleting characters. The first
   pioneer party is capped at 20 named members so its durable planning record
-  remains a bounded small-group projection.
+  remains a bounded small-group projection. Restored legacy records are trimmed
+  to the same window before they can be exposed or extended, with a retained
+  member selected as leader if the old leader fell outside that window.
 
 ## Server and protocol requirements
 

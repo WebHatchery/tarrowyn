@@ -1,7 +1,10 @@
 use super::*;
 use crate::config::ServerConfig;
 use crate::repository::WorldRepository;
-use tarrowyn_protocol::{ExpeditionAction, ExpeditionRequest, GuestSessionRequest};
+use tarrowyn_protocol::{
+    Expedition, ExpeditionAction, ExpeditionMember, ExpeditionRequest, ExpeditionRole,
+    ExpeditionStatus, GuestSessionRequest, Position,
+};
 
 fn guest(repository: &WorldRepository) -> tarrowyn_protocol::GuestSessionResponse {
     repository
@@ -167,4 +170,38 @@ fn pioneer_expedition_keeps_its_durable_member_list_bounded() {
             .len(),
         super::MAX_EXPEDITION_MEMBERS
     );
+}
+
+#[test]
+fn loading_an_oversized_pioneer_record_keeps_a_valid_leader_window() {
+    let mut phase = super::Phase3State::default();
+    phase.expedition = Some(Expedition {
+        expedition_id: "legacy-pioneer".to_owned(),
+        outpost_name: "Legacy Rest".to_owned(),
+        leader_account_id: "account-outside-window".to_owned(),
+        members: (0..=super::MAX_EXPEDITION_MEMBERS)
+            .map(|index| ExpeditionMember {
+                account_id: format!("account-{index}"),
+                display_name: format!("Member {index}"),
+                role: ExpeditionRole::Builder,
+            })
+            .collect(),
+        food: 6,
+        tools: 3,
+        materials: 8,
+        safety: 3,
+        status: ExpeditionStatus::Planning,
+        outcome: None,
+        outpost_position: Position { x: 14, y: 8 },
+    });
+
+    super::trim_expedition_members(&mut phase);
+
+    let expedition = phase.expedition.expect("legacy expedition");
+    assert_eq!(expedition.members.len(), super::MAX_EXPEDITION_MEMBERS);
+    assert_eq!(expedition.leader_account_id, "account-0");
+    assert!(expedition
+        .members
+        .iter()
+        .any(|member| member.account_id == expedition.leader_account_id));
 }

@@ -104,6 +104,22 @@ pub(super) fn fresh() -> Phase3State {
     Phase3State::default()
 }
 
+pub(super) fn trim_expedition_members(phase: &mut Phase3State) {
+    let Some(expedition) = phase.expedition.as_mut() else {
+        return;
+    };
+    expedition.members.truncate(MAX_EXPEDITION_MEMBERS);
+    if !expedition
+        .members
+        .iter()
+        .any(|member| member.account_id == expedition.leader_account_id)
+    {
+        if let Some(member) = expedition.members.first() {
+            expedition.leader_account_id = member.account_id.clone();
+        }
+    }
+}
+
 pub(super) fn archive_excess(phase: &mut Phase3State) {
     while phase.chronicle.len() > MAX_CHRONICLE {
         if let Some(entry) = phase.chronicle.pop_front() {
