@@ -37,6 +37,7 @@ fn core_ok(state: &RepositoryState, config: &ServerConfig, account_ids: &HashSet
             && (!identity.knocked_out || identity.injuries > 0)
             && identity.last_seen_tick <= state.tick
             && identity.last_tax_day <= state.clock.day
+            && super::super::skills::skill_ledger_integrity_ok(&identity.skills)
     });
     let plots_ok = unique_positions(state.plots.iter().map(|plot| plot.position))
         && state.plots.iter().all(|plot| {
