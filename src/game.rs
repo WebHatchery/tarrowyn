@@ -527,6 +527,7 @@ impl Game {
                         .find(|player| {
                             Some(player.account_id.as_str()) != own
                                 && !player.stale(client.projection.server_tick)
+                                && player.position == client.projection.player_position
                         })
                         .map(|player| player.account_id.clone());
                     match target {
