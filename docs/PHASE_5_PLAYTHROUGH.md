@@ -9,7 +9,7 @@ and settled the order at the destination. The market response changed from
 payment, and the order remained idempotent when its request was repeated.
 
 The settlements expose different conditions, vacancies, demands, resources,
-and chronicle projections. The regional event fixture moved from signal to
+public works, and free-plot projections. The regional event fixture moved from signal to
 escalation, accepted a ferry-marker intervention, and resolved with recorded
 effects on route safety, prices, and settlement confidence. The Maren household
 changed from considering to travelling or arrived as the bounded household

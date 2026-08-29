@@ -39,6 +39,26 @@
       "upkeep_per_day": 3,
       "service_quality": 70,
       "note": "Menders and healers report whether shared funding reaches them."
+    },
+    {
+      "id": "whisperwood-watchtower",
+      "name": "Whisperwood watchtower",
+      "kind": "public_building",
+      "position": {"x": 12, "y": 4},
+      "condition": 58,
+      "upkeep_per_day": 1,
+      "service_quality": 54,
+      "note": "The frontier watchtower marks a safe approach while the outpost is strained."
+    },
+    {
+      "id": "saltmere-quay",
+      "name": "Saltmere quay",
+      "kind": "service",
+      "position": {"x": 3, "y": 9},
+      "condition": 76,
+      "upkeep_per_day": 1,
+      "service_quality": 68,
+      "note": "The quay keeps the ferry ledger and landing service open."
     }
   ]
 }

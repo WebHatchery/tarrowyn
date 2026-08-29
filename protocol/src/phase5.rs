@@ -125,6 +125,12 @@ pub struct SettlementProjection {
     pub industry: u8,
     pub governance: u8,
     pub player_activity: u8,
+    #[serde(default)]
+    pub claim_count: u32,
+    #[serde(default)]
+    pub available_plot_count: u32,
+    #[serde(default)]
+    pub public_works: Vec<String>,
     pub condition: SettlementCondition,
     pub milestones: Vec<String>,
     pub vacancies: Vec<String>,

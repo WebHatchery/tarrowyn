@@ -160,7 +160,7 @@ fn household_templates_follow_the_validated_manifest() {
 #[test]
 fn infrastructure_profiles_follow_the_validated_manifest() {
     let profiles = super::infrastructure_profiles();
-    assert_eq!(profiles.len(), 4);
+    assert_eq!(profiles.len(), 6);
     assert_eq!(profiles[0].id, "north-road");
     assert_eq!(
         profiles[0].kind,
@@ -173,6 +173,14 @@ fn infrastructure_profiles_follow_the_validated_manifest() {
     assert_eq!(profiles[0].condition, 72);
     assert_eq!(profiles[0].upkeep_per_day, 2);
     assert_eq!(profiles[0].service_quality, 58);
+    assert!(profiles.iter().any(|profile| {
+        profile.id == "whisperwood-watchtower"
+            && profile.kind == tarrowyn_protocol::InfrastructureKind::PublicBuilding
+    }));
+    assert!(profiles.iter().any(|profile| {
+        profile.id == "saltmere-quay"
+            && profile.kind == tarrowyn_protocol::InfrastructureKind::Service
+    }));
 }
 
 #[test]

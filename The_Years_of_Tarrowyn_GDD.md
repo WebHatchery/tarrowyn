@@ -333,6 +333,8 @@ Growth emerges from population, infrastructure, food, trade, safety, industry, g
 
 The regional projection keeps player activity local to each settlement: active characters and open orders support the places they touch, while unattended activity fades between decision intervals. Low activity combined with weak local industry or governance can expose a strained or quiet settlement without making the location immediately unplayable.
 
+Regional settlement views also distinguish recognised claims, free plots, and public works by location, while the shared registry and infrastructure records remain authoritative for changing them.
+
 ### Decline and Abandonment
 
 Settlements may also shrink. If players leave and no one takes responsibility, businesses can close, NPC families can migrate, infrastructure can deteriorate, and a former town may eventually become an abandoned site.

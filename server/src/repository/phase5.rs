@@ -32,6 +32,7 @@ impl WorldRepository {
         let mut state = self.state.lock().expect("world repository lock poisoned");
         expire_sessions(&mut state, &self.config);
         let key = authenticate(&mut state, token, &self.config)?;
+        refresh_settlement_facilities(&mut state);
         let location_id = player_location(&state, &key);
         let location = state
             .phase5
@@ -93,6 +94,7 @@ impl WorldRepository {
         let mut state = self.state.lock().expect("world repository lock poisoned");
         expire_sessions(&mut state, &self.config);
         authenticate(&mut state, token, &self.config)?;
+        refresh_settlement_facilities(&mut state);
         Ok(ApiResponse {
             meta: meta(state.tick, None, Some(state.cursor)),
             data: SettlementsResponse {
@@ -581,6 +583,7 @@ pub(super) fn phase5_tick(state: &mut RepositoryState, config: &ServerConfig) {
     }
     advance_events(state);
     expire_market_orders(state);
+    refresh_settlement_facilities(state);
 }
 
 fn create_order(

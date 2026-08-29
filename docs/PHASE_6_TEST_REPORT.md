@@ -70,6 +70,9 @@ settlement, decays after the last session expires, and exposes a low-activity
 strained condition without deleting the settlement projection.
 The regional-summary regression confirms the touch projection places the
 current settlement condition and recovery-open signal beside travel status.
+The settlement-facilities regression confirms the regional projection maps
+claims, free plots, and public works to their nearest settlement while leaving
+the Phase 4 registry and infrastructure records authoritative.
 The skill-catalogue regressions confirm direct root guidance, non-empty advanced
 discovery requirements, and re-evaluation of stored prerequisite history when a
 new advanced merger becomes eligible.

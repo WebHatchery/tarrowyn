@@ -1,6 +1,8 @@
 use crate::{ServerConfig, WorldRepository};
 use std::time::Duration;
-use tarrowyn_protocol::{SettlementCondition, SettlementProjection};
+use tarrowyn_protocol::{
+    ClaimLifecycleAction, ClaimLifecycleRequest, SettlementCondition, SettlementProjection,
+};
 
 #[test]
 fn settlement_activity_is_local_and_declines_after_the_last_player_leaves() {
@@ -38,6 +40,69 @@ fn settlement_activity_is_local_and_declines_after_the_last_player_leaves() {
     );
     assert!(settlement(&after_departure, "saltmere").player_activity < 15);
     assert!(repository.account(&session.account_token).is_err());
+}
+
+#[test]
+fn settlement_projection_rolls_up_nearest_claims_plots_and_public_works() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = super::guest(&repository, "phase5-settlement-facilities");
+
+    let initial = repository
+        .settlements(&session.account_token)
+        .expect("settlements")
+        .data
+        .settlements;
+    assert_eq!(settlement(&initial, "hearth").available_plot_count, 1);
+    assert_eq!(settlement(&initial, "saltmere").available_plot_count, 2);
+    assert_eq!(
+        settlement(&initial, "whisperwood-outpost").available_plot_count,
+        0
+    );
+    assert!(settlement(&initial, "hearth")
+        .public_works
+        .iter()
+        .any(|work| work == "Town hall"));
+    assert_eq!(
+        settlement(&initial, "whisperwood-outpost").public_works,
+        vec!["Whisperwood watchtower"]
+    );
+    assert_eq!(
+        settlement(&initial, "saltmere").public_works,
+        vec!["Saltmere quay"]
+    );
+
+    let requested = repository
+        .claim_lifecycle(
+            &session.account_token,
+            ClaimLifecycleRequest {
+                request_id: "facility-claim".to_owned(),
+                action: ClaimLifecycleAction::Request,
+                claim_id: None,
+                target_account_id: None,
+            },
+        )
+        .expect("claim request")
+        .data;
+    assert!(requested.accepted);
+    let after_claim = repository
+        .settlements(&session.account_token)
+        .expect("settlements after claim")
+        .data
+        .settlements;
+    assert_eq!(
+        after_claim
+            .iter()
+            .map(|settlement| settlement.claim_count)
+            .sum::<u32>(),
+        1
+    );
+    assert_eq!(
+        after_claim
+            .iter()
+            .map(|settlement| settlement.available_plot_count)
+            .sum::<u32>(),
+        2
+    );
 }
 
 fn settlement_snapshot(repository: &WorldRepository) -> Vec<SettlementProjection> {

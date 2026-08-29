@@ -64,6 +64,11 @@ and marks a recovery opportunity as open. The comparison data remains
 available in the same projection so a player can see the wider region without
 leaving the shared-road sidebar.
 
+Each settlement projection also rolls up its nearest recognised claims, free
+plots, and public works. The bounded content fixture therefore gives Hearth,
+Whisperwood, and Saltmere distinct facility signals while the Phase 4 registry
+and infrastructure records remain the authoritative mutation surfaces.
+
 ## Event lifecycle
 
 The seeded `river-thaw` fixture follows signal, escalation, intervention,

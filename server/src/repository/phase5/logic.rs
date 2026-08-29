@@ -5,7 +5,8 @@ use super::super::*;
 use super::*;
 use std::collections::HashSet;
 use tarrowyn_protocol::{
-    CommodityKind, MarketOrderStatus, RegionalEventStage, SettlementCondition, TravelStatus,
+    ClaimLifecycleStatus, CommodityKind, MarketOrderStatus, Position, RegionalEventStage,
+    SettlementCondition, TravelStatus,
 };
 
 pub(super) fn validate_request_id(request_id: &str) -> Result<(), RepositoryError> {
@@ -148,6 +149,53 @@ pub(super) fn update_settlements(state: &mut RepositoryState) {
     for (location, old, new) in transitions {
         record_regional(state, &[location.as_str()], "settlement condition", &format!("A settlement moved from {old:?} to {new:?}; its vacancies and recovery work remain visible."));
     }
+}
+
+pub(super) fn refresh_settlement_facilities(state: &mut RepositoryState) {
+    let locations = state
+        .phase5
+        .locations
+        .iter()
+        .map(|location| (location.location_id.clone(), location.position))
+        .collect::<Vec<_>>();
+    let claims = state
+        .phase4
+        .claims
+        .iter()
+        .filter(|claim| claim.status != ClaimLifecycleStatus::Reclaimed)
+        .map(|claim| claim.position)
+        .collect::<Vec<_>>();
+    let available_plots = state.phase4.available_plots.clone();
+    let public_works = state
+        .phase4
+        .infrastructure
+        .iter()
+        .map(|record| (record.position, record.name.clone()))
+        .collect::<Vec<_>>();
+
+    for settlement in &mut state.phase5.settlements {
+        let location_id = settlement.location_id.as_str();
+        settlement.claim_count = claims
+            .iter()
+            .filter(|position| nearest_location(&locations, **position) == Some(location_id))
+            .count() as u32;
+        settlement.available_plot_count = available_plots
+            .iter()
+            .filter(|position| nearest_location(&locations, **position) == Some(location_id))
+            .count() as u32;
+        settlement.public_works = public_works
+            .iter()
+            .filter(|(position, _)| nearest_location(&locations, *position) == Some(location_id))
+            .map(|(_, name)| name.clone())
+            .collect();
+    }
+}
+
+fn nearest_location(locations: &[(String, Position)], position: Position) -> Option<&str> {
+    locations
+        .iter()
+        .min_by_key(|(_, candidate)| candidate.manhattan_distance(position))
+        .map(|(location_id, _)| location_id.as_str())
 }
 
 fn active_players_at(state: &RepositoryState, location_id: &str) -> u8 {
