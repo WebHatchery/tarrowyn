@@ -385,6 +385,19 @@ pub fn reconcile_market_order(
     }
     state.phase5.market_orders[index].status = MarketOrderStatus::Cancelled;
     state.phase5.market_orders[index].settled_tick = Some(state.tick);
+    let (chronicle, response) = if order.fallback_used {
+        (
+            "Support closed a travelling fallback shipment without refunding unescrowed goods.",
+            "The open or failed fallback order was closed without inventing an escrow refund."
+                .to_owned(),
+        )
+    } else {
+        (
+            "Support restored failed shipment escrow and closed its authoritative order.",
+            "The open or failed order was closed and its escrow was restored exactly once."
+                .to_owned(),
+        )
+    };
     record_regional(
         state,
         &[
@@ -392,11 +405,7 @@ pub fn reconcile_market_order(
             order.destination_location_id.as_str(),
         ],
         "market order repair",
-        "Support restored failed shipment escrow and closed its authoritative order.",
+        chronicle,
     );
-    (
-        true,
-        "The open or failed order was closed and its escrow was restored exactly once.".to_owned(),
-        None,
-    )
+    (true, response, None)
 }

@@ -140,5 +140,22 @@ fn travelling_fallback_is_bounded_delayed_and_not_refunded() {
         .expect("next-day fallback response")
         .data;
     assert!(reset.accepted);
-    assert!(reset.order.expect("next-day fallback order").fallback_used);
+    let reset_order = reset.order.expect("next-day fallback order");
+    assert!(reset_order.fallback_used);
+
+    let state = repository.state.lock().expect("repository lock");
+    let mut state = state;
+    let order = state
+        .phase5
+        .market_orders
+        .iter_mut()
+        .find(|order| order.order_id == reset_order.order_id)
+        .expect("reset fallback order in state");
+    order.status = tarrowyn_protocol::MarketOrderStatus::Failed;
+    let (accepted, message, reason) =
+        super::super::market::reconcile_market_order(&mut state, Some(&reset_order.order_id));
+    assert!(accepted);
+    assert!(reason.is_none());
+    assert!(message.contains("without inventing"));
+    assert_eq!(state.identities[&session.client_key].inventory.seeds, 0);
 }
