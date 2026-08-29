@@ -185,6 +185,7 @@ impl RepositoryState {
         super::phase5::trim_market_orders(&mut phase5);
         super::phase5::trim_event_history(&mut phase5);
         super::phase5::trim_settlement_chronicles(&mut phase5);
+        super::phase5::trim_household_histories(&mut phase5);
         trim_replay_cache(&mut phase5.request_results);
         let mut phase6 = stored.phase6;
         super::phase6::trim_moderation_reports(&mut phase6, super::phase4::unix_time_seconds());

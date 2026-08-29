@@ -303,6 +303,7 @@ pub(super) fn merge_household(
             }
         })
         .collect();
+    super::super::phase5::trim_household_histories(&mut state.phase5);
     super::super::phase3::record(
         state,
         "support household repair",

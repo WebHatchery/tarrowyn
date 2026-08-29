@@ -102,6 +102,7 @@ pub(crate) fn fresh(_config: &ServerConfig) -> Phase5State {
 
 pub(crate) const MAX_REGIONAL_EVENTS: usize = super::super::MAX_EVENTS;
 pub(crate) const MAX_SETTLEMENT_CHRONICLE: usize = 64;
+pub(crate) const MAX_HOUSEHOLD_HISTORY: usize = 64;
 
 pub(crate) fn trim_event_history(phase: &mut Phase5State) {
     let excess = phase.events.len().saturating_sub(MAX_REGIONAL_EVENTS);
@@ -122,6 +123,18 @@ pub(crate) fn trim_settlement_chronicles(phase: &mut Phase5State) {
             .saturating_sub(MAX_SETTLEMENT_CHRONICLE);
         if excess > 0 {
             settlement.chronicle.drain(..excess);
+        }
+    }
+}
+
+pub(crate) fn trim_household_histories(phase: &mut Phase5State) {
+    for household in &mut phase.households {
+        let excess = household
+            .history
+            .len()
+            .saturating_sub(MAX_HOUSEHOLD_HISTORY);
+        if excess > 0 {
+            household.history.drain(..excess);
         }
     }
 }

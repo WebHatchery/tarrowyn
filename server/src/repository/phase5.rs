@@ -23,7 +23,8 @@ pub(super) use market::{
 pub(super) use recovery::clear_stuck_travel;
 use settlements::{refresh_settlement_facilities, update_households, update_settlements};
 pub(super) use state::{
-    fresh, trim_event_history, trim_settlement_chronicles, Phase5Response, Phase5State,
+    fresh, trim_event_history, trim_household_histories, trim_settlement_chronicles,
+    Phase5Response, Phase5State,
 };
 
 const REGION_ID: &str = "hearthlands";
@@ -626,6 +627,7 @@ pub(super) fn phase5_tick(state: &mut RepositoryState, config: &ServerConfig) {
     advance_events(state);
     expire_market_orders(state);
     refresh_settlement_facilities(state);
+    trim_household_histories(&mut state.phase5);
 }
 
 fn fulfil_order(

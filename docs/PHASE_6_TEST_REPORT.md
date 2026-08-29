@@ -180,8 +180,9 @@ checks. The numeric checks cover trade receipt, farming counters, skill-merger
 qualification, travel progress, governance upkeep, and settlement scarcity
 projection; the regional price-note projection also saturates malformed
 manifest values, and oversized unsigned environment values fall back instead of
-wrapping. The full release gate is reserved for the next major milestone or a
-change that crosses subsystem boundaries.
+wrapping. Regional household movement history also keeps its latest 64 entries
+on runtime updates and snapshot load. The full release gate is reserved for the
+next major milestone or a change that crosses subsystem boundaries.
 
 The accumulated maintenance batch published successfully through
 `publish.ps1` on 2026-08-29: Windows and WebGL packages built and deployed to
