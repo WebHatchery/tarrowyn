@@ -24,6 +24,7 @@ mod chat;
 mod farming;
 mod models;
 mod mysql;
+mod observability;
 mod persistence;
 mod phase3;
 mod phase3_frontier;
@@ -608,42 +609,6 @@ pub(super) fn player_projection(state: &RepositoryState, key: &str) -> PlayerPro
         recovery_cost: identity.recovery_cost,
     }
 }
-fn snapshot(
-    state: &RepositoryState,
-    config: &ServerConfig,
-    players: Vec<PlayerPresence>,
-) -> WorldSnapshot {
-    WorldSnapshot {
-        width: config.world_width,
-        height: config.world_height,
-        tiles: world::world_tiles(config.world_width, config.world_height),
-        clock: state.clock.clone(),
-        players,
-        plots: state.plots.clone(),
-        animals: state.phase4.animals.clone(),
-        tavern_position: Position { x: 8, y: 5 },
-        cursor: state.cursor,
-        wilderness: Some(state.phase3.zone.clone()),
-        outpost: state.phase3.outpost,
-        claim: state.phase3.claim.clone(),
-        expedition: state.phase3.expedition.clone(),
-    }
-}
-fn feed(state: &RepositoryState) -> TavernFeedResponse {
-    TavernFeedResponse {
-        notices: state.notices.iter().cloned().collect(),
-        rumours: phase3::rumours(&state.phase3),
-        chat: state.chat_history.iter().cloned().collect(),
-        cursor: state.cursor,
-    }
-}
-fn meta(tick: u64, request_id: Option<String>, cursor: Option<u64>) -> ApiMeta {
-    let mut meta = ApiMeta::at(tick);
-    meta.request_id = request_id;
-    meta.cursor = cursor;
-    meta
-}
-
 pub(super) fn validate_request_id(request_id: &str) -> Result<(), RepositoryError> {
     if request_id.trim().is_empty()
         || request_id.chars().count() > 64
@@ -714,45 +679,36 @@ pub(super) fn validate_event_cursor(
     Ok(())
 }
 
+fn snapshot(
+    state: &RepositoryState,
+    config: &ServerConfig,
+    players: Vec<PlayerPresence>,
+) -> WorldSnapshot {
+    observability::snapshot(state, config, players)
+}
+
+fn feed(state: &RepositoryState) -> TavernFeedResponse {
+    observability::feed(state)
+}
+
+fn meta(tick: u64, request_id: Option<String>, cursor: Option<u64>) -> ApiMeta {
+    observability::meta(tick, request_id, cursor)
+}
+
 fn push_event(state: &mut RepositoryState, event: WorldEvent) -> u64 {
-    state.cursor += 1;
-    state.events.push_back(EventRecord {
-        cursor: state.cursor,
-        event,
-    });
-    trim_back(&mut state.events, MAX_EVENTS);
-    state.cursor
+    observability::push_event(state, event)
 }
+
 fn add_notice(state: &mut RepositoryState, kind: &str, text: &str) {
-    let id = state.next_notice;
-    state.next_notice += 1;
-    let mut notice = TavernNotice {
-        notice_id: id,
-        kind: kind.to_owned(),
-        text: text.to_owned(),
-        created_tick: state.tick,
-        cursor: 0,
-    };
-    let cursor = push_event(state, WorldEvent::TavernNotice(notice.clone()));
-    notice.cursor = cursor;
-    if let Some(EventRecord {
-        event: WorldEvent::TavernNotice(stored),
-        ..
-    }) = state.events.back_mut()
-    {
-        *stored = notice.clone();
-    }
-    state.notices.push_back(notice);
-    trim_back(&mut state.notices, MAX_NOTICES);
+    observability::add_notice(state, kind, text);
 }
+
 fn trim_back<T>(queue: &mut VecDeque<T>, max: usize) {
-    while queue.len() > max {
-        queue.pop_front();
-    }
+    observability::trim_back(queue, max);
 }
-fn trim_queue<T>(mut queue: VecDeque<T>, max: usize) -> VecDeque<T> {
-    trim_back(&mut queue, max);
-    queue
+
+fn trim_queue<T>(queue: VecDeque<T>, max: usize) -> VecDeque<T> {
+    observability::trim_queue(queue, max)
 }
 
 #[cfg(test)]
