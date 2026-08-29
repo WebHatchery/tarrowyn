@@ -220,6 +220,40 @@ fn client_pending_queues_stop_at_the_backpressure_limit() {
 }
 
 #[test]
+fn movement_and_chat_backpressure_explain_the_retry_path() {
+    let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
+    client.state = ConnectionState::Online;
+    for index in 0..super::queue::MAX_PENDING_COMMANDS {
+        client.movement_queue.push_back(super::MovementIntent {
+            request_id: format!("move-{index}"),
+            dx: 1,
+            dy: 0,
+        });
+    }
+
+    client.queue_movement(1, 0);
+
+    assert_eq!(
+        client.movement_queue.len(),
+        super::queue::MAX_PENDING_COMMANDS
+    );
+    assert!(client.status_message.contains("movement queue is full"));
+
+    for index in 0..super::queue::MAX_PENDING_COMMANDS {
+        client.chat_queue.push_back(ChatRequest {
+            request_id: format!("chat-{index}"),
+            channel: "settlement".to_owned(),
+            text: "queued".to_owned(),
+        });
+    }
+
+    client.queue_chat("try again");
+
+    assert_eq!(client.chat_queue.len(), super::queue::MAX_PENDING_COMMANDS);
+    assert!(client.status_message.contains("chat channel is busy"));
+}
+
+#[test]
 fn farming_backpressure_does_not_claim_pending_confirmation() {
     let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
     client.state = ConnectionState::Online;
