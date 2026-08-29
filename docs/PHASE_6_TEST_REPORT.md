@@ -500,3 +500,7 @@ cover an orphaned identity key and a mismatched cached request ID.
 Core repository sequence integrity now requires positive guest, message, token,
 trade, and notice counters before readiness is reported. One focused regression
 covers a zeroed notice sequence.
+
+Core character replay integrity now validates the bounds and key/response
+agreement of farming, trade, movement, and chat replay maps. One focused
+regression covers a mismatched chat response request ID.

@@ -10,6 +10,7 @@ use tarrowyn_protocol::{
 
 mod chat_validation;
 mod core_metadata_integrity;
+mod core_replay_integrity;
 mod events;
 mod input_bounds;
 mod integrity;

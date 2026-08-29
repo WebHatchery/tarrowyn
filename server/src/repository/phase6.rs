@@ -13,6 +13,7 @@ use tarrowyn_protocol::{
 
 mod account;
 mod backup;
+mod core_replay_integrity;
 mod deletion;
 mod maintenance;
 mod moderation;
