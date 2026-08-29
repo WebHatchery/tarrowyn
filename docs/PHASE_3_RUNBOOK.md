@@ -19,8 +19,10 @@ ephemeral, while the same `client_key` resumes the durable character.
 
 ## Phase 3 endpoints
 
-All endpoints except `/health` and `/v1/session/guest` require the bearer token
-returned by guest session creation.
+All gameplay endpoints except `/health`, `/v1/ops/health`, and
+`/v1/session/guest` require the bearer token returned by guest session
+creation. The operations health endpoint remains public so readiness can be
+checked before authentication.
 
 | Endpoint | Use |
 |---|---|

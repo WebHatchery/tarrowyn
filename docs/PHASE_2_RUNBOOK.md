@@ -30,8 +30,10 @@ gold, or trades.
 
 ## Phase 2 endpoints
 
-All endpoints except `/health` and `/v1/session/guest` require the bearer token
-returned by the guest-session response.
+All gameplay endpoints except `/health`, `/v1/ops/health`, and
+`/v1/session/guest` require the bearer token returned by the guest-session
+response. The operations health endpoint remains public so a client can read
+maintenance readiness before it has an authenticated session.
 
 | Endpoint | Use |
 |---|---|
