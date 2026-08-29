@@ -237,16 +237,32 @@ impl GameSession {
     }
 
     pub fn update_clock(&mut self, config: &GameConfig, dt: f32) -> bool {
-        self.day_seconds += dt.max(0.0);
         let day_length = config.day_length_seconds.max(1.0);
-        let mut advanced = false;
-        while self.day_seconds >= day_length {
-            self.day_seconds -= day_length;
-            self.day = self.day.saturating_add(1);
-            advanced = true;
-            self.advance_crops();
+        let current_seconds = if self.day_seconds.is_finite() && self.day_seconds >= 0.0 {
+            self.day_seconds
+        } else {
+            0.0
+        };
+        let delta = if dt.is_finite() { dt.max(0.0) } else { 0.0 };
+        let total_seconds = current_seconds + delta;
+        if !total_seconds.is_finite() {
+            self.day_seconds = 0.0;
+            self.day = u32::MAX;
+            self.advance_crops(u32::MAX);
+            return true;
         }
-        advanced
+
+        let elapsed_days = (total_seconds / day_length).floor();
+        if elapsed_days < 1.0 {
+            self.day_seconds = total_seconds;
+            return false;
+        }
+
+        self.day_seconds = total_seconds % day_length;
+        let elapsed_days = elapsed_days.min(u32::MAX as f32) as u32;
+        self.day = self.day.saturating_add(elapsed_days);
+        self.advance_crops(elapsed_days);
+        true
     }
 
     pub fn clock_minutes(&self, config: &GameConfig) -> u32 {
@@ -416,9 +432,13 @@ impl GameSession {
             .map(|(pos, _)| pos)
     }
 
-    fn advance_crops(&mut self) {
+    fn advance_crops(&mut self, elapsed_days: u32) {
+        let growth = elapsed_days.min(u32::from(u8::MAX)) as u8;
         for crop in self.world.crops.data_mut().iter_mut().flatten() {
-            crop.stage = crop.stage.saturating_add(1).min(CropState::MATURE_STAGE);
+            crop.stage = crop
+                .stage
+                .saturating_add(growth)
+                .min(CropState::MATURE_STAGE);
         }
         self.record(format!(
             "Day {} begins; the fields have grown quietly.",

@@ -83,6 +83,17 @@ fn day_rollover_advances_the_clock_and_crops() {
 }
 
 #[test]
+fn huge_offline_clock_delta_catches_up_without_a_day_loop() {
+    let config = test_config();
+    let mut session = GameSession::new(&config);
+
+    assert!(session.update_clock(&config, f32::MAX));
+    assert_eq!(session.day, u32::MAX);
+    assert!(session.day_seconds < config.day_length_seconds);
+    assert_eq!(session.crops_ready(), 3);
+}
+
+#[test]
 fn offline_fixture_uses_the_same_day_period_boundaries() {
     let config = test_config();
     let mut session = GameSession::new(&config);

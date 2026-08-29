@@ -274,6 +274,8 @@ The shared inventory projection also saturates malformed total quantities, with
 a focused protocol boundary regression.
 The offline inventory total follows the same saturation policy when saved crop
 counts are already at their ceiling.
+The offline clock also catches up a huge finite delta in constant time, with a
+focused long-session boundary regression instead of an unbounded day loop.
 Regional household movement history also keeps its latest 64 entries on runtime
 updates and snapshot load. On 2026-08-30, the long-run boundary reliability
 milestone passed the full release gate: 14 protocol tests, 242 server tests, 92
