@@ -1,7 +1,8 @@
 use super::super::super::{ServerConfig, WorldRepository};
 use super::guest;
 use tarrowyn_protocol::{
-    LocalCombatAction, LocalCombatRequest, RecoveryChoice, RecoveryRequest, WeaponKind,
+    LocalCombatAction, LocalCombatRequest, RecoveryChoice, RecoveryRequest, TravelAction,
+    TravelRequest, WeaponKind,
 };
 
 #[test]
@@ -245,6 +246,24 @@ fn knocked_out_local_player_cannot_reenter_before_recovery() {
         tarrowyn_protocol::LocalCombatStatus::KnockedOut
     );
     assert!(bypass
+        .reason
+        .as_deref()
+        .is_some_and(|reason| reason.contains("recovery")));
+
+    let travel_bypass = repo
+        .travel(
+            &session.account_token,
+            TravelRequest {
+                request_id: "recovery-boundary-travel".to_owned(),
+                action: TravelAction::Start,
+                route_id: Some("north-pack-road".to_owned()),
+                travel_id: None,
+            },
+        )
+        .unwrap()
+        .data;
+    assert!(!travel_bypass.accepted);
+    assert!(travel_bypass
         .reason
         .as_deref()
         .is_some_and(|reason| reason.contains("recovery")));

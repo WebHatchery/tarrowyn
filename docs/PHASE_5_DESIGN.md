@@ -21,6 +21,11 @@ merges changed event records by stable event ID, so a stage transition does
 not erase earlier regional history. If a restore moves the cursor backward,
 the regional stream drops its cache and restarts from cursor zero.
 
+Travel and combat recovery are also an explicit boundary: a knocked-out
+character cannot start, resume, or alter a regional journey until a recovery
+choice clears the knockout. The server enforces this even when a client sends a
+direct travel request outside the visible touch controls.
+
 The three routes are a threatened north pack road, an operational Saltmere
 ferry, and a delayed frontier watch trail. Repair, escort, and improvement are
 server-owned logistics actions. An interruption preserves character, cargo,

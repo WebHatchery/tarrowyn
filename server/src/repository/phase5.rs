@@ -231,6 +231,24 @@ impl WorldRepository {
         }
         let current_location = player_location(&state, &key);
         let current_travel = state.phase5.travel.get(&key).cloned();
+        if state
+            .identities
+            .get(&key)
+            .expect("identity exists")
+            .knocked_out
+        {
+            let response = travel_response(
+                &mut state,
+                &key,
+                request,
+                current_travel,
+                false,
+                Some("You are knocked out; choose a recovery prompt before travelling.".to_owned()),
+            );
+            record_command_outcome(&mut state, false);
+            self.persist(&state);
+            return response;
+        }
         let mut accepted = false;
         let mut reason = None;
         let travel = match request.action {
