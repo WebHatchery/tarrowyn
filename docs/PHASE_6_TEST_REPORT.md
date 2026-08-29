@@ -74,6 +74,9 @@ regional targets as support changes.
 The regional-summary regression confirms the touch projection places the
 current settlement condition, recovery-open signal, and compact facility counts
 beside travel status.
+It also confirms the shared-road sidebar keeps the wider comparison visible by
+showing each settlement's condition and open-vacancy count alongside the local
+line.
 The settlement-facilities regression confirms the regional projection maps
 claims, free plots, and public works to their nearest settlement while leaving
 the Phase 4 registry and infrastructure records authoritative.
