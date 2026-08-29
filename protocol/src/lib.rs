@@ -466,7 +466,10 @@ pub struct TradeBundle {
 
 impl TradeBundle {
     pub fn item_count(self) -> u32 {
-        self.wheat + self.turnips + self.moonberries + self.seeds
+        self.wheat
+            .saturating_add(self.turnips)
+            .saturating_add(self.moonberries)
+            .saturating_add(self.seeds)
     }
 }
 

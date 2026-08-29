@@ -14,6 +14,7 @@ mod persistence;
 mod reset;
 mod telemetry;
 mod trade_retention;
+mod trade_validation;
 
 fn repo() -> WorldRepository {
     WorldRepository::new(ServerConfig {
