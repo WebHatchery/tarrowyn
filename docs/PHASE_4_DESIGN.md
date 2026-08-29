@@ -59,9 +59,9 @@ homestead demonstration. A claim moves through requested, active, renewed,
 transferred or inherited, abandoned, expired, and reclaimed states. Building
 access is a claim property; the identity, character progression, and protected
 stored goods are never deleted by expiry or reclamation.
-Only a requested or active lease may be abandoned, and only an active,
-renewed, transferred, or inherited lease may change hands. Expired, abandoned,
-and reclaimed rows cannot be reactivated by a lifecycle command, so their
+Only a requested or live lease may be abandoned, and only a live lease (active,
+renewed, transferred, or inherited) may change hands. Expired, abandoned, and
+reclaimed rows cannot be reactivated by a lifecycle command, so their
 reclamation grace cannot be postponed by a stale owner.
 
 An approved lease lasts 90 real days (the prototype's explicit three-real-month
