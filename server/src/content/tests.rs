@@ -34,6 +34,30 @@ fn action_kinds_must_match_the_supported_protocol_actions() {
 }
 
 #[test]
+fn launch_action_ids_must_match_their_protocol_kinds() {
+    let mut actions: Vec<super::ActionManifest> =
+        macroquad_toolkit::data_loader::parse_json_labeled(
+            "actions.json",
+            macroquad_toolkit::include_json_str!("../../../assets/data/actions.json"),
+        )
+        .expect("checked-in actions content should parse");
+    actions
+        .first_mut()
+        .expect("the actions manifest should have a launch record")
+        .id = "unmapped".to_owned();
+
+    let missing_error = super::validate_actions(&actions)
+        .expect_err("the offline controls need every launch action ID");
+    assert!(missing_error.contains("launch action plant"));
+
+    actions[0].id = "plant".to_owned();
+    actions[0].kind = "tend".to_owned();
+    let mismatch_error = super::validate_actions(&actions)
+        .expect_err("a launch action ID must keep its executable kind");
+    assert!(mismatch_error.contains("must use kind plant"));
+}
+
+#[test]
 fn event_interventions_must_have_an_implemented_effect() {
     let mut events: super::EventsManifest = macroquad_toolkit::data_loader::parse_json_labeled(
         "events.json",

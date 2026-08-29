@@ -27,9 +27,9 @@ The launch-default regression confirms the server's world dimensions, day
 length, starting gold, and starting seeds follow the shared game-config
 manifest; the guest identity and offline fixture checks cover the same initial
 seed supply at their respective authority boundaries.
-The action-content regression confirms authored action kinds stay within the
-four protocol actions the client can execute, rejecting an unmapped kind before
-startup.
+The action-content regressions confirm authored action IDs and kinds stay
+aligned with the four protocol actions the client can execute, rejecting an
+unmapped kind, missing launch ID, or mismatched executable kind before startup.
 The event-content regression confirms every authored intervention choice maps
 to a server effect, rejecting a visible choice that would otherwise resolve as
 a silent generic response.

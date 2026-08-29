@@ -536,6 +536,21 @@ fn validate_actions(actions: &[ActionManifest]) -> Result<(), String> {
     {
         return Err("actions need IDs, names, descriptions, and supported kinds".to_owned());
     }
+    for (action_id, action_kind) in [
+        ("plant", "plant"),
+        ("tend", "tend"),
+        ("harvest", "harvest"),
+        ("listen", "listen"),
+    ] {
+        let Some(action) = actions.iter().find(|action| action.id == action_id) else {
+            return Err(format!("actions are missing the launch action {action_id}"));
+        };
+        if action.kind != action_kind {
+            return Err(format!(
+                "launch action {action_id} must use kind {action_kind}"
+            ));
+        }
+    }
     Ok(())
 }
 

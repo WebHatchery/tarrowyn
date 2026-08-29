@@ -105,6 +105,21 @@ if (@($actionRecords | Where-Object {
     }).Count -gt 0) {
     throw "Actions must use a supported protocol kind."
 }
+$requiredActions = @{
+    "plant" = "plant"
+    "tend" = "tend"
+    "harvest" = "harvest"
+    "listen" = "listen"
+}
+foreach ($actionId in $requiredActions.Keys) {
+    $action = $actionRecords | Where-Object { [string]$_.id -eq $actionId } | Select-Object -First 1
+    if ($null -eq $action) {
+        throw "Actions are missing launch action $actionId."
+    }
+    if ([string]$action.kind -ne $requiredActions[$actionId]) {
+        throw "Launch action $actionId must use kind $($requiredActions[$actionId])."
+    }
+}
 Assert-Records "crops" (Get-Records $manifests["crops.json"] $null "crops") @("name", "description") @()
 Assert-Records "contracts" (Get-Records $manifests["contracts.json"] "contracts" "contracts") @("title", "description", "target") @()
 $eventRecords = Get-Records $manifests["events.json"] "events" "events"
