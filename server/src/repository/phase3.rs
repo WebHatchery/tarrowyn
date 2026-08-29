@@ -269,6 +269,12 @@ impl WorldRepository {
         expire_sessions(&mut state, &self.config);
         let key = authenticate(&mut state, token, &self.config)?;
         validate_request_id(&request.request_id)?;
+        let contract_id = validate_bounded_text(
+            &request.contract_id,
+            160,
+            "invalid_contract_id",
+            "A contract selector must be bounded and contain no control characters.",
+        )?;
         let cache_key = cache_key(&key, &request.request_id);
         if let Some(Phase3Response::Contract(response)) =
             state.phase3.request_results.get(&cache_key)
@@ -301,7 +307,7 @@ impl WorldRepository {
             .get(&key)
             .expect("contract exists")
             .clone();
-        if request.contract_id != CONTRACT_ID {
+        if contract_id != CONTRACT_ID {
             response.reason = Some("That contract is not written in the tavern ledger.".to_owned());
         } else {
             match request.action {

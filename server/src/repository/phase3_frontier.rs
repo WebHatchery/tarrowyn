@@ -185,6 +185,11 @@ impl WorldRepository {
         expire_sessions(&mut state, &self.config);
         let key = authenticate(&mut state, token, &self.config)?;
         validate_request_id(&request.request_id)?;
+        let _expedition_id = super::validate_optional_identifier(
+            request.expedition_id.as_deref(),
+            "invalid_expedition_id",
+            "An expedition selector must be bounded and contain no control characters.",
+        )?;
         let requested_outpost_name = if request.action == ExpeditionAction::Announce {
             validate_outpost_name(request.outpost_name.as_deref())?
         } else {

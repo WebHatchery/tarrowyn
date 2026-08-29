@@ -39,9 +39,10 @@ can happen. Durable identity and player-provided labels such as account-deletion
 account IDs, linked display names, expedition outpost names, and public proposal
 targets are trimmed,
 bounded, and rejected when they contain control characters; chat text and
-channel names follow the same stored-text boundary. Canonical claim, knowledge,
-profession, and lesson selectors, regional route, travel, market, and event
-selectors, event intervention text, plus moderation target IDs and notes,
+channel names follow the same stored-text boundary. Canonical contract,
+expedition, claim, knowledge, profession, governance, trade, and lesson
+selectors, regional route, travel, market, and event selectors, event
+intervention text, plus moderation target IDs and notes,
 support account and repair selector IDs, and operator notes, use the same
 bounded control-free audit boundary. Chat also has length and per-tick limits;
 chat metadata, trades, claims, governance, moderation, and support repairs are

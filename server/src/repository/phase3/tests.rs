@@ -6,6 +6,8 @@ use tarrowyn_protocol::{
     ExpeditionStatus, GuestSessionRequest, Position,
 };
 
+mod input_bounds;
+
 fn guest(repository: &WorldRepository) -> tarrowyn_protocol::GuestSessionResponse {
     repository
         .guest_session(GuestSessionRequest {

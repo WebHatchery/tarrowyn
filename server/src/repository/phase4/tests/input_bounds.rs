@@ -1,7 +1,8 @@
 use super::*;
 use tarrowyn_protocol::{
-    ClaimLifecycleAction, ClaimLifecycleRequest, KnowledgeAction, KnowledgeRequest,
-    ProfessionAction, ProfessionKind, ProfessionRequest, SkillAction, SkillRequest,
+    ClaimLifecycleAction, ClaimLifecycleRequest, GovernanceAction, KnowledgeAction,
+    KnowledgeRequest, ProfessionAction, ProfessionKind, ProfessionRequest, SkillAction,
+    SkillRequest,
 };
 
 #[test]
@@ -122,6 +123,31 @@ fn skill_selectors_reject_unbounded_or_controlled_ids() {
                 },
             )
             .expect_err("invalid skill selector should be rejected");
+        assert_eq!(error.status, 400);
+        assert_eq!(error.error.code, expected_code);
+    }
+}
+
+#[test]
+fn governance_selectors_reject_unbounded_or_controlled_ids() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = guest(&repository, "phase4-governance-input");
+
+    let cases = [
+        (
+            Some("office\nwith-control".to_owned()),
+            None,
+            "invalid_office_id",
+        ),
+        (None, Some("x".repeat(161)), "invalid_proposal_id"),
+    ];
+    for (office_id, proposal_id, expected_code) in cases {
+        let mut request = governance_request(GovernanceAction::Inspect, expected_code);
+        request.office_id = office_id;
+        request.proposal_id = proposal_id;
+        let error = repository
+            .governance(&session.account_token, request)
+            .expect_err("invalid governance selector should be rejected");
         assert_eq!(error.status, 400);
         assert_eq!(error.error.code, expected_code);
     }

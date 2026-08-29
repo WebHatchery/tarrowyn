@@ -1,4 +1,6 @@
-use super::{account_id, account_name, cache_key, record, validate_request_id};
+use super::{
+    account_id, account_name, cache_key, record, validate_optional_identifier, validate_request_id,
+};
 use crate::config::ServerConfig;
 use tarrowyn_protocol::{
     ApiResponse, GovernanceAction, GovernanceRequest, GovernanceResponse, OfficeKind,
@@ -41,6 +43,16 @@ impl super::super::WorldRepository {
         super::super::expire_sessions(&mut state, &self.config);
         let key = super::super::authenticate(&mut state, token, &self.config)?;
         validate_request_id(&request.request_id)?;
+        let office_id = validate_optional_identifier(
+            request.office_id.as_deref(),
+            "invalid_office_id",
+            "An office selector must be bounded and contain no control characters.",
+        )?;
+        let proposal_id = validate_optional_identifier(
+            request.proposal_id.as_deref(),
+            "invalid_proposal_id",
+            "A proposal selector must be bounded and contain no control characters.",
+        )?;
         let requested_target = if request.action == GovernanceAction::Propose {
             validate_proposal_target(request.target.as_deref())?
         } else {
@@ -67,7 +79,7 @@ impl super::super::WorldRepository {
         match request.action {
             GovernanceAction::Inspect => response.accepted = true,
             GovernanceAction::ClaimOffice => {
-                let office_id = request.office_id.as_deref().unwrap_or("steward").to_owned();
+                let office_id = office_id.as_deref().unwrap_or("steward").to_owned();
                 let tick = state.tick;
                 let Some(office) = state
                     .phase4
@@ -184,7 +196,7 @@ impl super::super::WorldRepository {
                 }
             }
             GovernanceAction::Approve => {
-                let Some(proposal_id) = request.proposal_id.as_deref() else {
+                let Some(proposal_id) = proposal_id.as_deref() else {
                     response.reason = Some("Name the proposal to approve.".to_owned());
                     response.governance = state.phase4.governance.clone();
                     return finish(self, &mut state, cache, request.request_id, response);
@@ -220,7 +232,7 @@ impl super::super::WorldRepository {
                 }
             }
             GovernanceAction::Complete => {
-                let Some(proposal_id) = request.proposal_id.as_deref() else {
+                let Some(proposal_id) = proposal_id.as_deref() else {
                     response.reason = Some("Name the approved proposal to complete.".to_owned());
                     response.governance = state.phase4.governance.clone();
                     return finish(self, &mut state, cache, request.request_id, response);

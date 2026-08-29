@@ -38,6 +38,19 @@ impl WorldRepository {
         expire_sessions(&mut state, &self.config);
         let identity_key = authenticate(&mut state, token, &self.config)?;
         validate_request_id(&request.request_id)?;
+        let recipient_account_id = validate_optional_identifier(
+            request.recipient_account_id.as_deref(),
+            "invalid_recipient_account_id",
+            "A trade recipient account ID must be bounded and contain no control characters.",
+        )?;
+        let trade_id = validate_optional_identifier(
+            request.trade_id.as_deref(),
+            "invalid_trade_id",
+            "A trade selector must be bounded and contain no control characters.",
+        )?;
+        let mut request = request;
+        request.recipient_account_id = recipient_account_id;
+        request.trade_id = trade_id;
         if let Some(previous) = state
             .identities
             .get(&identity_key)
