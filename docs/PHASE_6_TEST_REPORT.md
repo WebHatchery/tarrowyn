@@ -541,6 +541,8 @@ focused profile regressions.
 Phase 4 local-combat persistence now bounds encounter health, preserves stored
 property safety, and enforces status/health agreement, with two focused combat
 regressions.
+Phase 4 animal persistence now validates world position, safe names, condition
+limits, and care timing, with two focused farming regressions.
 
 The cross-layer persistence-readiness milestone passed the full release gate on
 2026-08-30 after the core and Phase 3-6 integrity additions: 14 protocol tests,

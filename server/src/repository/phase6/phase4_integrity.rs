@@ -287,11 +287,15 @@ pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
                 .iter()
                 .map(|animal| animal.animal_id.as_str()),
         )
-        && state
-            .phase4
-            .animals
-            .iter()
-            .all(|animal| animal.max_condition > 0 && animal.condition <= animal.max_condition);
+        && state.phase4.animals.iter().all(|animal| {
+            bounded_text(&animal.animal_id, MAX_HOUSEHOLD_TEXT_CHARS)
+                && bounded_text(&animal.name, MAX_HOUSEHOLD_TEXT_CHARS)
+                && position_in_world(animal.position, config)
+                && animal.max_condition > 0
+                && animal.condition <= animal.max_condition
+                && animal.last_cared_tick <= state.tick
+                && animal.last_cared_day <= state.clock.day
+        });
     let combat_ok = state.phase4.combat.values().all(|combat| {
         bounded_text(&combat.encounter_id, MAX_COMBAT_TEXT_CHARS)
             && bounded_text(&combat.enemy_name, MAX_COMBAT_TEXT_CHARS)
