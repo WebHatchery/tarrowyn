@@ -39,13 +39,6 @@ impl WorldRepository {
             "invalid_repair_note",
             "Every support repair needs a bounded note without control characters.",
         )?;
-        let cache = format!("repair:{}:{}", actor, request.request_id);
-        if let Some(previous) = state.phase6.request_results.get(&cache) {
-            return Ok(ApiResponse {
-                meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
-                data: previous.clone(),
-            });
-        }
         let target_account = request
             .account_id
             .as_deref()
@@ -71,6 +64,13 @@ impl WorldRepository {
                 )
             })
             .transpose()?;
+        let cache = format!("repair:{}:{}", actor, request.request_id);
+        if let Some(previous) = state.phase6.request_results.get(&cache) {
+            return Ok(ApiResponse {
+                meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
+                data: previous.clone(),
+            });
+        }
         let target_key = state
             .identities
             .iter()

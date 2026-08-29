@@ -63,3 +63,46 @@ fn support_repair_rejects_unbounded_or_controlled_selector_ids() {
         assert_eq!(error.error.code, expected_code);
     }
 }
+
+#[test]
+fn support_repair_replay_does_not_skip_selector_validation() {
+    let repository = WorldRepository::new(ServerConfig {
+        support_operator_accounts: vec!["dev-account-1".to_owned()],
+        ..ServerConfig::default()
+    });
+    let operator = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("support-repair-replay-operator".to_owned()),
+            reset: false,
+        })
+        .expect("operator session")
+        .data;
+    let request_id = "repair-input-replay".to_owned();
+    repository
+        .support_repair(
+            &operator.account_token,
+            SupportRepairRequest {
+                request_id: request_id.clone(),
+                action: SupportRepairAction::NormalizeInventory,
+                account_id: Some(operator.account_id.clone()),
+                target_id: None,
+                note: "Create a replay result before checking malformed input.".to_owned(),
+            },
+        )
+        .expect("initial repair should be recorded");
+
+    let error = repository
+        .support_repair(
+            &operator.account_token,
+            SupportRepairRequest {
+                request_id,
+                action: SupportRepairAction::NormalizeInventory,
+                account_id: Some("x".repeat(161)),
+                target_id: None,
+                note: "The changed selector must still be validated.".to_owned(),
+            },
+        )
+        .expect_err("malformed replay selector should be rejected");
+    assert_eq!(error.status, 400);
+    assert_eq!(error.error.code, "invalid_repair_account");
+}
