@@ -90,3 +90,36 @@ fn trade_history_evicts_terminal_records_and_preserves_pending_work() {
     assert_eq!(state.trades.len(), 128);
     assert!(!state.trades.contains_key("trade-128"));
 }
+
+#[test]
+fn trade_id_stays_at_the_numeric_ceiling() {
+    let repository = repo();
+    let creator = guest(&repository, "trade-id-ceiling-creator");
+    let recipient = guest(&repository, "trade-id-ceiling-recipient");
+    {
+        let mut state = repository.state.lock().expect("world repository lock");
+        state.next_trade = u64::MAX;
+    }
+
+    let response = repository
+        .trade(
+            &creator.account_token,
+            TradeRequest {
+                request_id: "trade-id-ceiling-request".to_owned(),
+                action: TradeAction::Create,
+                trade_id: None,
+                recipient_account_id: Some(recipient.account_id),
+                offer: Some(TradeBundle::default()),
+                request: Some(TradeBundle::default()),
+            },
+        )
+        .expect("trade response")
+        .data;
+
+    assert_eq!(
+        response.trade.expect("accepted trade").trade_id,
+        format!("trade-{}", u64::MAX)
+    );
+    let state = repository.state.lock().expect("world repository lock");
+    assert_eq!(state.next_trade, u64::MAX);
+}

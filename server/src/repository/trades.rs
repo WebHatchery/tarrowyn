@@ -177,7 +177,7 @@ fn create_trade(
         created_tick: state.tick,
         expires_tick: state.tick.saturating_add(config.trade_expiry_ticks.max(1)),
     };
-    state.next_trade += 1;
+    state.next_trade = state.next_trade.saturating_add(1);
     state.trades.insert(trade.trade_id.clone(), trade.clone());
     accepted_trade(request, trade)
 }
