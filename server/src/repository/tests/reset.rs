@@ -16,6 +16,13 @@ fn guest_reset_replaces_private_state_and_releases_world_ownership() {
         })
         .unwrap()
         .data;
+    {
+        let mut state = repository.state.lock().unwrap();
+        state
+            .phase3
+            .expedition_credentials
+            .push(first.account_id.clone());
+    }
     let order = repository
         .profession_order(
             &first.account_token,
@@ -96,6 +103,11 @@ fn guest_reset_replaces_private_state_and_releases_world_ownership() {
         .is_none());
     let state = repository.state.lock().unwrap();
     assert!(!state.phase3.contracts.contains_key(&first.client_key));
+    assert!(!state
+        .phase3
+        .expedition_credentials
+        .iter()
+        .any(|id| id == &first.account_id));
     assert!(!state.phase5.travel.contains_key(&first.client_key));
     assert!(!state.phase4.request_results.keys().any(|key| {
         key.starts_with(&format!("phase4:{}:", first.account_id))
