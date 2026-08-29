@@ -450,3 +450,8 @@ Regional event integrity now validates lifecycle text, affected-location
 uniqueness and references, intervention choices, stage/outcome combinations,
 tick ordering, and retained cursors. Two focused regressions cover an invalid
 intervention choice and a missing event cursor.
+
+Regional household integrity now validates the fixed household registry,
+location references, bounded history, supported lifecycle statuses, and
+departure/arrival timelines. Two focused regressions cover an unsupported
+status and an impossible considering-state timeline.

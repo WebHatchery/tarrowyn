@@ -4,6 +4,8 @@ use tarrowyn_protocol::RegionalEventStage;
 
 const MAX_EVENT_TEXT_CHARS: usize = 512;
 const MAX_EVENT_ID_CHARS: usize = 160;
+const MAX_HOUSEHOLD_TEXT_CHARS: usize = 240;
+const MAX_HOUSEHOLD_HISTORY: usize = 64;
 
 pub(super) fn ok(state: &RepositoryState) -> bool {
     let location_ids: HashSet<&str> = state
@@ -21,6 +23,13 @@ pub(super) fn ok(state: &RepositoryState) -> bool {
             .events
             .iter()
             .all(|event| event_ok(event, &location_ids, state.cursor, state.tick))
+        && !state.phase5.households.is_empty()
+        && unique_household_ids(state)
+        && state
+            .phase5
+            .households
+            .iter()
+            .all(|household| household_ok(household, &location_ids, state.tick))
 }
 
 fn unique_event_ids(state: &RepositoryState) -> bool {
@@ -91,6 +100,54 @@ fn event_ok(
         && event.cursor <= current_cursor
 }
 
+fn unique_household_ids(state: &RepositoryState) -> bool {
+    let mut ids = HashSet::new();
+    state
+        .phase5
+        .households
+        .iter()
+        .all(|household| ids.insert(household.household_id.as_str()))
+}
+
+fn household_ok(
+    household: &tarrowyn_protocol::RegionalHousehold,
+    location_ids: &HashSet<&str>,
+    current_tick: u64,
+) -> bool {
+    let timeline_ok = match household.status.as_str() {
+        "considering" => household.departure_tick.is_none() && household.arrival_tick.is_none(),
+        "travelling" => household.departure_tick.is_some() && household.arrival_tick.is_none(),
+        "arrived" => household
+            .departure_tick
+            .zip(household.arrival_tick)
+            .is_some_and(|(departure, arrival)| departure <= arrival),
+        _ => false,
+    };
+    bounded_household(&household.household_id)
+        && bounded_household(&household.household_name)
+        && location_ids.contains(household.origin_location_id.as_str())
+        && household
+            .destination_location_id
+            .as_deref()
+            .is_none_or(|location| location_ids.contains(location))
+        && bounded_household(&household.status)
+        && bounded_household(&household.reason)
+        && bounded_household(&household.service)
+        && !household.history.is_empty()
+        && household.history.len() <= MAX_HOUSEHOLD_HISTORY
+        && household
+            .history
+            .iter()
+            .all(|entry| bounded_household(entry))
+        && household
+            .departure_tick
+            .is_none_or(|departure| departure <= current_tick)
+        && household
+            .arrival_tick
+            .is_none_or(|arrival| arrival <= current_tick)
+        && timeline_ok
+}
+
 fn bounded(value: &str) -> bool {
     bounded_with_limit(value, MAX_EVENT_TEXT_CHARS)
 }
@@ -99,4 +156,8 @@ fn bounded_with_limit(value: &str, max_chars: usize) -> bool {
     !value.trim().is_empty()
         && value.chars().count() <= max_chars
         && !value.chars().any(char::is_control)
+}
+
+fn bounded_household(value: &str) -> bool {
+    bounded_with_limit(value, MAX_HOUSEHOLD_TEXT_CHARS)
 }

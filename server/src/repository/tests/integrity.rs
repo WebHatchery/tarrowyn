@@ -179,6 +179,32 @@ fn invalid_regional_event_cursor_degrades_readiness() {
 }
 
 #[test]
+fn invalid_regional_household_status_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state.phase5.households[0].status = "impossible".to_owned();
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
+fn invalid_regional_household_timeline_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state.phase5.households[0].departure_tick = Some(1);
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
 fn invalid_travel_reference_degrades_readiness() {
     let repository = WorldRepository::new(ServerConfig::default());
     let session = super::guest(&repository, "integrity-travel");
