@@ -53,6 +53,12 @@ failure path.
 
 ## Cross-phase quality bar
 
+For a focused maintenance change, run the smallest test that exercises the
+changed rule, then run formatting and diff checks. Reserve the workspace-wide
+test/clippy release gate for a major milestone or a change that crosses
+subsystem boundaries; do not repeat unrelated full-suite coverage for each
+small element.
+
 - `cargo fmt`, `cargo test`, and `cargo clippy --all-targets --all-features
   -- -D warnings` remain clean for the client and every new Rust crate.
 - Every `.rs` file stays below the workspace’s 800-line limit.

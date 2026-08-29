@@ -171,10 +171,18 @@ stored in the repository.
 
 After the Storm Magic milestone release gate, maintenance changes have used
 focused checks for only the changed subsystem: lifecycle chronicle transitions,
-regional history locality, and persisted input boundaries each run their
-targeted repository test plus formatting and diff checks. The full release gate
-is reserved for the next major milestone or a change that crosses subsystem
-boundaries.
+regional history locality, persisted input boundaries, and numeric boundaries
+each run their targeted repository or protocol test plus formatting and diff
+checks. The numeric checks cover trade receipt, farming counters, skill-merger
+qualification, travel progress, governance upkeep, and settlement scarcity
+projection. The full release gate is reserved for the next major milestone or a
+change that crosses subsystem boundaries.
+
+The accumulated maintenance batch published successfully through
+`publish.ps1` on 2026-08-29: Windows and WebGL packages built and deployed to
+Preview. The publisher reported a non-blocking Project Roost tracking HTTP 500
+and the existing `net2` future-incompatibility warning; neither prevented the
+deployment artifact from being produced.
 
 ## Load and failure gate
 
