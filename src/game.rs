@@ -138,7 +138,9 @@ impl Game {
 
         let virtual_ui = begin_virtual_ui_frame(ui::LOGICAL_WIDTH, ui::LOGICAL_HEIGHT);
         let regional_inspection = match &self.mode {
-            ClientMode::Online(client) if self.regional_inspection_open => {
+            ClientMode::Online(client)
+                if self.regional_inspection_open && client.state == ConnectionState::Online =>
+            {
                 Some(client.phase5_inspection())
             }
             _ => None,
