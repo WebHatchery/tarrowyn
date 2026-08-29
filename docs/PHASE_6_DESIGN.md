@@ -214,6 +214,9 @@ The world ticker schedules against monotonic deadlines rather than sleeping a
 full interval after each update. Normal persistence and request work therefore
 does not stretch the GDD's 80-minute day; an overrun advances to the next
 recoverable deadline without running an unbounded burst of catch-up ticks.
+Authoritative world ticks and calendar days saturate at their numeric ceilings,
+and restored clock seconds are normalized into the configured day window before
+the worker resumes ticking.
 
 `/health` remains a simple process check. `/v1/ops/health` is a readiness and
 integrity check. Authenticated `/v1/ops/metrics` reports sessions, accounts,
