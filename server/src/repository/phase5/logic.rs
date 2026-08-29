@@ -206,7 +206,7 @@ pub(super) fn resolve_event(
     };
     if !matches!(
         state.phase5.events[index].stage,
-        RegionalEventStage::Intervention | RegionalEventStage::Escalation
+        RegionalEventStage::Intervention
     ) {
         return (
             false,

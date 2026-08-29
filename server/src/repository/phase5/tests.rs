@@ -269,6 +269,23 @@ fn regional_event_cursor_and_household_history_survive_ticks() {
         .iter()
         .any(|event| event.event_id == event_id
             && event.stage == tarrowyn_protocol::RegionalEventStage::Escalation));
+    let premature_resolution = repository
+        .event_action(
+            &session.account_token,
+            RegionalEventRequest {
+                request_id: "resolve-too-soon".to_owned(),
+                action: RegionalEventAction::Resolve,
+                event_id: Some(event_id.clone()),
+                intervention: None,
+            },
+        )
+        .unwrap()
+        .data;
+    assert!(!premature_resolution.accepted);
+    assert!(premature_resolution
+        .reason
+        .as_deref()
+        .is_some_and(|reason| reason.contains("intervention")));
     let arbitrary_intervention = repository
         .event_action(
             &session.account_token,
