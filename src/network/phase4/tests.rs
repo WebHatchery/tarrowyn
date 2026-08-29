@@ -107,6 +107,39 @@ fn registry_button_chooses_the_current_account_claim() {
     };
     assert_eq!(request.action, ClaimLifecycleAction::Request);
     assert!(request.claim_id.is_none());
+
+    client.commands.clear();
+    client.own_account_id = Some("account-1".to_owned());
+    client.governance = Some(tarrowyn_protocol::GovernanceState {
+        settlement_id: "hearth".to_owned(),
+        offices: vec![tarrowyn_protocol::OfficeRecord {
+            office_id: "steward".to_owned(),
+            kind: tarrowyn_protocol::OfficeKind::Steward,
+            title: "Settlement Steward".to_owned(),
+            authority: "Approve leases".to_owned(),
+            holder_account_id: Some("account-1".to_owned()),
+            holder_name: Some("The traveller".to_owned()),
+            last_active_tick: 1,
+            vacant: false,
+            vacancy_reason: None,
+        }],
+        proposals: Vec::new(),
+        decisions: Vec::new(),
+        public_treasury: 10,
+        administration_quality: 50,
+        service_funding_until_tick: 0,
+        taxation: None,
+        tax_ledger: Vec::new(),
+        cursor: 2,
+    });
+    client.claims.as_mut().expect("claim projection").claims[1].status =
+        tarrowyn_protocol::ClaimLifecycleStatus::Requested;
+    client.queue_cycle("registry", "registry-3".to_owned());
+    let Some(Phase4Command::Claim(request)) = client.commands.pop_front() else {
+        panic!("a steward should queue approval for a pending resident lease");
+    };
+    assert_eq!(request.action, ClaimLifecycleAction::Approve);
+    assert_eq!(request.claim_id.as_deref(), Some("newer-other-lease"));
 }
 
 #[test]

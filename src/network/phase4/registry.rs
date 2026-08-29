@@ -12,23 +12,19 @@ impl Phase4Client {
             })
         });
         let claim = self.claims.as_ref().and_then(|claims| {
-            claims
-                .claims
-                .iter()
-                .rev()
-                .find(|claim| {
-                    own_account_id.is_some_and(|account_id| {
-                        claim.owner_account_id.as_deref() == Some(account_id)
+            is_steward
+                .then(|| {
+                    claims.claims.iter().rev().find(|claim| {
+                        claim.status == tarrowyn_protocol::ClaimLifecycleStatus::Requested
                     })
                 })
+                .flatten()
                 .or_else(|| {
-                    is_steward
-                        .then(|| {
-                            claims.claims.iter().rev().find(|claim| {
-                                claim.status == tarrowyn_protocol::ClaimLifecycleStatus::Requested
-                            })
+                    claims.claims.iter().rev().find(|claim| {
+                        own_account_id.is_some_and(|account_id| {
+                            claim.owner_account_id.as_deref() == Some(account_id)
                         })
-                        .flatten()
+                    })
                 })
         });
         let (action, claim_id) = match claim {
