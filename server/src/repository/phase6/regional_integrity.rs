@@ -219,6 +219,17 @@ fn travel_ok(
     location_ids: &HashSet<&str>,
     current_tick: u64,
 ) -> bool {
+    let status_ok = match travel.status {
+        tarrowyn_protocol::TravelStatus::Travelling => {
+            travel.progress < 100 && current_tick < travel.eta_tick
+        }
+        tarrowyn_protocol::TravelStatus::Interrupted
+        | tarrowyn_protocol::TravelStatus::Recovering => travel.progress < 100,
+        tarrowyn_protocol::TravelStatus::Arrived => {
+            travel.progress == 100 && current_tick >= travel.eta_tick
+        }
+        tarrowyn_protocol::TravelStatus::Idle => false,
+    };
     bounded_travel(&travel.travel_id)
         && bounded_travel(&travel.route_id)
         && bounded_travel(&travel.origin_location_id)
@@ -231,7 +242,7 @@ fn travel_ok(
         && travel.departure_tick <= current_tick
         && travel.progress <= 100
         && travel.risk_percent <= 100
-        && !matches!(travel.status, tarrowyn_protocol::TravelStatus::Idle)
+        && status_ok
         && travel.interruption.as_deref().is_none_or(bounded_travel)
         && travel.recovery_note.as_deref().is_none_or(bounded_travel)
         && (!matches!(travel.status, tarrowyn_protocol::TravelStatus::Interrupted)
