@@ -70,8 +70,15 @@ fn validate_manifest(manifest: &SkillManifest) -> Result<(), String> {
         return Err("skill IDs must be unique and non-empty".to_owned());
     }
     for skill in &manifest.skills {
-        if !(1..=5).contains(&skill.depth) || skill.name.trim().is_empty() {
-            return Err(format!("skill {} has invalid identity or depth", skill.id));
+        if !(1..=5).contains(&skill.depth)
+            || skill.name.trim().is_empty()
+            || skill.description.trim().is_empty()
+            || skill.entry_hint.trim().is_empty()
+        {
+            return Err(format!(
+                "skill {} has invalid identity, depth, description, or entry hint",
+                skill.id
+            ));
         }
         if skill.depth == 1 {
             if !skill.directly_teachable
@@ -85,7 +92,7 @@ fn validate_manifest(manifest: &SkillManifest) -> Result<(), String> {
             }
         } else if skill.prerequisites.is_empty()
             || skill.qualifying_event.is_none()
-            || skill.qualifying_count.is_none()
+            || skill.qualifying_count.is_none_or(|count| count == 0)
             || (skill.qualifying_event.as_deref() == Some("weapon_defeats")
                 && skill.minimum_per_prerequisite.is_none())
         {

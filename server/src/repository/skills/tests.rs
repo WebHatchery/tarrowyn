@@ -45,6 +45,25 @@ fn catalogue_exposes_direct_roots_and_hides_advanced_recipe_details() {
 }
 
 #[test]
+fn skill_manifest_rejects_empty_player_guidance() {
+    let mut manifest: SkillManifest = serde_json::from_str(SKILLS_JSON).unwrap();
+    manifest.skills[0].entry_hint.clear();
+
+    let error = validate_manifest(&manifest).unwrap_err();
+    assert!(error.contains("entry hint"));
+}
+
+#[test]
+fn skill_manifest_rejects_zero_advanced_discovery_thresholds() {
+    let mut manifest: SkillManifest = serde_json::from_str(SKILLS_JSON).unwrap();
+    let last = manifest.skills.len() - 1;
+    manifest.skills[last].qualifying_count = Some(0);
+
+    let error = validate_manifest(&manifest).unwrap_err();
+    assert!(error.contains("discovery requirements"));
+}
+
+#[test]
 fn a_root_can_begin_through_an_idempotent_first_practice() {
     let repository = WorldRepository::new(ServerConfig {
         backup_path: None,
