@@ -200,7 +200,9 @@ fn replay_caches_ok(state: &RepositoryState, identity_accounts: &HashSet<&str>) 
         .iter()
         .all(|(key, response)| bounded(key, MAX_CACHE_KEY_CHARS) && support_response_ok(response));
     let moderation_results_ok = phase6.moderation_results.iter().all(|(key, response)| {
-        bounded(key, MAX_CACHE_KEY_CHARS) && moderation_response_ok(response)
+        bounded(key, MAX_CACHE_KEY_CHARS)
+            && moderation_response_ok(response)
+            && identity_cache_key_matches(key, "moderation:", &response.request_id, state)
     });
     let account_ids_ok = phase6
         .accounts
@@ -306,6 +308,18 @@ fn cached_session_matches_account(
                 && stored.refresh_token == session.refresh_token
                 && stored.expires_at_tick == session.expires_at_tick
         })
+}
+
+fn identity_cache_key_matches(
+    key: &str,
+    prefix: &str,
+    request_id: &str,
+    state: &RepositoryState,
+) -> bool {
+    state
+        .identities
+        .keys()
+        .any(|identity_key| key == format!("{prefix}{identity_key}:{request_id}"))
 }
 
 fn account_or_deleted(account_id: &str, identity_accounts: &HashSet<&str>) -> bool {

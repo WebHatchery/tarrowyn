@@ -569,6 +569,8 @@ Production identity replay caches now bind each cached link response to the
 identity encoded by its key, with one focused cross-account cache regression.
 Production refresh replay caches now validate request-key shape and retained
 session/account alignment, with one focused cross-account cache regression.
+Moderation replay caches now bind their keys to live identity and request
+records, with one focused moderation-key regression.
 Regional travel persistence now keeps status, progress, and ETA in agreement,
 with one focused travel-timeline regression.
 

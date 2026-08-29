@@ -137,6 +137,54 @@ fn moderation_reports_reject_missing_or_mismatched_chat_evidence() {
 }
 
 #[test]
+fn malformed_moderation_replay_key_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("moderation-replay-key-integrity".to_owned()),
+            reset: false,
+        })
+        .expect("guest session")
+        .data;
+    repository
+        .moderation_report(
+            &session.account_token,
+            ModerationReportRequest {
+                request_id: "moderation-replay-key".to_owned(),
+                target_account_id: None,
+                message_id: None,
+                category: "harassment".to_owned(),
+                note: "The report keeps a bounded operator note.".to_owned(),
+            },
+        )
+        .expect("moderation report");
+
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        let key = state
+            .phase6
+            .moderation_results
+            .keys()
+            .next()
+            .cloned()
+            .expect("moderation cache");
+        let response = state
+            .phase6
+            .moderation_results
+            .remove(&key)
+            .expect("moderation cache response");
+        state.phase6.moderation_results.insert(
+            "moderation:missing-identity:moderation-replay-key".to_owned(),
+            response,
+        );
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
 fn support_repairs_reject_unbounded_or_controlled_operator_notes() {
     for (request_id, note) in [
         ("repair-long-note", "x".repeat(241)),
