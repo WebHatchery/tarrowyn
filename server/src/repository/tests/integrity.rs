@@ -339,6 +339,37 @@ fn invalid_phase4_bounds_degrade_readiness() {
 }
 
 #[test]
+fn missing_phase4_foundation_collections_degrade_readiness() {
+    for missing in [
+        "offices",
+        "infrastructure",
+        "households",
+        "knowledge",
+        "animals",
+    ] {
+        let repository = WorldRepository::new(ServerConfig::default());
+        {
+            let mut state = repository.state.lock().expect("repository lock");
+            match missing {
+                "offices" => state.phase4.governance.offices.clear(),
+                "infrastructure" => state.phase4.infrastructure.clear(),
+                "households" => state.phase4.households.clear(),
+                "knowledge" => state.phase4.knowledge.clear(),
+                "animals" => state.phase4.animals.clear(),
+                _ => unreachable!("test collection is fixed"),
+            }
+        }
+
+        let health = repository.ops_health().data;
+        assert!(!health.ready, "missing {missing} should degrade readiness");
+        assert!(
+            !health.integrity_ok,
+            "missing {missing} should fail the integrity check"
+        );
+    }
+}
+
+#[test]
 fn invalid_player_position_degrades_readiness() {
     let repository = WorldRepository::new(ServerConfig::default());
     let session = super::guest(&repository, "integrity-player-position");

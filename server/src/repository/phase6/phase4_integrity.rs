@@ -25,7 +25,8 @@ pub(super) fn ok(state: &RepositoryState) -> bool {
         .collect();
 
     let governance = &state.phase4.governance;
-    let governance_ok = settlement_ids.contains(governance.settlement_id.as_str())
+    let governance_ok = !governance.offices.is_empty()
+        && settlement_ids.contains(governance.settlement_id.as_str())
         && unique_non_empty(
             governance
                 .offices
@@ -77,17 +78,19 @@ pub(super) fn ok(state: &RepositoryState) -> bool {
         })
         && governance.administration_quality <= 100;
 
-    let infrastructure_ok = unique_non_empty(
-        state
+    let infrastructure_ok = !state.phase4.infrastructure.is_empty()
+        && unique_non_empty(
+            state
+                .phase4
+                .infrastructure
+                .iter()
+                .map(|record| record.infrastructure_id.as_str()),
+        )
+        && state
             .phase4
             .infrastructure
             .iter()
-            .map(|record| record.infrastructure_id.as_str()),
-    ) && state
-        .phase4
-        .infrastructure
-        .iter()
-        .all(|record| record.condition <= 100 && record.service_quality <= 100);
+            .all(|record| record.condition <= 100 && record.service_quality <= 100);
 
     let claims_ok = unique_non_empty(
         state
@@ -107,21 +110,23 @@ pub(super) fn ok(state: &RepositoryState) -> bool {
             && claim.lease_days > 0
     });
 
-    let households_ok = unique_non_empty(
-        state
-            .phase4
-            .households
-            .iter()
-            .map(|household| household.household_id.as_str()),
-    ) && state.phase4.households.iter().all(|household| {
-        !household.home.trim().is_empty()
-            && household.service_quality <= 100
-            && household.demand <= 100
-            && household.housing <= 100
-            && household.safety <= 100
-            && household.food <= 100
-            && household.competition <= 100
-    });
+    let households_ok = !state.phase4.households.is_empty()
+        && unique_non_empty(
+            state
+                .phase4
+                .households
+                .iter()
+                .map(|household| household.household_id.as_str()),
+        )
+        && state.phase4.households.iter().all(|household| {
+            !household.home.trim().is_empty()
+                && household.service_quality <= 100
+                && household.demand <= 100
+                && household.housing <= 100
+                && household.safety <= 100
+                && household.food <= 100
+                && household.competition <= 100
+        });
 
     let orders_ok = unique_non_empty(
         state
@@ -148,26 +153,29 @@ pub(super) fn ok(state: &RepositoryState) -> bool {
             && lesson.teacher_account_id != lesson.learner_account_id
     });
 
-    let knowledge_ok = unique_non_empty(
-        state
-            .phase4
-            .knowledge
-            .iter()
-            .map(|item| item.knowledge_id.as_str()),
-    ) && state.phase4.knowledge.iter().all(|item| {
-        unique_non_empty(item.discovered_by.iter().map(String::as_str))
-            && item
-                .discovered_by
+    let knowledge_ok = !state.phase4.knowledge.is_empty()
+        && unique_non_empty(
+            state
+                .phase4
+                .knowledge
                 .iter()
-                .all(|account_id| account_ids.contains(account_id.as_str()))
-            && !item.stored_in.trim().is_empty()
-    }) && state.phase4.known_by.iter().all(|(identity_key, known)| {
-        identity_keys.contains(identity_key.as_str())
-            && unique_non_empty(known.iter().map(String::as_str))
-            && known
-                .iter()
-                .all(|knowledge_id| knowledge_ids.contains(knowledge_id.as_str()))
-    });
+                .map(|item| item.knowledge_id.as_str()),
+        )
+        && state.phase4.knowledge.iter().all(|item| {
+            unique_non_empty(item.discovered_by.iter().map(String::as_str))
+                && item
+                    .discovered_by
+                    .iter()
+                    .all(|account_id| account_ids.contains(account_id.as_str()))
+                && !item.stored_in.trim().is_empty()
+        })
+        && state.phase4.known_by.iter().all(|(identity_key, known)| {
+            identity_keys.contains(identity_key.as_str())
+                && unique_non_empty(known.iter().map(String::as_str))
+                && known
+                    .iter()
+                    .all(|knowledge_id| knowledge_ids.contains(knowledge_id.as_str()))
+        });
 
     let identity_keyed_state_ok = state
         .phase4
@@ -188,17 +196,19 @@ pub(super) fn ok(state: &RepositoryState) -> bool {
             )
         })
     });
-    let animals_ok = unique_non_empty(
-        state
+    let animals_ok = !state.phase4.animals.is_empty()
+        && unique_non_empty(
+            state
+                .phase4
+                .animals
+                .iter()
+                .map(|animal| animal.animal_id.as_str()),
+        )
+        && state
             .phase4
             .animals
             .iter()
-            .map(|animal| animal.animal_id.as_str()),
-    ) && state
-        .phase4
-        .animals
-        .iter()
-        .all(|animal| animal.max_condition > 0 && animal.condition <= animal.max_condition);
+            .all(|animal| animal.max_condition > 0 && animal.condition <= animal.max_condition);
     let available_plots_ok = unique_positions(
         state
             .phase4

@@ -430,3 +430,9 @@ those Phase 6 boundaries. The scoped validation passed on 2026-08-30 with 26
 integrity tests, server-only clippy, and the project publisher's Windows and
 WebGL builds, packaging, Preview deployment, and catalog synchronization; the
 workspace test gate remains reserved for the next major milestone.
+
+The Phase 4 readiness boundary now also requires the authored civic foundation
+collections—offices, infrastructure, households, knowledge, and animals—to
+remain present after restore or repair. One focused regression exercises each
+missing collection; the dynamic available-plot list remains allowed to be empty
+when all recognised plots are occupied.
