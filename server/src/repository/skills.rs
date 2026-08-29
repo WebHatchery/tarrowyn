@@ -603,7 +603,7 @@ pub(super) fn record_practice(state: &mut RepositoryState, key: &str, skill_id: 
     discover_eligible(state, key);
 }
 
-pub(super) fn record_qualifying_event(state: &mut RepositoryState, key: &str, event: &str) {
+pub(super) fn record_qualifying_event(state: &mut RepositoryState, key: &str, event: &str) -> bool {
     let identity = state.identities.get_mut(key).expect("identity exists");
     let count = identity
         .skills
@@ -611,7 +611,25 @@ pub(super) fn record_qualifying_event(state: &mut RepositoryState, key: &str, ev
         .entry(event.to_owned())
         .or_insert(0);
     *count = count.saturating_add(1);
-    discover_eligible(state, key);
+    discover_eligible(state, key)
+}
+
+pub(super) fn storm_magic_discovered(state: &RepositoryState, key: &str) -> bool {
+    state
+        .identities
+        .get(key)
+        .expect("identity exists")
+        .skills
+        .known
+        .iter()
+        .any(|skill_id| skill_id == "storm-magic")
+}
+
+pub(super) fn storm_prerequisites_mastered(state: &RepositoryState, key: &str) -> bool {
+    let ledger = &state.identities.get(key).expect("identity exists").skills;
+    ["wind-magic", "water-magic", "electricity-magic"]
+        .iter()
+        .all(|skill_id| mastery(ledger, skill_id) >= 5)
 }
 
 pub(super) fn record_weapon_defeat(state: &mut RepositoryState, key: &str, weapon: WeaponKind) {

@@ -60,6 +60,7 @@ pub struct UiContext<'a> {
     pub account_deletion_armed: bool,
     pub crafting: Option<CraftingView>,
     pub combat: Option<&'a LocalCombatState>,
+    pub storm_magic_unlocked: bool,
     pub knocked_out: bool,
     pub ui: &'a VirtualUi,
 }

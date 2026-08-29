@@ -227,6 +227,7 @@ impl Game {
                     account_deletion_armed: client.account_deletion_armed(),
                     crafting: client.crafting_view(),
                     combat: client.combat_state(),
+                    storm_magic_unlocked: client.storm_magic_unlocked(),
                     knocked_out: client
                         .projection
                         .player
@@ -281,6 +282,7 @@ impl Game {
                     account_deletion_armed: false,
                     crafting: None,
                     combat: None,
+                    storm_magic_unlocked: false,
                     knocked_out: false,
                     ui: &virtual_ui,
                 })

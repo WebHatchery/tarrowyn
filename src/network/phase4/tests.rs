@@ -372,6 +372,27 @@ fn spell_button_queues_an_explicit_cast() {
 }
 
 #[test]
+fn discovered_storm_magic_changes_the_visible_spell_capability() {
+    let mut client = Phase4Client::new();
+    client.skills = Some(SkillsResponse {
+        skills: vec![SkillView {
+            skill_id: "storm-magic".to_owned(),
+            name: "Storm Magic".to_owned(),
+            family: tarrowyn_protocol::SkillFamily::Magic,
+            depth: 2,
+            mastery: 0,
+            status: SkillStatus::Discovered,
+            description: "A deliberate storm working.".to_owned(),
+            entry_hint: "The three currents answer one another.".to_owned(),
+        }],
+        lessons: Vec::new(),
+        cursor: 0,
+    });
+
+    assert!(client.storm_magic_unlocked());
+}
+
+#[test]
 fn school_button_joins_an_open_lesson_for_the_learner() {
     let mut client = Phase4Client::new();
     client.own_account_id = Some("learner-1".to_owned());

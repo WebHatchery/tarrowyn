@@ -190,6 +190,12 @@ from resolving several actions; `TARROWYN_COMBAT_ACTION_COOLDOWN_TICKS` can
 shorten or lengthen that deployment boundary. The response exposes the next
 available tick, and the client shows the remaining window beside the action
 bar so timing is readable without requiring a keyboard.
+When Wind Magic, Water Magic, and Electricity Magic are each mastered, the
+same visible Spell control becomes a severe-weather three-element working.
+Each encounter can contribute one successful interaction, and 25 such
+interactions reveal Storm Magic. After discovery, that touch control becomes
+a one-use Storm technique for the encounter with a readable discovery prompt;
+the server still owns weather, mastery, discovery, damage, and timing.
 The existing Phase 3 combat/recovery contract remains available for the
 Brambleback contract; the Phase 4 local endpoint completes the readable
 multi-turn loop.

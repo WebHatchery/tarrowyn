@@ -650,6 +650,14 @@ impl Phase4Client {
     pub(super) fn take_refreshed_session(&mut self) -> Option<AuthSession> {
         self.regional.take_refreshed_session()
     }
+
+    pub(super) fn storm_magic_unlocked(&self) -> bool {
+        self.skills.as_ref().is_some_and(|skills| {
+            skills.skills.iter().any(|skill| {
+                skill.skill_id == "storm-magic" && skill.status == SkillStatus::Discovered
+            })
+        })
+    }
 }
 
 #[cfg(test)]
@@ -753,6 +761,10 @@ impl OnlineClient {
 
     pub(crate) fn combat_state(&self) -> Option<&LocalCombatState> {
         self.phase4.combat.as_ref()
+    }
+
+    pub(crate) fn storm_magic_unlocked(&self) -> bool {
+        self.phase4.storm_magic_unlocked()
     }
 
     pub(crate) fn queue_crafting_timing(&mut self) {

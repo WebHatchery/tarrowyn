@@ -52,6 +52,12 @@ production session/audit records, and queued account-deletion work, and
 the per-character skill ledger while retaining defaults for Phase 1–6 files.
 Local combat additionally persists its next server-tick action window, with
 serde defaults keeping older combat records available after upgrade.
+Storm Magic discovery uses the persisted root-practice and qualifying-event
+ledger: severe-weather three-element workings are limited to one spell per
+encounter, require mastered Wind, Water, and Electricity Magic, and reveal the
+server-owned merger after 25 successful interactions. The existing touch Spell
+control presents the discovered Storm technique without exposing hidden
+prerequisite data.
 Every mutation replay cache is trimmed to a 512-entry per-scope bound on the
 authoritative world tick, including identity, regional, support, authentication,
 moderation, and earlier-phase command results.

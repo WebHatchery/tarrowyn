@@ -89,6 +89,14 @@ impl super::super::WorldRepository {
                 "Wait for the visible action window, then choose a combat control.".to_owned();
             return finish_local_combat(self, &mut state, cache, response);
         }
+        let storm_magic = super::super::skills::storm_magic_discovered(&state, &key);
+        let storm_interaction = request.action == LocalCombatAction::CastSpell
+            && !storm_magic
+            && matches!(
+                super::super::world::field_weather_for_day(state.clock.day),
+                tarrowyn_protocol::FieldWeather::HeavyRain
+            )
+            && super::super::skills::storm_prerequisites_mastered(&state, &key);
         match request.action {
             LocalCombatAction::Prepare => {
                 if position.manhattan_distance(zone_position) > 2 {
@@ -216,7 +224,11 @@ impl super::super::WorldRepository {
                         LocalCombatAction::Technique => technique_damage(request.weapon),
                         LocalCombatAction::CastSpell => {
                             combat.spell_ready = false;
-                            2
+                            if storm_magic {
+                                3
+                            } else {
+                                2
+                            }
                         }
                         _ => request.weapon.damage().clamp(1, 2),
                     };
@@ -285,9 +297,16 @@ impl super::super::WorldRepository {
                         );
                     } else if request.action == LocalCombatAction::CastSpell {
                         response.accepted = true;
-                        response.prompt =
+                        response.prompt = if storm_interaction {
+                            "The three currents answer in the rain. One Storm Magic interaction is recorded; choose STRIKE, GUARD, or RETREAT."
+                                .to_owned()
+                        } else if storm_magic {
+                            "Storm Magic tears across the clearing. Choose STRIKE, GUARD, or RETREAT."
+                                .to_owned()
+                        } else {
                             "The wind spark tears across the clearing. Choose STRIKE, GUARD, or RETREAT."
-                                .to_owned();
+                                .to_owned()
+                        };
                     } else {
                         response.accepted = true;
                         response.prompt = format!(
@@ -303,11 +322,20 @@ impl super::super::WorldRepository {
                 .tick
                 .saturating_add(self.config.combat_action_cooldown_ticks);
         }
-        if response.accepted
-            && request.action == LocalCombatAction::CastSpell
-            && combat.status != LocalCombatStatus::Victorious
-        {
-            super::super::skills::record_practice(&mut state, &key, "wind-magic");
+        if response.accepted && request.action == LocalCombatAction::CastSpell {
+            if storm_interaction {
+                if super::super::skills::record_qualifying_event(
+                    &mut state,
+                    &key,
+                    "storm_interactions",
+                ) {
+                    response.prompt =
+                        "The three currents settle into Storm Magic. The new technique is discovered; prepare again to wield it."
+                            .to_owned();
+                }
+            } else if !storm_magic && combat.status != LocalCombatStatus::Victorious {
+                super::super::skills::record_practice(&mut state, &key, "wind-magic");
+            }
         }
         state.phase4.combat.insert(key.clone(), combat.clone());
         response.combat = combat;

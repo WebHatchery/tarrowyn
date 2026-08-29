@@ -149,7 +149,16 @@ pub(super) fn draw_sidebar(
         22.0,
         mouse,
         &[
-            ("spell", "Spell", !ctx.knocked_out, ButtonTone::Secondary),
+            (
+                "spell",
+                if ctx.storm_magic_unlocked {
+                    "Storm"
+                } else {
+                    "Spell"
+                },
+                !ctx.knocked_out,
+                ButtonTone::Secondary,
+            ),
             (
                 "expedition",
                 "Pioneer",
