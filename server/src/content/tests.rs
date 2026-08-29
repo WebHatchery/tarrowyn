@@ -75,6 +75,25 @@ fn region_locations_must_stay_inside_the_configured_world() {
 }
 
 #[test]
+fn infrastructure_positions_must_stay_inside_the_configured_world() {
+    let mut infrastructure: super::settlements::InfrastructureManifest =
+        macroquad_toolkit::data_loader::parse_json_labeled(
+            "infrastructure.json",
+            macroquad_toolkit::include_json_str!("../../../assets/data/infrastructure.json"),
+        )
+        .expect("checked-in infrastructure content should parse");
+    infrastructure
+        .infrastructure
+        .first_mut()
+        .expect("the infrastructure manifest should have a launch record")
+        .position = tarrowyn_protocol::Position { x: 99, y: 99 };
+
+    let error = super::settlements::validate_infrastructure(&infrastructure, 18, 12)
+        .expect_err("an off-map infrastructure record must fail validation");
+    assert!(error.contains("bounded"));
+}
+
+#[test]
 fn server_crop_rotation_follows_the_validated_manifest() {
     assert_eq!(
         super::crop_kind_for_seed(0),

@@ -105,7 +105,8 @@ Assert-Records "events" (Get-Records $manifests["events.json"] "events" "events"
 Assert-Records "items" (Get-Records $manifests["items.json"] "items" "items") @("kind", "sink") @()
 Assert-Records "threats" (Get-Records $manifests["threats.json"] "threats" "threats") @("name", "monster", "resource_demand", "rumour") @()
 Assert-Records "households" (Get-Records $manifests["households.json"] "households" "households") @("name", "occupation", "home_settlement", "service", "clue", "reason", "regional_service") @("members", "history")
-Assert-Records "infrastructure" (Get-Records $manifests["infrastructure.json"] "infrastructure" "infrastructure") @("name", "kind", "note") @()
+$infrastructureRecords = Get-Records $manifests["infrastructure.json"] "infrastructure" "infrastructure"
+Assert-Records "infrastructure" $infrastructureRecords @("name", "kind", "note") @()
 Assert-Records "npc households" (Get-Records $manifests["npc_households.json"] "npc_households" "npc households") @("household_name", "home", "work", "demand", "clue") @("members", "needs")
 Assert-Records "recipes" (Get-Records $manifests["recipes.json"] "recipes" "recipes") @("name", "profession", "service", "benefit") @()
 Assert-Records "settlements" (Get-Records $manifests["settlements.json"] "settlements" "settlements") @("location", "name", "governance", "condition") @("infrastructure", "milestones", "vacancies", "demand", "abundant", "scarce")
@@ -164,6 +165,14 @@ $adjacentPlots = @($region.farm_plots | Where-Object {
     ([math]::Abs(([int]$_.x) - $animalX) + [math]::Abs(([int]$_.y) - $animalY)) -eq 1
 })
 if ($adjacentPlots.Count -eq 0) { throw "Region farm animal position must be one tile from a farm plot." }
+if (@($infrastructureRecords | Where-Object {
+        $null -eq $_.position -or $null -eq $_.position.x -or $null -eq $_.position.y -or
+        [int]$_.position.x -lt 0 -or [int]$_.position.y -lt 0 -or
+        [int]$_.position.x -ge [int]$gameConfig.world_width -or
+        [int]$_.position.y -ge [int]$gameConfig.world_height
+    }).Count -gt 0) {
+    throw "Infrastructure positions must be inside the configured world."
+}
 if ($locations.Count -lt 3) { throw "The regional manifest needs three locations." }
 foreach ($route in $region.routes) {
     if ($locations -notcontains $route.origin -or $locations -notcontains $route.destination) { throw "Route $($route.id) references an unknown location." }

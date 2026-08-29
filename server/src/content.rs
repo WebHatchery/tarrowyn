@@ -255,7 +255,7 @@ pub fn validate() -> Result<(), String> {
     validate_region(&region, &game_config)?;
     households::validate(&region)?;
     recipes::validate()?;
-    settlements::validate(&region)?;
+    settlements::validate(&region, &game_config)?;
     npcs::validate()?;
     crate::repository::validate_skill_catalog()?;
     Ok(())

@@ -53,18 +53,18 @@ pub(crate) struct SettlementProfile {
 }
 
 #[derive(Debug, Deserialize)]
-struct InfrastructureManifest {
-    infrastructure: Vec<InfrastructureRecordManifest>,
+pub(super) struct InfrastructureManifest {
+    pub(super) infrastructure: Vec<InfrastructureRecordManifest>,
 }
 
 static INFRASTRUCTURE_CATALOG: OnceLock<Vec<InfrastructureRecordManifest>> = OnceLock::new();
 
 #[derive(Debug, Deserialize)]
-struct InfrastructureRecordManifest {
+pub(super) struct InfrastructureRecordManifest {
     id: String,
     name: String,
     kind: String,
-    position: super::Position,
+    pub(super) position: super::Position,
     condition: u8,
     upkeep_per_day: u32,
     service_quality: u8,
@@ -83,7 +83,10 @@ pub(crate) struct InfrastructureProfile {
     pub(crate) note: String,
 }
 
-pub(super) fn validate(region: &super::RegionManifest) -> Result<(), String> {
+pub(super) fn validate(
+    region: &super::RegionManifest,
+    game_config: &super::GameConfigManifest,
+) -> Result<(), String> {
     let settlements: SettlementsManifest = parse_json_labeled(
         "settlements.json",
         macroquad_toolkit::include_json_str!("../../../assets/data/settlements.json"),
@@ -95,7 +98,11 @@ pub(super) fn validate(region: &super::RegionManifest) -> Result<(), String> {
     )
     .map_err(|error| format!("infrastructure JSON is invalid: {error}"))?;
     validate_settlements(&settlements, region)?;
-    validate_infrastructure(&infrastructure)?;
+    validate_infrastructure(
+        &infrastructure,
+        game_config.world_width,
+        game_config.world_height,
+    )?;
     Ok(())
 }
 
@@ -141,7 +148,8 @@ pub(crate) fn infrastructure_profiles() -> Vec<InfrastructureProfile> {
             macroquad_toolkit::include_json_str!("../../../assets/data/infrastructure.json"),
         )
         .expect("infrastructure content JSON must be valid");
-        validate_infrastructure(&infrastructure)
+        let config = super::game_config_defaults();
+        validate_infrastructure(&infrastructure, config.world_width, config.world_height)
             .expect("infrastructure content must satisfy its schema");
         infrastructure.infrastructure
     });
@@ -182,7 +190,11 @@ fn infrastructure_kind(kind: &str) -> InfrastructureKind {
     }
 }
 
-fn validate_infrastructure(infrastructure: &InfrastructureManifest) -> Result<(), String> {
+pub(super) fn validate_infrastructure(
+    infrastructure: &InfrastructureManifest,
+    world_width: u32,
+    world_height: u32,
+) -> Result<(), String> {
     super::validate_id_list(
         "infrastructure",
         infrastructure
@@ -208,6 +220,10 @@ fn validate_infrastructure(infrastructure: &InfrastructureManifest) -> Result<()
                     record.kind.as_str(),
                     "road" | "bridge" | "plot" | "public_building" | "service"
                 )
+                || record.position.x < 0
+                || record.position.y < 0
+                || record.position.x as u32 >= world_width
+                || record.position.y as u32 >= world_height
                 || record.condition > 100
                 || record.upkeep_per_day == 0
                 || record.service_quality > 100
