@@ -109,7 +109,7 @@ fn transient_refresh_failure_retries_the_same_request() {
     assert_eq!(notices.len(), 1);
 
     client.refresh_retry_timer = 0.0;
-    client.dispatch(&mut api);
+    client.dispatch(&mut api, false);
     assert!(client.pending_refresh.is_some());
     assert_eq!(client.in_flight_refresh, Some(request));
 }
@@ -123,12 +123,31 @@ fn refresh_waits_for_commands_and_blocks_new_dispatch_until_rotation_finishes() 
     client.pending_command = Some(Pending::failed("command still in flight"));
 
     let mut api = HttpClient::new("https://example.test");
-    client.dispatch_refresh(&mut api);
+    client.dispatch_refresh(&mut api, false);
     assert!(client.pending_refresh.is_none());
 
     client.pending_command = None;
-    client.dispatch(&mut api);
+    client.dispatch(&mut api, false);
     assert!(client.pending_refresh.is_some());
+    assert!(client.pending_command.is_none());
+    assert!(matches!(
+        client.commands.front(),
+        Some(Phase5Command::Report(_))
+    ));
+}
+
+#[test]
+fn another_subsystem_mutation_blocks_refresh_and_regional_dispatch() {
+    let mut client = Phase5Client::new();
+    client.refresh_token = Some("refresh-secret".to_owned());
+    client.auth_refresh_timer = 0.0;
+    client.queue_report("queued-report".to_owned(), None, None);
+
+    let mut api = HttpClient::new("https://example.test");
+    let mut notices = Vec::new();
+    client.update(0.0, &mut api, true, true, &mut notices);
+
+    assert!(client.pending_refresh.is_none());
     assert!(client.pending_command.is_none());
     assert!(matches!(
         client.commands.front(),
@@ -196,7 +215,7 @@ fn transient_command_failure_requeues_the_same_request() {
 
     let mut api = HttpClient::new("https://example.test");
     let mut notices = Vec::new();
-    client.update(0.0, &mut api, true, &mut notices);
+    client.update(0.0, &mut api, true, false, &mut notices);
 
     assert!(matches!(
         client.commands.front(),

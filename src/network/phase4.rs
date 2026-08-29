@@ -114,6 +114,7 @@ impl Phase4Client {
         dt: f32,
         api: &mut HttpClient,
         online: bool,
+        another_mutation_pending: bool,
         notices: &mut Vec<NetworkNotice>,
     ) {
         if !online {
@@ -197,11 +198,17 @@ impl Phase4Client {
                 ))),
             }
         }
-        self.dispatch(api);
-        self.regional.update(dt, api, online, notices);
+        self.dispatch(api, another_mutation_pending);
+        self.regional.update(
+            dt,
+            api,
+            online,
+            self.pending_command.is_some() || another_mutation_pending,
+            notices,
+        );
     }
 
-    fn dispatch(&mut self, api: &mut HttpClient) {
+    fn dispatch(&mut self, api: &mut HttpClient, another_mutation_pending: bool) {
         if self.pending_governance.is_none() {
             self.pending_governance = Some(api.get("/v1/settlement/governance"));
         }
@@ -223,7 +230,10 @@ impl Phase4Client {
         if self.pending_combat.is_none() {
             self.pending_combat = Some(api.get("/v1/combat/local"));
         }
-        if self.pending_command.is_none() {
+        if self.pending_command.is_none()
+            && !another_mutation_pending
+            && !self.regional.auth_refresh_pending()
+        {
             if let Some(command) = self.commands.pop_front() {
                 self.pending_command = Some(match command {
                     Phase4Command::Governance(request) => {
@@ -684,6 +694,10 @@ impl Phase4Client {
 
     pub(super) fn queue_region_cycle(&mut self, id: &str) -> bool {
         self.regional.queue_cycle(id)
+    }
+
+    pub(super) fn auth_refresh_pending(&self) -> bool {
+        self.regional.auth_refresh_pending()
     }
 
     pub(super) fn queue_region_report(

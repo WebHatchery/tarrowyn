@@ -129,7 +129,13 @@ impl FrontierClient {
         cursor_boundary
     }
 
-    pub(super) fn dispatch(&mut self, api: &mut HttpClient, online: bool, cursor: u64) {
+    pub(super) fn dispatch(
+        &mut self,
+        api: &mut HttpClient,
+        online: bool,
+        cursor: u64,
+        auth_refresh_pending: bool,
+    ) {
         if !online {
             return;
         }
@@ -143,7 +149,7 @@ impl FrontierClient {
         if self.pending_opportunities.is_none() {
             self.pending_opportunities = Some(api.get("/v1/settlement/opportunities"));
         }
-        if self.pending_command.is_none() {
+        if self.pending_command.is_none() && !auth_refresh_pending {
             if let Some(command) = self.commands.pop_front() {
                 self.pending_command = Some(match command {
                     FrontierCommand::Contract(request) => {
@@ -169,6 +175,10 @@ impl FrontierClient {
         self.pending_opportunities = None;
         self.pending_command = None;
         self.commands.clear();
+    }
+
+    pub(super) fn has_pending_command(&self) -> bool {
+        self.pending_command.is_some()
     }
 
     pub(super) fn queue_contract(&mut self, request_id: String, action: ContractAction) -> bool {

@@ -103,11 +103,16 @@ impl Phase5Client {
         self.own_account_id = account_id.map(str::to_owned);
     }
 
+    pub(super) fn auth_refresh_pending(&self) -> bool {
+        self.pending_refresh.is_some() || self.in_flight_refresh.is_some()
+    }
+
     pub(super) fn update(
         &mut self,
         dt: f32,
         api: &mut HttpClient,
         online: bool,
+        another_mutation_pending: bool,
         notices: &mut Vec<NetworkNotice>,
     ) {
         if !online {
@@ -205,11 +210,11 @@ impl Phase5Client {
                 }
             }
         }
-        self.dispatch(api);
+        self.dispatch(api, another_mutation_pending);
     }
 
-    fn dispatch(&mut self, api: &mut HttpClient) {
-        self.dispatch_refresh(api);
+    fn dispatch(&mut self, api: &mut HttpClient, another_mutation_pending: bool) {
+        self.dispatch_refresh(api, another_mutation_pending);
         if self.pending_refresh.is_none() && self.refresh_timer <= 0.0 {
             if self.pending_region.is_none() {
                 self.pending_region = Some(api.get("/v1/region"));
@@ -241,6 +246,7 @@ impl Phase5Client {
         }
         if self.pending_command.is_none()
             && self.pending_refresh.is_none()
+            && !another_mutation_pending
             && self.command_retry_timer <= 0.0
         {
             if let Some(command) = self.commands.pop_front() {

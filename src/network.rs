@@ -340,10 +340,12 @@ impl OnlineClient {
                 .as_ref()
                 .map(|account| account.account_id.as_str()),
         );
+        let frontier_mutation_pending = self.frontier.has_pending_command();
         self.phase4.update(
             dt,
             &mut self.api,
             self.state == ConnectionState::Online,
+            frontier_mutation_pending,
             &mut notices,
         );
         if let Some(account) = self.phase4.take_linked_account(self.client_key.as_deref()) {
@@ -369,6 +371,7 @@ impl OnlineClient {
             &mut self.api,
             self.state == ConnectionState::Online,
             self.projection.cursor,
+            self.phase4.auth_refresh_pending(),
         );
         maintenance::restore_status(self);
         notices
