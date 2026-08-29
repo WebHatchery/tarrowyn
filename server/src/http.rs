@@ -4,6 +4,7 @@ use serde::Serialize;
 use std::io::Read;
 use std::sync::Arc;
 use std::thread;
+use std::time::{Duration, Instant};
 use tarrowyn_protocol::{
     AccountDeletionRequest, ApiErrorResponse, ApiMeta, ApiResponse, AuthLinkRequest,
     AuthRefreshRequest, AuthRevokeRequest, ChatRequest, ClaimLifecycleRequest, ClaimRequest,
@@ -29,9 +30,15 @@ pub fn serve(config: crate::config::ServerConfig) -> Result<(), String> {
     );
     let server = Server::http(&config.bind_addr).map_err(|error| error.to_string())?;
     let ticker_repository = Arc::clone(&repository);
-    thread::spawn(move || loop {
-        thread::sleep(config.tick_interval);
-        ticker_repository.tick();
+    let tick_interval = config.tick_interval;
+    thread::spawn(move || {
+        let mut next_tick = Instant::now()
+            .checked_add(tick_interval)
+            .unwrap_or_else(Instant::now);
+        loop {
+            monotonic_tick_wait(&mut next_tick, tick_interval);
+            ticker_repository.tick();
+        }
     });
     eprintln!(
         "Tarrowyn server listening on {} (protocol {}, {}ms tick)",
@@ -43,6 +50,22 @@ pub fn serve(config: crate::config::ServerConfig) -> Result<(), String> {
         handle_request(request, Arc::clone(&repository));
     }
     Ok(())
+}
+
+fn monotonic_tick_wait(deadline: &mut Instant, interval: Duration) {
+    let now = Instant::now();
+    if *deadline > now {
+        thread::sleep(*deadline - now);
+    }
+    let now = Instant::now();
+    *deadline = next_tick_deadline(*deadline, now, interval);
+}
+
+fn next_tick_deadline(deadline: Instant, now: Instant, interval: Duration) -> Instant {
+    deadline
+        .checked_add(interval)
+        .filter(|next| *next > now)
+        .unwrap_or_else(|| now.checked_add(interval).unwrap_or(now))
 }
 
 fn handle_request(mut request: Request, repository: Arc<WorldRepository>) {

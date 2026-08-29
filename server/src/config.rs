@@ -89,10 +89,13 @@ impl Default for ServerConfig {
 impl ServerConfig {
     pub fn from_env() -> Self {
         let defaults = Self::default();
-        let tick_interval = Duration::from_millis(env_u64(
-            "TARROWYN_TICK_MS",
-            defaults.tick_interval.as_millis() as u64,
-        ));
+        let tick_interval = Duration::from_millis(
+            env_u64(
+                "TARROWYN_TICK_MS",
+                defaults.tick_interval.as_millis() as u64,
+            )
+            .max(1),
+        );
         Self {
             bind_addr: env_string("TARROWYN_SERVER_ADDR", defaults.bind_addr),
             db_driver: env_string("DB_DRIVER", defaults.db_driver),

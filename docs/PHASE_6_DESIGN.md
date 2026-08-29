@@ -161,6 +161,11 @@ provider secrets, and support credentials are environment or deployment-secret
 inputs, never checked into the repository. Development guest identities use a
 separate fixture state path and must not share production data.
 
+The world ticker schedules against monotonic deadlines rather than sleeping a
+full interval after each update. Normal persistence and request work therefore
+does not stretch the GDD's 80-minute day; an overrun advances to the next
+recoverable deadline without running an unbounded burst of catch-up ticks.
+
 `/health` remains a simple process check. `/v1/ops/health` is a readiness and
 integrity check. Authenticated `/v1/ops/metrics` reports sessions, accounts,
 regional visibility, event backlog, open orders, travel recovery load, command
