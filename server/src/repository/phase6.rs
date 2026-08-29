@@ -62,6 +62,8 @@ pub(super) struct Phase6State {
     #[serde(default)]
     pub(super) auth_refresh_results: HashMap<String, AuthRefreshResponse>,
     #[serde(default)]
+    pub(super) auth_refresh_accounts: HashMap<String, String>,
+    #[serde(default)]
     pub(super) auth_revoke_results: HashMap<String, AuthRevokeResponse>,
     pub(super) audits: VecDeque<AuditRecord>,
     pub(super) reports: HashMap<String, ModerationReportResponse>,
@@ -95,6 +97,7 @@ pub(super) fn fresh(_config: &ServerConfig) -> Phase6State {
         sessions: HashMap::new(),
         auth_link_results: HashMap::new(),
         auth_refresh_results: HashMap::new(),
+        auth_refresh_accounts: HashMap::new(),
         auth_revoke_results: HashMap::new(),
         audits: VecDeque::new(),
         reports: HashMap::new(),
@@ -346,7 +349,11 @@ impl WorldRepository {
         state
             .phase6
             .auth_refresh_results
-            .insert(cache_key, response.clone());
+            .insert(cache_key.clone(), response.clone());
+        state
+            .phase6
+            .auth_refresh_accounts
+            .insert(cache_key, old_session.account_id.clone());
         record_command_outcome(&mut state, true);
         self.persist(&state);
         Ok(ApiResponse {
@@ -567,6 +574,10 @@ pub(super) fn phase6_tick(state: &mut RepositoryState, config: &ServerConfig) ->
     deletion::process(state);
     trim_replay_cache(&mut state.phase6.auth_link_results);
     trim_replay_cache(&mut state.phase6.auth_refresh_results);
+    state
+        .phase6
+        .auth_refresh_accounts
+        .retain(|key, _| state.phase6.auth_refresh_results.contains_key(key));
     trim_replay_cache(&mut state.phase6.auth_revoke_results);
     trim_replay_cache(&mut state.phase6.moderation_results);
     prune_moderation_cooldowns(state);

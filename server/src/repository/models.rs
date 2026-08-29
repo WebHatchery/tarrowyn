@@ -198,6 +198,9 @@ impl RepositoryState {
         super::phase6::trim_moderation_reports(&mut phase6, super::phase4::unix_time_seconds());
         trim_replay_cache(&mut phase6.auth_link_results);
         trim_replay_cache(&mut phase6.auth_refresh_results);
+        phase6
+            .auth_refresh_accounts
+            .retain(|key, _| phase6.auth_refresh_results.contains_key(key));
         trim_replay_cache(&mut phase6.auth_revoke_results);
         trim_replay_cache(&mut phase6.moderation_results);
         phase6

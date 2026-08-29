@@ -80,6 +80,9 @@ accounts until the next authoritative processing tick.
 Production access records are retained only while their access token is active
 or their refresh token remains valid; revoked and fully expired sessions are
 removed during session maintenance without interrupting a valid refresh.
+Refresh replay results retain their account ownership separately from the live
+session table so deletion also removes rotated responses after their access
+session has expired.
 Moderation cooldowns are identity-lifecycle state rather than replay history:
 they remain for every extant identity and are removed only when that identity
 leaves the world, so report rate limits are not defeated by cache eviction.

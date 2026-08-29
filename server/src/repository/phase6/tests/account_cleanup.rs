@@ -1,9 +1,9 @@
 use super::*;
 use tarrowyn_protocol::{
-    AccountDeletionRequest, AuthLinkRequest, ChronicleEntry, ClaimLifecycleAction,
-    ClaimLifecycleRequest, GuestSessionRequest, KnowledgeAction, KnowledgeRequest,
-    MarketOrderAction, MarketOrderRequest, ProfessionAction, ProfessionKind, ProfessionRequest,
-    SkillAction, SkillRequest,
+    AccountDeletionRequest, AuthLinkRequest, AuthRefreshRequest, ChronicleEntry,
+    ClaimLifecycleAction, ClaimLifecycleRequest, GuestSessionRequest, KnowledgeAction,
+    KnowledgeRequest, MarketOrderAction, MarketOrderRequest, ProfessionAction, ProfessionKind,
+    ProfessionRequest, SkillAction, SkillRequest,
 };
 
 fn history_entry(name: &str) -> ChronicleEntry {
@@ -183,6 +183,71 @@ fn account_deletion_removes_phase4_and_phase5_replay_payloads() {
         .expedition_credentials
         .iter()
         .any(|id| id == &account_id));
+}
+
+#[test]
+fn account_deletion_removes_refresh_replay_after_access_expiry() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let guest = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("refresh-replay-cleanup".to_owned()),
+            reset: false,
+        })
+        .unwrap()
+        .data;
+    let linked = repository
+        .auth_link(
+            &guest.account_token,
+            AuthLinkRequest {
+                request_id: "refresh-replay-link".to_owned(),
+                provider: "webhatchery-identity-oidc".to_owned(),
+                subject: "refresh-replay-subject".to_owned(),
+                display_name: None,
+            },
+        )
+        .unwrap()
+        .data;
+    let refreshed = repository
+        .auth_refresh(AuthRefreshRequest {
+            request_id: "refresh-replay-refresh".to_owned(),
+            refresh_token: linked.session.refresh_token,
+        })
+        .unwrap()
+        .data;
+    let account_id = linked.account_id.clone();
+    let deletion = repository
+        .account_delete(
+            &refreshed.session.account_token,
+            AccountDeletionRequest {
+                request_id: "refresh-replay-delete".to_owned(),
+                account_id: account_id.clone(),
+            },
+        )
+        .unwrap()
+        .data;
+    assert!(deletion.accepted);
+
+    {
+        let mut state = repository.state.lock().unwrap();
+        state
+            .phase6
+            .sessions
+            .remove(&refreshed.session.account_token);
+        state.sessions.remove(&refreshed.session.account_token);
+    }
+    repository.tick();
+
+    let state = repository.state.lock().unwrap();
+    assert!(state
+        .phase6
+        .auth_refresh_results
+        .values()
+        .all(|response| response.session.account_token != refreshed.session.account_token));
+    assert!(state
+        .phase6
+        .auth_refresh_accounts
+        .values()
+        .all(|account| account != &account_id));
 }
 
 #[test]

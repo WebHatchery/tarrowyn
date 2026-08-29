@@ -51,6 +51,13 @@ fn erase_account(state: &mut RepositoryState, request: &PendingAccountDeletion) 
         .filter(|(_, session)| session.account_id == request.account_id)
         .map(|(token, _)| token.clone())
         .collect();
+    let deleted_refresh_replays: HashSet<String> = state
+        .phase6
+        .auth_refresh_accounts
+        .iter()
+        .filter(|(_, account_id)| *account_id == &request.account_id)
+        .map(|(key, _)| key.clone())
+        .collect();
     state
         .phase6
         .sessions
@@ -92,10 +99,14 @@ fn erase_account(state: &mut RepositoryState, request: &PendingAccountDeletion) 
         .phase6
         .auth_revoke_results
         .retain(|key, _| !key.starts_with(&format!("{}:", request.identity_key)));
+    state.phase6.auth_refresh_results.retain(|key, response| {
+        !deleted_refresh_replays.contains(key)
+            && !deleted_tokens.contains(&response.session.account_token)
+    });
     state
         .phase6
-        .auth_refresh_results
-        .retain(|_, response| !deleted_tokens.contains(&response.session.account_token));
+        .auth_refresh_accounts
+        .retain(|key, _| !deleted_refresh_replays.contains(key));
     state
         .phase6
         .moderation_results
