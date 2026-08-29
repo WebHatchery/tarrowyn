@@ -498,12 +498,17 @@ pub(super) fn price_notes(state: &RepositoryState, location: &str) -> Vec<String
         format!(
             "{}: {} gold at {}% regional index",
             commodity.label(),
-            base_price(commodity) * u32::from(index) / 100,
+            indexed_price(base_price(commodity), index),
             index
         )
     })
     .collect()
 }
+
+pub(super) fn indexed_price(base: u32, index: u16) -> u32 {
+    base.saturating_mul(u32::from(index)) / 100
+}
+
 pub(super) fn season(day: u32) -> String {
     crate::content::season_for_day(day)
 }
