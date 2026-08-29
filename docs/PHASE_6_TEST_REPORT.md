@@ -605,6 +605,10 @@ The skill manifest boundary now rejects unsafe player guidance, oversized
 identifiers, duplicate or oversized prerequisite lists, invalid practice keys,
 and malformed qualifying-event names, with two focused catalogue regressions.
 
+The shared content ID boundary now rejects control characters and IDs over 160
+characters across every validated manifest, with one focused content-validator
+regression.
+
 The cross-layer persistence-readiness milestone passed the full release gate on
 2026-08-30 after the core and Phase 3-6 integrity additions: 14 protocol tests,
 282 server tests, and 93 client tests, followed by asset/code-standard checks,

@@ -37,6 +37,7 @@ const REQUIRED_MANIFESTS: &[&str] = &[
     "settlements.json",
     "skills.json",
 ];
+const MAX_CONTENT_ID_CHARS: usize = 160;
 
 #[derive(Debug, Deserialize)]
 struct ContentSchemaManifest {
@@ -729,7 +730,11 @@ fn validate_required_ids(
 
 fn validate_id_list(label: &str, ids: Vec<&str>) -> Result<(), String> {
     if ids.is_empty()
-        || ids.iter().any(|id| id.trim().is_empty())
+        || ids.iter().any(|id| {
+            id.trim().is_empty()
+                || id.chars().count() > MAX_CONTENT_ID_CHARS
+                || id.chars().any(char::is_control)
+        })
         || ids.iter().collect::<HashSet<_>>().len() != ids.len()
     {
         return Err(format!("{label} IDs must be unique and non-empty"));

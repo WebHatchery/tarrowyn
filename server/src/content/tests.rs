@@ -16,6 +16,14 @@ fn content_ids_must_be_unique_and_non_empty() {
 }
 
 #[test]
+fn content_ids_must_be_bounded_and_control_free() {
+    let oversized = "x".repeat(161);
+    assert!(super::validate_id_list("test", vec!["safe-id"]).is_ok());
+    assert!(super::validate_id_list("test", vec!["unsafe\nid"]).is_err());
+    assert!(super::validate_id_list("test", vec![oversized.as_str()]).is_err());
+}
+
+#[test]
 fn action_kinds_must_match_the_supported_protocol_actions() {
     let mut actions: Vec<super::ActionManifest> =
         macroquad_toolkit::data_loader::parse_json_labeled(
