@@ -3,11 +3,11 @@ use super::*;
 #[test]
 fn recovery_risk_label_stays_compact_without_losing_the_seed_rule() {
     assert_eq!(
-        recovery_risk_label("At most one carried seed is risked on knockout."),
+        super::panels::recovery_risk_label("At most one carried seed is risked on knockout."),
         "1 carried seed"
     );
     assert_eq!(
-        recovery_risk_label("A carried tool may be damaged."),
+        super::panels::recovery_risk_label("A carried tool may be damaged."),
         "carried item"
     );
 }
@@ -68,7 +68,7 @@ fn skill_selection_keeps_roots_open_and_advanced_arts_hidden() {
         mastery: 5,
         ..available
     };
-    assert!(skill_practice_choice(&practising));
-    assert!(!skill_practice_choice(&advanced));
-    assert!(!skill_practice_choice(&mastered));
+    assert!(super::panels::skill_practice_choice(&practising));
+    assert!(!super::panels::skill_practice_choice(&advanced));
+    assert!(!super::panels::skill_practice_choice(&mastered));
 }
