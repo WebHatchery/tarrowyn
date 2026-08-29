@@ -248,13 +248,34 @@ pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
         .chain(state.phase4.combat.keys())
         .all(|identity_key| identity_keys.contains(identity_key.as_str()));
     let profiles_ok = state.phase4.profiles.values().all(|profiles| {
+        let mut professions = Vec::new();
         profiles.iter().all(|profile| {
-            unique_non_empty(
-                profile
-                    .capabilities
-                    .iter()
-                    .map(|capability| capability.capability_id.as_str()),
-            )
+            let profession_unique = if professions.contains(&profile.profession) {
+                false
+            } else {
+                professions.push(profile.profession);
+                true
+            };
+            profession_unique
+                && profile.level > 0
+                && profile
+                    .credential
+                    .as_deref()
+                    .is_none_or(|credential| bounded_text(credential, MAX_KNOWLEDGE_TEXT_CHARS))
+                && profile.capabilities.iter().all(|capability| {
+                    capability.profession == profile.profession
+                        && capability.level > 0
+                        && bounded_text(&capability.capability_id, MAX_KNOWLEDGE_ID_CHARS)
+                        && bounded_text(&capability.name, MAX_HOUSEHOLD_TEXT_CHARS)
+                        && bounded_text(&capability.description, MAX_KNOWLEDGE_TEXT_CHARS)
+                        && bounded_text(&capability.effect, MAX_KNOWLEDGE_TEXT_CHARS)
+                })
+                && unique_non_empty(
+                    profile
+                        .capabilities
+                        .iter()
+                        .map(|capability| capability.capability_id.as_str()),
+                )
         })
     });
     let animals_ok = !state.phase4.animals.is_empty()

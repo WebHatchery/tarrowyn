@@ -341,3 +341,71 @@ fn duplicate_phase4_knowledge_discoverer_degrades_readiness() {
     assert!(!health.ready);
     assert!(!health.integrity_ok);
 }
+
+#[test]
+fn duplicate_phase4_profession_profile_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("phase4-profile-state".to_owned()),
+            reset: false,
+        })
+        .expect("guest session")
+        .data;
+    repository
+        .professions(&session.account_token)
+        .expect("profession view");
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        let profile = state
+            .phase4
+            .profiles
+            .get(&session.client_key)
+            .and_then(|profiles| profiles.first())
+            .cloned()
+            .expect("profile");
+        state
+            .phase4
+            .profiles
+            .get_mut(&session.client_key)
+            .expect("profiles")
+            .push(profile);
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
+fn malformed_phase4_capability_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("phase4-capability-state".to_owned()),
+            reset: false,
+        })
+        .expect("guest session")
+        .data;
+    repository
+        .professions(&session.account_token)
+        .expect("profession view");
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state
+            .phase4
+            .profiles
+            .get_mut(&session.client_key)
+            .expect("profiles")
+            .first_mut()
+            .expect("profile")
+            .capabilities
+            .first_mut()
+            .expect("capability")
+            .level = 0;
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
