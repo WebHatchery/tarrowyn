@@ -117,7 +117,9 @@ pub struct Position {
 
 impl Position {
     pub fn manhattan_distance(self, other: Self) -> u32 {
-        self.x.abs_diff(other.x) + self.y.abs_diff(other.y)
+        self.x
+            .abs_diff(other.x)
+            .saturating_add(self.y.abs_diff(other.y))
     }
 }
 

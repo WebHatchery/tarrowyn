@@ -42,6 +42,21 @@ fn response_deserialization_rejects_a_deployment_protocol_mismatch() {
 }
 
 #[test]
+fn position_distance_saturates_malformed_coordinates() {
+    assert_eq!(
+        Position {
+            x: i32::MIN,
+            y: i32::MIN,
+        }
+        .manhattan_distance(Position {
+            x: i32::MAX,
+            y: i32::MAX,
+        }),
+        u32::MAX
+    );
+}
+
+#[test]
 fn chat_contract_preserves_bounded_message_fields() {
     let request = ChatRequest {
         request_id: "chat-1".to_owned(),

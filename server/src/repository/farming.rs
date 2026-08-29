@@ -53,8 +53,7 @@ impl WorldRepository {
                 );
                 return self.store_farming_result(&mut state, identity_key, response);
             };
-            let distance =
-                current.x.abs_diff(request.position.x) + current.y.abs_diff(request.position.y);
+            let distance = current.manhattan_distance(request.position);
             if distance > 1 {
                 response.reason = Some("Stand beside the animal before caring for it.".to_owned());
                 response.animal = Some(state.phase4.animals[animal_index].clone());
@@ -83,8 +82,7 @@ impl WorldRepository {
             response.reason = Some("That position is not a shared field plot.".to_owned());
             return self.store_farming_result(&mut state, identity_key, response);
         };
-        let distance =
-            current.x.abs_diff(request.position.x) + current.y.abs_diff(request.position.y);
+        let distance = current.manhattan_distance(request.position);
         if distance > 1 {
             response.reason = Some("Stand beside the field plot before tending it.".to_owned());
             return self.store_farming_result(&mut state, identity_key, response);
