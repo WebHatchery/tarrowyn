@@ -97,10 +97,11 @@ In the online client, use only visible controls:
    conditions.
 7. Walk near Whisperwood, tap `Local fight`, and use the visible buttons to
    prepare, try the first-exchange `Technique`, then strike or guard. Use
-   `Bandage`, `Reposition`, or `Spell` as the encounter permits, and tap the
-    existing `Recover` control after a knockout. After each accepted action,
-    read the visible `Action ready` or `Action opens in … beat` status before
-    sending the next action.
+   `Bandage`, `Reposition`, or `Spell` as the encounter permits. After a
+   knockout, read the visible carried-loss risk, healer gold cost, and stored
+   property safety, then choose `Self`, `Rescuer`, or `Healer` from the visible
+   recovery row. After each accepted action, read the visible `Action ready`
+   or `Action opens in … beat` status before sending the next action.
 
 `Reconnect` is the recovery path for timeouts and rejected commands; no step in
 this checklist requires a physical keyboard.

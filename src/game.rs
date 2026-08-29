@@ -600,7 +600,13 @@ impl Game {
                     tarrowyn_protocol::CombatAction::Strike,
                     tarrowyn_protocol::WeaponKind::IronSword,
                 ),
+                "recover-self" => {
+                    client.queue_recovery(tarrowyn_protocol::RecoveryChoice::SelfRecover)
+                }
                 "recover" => client.queue_recovery(tarrowyn_protocol::RecoveryChoice::AskRescuer),
+                "recover-healer" => {
+                    client.queue_recovery(tarrowyn_protocol::RecoveryChoice::PayHealer)
+                }
                 "claim" => client.queue_claim_cycle(),
                 "abandon-claim" => client
                     .queue_claim_action(tarrowyn_protocol::ClaimLifecycleAction::Abandon, None),

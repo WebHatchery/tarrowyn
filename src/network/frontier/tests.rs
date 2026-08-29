@@ -99,6 +99,24 @@ fn frontier_action_reports_a_full_command_queue() {
 }
 
 #[test]
+fn recovery_buttons_queue_each_authoritative_choice() {
+    let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
+    client.state = crate::network::ConnectionState::Online;
+
+    for choice in [
+        RecoveryChoice::SelfRecover,
+        RecoveryChoice::AskRescuer,
+        RecoveryChoice::PayHealer,
+    ] {
+        client.queue_recovery(choice);
+        let Some(FrontierCommand::Recovery(request)) = client.frontier.commands.pop_front() else {
+            panic!("a recovery choice should queue a recovery request");
+        };
+        assert_eq!(request.choice, choice);
+    }
+}
+
+#[test]
 fn abandoned_homestead_cycle_requests_a_new_lease() {
     let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
     client.state = crate::network::ConnectionState::Online;

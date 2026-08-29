@@ -147,32 +147,37 @@ pub(super) fn draw_sidebar(
         actions.push(UiAction::SendChat);
     }
 
-    draw_button_row(
-        content,
-        top + 239.0,
-        22.0,
-        mouse,
-        &[
-            (
-                "contract",
-                "Contract",
-                !ctx.knocked_out,
-                ButtonTone::Secondary,
-            ),
-            ("strike", "Strike", !ctx.knocked_out, ButtonTone::Secondary),
-            (
-                "technique",
-                "Technique",
-                !ctx.knocked_out,
-                ButtonTone::Secondary,
-            ),
-            ("recover", "Recover", ctx.knocked_out, ButtonTone::Secondary),
-            ("claim", "Claim", !ctx.knocked_out, ButtonTone::Secondary),
-            ("item", "Bandage", !ctx.knocked_out, ButtonTone::Secondary),
-        ],
-        ctx,
-        actions,
-    );
+    if ctx.knocked_out {
+        draw_button_row(
+            content,
+            top + 239.0,
+            22.0,
+            mouse,
+            &[
+                ("recover-self", "Self", true, ButtonTone::Secondary),
+                ("recover", "Rescuer", true, ButtonTone::Secondary),
+                ("recover-healer", "Healer", true, ButtonTone::Secondary),
+            ],
+            ctx,
+            actions,
+        );
+    } else {
+        draw_button_row(
+            content,
+            top + 239.0,
+            22.0,
+            mouse,
+            &[
+                ("contract", "Contract", true, ButtonTone::Secondary),
+                ("strike", "Strike", true, ButtonTone::Secondary),
+                ("technique", "Technique", true, ButtonTone::Secondary),
+                ("claim", "Claim", true, ButtonTone::Secondary),
+                ("item", "Bandage", true, ButtonTone::Secondary),
+            ],
+            ctx,
+            actions,
+        );
+    }
     draw_button_row(
         content,
         top + 264.0,
@@ -487,7 +492,16 @@ fn draw_combat_status(ctx: &UiContext<'_>, content: Rect, top: f32) {
         tarrowyn_protocol::LocalCombatStatus::Retreated => "retreated",
     };
     draw_surface(
-        Rect::new(content.x, top + 101.0, content.w, 34.0),
+        Rect::new(
+            content.x,
+            top + 101.0,
+            content.w,
+            if combat.status == tarrowyn_protocol::LocalCombatStatus::KnockedOut {
+                38.0
+            } else {
+                34.0
+            },
+        ),
         &SurfaceStyle::new(Color::new(0.075, 0.105, 0.115, 1.0))
             .with_border(1.0, Color::new(0.62, 0.42, 0.22, 0.7)),
     );
@@ -500,6 +514,17 @@ fn draw_combat_status(ctx: &UiContext<'_>, content: Rect, top: f32) {
         top + 115.0,
         TextStyle::new(10.0, GOLD).params(),
     );
+    if combat.status == tarrowyn_protocol::LocalCombatStatus::KnockedOut {
+        draw_ui_text_ex(
+            &format!(
+                "Risk: {}  •  Healer: {} gold  •  stored property safe",
+                combat.carried_risk, combat.recovery_cost
+            ),
+            content.x + 8.0,
+            top + 129.0,
+            TextStyle::new(8.0, CREAM).params(),
+        );
+    }
 }
 
 fn draw_button_row(
