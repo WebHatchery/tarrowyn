@@ -63,12 +63,13 @@ fn contract_cycle_waits_through_the_tavern_cooldown() {
 }
 
 #[test]
-fn frontier_error_summary_keeps_an_api_rejection_code() {
+fn frontier_refresh_error_keeps_an_api_rejection_code() {
     assert_eq!(
-        super::short_error(
-            "HTTP API error in 'POST /v1/contracts/brambleback-watch' [rate_limited]: Try again later."
+        super::refresh_error_notice(
+            "tavern contracts",
+            "HTTP API error in 'GET /v1/contracts' [rate_limited]: Try again later."
         ),
-        "HTTP API error in 'POST /v1/contracts/brambleback-watch' [rate_limited]: Try again later."
+        "The tavern contracts could not be refreshed; reconnect or tap the visible control to retry. HTTP API error in 'GET /v1/contracts' [rate_limited]: Try again later."
     );
 }
 

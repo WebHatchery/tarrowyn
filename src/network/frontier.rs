@@ -66,12 +66,12 @@ impl FrontierClient {
             .and_then(|pending| pending.poll_timed(dt, REQUEST_TIMEOUT_SECONDS))
         {
             self.pending_contracts = None;
-            if let Ok(response) = result {
-                self.contracts = response.data.contracts;
-            } else {
-                notices.push(NetworkNotice::Warning(
-                    "The tavern contracts could not be refreshed.".to_owned(),
-                ));
+            match result {
+                Ok(response) => self.contracts = response.data.contracts,
+                Err(error) => notices.push(NetworkNotice::Warning(refresh_error_notice(
+                    "tavern contracts",
+                    &error,
+                ))),
             }
         }
         if let Some(result) = self
@@ -92,9 +92,10 @@ impl FrontierClient {
                 Err(error) if super::cursor::is_cursor_recovery_error(&error) => {
                     cursor_boundary = true;
                 }
-                Err(_) => notices.push(NetworkNotice::Warning(
-                    "The settlement chronicle could not be refreshed.".to_owned(),
-                )),
+                Err(error) => notices.push(NetworkNotice::Warning(refresh_error_notice(
+                    "settlement chronicle",
+                    &error,
+                ))),
             }
         }
         if let Some(result) = self
@@ -105,9 +106,10 @@ impl FrontierClient {
             self.pending_opportunities = None;
             match result {
                 Ok(response) => projection.opportunities = response.data.opportunities,
-                Err(_) => notices.push(NetworkNotice::Warning(
-                    "The frontier opportunities could not be refreshed.".to_owned(),
-                )),
+                Err(error) => notices.push(NetworkNotice::Warning(refresh_error_notice(
+                    "frontier opportunities",
+                    &error,
+                ))),
             }
         }
         if let Some(result) = self
@@ -276,6 +278,13 @@ fn short_error(error: &str) -> String {
         .chars()
         .take(100)
         .collect()
+}
+
+fn refresh_error_notice(label: &str, error: &str) -> String {
+    format!(
+        "The {label} could not be refreshed; reconnect or tap the visible control to retry. {}",
+        short_error(error)
+    )
 }
 
 fn apply_combat(
