@@ -30,6 +30,7 @@ mod phase3_frontier;
 mod phase4;
 mod phase5;
 mod phase6;
+mod recovery;
 mod reset;
 mod session;
 mod skills;

@@ -417,6 +417,41 @@ fn knocked_out_local_player_cannot_reenter_before_recovery() {
 }
 
 #[test]
+fn recovery_without_a_carried_seed_stays_knocked_out() {
+    let repo = WorldRepository::new(ServerConfig::default());
+    let session = guest(&repo, "recovery-no-seed");
+    {
+        let mut state = repo.state.lock().expect("repository lock");
+        let identity = state
+            .identities
+            .get_mut(&session.client_key)
+            .expect("guest identity");
+        identity.knocked_out = true;
+        identity.injuries = 2;
+        identity.recovery_cost = 4;
+        identity.inventory.seeds = 0;
+    }
+
+    let recovery = repo
+        .recovery(
+            &session.account_token,
+            RecoveryRequest {
+                request_id: "recovery-no-seed-request".to_owned(),
+                choice: RecoveryChoice::SelfRecover,
+            },
+        )
+        .expect("recovery response")
+        .data;
+
+    assert!(!recovery.accepted);
+    assert!(recovery.player.knocked_out);
+    assert!(recovery
+        .reason
+        .as_deref()
+        .is_some_and(|reason| reason.contains("carried seed")));
+}
+
+#[test]
 fn local_combat_can_cast_one_wind_spark_per_encounter() {
     let repo = WorldRepository::new(ServerConfig {
         movement_cooldown_ticks: 0,
