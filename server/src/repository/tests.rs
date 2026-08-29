@@ -10,6 +10,7 @@ use tarrowyn_protocol::{
 
 mod chat_validation;
 mod events;
+mod movement_validation;
 mod persistence;
 mod reset;
 mod telemetry;

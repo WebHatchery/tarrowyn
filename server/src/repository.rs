@@ -336,7 +336,12 @@ impl WorldRepository {
             position: current,
             reason: None,
         };
-        if intent.dx.abs() + intent.dy.abs() != 1 {
+        if intent
+            .dx
+            .unsigned_abs()
+            .saturating_add(intent.dy.unsigned_abs())
+            != 1
+        {
             response.reason = Some("Movement must be one cardinal step.".to_owned());
         } else if limited {
             response.reason = Some("Movement is arriving too quickly.".to_owned());
