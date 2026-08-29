@@ -1,5 +1,5 @@
 use super::phase5::Phase5Client;
-use super::{NetworkNotice, OnlineClient, REQUEST_TIMEOUT_SECONDS};
+use super::{NetworkNotice, REQUEST_TIMEOUT_SECONDS};
 use macroquad_toolkit::net::{HttpClient, Pending};
 use std::collections::VecDeque;
 use tarrowyn_protocol::{
@@ -13,6 +13,7 @@ use tarrowyn_protocol::{
 
 mod combat;
 mod lifecycle;
+mod online;
 mod recovery;
 mod registry;
 mod summary;
@@ -742,59 +743,4 @@ fn short_error(error: &str) -> String {
         .chars()
         .take(100)
         .collect()
-}
-
-impl OnlineClient {
-    pub(crate) fn queue_phase4(&mut self, id: &str) {
-        if self.state == super::ConnectionState::Online {
-            let request_id = self.next_request_id("phase4");
-            if !self.phase4.queue_cycle(id, request_id) {
-                self.status_message =
-                    "That settlement action is not ready; wait for its ledger or queue to clear."
-                        .to_owned();
-            }
-        }
-    }
-
-    pub(crate) fn phase4_summary(&self) -> String {
-        self.phase4.summary()
-    }
-
-    pub(crate) fn crafting_view(&self) -> Option<CraftingView> {
-        self.phase4
-            .crafting_view()
-            .map(|(progress, target_start, target_end)| CraftingView {
-                progress,
-                target_start,
-                target_end,
-            })
-    }
-
-    pub(crate) fn combat_state(&self) -> Option<&LocalCombatState> {
-        self.phase4.combat.as_ref()
-    }
-
-    pub(crate) fn storm_magic_unlocked(&self) -> bool {
-        self.phase4.storm_magic_unlocked()
-    }
-
-    pub(crate) fn queue_crafting_timing(&mut self) {
-        if self.state != super::ConnectionState::Online {
-            return;
-        }
-        let request_id = self.next_request_id("craft");
-        if self.phase4.submit_crafting(request_id) {
-            self.status_message =
-                "Crafting result sent; waiting for the workshop ledger…".to_owned();
-        }
-    }
-
-    pub(crate) fn queue_skill_teach(&mut self, target_account_id: &str) -> bool {
-        if self.state != super::ConnectionState::Online {
-            return false;
-        }
-        let request_id = self.next_request_id("school");
-        self.phase4
-            .queue_school(request_id, target_account_id.to_owned())
-    }
 }

@@ -603,9 +603,9 @@ impl Game {
                         .map(|player| player.account_id.clone());
                     match target {
                         Some(target) if client.queue_skill_teach(&target) => {}
-                        Some(_) => self
-                            .notifications
-                            .warning("Master a discipline before offering a school lesson."),
+                        Some(_) => self.notifications.warning(
+                            "No mastered discipline is ready, or the school ledger is busy.",
+                        ),
                         None => self
                             .notifications
                             .warning("Another nearby player must be present for a school lesson."),
