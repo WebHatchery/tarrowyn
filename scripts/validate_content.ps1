@@ -127,6 +127,22 @@ Assert-Records "region locations" $locationsRecords @("name", "kind", "role", "a
 Assert-Records "region routes" $routesRecords @("name", "transport", "origin", "destination", "status", "note") @()
 $locations = @($region.locations | ForEach-Object { $_.id })
 $routes = @($region.routes | ForEach-Object { $_.id })
+if (@($region.locations | Where-Object {
+        $null -eq $_.position -or $null -eq $_.position.x -or $null -eq $_.position.y -or
+        [int]$_.position.x -lt 0 -or [int]$_.position.y -lt 0 -or
+        [int]$_.position.x -ge [int]$gameConfig.world_width -or
+        [int]$_.position.y -ge [int]$gameConfig.world_height
+    }).Count -gt 0) {
+    throw "Region locations must be inside the configured world."
+}
+if (@($region.farm_plots | Where-Object {
+        $null -eq $_.x -or $null -eq $_.y -or
+        [int]$_.x -lt 0 -or [int]$_.y -lt 0 -or
+        [int]$_.x -ge [int]$gameConfig.world_width -or
+        [int]$_.y -ge [int]$gameConfig.world_height
+    }).Count -gt 0) {
+    throw "Region farm plot positions must be inside the configured world."
+}
 $farmPlots = @($region.farm_plots | ForEach-Object { "$($_.x),$($_.y)" })
 if ($locations.Count -ne ($locations | Sort-Object -Unique).Count) { throw "Region location IDs must be unique." }
 if ($routes.Count -ne ($routes | Sort-Object -Unique).Count) { throw "Region route IDs must be unique." }

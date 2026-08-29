@@ -51,6 +51,30 @@ fn launch_route_topology_cannot_drift_from_runtime_contract() {
 }
 
 #[test]
+fn region_locations_must_stay_inside_the_configured_world() {
+    let mut region: super::RegionManifest = macroquad_toolkit::data_loader::parse_json_labeled(
+        "region.json",
+        macroquad_toolkit::include_json_str!("../../../assets/data/region.json"),
+    )
+    .expect("checked-in region content should parse");
+    region
+        .locations
+        .first_mut()
+        .expect("the region should have a launch location")
+        .position = tarrowyn_protocol::Position { x: 99, y: 99 };
+    let game_config: super::GameConfigManifest =
+        macroquad_toolkit::data_loader::parse_json_labeled(
+            "game_config.json",
+            macroquad_toolkit::include_json_str!("../../../assets/data/game_config.json"),
+        )
+        .expect("checked-in game config should parse");
+
+    let error = super::validate_region(&region, &game_config)
+        .expect_err("an off-map location must fail validation");
+    assert!(error.contains("inside the world"));
+}
+
+#[test]
 fn server_crop_rotation_follows_the_validated_manifest() {
     assert_eq!(
         super::crop_kind_for_seed(0),

@@ -37,6 +37,14 @@ pub(super) fn validate_region(
             "region farm animal must be inside the world and one tile from a plot".to_owned(),
         );
     }
+    if region.locations.iter().any(|location| {
+        location.position.x < 0
+            || location.position.y < 0
+            || location.position.x as u32 >= game_config.world_width
+            || location.position.y as u32 >= game_config.world_height
+    }) {
+        return Err("region locations must be inside the world".to_owned());
+    }
     validate_id_list(
         "location",
         region
