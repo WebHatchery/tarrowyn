@@ -600,12 +600,10 @@ mod tests;
 
 impl OnlineClient {
     pub(crate) fn queue_phase5(&mut self, id: &str) {
-        if self.state == super::ConnectionState::Online {
-            if !self.phase4.queue_region_cycle(id) {
-                self.status_message =
-                    "That regional action is not ready; wait for its projection or queue to clear."
-                        .to_owned();
-            }
+        if self.state == super::ConnectionState::Online && !self.phase4.queue_region_cycle(id) {
+            self.status_message =
+                "That regional action is not ready; wait for its projection or queue to clear."
+                    .to_owned();
         }
     }
     pub(crate) fn phase5_summary(&self) -> String {
