@@ -1,5 +1,15 @@
 use super::*;
-use tarrowyn_protocol::TradeStatus;
+use tarrowyn_protocol::{TradeAction, TradeStatus};
+
+pub(super) fn trade_success_message(action: Option<TradeAction>) -> &'static str {
+    match action {
+        Some(TradeAction::Create) => "The trade offer is on the ledger; awaiting the other player.",
+        Some(TradeAction::Review) => "The trade details are current.",
+        Some(TradeAction::Accept) => "The trade ledger completed the exchange.",
+        Some(TradeAction::Cancel) => "The trade offer was withdrawn.",
+        None => "The trade ledger accepted the exchange.",
+    }
+}
 
 impl OnlineClient {
     pub(crate) fn pending_trade_for(&self, account_id: &str) -> Option<&TradeOffer> {
@@ -26,6 +36,7 @@ impl OnlineClient {
         let action = request.action;
         let request_id = request.request_id.clone();
         if super::queue::try_push(&mut self.trade_queue, request) {
+            self.pending_trade_action = Some(action);
             self.pending_request_type = Some(format!("trade::{action:?}"));
             self.pending_request_id = Some(request_id);
             self.status_message = "Trade command sent; waiting for the ledger…".to_owned();
@@ -58,13 +69,14 @@ impl OnlineClient {
             .and_then(|pending| pending.poll_timed(dt, REQUEST_TIMEOUT_SECONDS));
         let Some(result) = command_result else { return };
         self.pending_trade = None;
+        let trade_action = self.pending_trade_action.take();
         self.pending_request_id = None;
         self.pending_request_type = None;
         match result {
             Ok(response) => {
                 if response.data.accepted {
                     notices.push(NetworkNotice::Success(
-                        "The trade ledger accepted the exchange.".to_owned(),
+                        trade_success_message(trade_action).to_owned(),
                     ));
                 } else {
                     notices.push(NetworkNotice::Warning(

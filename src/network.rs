@@ -9,9 +9,9 @@ use tarrowyn_protocol::{
     ApiResponse, ChatMessage, ChatRequest, ChronicleEntry, ChronicleSummary, EventsResponse,
     Expedition, FarmAnimal, FarmingAction, FarmingRequest, FrontierEvent, GuestSessionRequest,
     GuestSessionResponse, LandClaim, MovementIntent, OpportunitySignal, OpsHealthResponse,
-    PlayerPresence, PlayerProjection, StateSnapshot, TavernFeedResponse, TimeOfDay, TradeOffer,
-    TradeRequest, TradeResponse, TradesResponse, WildernessZone, WorldClock, WorldEvent,
-    WorldSnapshot, MAX_CHAT_MESSAGE_LENGTH,
+    PlayerPresence, PlayerProjection, StateSnapshot, TavernFeedResponse, TimeOfDay, TradeAction,
+    TradeOffer, TradeRequest, TradeResponse, TradesResponse, WildernessZone, WorldClock,
+    WorldEvent, WorldSnapshot, MAX_CHAT_MESSAGE_LENGTH,
 };
 
 const REQUEST_TIMEOUT_SECONDS: f32 = 6.0;
@@ -259,6 +259,7 @@ pub struct OnlineClient {
     pub pending_request_id: Option<String>,
     pub action_awaiting_confirmation: bool,
     pub trades: Vec<TradeOffer>,
+    pending_trade_action: Option<TradeAction>,
     frontier: FrontierClient,
     phase4: Phase4Client,
 }
@@ -299,6 +300,7 @@ impl OnlineClient {
             pending_request_id: None,
             action_awaiting_confirmation: false,
             trades: Vec::new(),
+            pending_trade_action: None,
             frontier: FrontierClient::new(),
             phase4: Phase4Client::new(),
         };
@@ -483,6 +485,7 @@ impl OnlineClient {
         self.pending_request_type = None;
         self.pending_request_id = None;
         self.action_awaiting_confirmation = false;
+        self.pending_trade_action = None;
         self.trades.clear();
         cursor::reset_projection_history(&mut self.projection);
     }

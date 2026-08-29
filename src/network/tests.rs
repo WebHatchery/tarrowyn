@@ -317,3 +317,19 @@ fn trade_projection_selects_pending_and_incoming_offers_for_visible_actions() {
     );
     assert!(client.pending_trade_for("stranger").is_none());
 }
+
+#[test]
+fn trade_success_notice_describes_the_requested_action() {
+    assert_eq!(
+        super::trade_client::trade_success_message(Some(tarrowyn_protocol::TradeAction::Create)),
+        "The trade offer is on the ledger; awaiting the other player."
+    );
+    assert_eq!(
+        super::trade_client::trade_success_message(Some(tarrowyn_protocol::TradeAction::Review)),
+        "The trade details are current."
+    );
+    assert_eq!(
+        super::trade_client::trade_success_message(Some(tarrowyn_protocol::TradeAction::Accept)),
+        "The trade ledger completed the exchange."
+    );
+}
