@@ -14,6 +14,7 @@ use tarrowyn_protocol::{
 };
 
 pub(crate) const MAX_CHRONICLE: usize = 64;
+pub(super) const MAX_EXPEDITION_MEMBERS: usize = 20;
 const CONTRACT_ID: &str = "brambleback-watch";
 const MAX_CHRONICLE_SUMMARY_KINDS: usize = 12;
 

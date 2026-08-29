@@ -287,6 +287,10 @@ impl WorldRepository {
                     .any(|member| member.account_id == account_id)
                 {
                     response.reason = Some("You are already named on this expedition.".to_owned());
+                } else if expedition.members.len() >= super::phase3::MAX_EXPEDITION_MEMBERS {
+                    response.reason = Some(
+                        "The pioneer party has reached its 20-member planning limit.".to_owned(),
+                    );
                 } else {
                     expedition.members.push(ExpeditionMember {
                         account_id,

@@ -72,7 +72,9 @@ identity boundary clean. Credentials do not grant raw combat power.
 - Let a prepared group announce and attempt one pioneer expedition to establish
   a small outpost beyond the first settlement. The expedition needs food, tools,
   construction materials, safety, and people with complementary skills. Failure
-  creates a retreat/recovery story instead of deleting characters.
+  creates a retreat/recovery story instead of deleting characters. The first
+  pioneer party is capped at 20 named members so its durable planning record
+  remains a bounded small-group projection.
 
 ## Server and protocol requirements
 
