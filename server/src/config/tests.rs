@@ -13,4 +13,9 @@ fn default_server_clock_matches_the_gdd_eighty_minute_day() {
 fn oversized_unsigned_environment_values_fall_back_instead_of_wrapping() {
     assert_eq!(bounded_u32(u64::MAX, 17), 17);
     assert_eq!(bounded_u16(u64::MAX, 3306), 3306);
+    let representable = u64::try_from(usize::MAX).expect("usize fits in u64");
+    assert_eq!(bounded_usize(representable, 17), usize::MAX);
+    if representable < u64::MAX {
+        assert_eq!(bounded_usize(u64::MAX, 17), 17);
+    }
 }

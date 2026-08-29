@@ -126,8 +126,10 @@ impl ServerConfig {
                 "TARROWYN_COMBAT_ACTION_COOLDOWN_TICKS",
                 defaults.combat_action_cooldown_ticks,
             ),
-            chat_max_length: env_u64("TARROWYN_CHAT_MAX_LENGTH", defaults.chat_max_length as u64)
-                as usize,
+            chat_max_length: bounded_usize(
+                env_u64("TARROWYN_CHAT_MAX_LENGTH", defaults.chat_max_length as u64),
+                defaults.chat_max_length,
+            ),
             moderation_cooldown_ticks: env_u64(
                 "TARROWYN_MODERATION_COOLDOWN_TICKS",
                 defaults.moderation_cooldown_ticks,
@@ -246,6 +248,10 @@ fn bounded_u32(value: u64, default: u32) -> u32 {
 
 fn bounded_u16(value: u64, default: u16) -> u16 {
     u16::try_from(value).unwrap_or(default)
+}
+
+fn bounded_usize(value: u64, default: usize) -> usize {
+    usize::try_from(value).unwrap_or(default)
 }
 
 fn env_f32(name: &str, default: f32) -> f32 {
