@@ -9,6 +9,7 @@ use tarrowyn_protocol::{
 };
 
 mod event_retention;
+mod market_retention;
 mod settlements;
 
 fn guest(repository: &WorldRepository, key: &str) -> tarrowyn_protocol::GuestSessionResponse {

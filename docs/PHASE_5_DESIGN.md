@@ -47,6 +47,11 @@ condition alter the visible price index. Open orders, failed fulfilment, and
 stock notes are exposed as telemetry. A failed order is marked `Failed` rather
 than silently destroying the escrow record; support can reconcile it.
 
+The regional market keeps at most 128 order records. Fulfilled and cancelled
+history makes room for new shipments, while open and failed orders remain
+addressable for fulfilment or support escrow recovery; creation fails closed if
+all retained records are still live.
+
 The real-time calendar is locked before leases or crop promises depend on it:
 one game day is 80 real minutes. The 14-day season and four-season year (56
 game days) remain development fixtures pending pacing validation. Phase 5 names

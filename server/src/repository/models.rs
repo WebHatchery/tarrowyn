@@ -166,6 +166,7 @@ impl RepositoryState {
         super::phase4::trim_proposals(&mut phase4.governance);
         trim_replay_cache(&mut phase4.request_results);
         let mut phase5 = stored.phase5;
+        super::phase5::trim_market_orders(&mut phase5);
         super::phase5::trim_event_history(&mut phase5);
         trim_replay_cache(&mut phase5.request_results);
         let mut phase6 = stored.phase6;

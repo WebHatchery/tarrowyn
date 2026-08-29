@@ -17,7 +17,9 @@ mod recovery;
 mod settlements;
 mod state;
 use logic::*;
-pub(super) use market::{close_deleted_account_orders, reconcile_market_order};
+pub(super) use market::{
+    close_deleted_account_orders, create_order, reconcile_market_order, trim_market_orders,
+};
 pub(super) use recovery::clear_stuck_travel;
 use settlements::{refresh_settlement_facilities, update_households, update_settlements};
 pub(super) use state::{fresh, trim_event_history, Phase5Response, Phase5State};
@@ -608,80 +610,6 @@ pub(super) fn phase5_tick(state: &mut RepositoryState, config: &ServerConfig) {
     advance_events(state);
     expire_market_orders(state);
     refresh_settlement_facilities(state);
-}
-
-fn create_order(
-    state: &mut RepositoryState,
-    key: &str,
-    origin: &str,
-    request: &MarketOrderRequest,
-) -> (bool, Option<MarketOrder>, Option<String>) {
-    let Some(destination) = request.destination_location_id.as_deref() else {
-        return (
-            false,
-            None,
-            Some("Choose a destination settlement.".to_owned()),
-        );
-    };
-    let Some(commodity) = request.commodity else {
-        return (false, None, Some("Choose the good to move.".to_owned()));
-    };
-    let quantity = request.quantity.unwrap_or(0);
-    if quantity == 0 || quantity > 99 {
-        return (
-            false,
-            None,
-            Some("Orders hold between 1 and 99 goods.".to_owned()),
-        );
-    }
-    let Some(route) = state
-        .phase5
-        .routes
-        .iter()
-        .find(|route| {
-            route.origin_location_id == origin
-                && route.destination_location_id == destination
-                && route.status != RouteStatus::Closed
-        })
-        .cloned()
-    else {
-        return (
-            false,
-            None,
-            Some("No open route carries that good from here.".to_owned()),
-        );
-    };
-    if !take_commodity(state, key, origin, commodity, quantity) {
-        return (
-            false,
-            None,
-            Some(format!(
-                "There is not enough {} at the origin to escrow.",
-                commodity.label()
-            )),
-        );
-    }
-    let unit_price = base_price(commodity).saturating_add(u32::from(route.risk_percent / 10));
-    let identity = state.identities.get(key).expect("identity exists");
-    let order = MarketOrder {
-        order_id: format!("market-order-{}", state.phase5.next_order_id),
-        owner_account_id: identity.account_id.clone(),
-        owner_name: identity.display_name.clone(),
-        origin_location_id: origin.to_owned(),
-        destination_location_id: destination.to_owned(),
-        commodity,
-        quantity,
-        unit_price,
-        total_price: unit_price.saturating_mul(quantity),
-        status: MarketOrderStatus::Open,
-        created_tick: state.tick,
-        settled_tick: None,
-        route_id: route.route_id,
-        fallback_used: false,
-    };
-    state.phase5.next_order_id = state.phase5.next_order_id.saturating_add(1);
-    state.phase5.market_orders.push(order.clone());
-    (true, Some(order), None)
 }
 
 fn fulfil_order(
