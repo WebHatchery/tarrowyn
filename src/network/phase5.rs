@@ -332,6 +332,10 @@ impl Phase5Client {
             || (id == "delete-account" && self.deletion_armed)
     }
 
+    pub(super) fn travel_control(&self) -> (&'static str, bool, bool) {
+        self.travel_control_details()
+    }
+
     fn queue_event(&mut self, request_id: String) {
         let event = self.events.as_ref().and_then(|events| {
             events.events.iter().rev().find(|event| {
@@ -746,6 +750,10 @@ impl OnlineClient {
     }
     pub(crate) fn phase5_summary(&self) -> String {
         self.phase4.region_summary()
+    }
+
+    pub(crate) fn phase5_travel_control(&self) -> (&'static str, bool, bool) {
+        self.phase4.regional_travel_control()
     }
 
     pub(crate) fn has_open_market_order(&self) -> bool {

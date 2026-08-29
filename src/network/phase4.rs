@@ -657,6 +657,10 @@ impl Phase4Client {
         self.regional.summary()
     }
 
+    pub(super) fn regional_travel_control(&self) -> (&'static str, bool, bool) {
+        self.regional.travel_control()
+    }
+
     pub(super) fn has_open_market_order(&self) -> bool {
         self.regional.has_open_market_order()
     }

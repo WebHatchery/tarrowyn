@@ -189,6 +189,23 @@ fn route_repair_button_queues_an_authoritative_repair() {
             if request.route_id.as_deref() == Some("watch-trail")
                 && request.action == TravelAction::Start
     ));
+
+    client.commands.clear();
+    client.region.as_mut().expect("regional projection").travel =
+        Some(tarrowyn_protocol::TravelState {
+            travel_id: "interrupted-watch-trail".to_owned(),
+            route_id: "watch-trail".to_owned(),
+            origin_location_id: "whisperwood-outpost".to_owned(),
+            destination_location_id: "saltmere".to_owned(),
+            departure_tick: 0,
+            eta_tick: 9,
+            progress: 35,
+            risk_percent: 34,
+            status: TravelStatus::Interrupted,
+            interruption: Some("A fallen marker blocks the trail.".to_owned()),
+            recovery_note: None,
+        });
+    assert_eq!(client.travel_control_details(), ("Travel", false, true));
 }
 
 #[test]

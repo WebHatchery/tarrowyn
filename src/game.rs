@@ -155,6 +155,7 @@ impl Game {
                     .account
                     .as_ref()
                     .map(|account| account.account_id.as_str());
+                let (travel_label, can_travel, can_recover_travel) = client.phase5_travel_control();
                 let stats = client
                     .projection
                     .player
@@ -249,6 +250,9 @@ impl Game {
                                 && player.position == client.projection.player_position
                         }),
                     ),
+                    travel_label,
+                    can_travel,
+                    can_recover_travel,
                     ui: &virtual_ui,
                 })
             }
@@ -305,6 +309,9 @@ impl Game {
                     can_abandon_claim: false,
                     can_transfer_claim: false,
                     knowledge_label: "Knowledge",
+                    travel_label: "Travel",
+                    can_travel: false,
+                    can_recover_travel: false,
                     ui: &virtual_ui,
                 })
             }

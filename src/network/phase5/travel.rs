@@ -1,6 +1,24 @@
 use super::*;
 
 impl Phase5Client {
+    pub(super) fn travel_control_details(&self) -> (&'static str, bool, bool) {
+        let Some(region) = self.region.as_ref() else {
+            return ("Travel", false, false);
+        };
+        match region.travel.as_ref().map(|travel| travel.status) {
+            Some(TravelStatus::Interrupted) => ("Travel", false, true),
+            Some(TravelStatus::Travelling | TravelStatus::Recovering) => ("Interrupt", true, false),
+            Some(TravelStatus::Idle | TravelStatus::Arrived) | None => (
+                "Travel",
+                region
+                    .routes
+                    .iter()
+                    .any(|route| route.status != tarrowyn_protocol::RouteStatus::Closed),
+                false,
+            ),
+        }
+    }
+
     pub(super) fn queue_travel(&mut self, request_id: String) {
         let Some(region) = self.region.as_ref() else {
             return;

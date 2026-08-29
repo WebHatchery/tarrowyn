@@ -270,8 +270,18 @@ pub(super) fn draw_sidebar(
         22.0,
         mouse,
         &[
-            ("travel", "Travel", true, ButtonTone::Primary),
-            ("recover-travel", "Recover", true, ButtonTone::Primary),
+            (
+                "travel",
+                ctx.travel_label,
+                ctx.can_travel,
+                ButtonTone::Primary,
+            ),
+            (
+                "recover-travel",
+                "Recover",
+                ctx.can_recover_travel,
+                ButtonTone::Primary,
+            ),
             (
                 "route-repair",
                 "Repair",

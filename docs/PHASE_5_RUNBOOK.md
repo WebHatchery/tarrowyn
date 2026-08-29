@@ -23,7 +23,10 @@ Inspect `/v1/region`, `/v1/settlements`, `/v1/routes`,
 `TravelRequest.request_id`. The server response supplies the durable
 `travel_id`. Re-submit the same request ID to verify idempotency. Interrupt
 the journey, reconnect or issue `Recover`, and confirm that the original
-travel ID continues to the destination exactly once.
+travel ID continues to the destination exactly once. In the touch client,
+`Travel` becomes `Interrupt` while a journey is active; after an interruption,
+the dedicated `Recover` control is enabled and `Travel` remains unavailable
+until recovery is chosen.
 The online sidebar's `Repair` control exercises the route action for the first
 non-operational road connected to the current location: initially the north
 pack road at the Hearth, or the watch trail after arriving at Whisperwood.
