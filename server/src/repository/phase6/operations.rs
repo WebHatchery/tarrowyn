@@ -370,16 +370,24 @@ fn integrity_ok(state: &RepositoryState) -> bool {
         .len()
         == state.identities.len();
     unique_characters
-        && state
-            .phase5
-            .routes
-            .iter()
-            .all(|route| route.condition <= 100)
-        && state
-            .phase5
-            .settlements
-            .iter()
-            .all(|settlement| settlement.food <= 100 && settlement.safety <= 100)
+        && state.phase5.routes.iter().all(|route| {
+            route.length > 0
+                && route.risk_percent <= 100
+                && route.condition <= 100
+                && route.capacity > 0
+                && route.travel_ticks > 0
+                && route.repair_cost > 0
+        })
+        && state.phase5.settlements.iter().all(|settlement| {
+            settlement.population > 0
+                && settlement.food <= 100
+                && settlement.safety <= 100
+                && settlement.infrastructure <= 100
+                && settlement.industry <= 100
+                && settlement.governance <= 100
+                && settlement.player_activity <= 100
+                && settlement.price_index_percent > 0
+        })
 }
 
 fn alert_flags(

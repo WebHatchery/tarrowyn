@@ -109,6 +109,8 @@ The same content boundary requires emitted NPC household projection identities
 to remain unique as authored households expand.
 The focused operations regression counts active travelling fallback market
 orders separately from the general open-order backlog for support monitoring.
+The readiness regressions also reject malformed bounded route and settlement
+projections instead of reporting an operationally healthy regional state.
 The local-combat regression confirms accepted actions publish a persisted
 server-tick action window, reject same-tick bursts, and become available again
 after the authoritative tick advances. Older local-combat snapshots default
