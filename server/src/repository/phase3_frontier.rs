@@ -9,6 +9,7 @@ use tarrowyn_protocol::{
 };
 
 const MAX_OUTPOST_NAME_CHARS: usize = 80;
+const MAX_EXPEDITION_SUPPLY: u32 = 99;
 
 fn validate_outpost_name(name: Option<&str>) -> Result<Option<String>, RepositoryError> {
     let Some(name) = name else {
@@ -26,6 +27,12 @@ fn validate_outpost_name(name: Option<&str>) -> Result<Option<String>, Repositor
         ));
     }
     Ok(Some(name.to_owned()))
+}
+
+fn add_expedition_supply(total: &mut u32, requested: u32) {
+    *total = total
+        .saturating_add(requested.min(MAX_EXPEDITION_SUPPLY))
+        .min(MAX_EXPEDITION_SUPPLY);
 }
 
 pub(super) fn backfill_expedition_credentials(phase: &mut super::phase3::Phase3State) {
@@ -311,12 +318,10 @@ impl WorldRepository {
                     .iter()
                     .any(|member| member.account_id == account_id)
                 {
-                    expedition.food = expedition.food.saturating_add(request.food.min(99));
-                    expedition.tools = expedition.tools.saturating_add(request.tools.min(99));
-                    expedition.materials = expedition
-                        .materials
-                        .saturating_add(request.materials.min(99));
-                    expedition.safety = expedition.safety.saturating_add(request.safety.min(99));
+                    add_expedition_supply(&mut expedition.food, request.food);
+                    add_expedition_supply(&mut expedition.tools, request.tools);
+                    add_expedition_supply(&mut expedition.materials, request.materials);
+                    add_expedition_supply(&mut expedition.safety, request.safety);
                     response.accepted = true;
                 } else {
                     response.reason = Some("Join the group before adding supplies.".to_owned());

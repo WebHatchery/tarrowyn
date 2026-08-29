@@ -125,6 +125,62 @@ fn expedition_completion_records_a_credential_beyond_the_current_expedition() {
 }
 
 #[test]
+fn expedition_supply_totals_remain_bounded_across_actions() {
+    let repository = WorldRepository::new(ServerConfig {
+        backup_path: None,
+        ..ServerConfig::default()
+    });
+    let session = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("adventurer-supply-boundary".to_owned()),
+            reset: false,
+        })
+        .expect("guest session")
+        .data;
+    repository
+        .expedition(
+            &session.account_token,
+            ExpeditionRequest {
+                request_id: "supply-boundary-announce".to_owned(),
+                action: ExpeditionAction::Announce,
+                expedition_id: None,
+                role: Some(ExpeditionRole::Scout),
+                food: 0,
+                tools: 0,
+                materials: 0,
+                safety: 0,
+                outpost_name: None,
+            },
+        )
+        .expect("announce expedition");
+    for request_id in ["supply-boundary-first", "supply-boundary-second"] {
+        let response = repository
+            .expedition(
+                &session.account_token,
+                ExpeditionRequest {
+                    request_id: request_id.to_owned(),
+                    action: ExpeditionAction::Supply,
+                    expedition_id: Some("pioneer-1".to_owned()),
+                    role: None,
+                    food: u32::MAX,
+                    tools: u32::MAX,
+                    materials: u32::MAX,
+                    safety: u32::MAX,
+                    outpost_name: None,
+                },
+            )
+            .expect("supply expedition")
+            .data;
+        assert!(response.accepted);
+        let expedition = response.expedition.expect("expedition projection");
+        assert_eq!(expedition.food, 99);
+        assert_eq!(expedition.tools, 99);
+        assert_eq!(expedition.materials, 99);
+        assert_eq!(expedition.safety, 99);
+    }
+}
+
+#[test]
 fn legacy_succeeded_expedition_is_backfilled_before_rotation() {
     let repository = WorldRepository::new(ServerConfig {
         backup_path: None,
