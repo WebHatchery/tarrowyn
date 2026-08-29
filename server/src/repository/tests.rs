@@ -30,6 +30,7 @@ mod phase4_replay_integrity;
 mod phase4_state_integrity;
 mod phase5_metadata_integrity;
 mod phase5_replay_integrity;
+mod production_integrity;
 mod regional_record_integrity;
 mod request_validation;
 mod reset;

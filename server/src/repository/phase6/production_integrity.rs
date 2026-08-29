@@ -149,6 +149,7 @@ fn replay_caches_ok(state: &RepositoryState, identity_accounts: &HashSet<&str>) 
                 .get(&response.account_id)
                 .is_some_and(|account| {
                     account.provider == response.provider
+                        && link_cache_key_matches(key, &response.request_id, &account.identity_key)
                         && state
                             .identities
                             .get(&account.identity_key)
@@ -274,6 +275,10 @@ fn auth_session_ok(session: &AuthSession) -> bool {
         && bounded(&session.refresh_token, MAX_TOKEN_CHARS)
         && session.expires_in_seconds > 0
         && session.expires_at_tick > 0
+}
+
+fn link_cache_key_matches(key: &str, request_id: &str, identity_key: &str) -> bool {
+    key.strip_prefix(&format!("{identity_key}:")) == Some(request_id)
 }
 
 fn account_or_deleted(account_id: &str, identity_accounts: &HashSet<&str>) -> bool {
