@@ -22,6 +22,7 @@ mod moderation_cooldown;
 mod moderation_retention;
 mod moderation_validation;
 mod operations_metrics;
+mod replay_integrity;
 mod service_orders;
 mod session_integrity;
 mod support_chronicle;

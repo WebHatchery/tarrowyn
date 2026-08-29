@@ -1,4 +1,4 @@
-use super::super::models::RepositoryState;
+use super::super::models::{RepositoryState, MAX_REPLAY_CACHE};
 use super::{MAX_AUDITS, MAX_MODERATION_REPORTS, MAX_PENDING_DELETIONS};
 use std::collections::HashSet;
 use tarrowyn_protocol::{AuthSession, ModerationReportResponse, SupportRepairResponse};
@@ -138,6 +138,17 @@ fn moderation_ok(state: &RepositoryState) -> bool {
 
 fn replay_caches_ok(state: &RepositoryState, identity_accounts: &HashSet<&str>) -> bool {
     let phase6 = &state.phase6;
+    let cache_sizes_ok = [
+        phase6.auth_link_results.len(),
+        phase6.auth_link_tokens.len(),
+        phase6.auth_refresh_results.len(),
+        phase6.auth_refresh_accounts.len(),
+        phase6.auth_revoke_results.len(),
+        phase6.moderation_results.len(),
+        phase6.request_results.len(),
+    ]
+    .into_iter()
+    .all(|length| length <= MAX_REPLAY_CACHE);
     let link_results_ok = phase6.auth_link_results.iter().all(|(key, response)| {
         bounded(key, MAX_CACHE_KEY_CHARS)
             && bounded(&response.request_id, 64)
@@ -211,7 +222,8 @@ fn replay_caches_ok(state: &RepositoryState, identity_accounts: &HashSet<&str>) 
         .accounts
         .keys()
         .all(|account_id| identity_accounts.contains(account_id.as_str()));
-    link_results_ok
+    cache_sizes_ok
+        && link_results_ok
         && link_tokens_ok
         && refresh_results_ok
         && refresh_accounts_ok
