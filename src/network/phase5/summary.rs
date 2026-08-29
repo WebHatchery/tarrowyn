@@ -1,5 +1,5 @@
 use super::Phase5Client;
-use tarrowyn_protocol::{MarketOrderStatus, RouteStatus};
+use tarrowyn_protocol::{MarketOrderStatus, RegionalEventStage, RouteStatus};
 
 pub(super) fn render(client: &Phase5Client) -> String {
     let region = client
@@ -119,6 +119,18 @@ pub(super) fn render(client: &Phase5Client) -> String {
             )
         })
         .unwrap_or_else(|| "Roads loading".to_owned());
+    let event = client
+        .events
+        .as_ref()
+        .and_then(|events| events.events.last())
+        .map(|event| match event.stage {
+            RegionalEventStage::Signal => "Event signal".to_owned(),
+            RegionalEventStage::Escalation => "Event escalation".to_owned(),
+            RegionalEventStage::Intervention => "Event intervention".to_owned(),
+            RegionalEventStage::Resolution => "Event resolution".to_owned(),
+            RegionalEventStage::Aftermath => "Event aftermath".to_owned(),
+        })
+        .unwrap_or_else(|| "Events quiet".to_owned());
     let account = client
         .account
         .as_ref()
@@ -130,5 +142,5 @@ pub(super) fn render(client: &Phase5Client) -> String {
             }
         })
         .unwrap_or("Account loading");
-    format!("{region}\n{settlements}\n{roads} • {market} • {law}\n{account}")
+    format!("{region}\n{settlements}\n{roads} • {market} • {law} • {event}\n{account}")
 }

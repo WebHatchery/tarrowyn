@@ -70,7 +70,8 @@ free-plot, and public-work counts.
 The shared-road sidebar also exposes compact road availability/risk, open market
 orders, and the protected-law boundary. Detailed route names, stock notes, and
 price notes remain a follow-up inspector surface rather than being squeezed into
-the touch summary.
+the touch summary. The latest regional event stage is shown beside that compact
+telemetry so signals and escalations remain visible before intervention.
 
 Each settlement projection also rolls up its nearest recognised claims, free
 plots, and public works. The bounded content fixture therefore gives Hearth,

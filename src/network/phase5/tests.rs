@@ -288,6 +288,14 @@ fn regional_summary_shows_local_condition_and_recovery_signal() {
         recovery_path: "Protected recovery".to_owned(),
         policy_version: "phase5-no-pvp-1".to_owned(),
     });
+    client.events = Some(RegionalEventsResponse {
+        events: vec![regional_event(
+            "event-1",
+            tarrowyn_protocol::RegionalEventStage::Escalation,
+            7,
+        )],
+        cursor: 7,
+    });
 
     assert_eq!(client.season(), Some("thaw"));
     let first_line = client.summary().lines().next().unwrap().to_owned();
@@ -304,6 +312,7 @@ fn regional_summary_shows_local_condition_and_recovery_signal() {
     assert!(economy.contains("Roads 2/2 available • 1 at risk"));
     assert!(economy.contains("1 open order"));
     assert!(economy.contains("Protected economy"));
+    assert!(economy.contains("Event escalation"));
 }
 
 fn regional_event(

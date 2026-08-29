@@ -79,7 +79,8 @@ showing each settlement's condition and open-vacancy count alongside the local
 line.
 The regional telemetry regression also confirms the sidebar projection exposes
 authoritative road availability/risk, open market orders, and the protected-law
-boundary instead of leaving those loaded records hidden behind the controls.
+boundary plus the latest regional event stage instead of leaving those loaded
+records hidden behind the controls.
 The calendar presentation regression keeps the server-projected development
 season available to the online header beside the calendar day without locking
 the deferred season/year pacing decision.
