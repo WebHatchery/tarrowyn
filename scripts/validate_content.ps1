@@ -83,6 +83,21 @@ foreach ($name in $required) {
 $schema = Get-Content -Raw -LiteralPath (Join-Path $dataRoot "content_schema.json") | ConvertFrom-Json
 Assert-ManifestSchema $schema
 
+$gameConfig = $manifests["game_config.json"]
+$requiredGameText = @("game_name", "display_name", "save_slot", "version")
+foreach ($field in $requiredGameText) {
+    $property = $gameConfig.PSObject.Properties[$field]
+    if ($null -eq $property -or [string]::IsNullOrWhiteSpace([string]$property.Value)) {
+        throw "Game config needs a non-empty $field field."
+    }
+}
+$dayLength = [double]$gameConfig.day_length_seconds
+if ($gameConfig.world_width -lt 1 -or $gameConfig.world_height -lt 1 -or
+    $dayLength -le 0 -or [double]::IsNaN($dayLength) -or [double]::IsInfinity($dayLength) -or
+    $gameConfig.starting_gold -lt 1 -or $gameConfig.starting_seeds -lt 1 -or $gameConfig.starting_skill -lt 1) {
+    throw "Game config needs positive world, clock, and starting-resource values."
+}
+
 Assert-Records "actions" (Get-Records $manifests["actions.json"] $null "actions") @("name", "description", "kind") @()
 Assert-Records "crops" (Get-Records $manifests["crops.json"] $null "crops") @("name", "description") @()
 Assert-Records "contracts" (Get-Records $manifests["contracts.json"] "contracts" "contracts") @("title", "description", "target") @()
@@ -102,6 +117,9 @@ $region = Get-Content -Raw -LiteralPath (Join-Path $dataRoot "region.json") | Co
 $calendar = $region.calendar
 if ($null -eq $calendar -or $calendar.day_seconds -lt 1 -or $calendar.season_days -lt 1 -or $calendar.year_days -lt 1 -or @($calendar.seasons).Count -ne 4) {
     throw "Region calendar must define positive day, season, and year values plus four seasons."
+}
+if ($dayLength -ne [double]$calendar.day_seconds) {
+    throw "Game config day length must match the region calendar."
 }
 $locationsRecords = @($region.locations)
 $routesRecords = @($region.routes)
