@@ -248,7 +248,9 @@ impl Phase5Client {
         }
     }
 
-    pub(super) fn queue_cycle(&mut self, id: &str) {
+    pub(super) fn queue_cycle(&mut self, id: &str) -> bool {
+        let queue_len = self.commands.len();
+        let refresh_region = id == "region-map";
         let request_id = self.next_id();
         match id {
             "region-map" => self.refresh_timer = 0.0,
@@ -298,7 +300,7 @@ impl Phase5Client {
                     .as_ref()
                     .filter(|account| !account.guest_fixture)
                 else {
-                    return;
+                    return false;
                 };
                 if self.deletion_armed {
                     self.deletion_armed = false;
@@ -331,7 +333,7 @@ impl Phase5Client {
                         .map(|route| route.route_id.clone())
                 });
                 let Some(route_id) = route_id else {
-                    return;
+                    return false;
                 };
                 super::queue::try_push(
                     &mut self.commands,
@@ -344,6 +346,9 @@ impl Phase5Client {
             }
             _ => {}
         }
+        self.commands.len() > queue_len
+            || refresh_region
+            || (id == "delete-account" && self.deletion_armed)
     }
 
     fn queue_event(&mut self, request_id: String) {
@@ -751,7 +756,11 @@ mod tests;
 impl OnlineClient {
     pub(crate) fn queue_phase5(&mut self, id: &str) {
         if self.state == super::ConnectionState::Online {
-            self.phase4.queue_region_cycle(id);
+            if !self.phase4.queue_region_cycle(id) {
+                self.status_message =
+                    "That regional action is not ready; wait for its projection or queue to clear."
+                        .to_owned();
+            }
         }
     }
     pub(crate) fn phase5_summary(&self) -> String {

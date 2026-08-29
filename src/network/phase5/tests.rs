@@ -239,6 +239,14 @@ fn market_button_waits_for_the_order_destination() {
 }
 
 #[test]
+fn regional_cycle_reports_when_no_projection_action_is_ready() {
+    let mut client = Phase5Client::new();
+
+    assert!(!client.queue_cycle("travel"));
+    assert!(client.commands.is_empty());
+}
+
+#[test]
 fn market_success_notice_describes_the_requested_action() {
     assert_eq!(
         super::market_success_message(Some(MarketOrderAction::Create)),

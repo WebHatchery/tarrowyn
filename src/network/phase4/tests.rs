@@ -456,6 +456,14 @@ fn school_button_reports_a_full_command_queue() {
     );
 }
 
+#[test]
+fn phase_four_cycle_reports_when_no_command_is_ready() {
+    let mut client = Phase4Client::new();
+
+    assert!(!client.queue_cycle("practice", "practice-loading".to_owned()));
+    assert!(client.commands.is_empty());
+}
+
 fn claim_for_test(
     claim_id: &str,
     owner_account_id: Option<&str>,

@@ -238,7 +238,9 @@ impl Phase4Client {
         }
     }
 
-    pub(super) fn queue_cycle(&mut self, id: &str, request_id: String) {
+    pub(super) fn queue_cycle(&mut self, id: &str, request_id: String) -> bool {
+        let queue_len = self.commands.len();
+        let refresh_households = id == "households";
         match id {
             "town-hall" => self.queue_governance(request_id),
             "registry" => self.queue_claim(request_id),
@@ -257,6 +259,9 @@ impl Phase4Client {
             "households" => self.pending_households = None,
             _ => {}
         }
+        self.commands.len() > queue_len
+            || refresh_households
+            || (id == "order" && self.crafting.is_some())
     }
 
     fn queue_governance(&mut self, request_id: String) {
@@ -610,8 +615,8 @@ impl Phase4Client {
         summary::render(self)
     }
 
-    pub(super) fn queue_region_cycle(&mut self, id: &str) {
-        self.regional.queue_cycle(id);
+    pub(super) fn queue_region_cycle(&mut self, id: &str) -> bool {
+        self.regional.queue_cycle(id)
     }
 
     pub(super) fn region_summary(&self) -> String {
@@ -743,7 +748,11 @@ impl OnlineClient {
     pub(crate) fn queue_phase4(&mut self, id: &str) {
         if self.state == super::ConnectionState::Online {
             let request_id = self.next_request_id("phase4");
-            self.phase4.queue_cycle(id, request_id);
+            if !self.phase4.queue_cycle(id, request_id) {
+                self.status_message =
+                    "That settlement action is not ready; wait for its ledger or queue to clear."
+                        .to_owned();
+            }
         }
     }
 
