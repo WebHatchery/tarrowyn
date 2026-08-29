@@ -343,7 +343,7 @@ Regional settlement views also distinguish recognised claims, free plots, and pu
 
 Settlement condition projections also follow changing route safety, public-work condition, local industry, governance, and activity signals instead of remaining fixed content labels.
 
-The touch client keeps a compact comparison of each settlement's condition and open vacancies beside the local recovery signal, so regional opportunity remains visible without opening a separate desktop-only panel. The same shared-road surface exposes road availability and risk, open market orders, the protected-law boundary, and the latest regional event stage as compact regional telemetry.
+The touch client keeps a compact comparison of each settlement's condition and open vacancies beside the local recovery signal, so regional opportunity remains visible without opening a separate desktop-only panel. The same shared-road surface exposes road availability and risk, open market orders, the protected-law boundary, and the latest regional event stage as compact regional telemetry. When online, the map itself uses the authoritative regional location positions and route status colours.
 
 ### Decline and Abandonment
 

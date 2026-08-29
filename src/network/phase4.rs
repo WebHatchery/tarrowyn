@@ -636,6 +636,10 @@ impl Phase4Client {
         self.regional.season()
     }
 
+    pub(super) fn regional_region(&self) -> Option<&tarrowyn_protocol::RegionSnapshot> {
+        self.regional.region_snapshot()
+    }
+
     pub(super) fn take_linked_account(
         &mut self,
         client_key: Option<&str>,

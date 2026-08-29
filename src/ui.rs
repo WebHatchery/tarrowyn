@@ -13,6 +13,8 @@ use macroquad_toolkit::ui::RectExt;
 mod ui_crafting;
 #[path = "ui_online.rs"]
 mod ui_online;
+#[path = "ui_regional.rs"]
+mod ui_regional;
 
 pub const LOGICAL_WIDTH: f32 = 1280.0;
 pub const LOGICAL_HEIGHT: f32 = 720.0;
@@ -195,24 +197,7 @@ fn draw_map(ctx: &UiContext<'_>, rect: Rect) {
         );
     }
 
-    draw_landmark(
-        &view,
-        TilePos::new(8, 5),
-        "THE HEARTH",
-        Color::new(0.76, 0.46, 0.25, 1.0),
-    );
-    draw_landmark(
-        &view,
-        TilePos::new(4, 4),
-        "SHARED FIELDS",
-        Color::new(0.78, 0.69, 0.30, 1.0),
-    );
-    draw_landmark(
-        &view,
-        TilePos::new(14, 3),
-        "WHISPERWOOD",
-        Color::new(0.45, 0.78, 0.58, 1.0),
-    );
+    ui_regional::draw_map_overlay(ctx, &view, rect);
     draw_character(&view, ctx.player_position, CREAM, true);
     for (index, player) in ctx.remote_players.iter().enumerate() {
         if ctx.own_account_id == Some(player.account_id.as_str()) {

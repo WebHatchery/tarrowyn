@@ -563,6 +563,10 @@ impl Phase5Client {
         self.region.as_ref().map(|region| region.season.as_str())
     }
 
+    pub(super) fn region_snapshot(&self) -> Option<&RegionSnapshot> {
+        self.region.as_ref()
+    }
+
     fn next_id(&mut self) -> String {
         let id = format!("phase5-ui-{}", self.next_request_id);
         self.next_request_id = self.next_request_id.saturating_add(1);
@@ -717,6 +721,10 @@ impl OnlineClient {
 
     pub(crate) fn phase5_season(&self) -> Option<&str> {
         self.phase4.regional_season()
+    }
+
+    pub(crate) fn phase5_region(&self) -> Option<&RegionSnapshot> {
+        self.phase4.regional_region()
     }
 
     pub(crate) fn account_deletion_armed(&self) -> bool {

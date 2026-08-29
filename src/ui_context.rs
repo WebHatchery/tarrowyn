@@ -4,8 +4,8 @@ use crate::state::WorldState;
 use macroquad_toolkit::grid::TilePos;
 use macroquad_toolkit::ui::VirtualUi;
 use tarrowyn_protocol::{
-    ChatMessage, ChronicleEntry, ChronicleSummary, LocalCombatState, OpportunitySignal, TimeOfDay,
-    WildernessZone,
+    ChatMessage, ChronicleEntry, ChronicleSummary, LocalCombatState, OpportunitySignal,
+    RegionSnapshot, TimeOfDay, WildernessZone,
 };
 
 #[derive(Debug, Clone, PartialEq)]
@@ -50,6 +50,7 @@ pub struct UiContext<'a> {
     pub loaded_assets: usize,
     pub camera_zoom: f32,
     pub wilderness: Option<&'a WildernessZone>,
+    pub regional_region: Option<&'a RegionSnapshot>,
     pub chronicle: &'a [ChronicleEntry],
     pub chronicle_summary: Option<&'a ChronicleSummary>,
     pub opportunities: &'a [OpportunitySignal],

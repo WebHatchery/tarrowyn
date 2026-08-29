@@ -125,6 +125,9 @@ appropriate follow-up surface.
 It also keeps the latest regional event stage visible beside that telemetry, so
 an event signal or escalation remains readable between refreshes and its Event
 control remains discoverable.
+The map overlay uses the authoritative location positions and route statuses
+when the regional projection is loaded, while the offline fixture retains its
+local landmarks.
 The online header also shows the authoritative regional season beside the
 calendar day; the development cadence remains subject to the Phase 6 pacing
 decision.
