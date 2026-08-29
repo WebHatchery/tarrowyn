@@ -500,7 +500,7 @@ impl Phase4Client {
                 lesson.learner_account_id == own && lesson.teacher_account_id == target_account_id
             })
         }) {
-            super::queue::try_push(
+            return super::queue::try_push(
                 &mut self.commands,
                 Phase4Command::Skill(SkillRequest {
                     request_id,
@@ -510,7 +510,6 @@ impl Phase4Client {
                     target_account_id: Some(lesson.teacher_account_id.clone()),
                 }),
             );
-            return true;
         }
         let Some(skill) = self.skills.as_ref().and_then(|skills| {
             skills.skills.iter().find(|skill| {
@@ -528,8 +527,7 @@ impl Phase4Client {
                 skill_id: Some(skill.skill_id.clone()),
                 target_account_id: Some(target_account_id),
             }),
-        );
-        true
+        )
     }
 
     fn queue_skill_practice(&mut self, request_id: String) {

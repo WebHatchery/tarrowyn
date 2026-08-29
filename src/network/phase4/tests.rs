@@ -420,6 +420,42 @@ fn school_button_joins_an_open_lesson_for_the_learner() {
     assert_eq!(request.target_account_id.as_deref(), Some("teacher-1"));
 }
 
+#[test]
+fn school_button_reports_a_full_command_queue() {
+    let mut client = Phase4Client::new();
+    client.own_account_id = Some("learner-1".to_owned());
+    client.skills = Some(SkillsResponse {
+        skills: Vec::new(),
+        lessons: vec![SkillLesson {
+            lesson_id: "school-lesson-full".to_owned(),
+            teacher_account_id: "teacher-1".to_owned(),
+            teacher_name: "Teacher".to_owned(),
+            learner_account_id: "learner-1".to_owned(),
+            learner_name: "Learner".to_owned(),
+            skill_id: "sword-fighting".to_owned(),
+            skill_name: "Sword Fighting".to_owned(),
+            started_tick: 4,
+            expires_tick: 24,
+        }],
+        cursor: 4,
+    });
+    for index in 0..super::super::queue::MAX_PENDING_COMMANDS {
+        client
+            .commands
+            .push_back(Phase4Command::Combat(LocalCombatRequest {
+                request_id: format!("queued-{index}"),
+                action: LocalCombatAction::Prepare,
+                weapon: WeaponKind::IronSword,
+            }));
+    }
+
+    assert!(!client.queue_school("school-full".to_owned(), "teacher-1".to_owned()));
+    assert_eq!(
+        client.commands.len(),
+        super::super::queue::MAX_PENDING_COMMANDS
+    );
+}
+
 fn claim_for_test(
     claim_id: &str,
     owner_account_id: Option<&str>,
