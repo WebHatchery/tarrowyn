@@ -251,6 +251,85 @@ fn land_rights_complete_the_lifecycle_without_touching_character_state() {
 }
 
 #[test]
+fn claim_actions_without_ids_select_the_relevant_actor_lease() {
+    let repo = WorldRepository::new(ServerConfig::default());
+    let first = guest(&repo, "phase4-claim-fallback-first");
+    let second = guest(&repo, "phase4-claim-fallback-second");
+    let first_claim = repo
+        .claim_lifecycle(
+            &first.account_token,
+            ClaimLifecycleRequest {
+                request_id: "fallback-first-request".to_owned(),
+                action: ClaimLifecycleAction::Request,
+                claim_id: None,
+                target_account_id: None,
+            },
+        )
+        .unwrap()
+        .data
+        .claim
+        .expect("the first player should receive a lease");
+    assert!(
+        repo.claim_lifecycle(
+            &first.account_token,
+            ClaimLifecycleRequest {
+                request_id: "fallback-first-approve".to_owned(),
+                action: ClaimLifecycleAction::Approve,
+                claim_id: Some(first_claim.claim_id),
+                target_account_id: None,
+            },
+        )
+        .unwrap()
+        .data
+        .accepted
+    );
+    let second_claim = repo
+        .claim_lifecycle(
+            &second.account_token,
+            ClaimLifecycleRequest {
+                request_id: "fallback-second-request".to_owned(),
+                action: ClaimLifecycleAction::Request,
+                claim_id: None,
+                target_account_id: None,
+            },
+        )
+        .unwrap()
+        .data
+        .claim
+        .expect("the second player should receive a lease");
+    assert!(
+        repo.claim_lifecycle(
+            &second.account_token,
+            ClaimLifecycleRequest {
+                request_id: "fallback-second-approve".to_owned(),
+                action: ClaimLifecycleAction::Approve,
+                claim_id: Some(second_claim.claim_id),
+                target_account_id: None,
+            },
+        )
+        .unwrap()
+        .data
+        .accepted
+    );
+    let renewed = repo
+        .claim_lifecycle(
+            &second.account_token,
+            ClaimLifecycleRequest {
+                request_id: "fallback-second-renew".to_owned(),
+                action: ClaimLifecycleAction::Renew,
+                claim_id: None,
+                target_account_id: None,
+            },
+        )
+        .unwrap()
+        .data;
+    assert_eq!(
+        renewed.claim.unwrap().owner_account_id.as_deref(),
+        Some(second.account_id.as_str())
+    );
+}
+
+#[test]
 fn lease_expiry_uses_real_time_instead_of_the_accelerated_world_clock() {
     let repo = WorldRepository::new(ServerConfig {
         day_length_seconds: 1.0,

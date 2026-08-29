@@ -96,7 +96,12 @@ impl super::super::WorldRepository {
                 }
             }
             ClaimLifecycleAction::Approve => {
-                let Some(index) = claim_index(&state, request.claim_id.as_deref()) else {
+                let Some(index) = claim_index(
+                    &state,
+                    request.claim_id.as_deref(),
+                    request.action,
+                    &actor_id,
+                ) else {
                     response.reason = Some("Name the requested lease to approve.".to_owned());
                     return finish(self, &mut state, cache, request.request_id, response);
                 };
@@ -133,7 +138,12 @@ impl super::super::WorldRepository {
                 }
             }
             ClaimLifecycleAction::Renew => {
-                let Some(index) = claim_index(&state, request.claim_id.as_deref()) else {
+                let Some(index) = claim_index(
+                    &state,
+                    request.claim_id.as_deref(),
+                    request.action,
+                    &actor_id,
+                ) else {
                     response.reason = Some("Name the lease to renew.".to_owned());
                     return finish(self, &mut state, cache, request.request_id, response);
                 };
@@ -167,7 +177,12 @@ impl super::super::WorldRepository {
                 }
             }
             ClaimLifecycleAction::Transfer | ClaimLifecycleAction::Inherit => {
-                let Some(index) = claim_index(&state, request.claim_id.as_deref()) else {
+                let Some(index) = claim_index(
+                    &state,
+                    request.claim_id.as_deref(),
+                    request.action,
+                    &actor_id,
+                ) else {
                     response.reason = Some("Name the lease to transfer.".to_owned());
                     return finish(self, &mut state, cache, request.request_id, response);
                 };
@@ -218,7 +233,12 @@ impl super::super::WorldRepository {
                 }
             }
             ClaimLifecycleAction::Abandon => {
-                let Some(index) = claim_index(&state, request.claim_id.as_deref()) else {
+                let Some(index) = claim_index(
+                    &state,
+                    request.claim_id.as_deref(),
+                    request.action,
+                    &actor_id,
+                ) else {
                     response.reason = Some("Name the lease to abandon.".to_owned());
                     return finish(self, &mut state, cache, request.request_id, response);
                 };
@@ -239,7 +259,12 @@ impl super::super::WorldRepository {
                 }
             }
             ClaimLifecycleAction::Reclaim => {
-                let Some(index) = claim_index(&state, request.claim_id.as_deref()) else {
+                let Some(index) = claim_index(
+                    &state,
+                    request.claim_id.as_deref(),
+                    request.action,
+                    &actor_id,
+                ) else {
                     response.reason =
                         Some("Name the expired or abandoned lease to reclaim.".to_owned());
                     return finish(self, &mut state, cache, request.request_id, response);
@@ -335,22 +360,38 @@ fn claims_view(
 fn claim_index(
     state: &super::super::models::RepositoryState,
     claim_id: Option<&str>,
+    action: ClaimLifecycleAction,
+    actor_id: &str,
 ) -> Option<usize> {
-    claim_id
-        .and_then(|claim_id| {
-            state
-                .phase4
-                .claims
-                .iter()
-                .position(|claim| claim.claim_id == claim_id)
-        })
-        .or_else(|| {
-            state
-                .phase4
-                .claims
-                .iter()
-                .position(|claim| claim.owner_account_id.is_some())
-        })
+    if let Some(claim_id) = claim_id {
+        return state
+            .phase4
+            .claims
+            .iter()
+            .position(|claim| claim.claim_id == claim_id);
+    }
+    match action {
+        ClaimLifecycleAction::Approve => state
+            .phase4
+            .claims
+            .iter()
+            .position(|claim| claim.status == ClaimLifecycleStatus::Requested),
+        ClaimLifecycleAction::Renew
+        | ClaimLifecycleAction::Transfer
+        | ClaimLifecycleAction::Inherit
+        | ClaimLifecycleAction::Abandon => state
+            .phase4
+            .claims
+            .iter()
+            .position(|claim| claim.owner_account_id.as_deref() == Some(actor_id)),
+        ClaimLifecycleAction::Reclaim => state.phase4.claims.iter().position(|claim| {
+            matches!(
+                claim.status,
+                ClaimLifecycleStatus::Expired | ClaimLifecycleStatus::Abandoned
+            )
+        }),
+        ClaimLifecycleAction::Inspect | ClaimLifecycleAction::Request => None,
+    }
 }
 
 fn find_claim<'a>(
