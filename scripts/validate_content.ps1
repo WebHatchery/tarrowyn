@@ -122,6 +122,7 @@ if ($skillsVersion -lt 1) { throw "Skills manifest needs a positive version." }
 
 $region = Get-Content -Raw -LiteralPath (Join-Path $dataRoot "region.json") | ConvertFrom-Json
 $calendar = $region.calendar
+if ([string]$region.region_id -ne "hearthlands") { throw "Region manifest must use the hearthlands launch ID." }
 if ($null -eq $calendar -or $calendar.day_seconds -lt 1 -or $calendar.season_days -lt 1 -or $calendar.year_days -lt 1 -or @($calendar.seasons).Count -ne 4) {
     throw "Region calendar must define positive day, season, and year values plus four seasons."
 }
@@ -134,6 +135,19 @@ Assert-Records "region locations" $locationsRecords @("name", "kind", "role", "a
 Assert-Records "region routes" $routesRecords @("name", "transport", "origin", "destination", "status", "note") @()
 $locations = @($region.locations | ForEach-Object { $_.id })
 $routes = @($region.routes | ForEach-Object { $_.id })
+$settlementIds = @($settlementRecords | ForEach-Object { [string]$_.id })
+$requiredLocations = @("hearth", "whisperwood-outpost", "saltmere")
+$requiredRoutes = @("north-pack-road", "saltmere-ferry", "watch-trail")
+$requiredSettlements = @("hearth-settlement", "whisperwood-settlement", "saltmere-settlement")
+foreach ($requiredLocation in $requiredLocations) {
+    if ($locations -notcontains $requiredLocation) { throw "Region is missing launch location $requiredLocation." }
+}
+foreach ($requiredRoute in $requiredRoutes) {
+    if ($routes -notcontains $requiredRoute) { throw "Region is missing launch route $requiredRoute." }
+}
+foreach ($requiredSettlement in $requiredSettlements) {
+    if ($settlementIds -notcontains $requiredSettlement) { throw "Settlements are missing launch record $requiredSettlement." }
+}
 $itemIds = @($manifests["items.json"].items | ForEach-Object { [string]$_.id })
 foreach ($settlement in $settlementRecords) {
     $stockRecords = @($settlement.initial_stock)
