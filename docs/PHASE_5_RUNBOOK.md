@@ -38,7 +38,8 @@ with the same request boundary.
 Tap `Inspect` to open the authoritative regional detail panel. It lists each
 visible route by name with status, risk, and condition, followed by the first
 market stock and price notes. It also shows the latest event's cause, exact
-intervention choices, and outcome state before an action is sent. Use the
+intervention choices, accepted choice, and outcome state before and after an
+action is sent. Use the
 visible `Escort road` control to reduce route risk, or `Improve road` to
 increase route capacity and shorten its travel time. Both actions select the
 first open route connected to the current location and remain

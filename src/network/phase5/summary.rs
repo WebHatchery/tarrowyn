@@ -193,9 +193,10 @@ pub(super) fn inspection(client: &Phase5Client) -> String {
             } else {
                 event.intervention_options.join(" | ")
             };
+            let chosen = event.chosen_intervention.as_deref().unwrap_or("none");
             let outcome = event.outcome.as_deref().unwrap_or("pending");
             format!(
-                "Event {:?}: {} • cause: {} • choices: {} • outcome: {outcome}",
+                "Event {:?}: {} • cause: {} • choices: {} • chosen: {chosen} • outcome: {outcome}",
                 event.stage, event.title, event.cause, choices
             )
         })
