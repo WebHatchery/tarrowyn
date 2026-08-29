@@ -45,12 +45,17 @@ gates.
   actions. Repair operations must be audited and safe to repeat.
 
 Current implementation note: the selectable MySQL backend and initial
-transactional snapshot/index migration are now present. The configured local
-preview passes `scripts/verify_mysql.ps1`, including migration/readiness,
-overlapping duplicate-request replay, restart persistence, and native
-dump/restore into a temporary database. The checklist remains open for target
-environment migration, multi-worker concurrency, failover, and rollback
-drills; the JSON backend remains the deterministic default for local fixtures.
+transactional snapshot/index migration are now present. The recorded release-
+candidate run of the configured local preview passed
+`scripts/verify_mysql.ps1`, including migration/readiness, overlapping
+duplicate-request replay, restart persistence, and native dump/restore into a
+temporary database. A later 2026-08-29 rerun stopped at the fail-fast
+prerequisite probe because the configured `dev@localhost` credentials were
+rejected (`ERROR 1045`); the follow-up register records that local environment
+blocker and makes no new persistence claim. The checklist remains open for
+working preview credentials, target-environment migration, multi-worker
+concurrency, failover, and rollback drills; the JSON backend remains the
+deterministic default for local fixtures.
 
 ### Deployment and operations
 

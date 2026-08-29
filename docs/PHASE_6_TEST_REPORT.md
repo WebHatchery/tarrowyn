@@ -118,14 +118,18 @@ The shared protocol tests also reject a response whose protocol version does
 not match the client before endpoint data can be projected.
 The selected MySQL bridge now has a checked-in migration, startup pool/migration
 failure handling, transactional snapshot/index writes, and driver-selection
-tests. The configured local preview MySQL service passed
-`scripts/verify_mysql.ps1`: storage version 20 readiness, authoritative animal
-state, duplicate chat/movement/auth/moderation replay, concurrent duplicate chat replay,
-temporary backup creation, and identity/state persistence across a server
-restart all succeeded. It then restored a native
-`mysqldump` into a generated temporary database and verified the current world
-row and identity index before cleanup. The script uses a unique guest key and
-does not reset or delete the configured database.
+tests. The recorded release-candidate run of the configured local preview
+MySQL service passed `scripts/verify_mysql.ps1`: storage version 20 readiness,
+authoritative animal state, duplicate chat/movement/auth/moderation replay,
+concurrent duplicate chat replay, temporary backup creation, and
+identity/state persistence across a server restart all succeeded. It then
+restored a native `mysqldump` into a generated temporary database and verified
+the current world row and identity index before cleanup. The script uses a
+unique guest key and does not reset or delete the configured database. A later
+2026-08-29 rerun stopped at the fail-fast prerequisite probe because the
+configured `dev@localhost` credentials were rejected (`ERROR 1045`); that run
+claimed no persistence coverage, and the follow-up register records the
+environment blocker.
 
 The target environment still owns the remaining migration, multi-worker
 concurrent-write, database failover, and rollback gates. The local script
