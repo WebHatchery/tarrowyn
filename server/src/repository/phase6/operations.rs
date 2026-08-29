@@ -483,14 +483,18 @@ fn integrity_ok(state: &RepositoryState) -> bool {
             };
             location_ids.contains(location_id) && item_ids.contains(commodity)
         });
-    let unique_characters = state
-        .identities
-        .values()
-        .map(|identity| identity.character_id.as_str())
-        .collect::<std::collections::HashSet<_>>()
-        .len()
-        == state.identities.len();
-    unique_characters
+    let identity_ids_ok = unique_non_empty(
+        state
+            .identities
+            .values()
+            .map(|identity| identity.account_id.as_str()),
+    ) && unique_non_empty(
+        state
+            .identities
+            .values()
+            .map(|identity| identity.character_id.as_str()),
+    );
+    identity_ids_ok
         && !state.phase5.locations.is_empty()
         && !state.phase5.routes.is_empty()
         && !state.phase5.settlements.is_empty()

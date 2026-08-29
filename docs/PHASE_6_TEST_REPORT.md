@@ -369,3 +369,7 @@ Focused regressions cover those two restore boundaries as well.
 
 Regional stock keys are also checked against known location and item IDs, with
 a focused regression for a stock entry that names a missing location.
+
+Identity readiness now checks both non-empty account IDs and character IDs for
+uniqueness, matching the MySQL account-index key boundary; a focused regression
+covers duplicate account IDs before persistence can fail.

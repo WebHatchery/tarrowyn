@@ -202,3 +202,40 @@ fn invalid_market_stock_reference_degrades_readiness() {
     assert!(!health.ready);
     assert!(!health.integrity_ok);
 }
+
+#[test]
+fn duplicate_identity_account_ids_degrade_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let first = super::guest(&repository, "integrity-account-one");
+    let second = super::guest(&repository, "integrity-account-two");
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        let first_key = state
+            .identities
+            .iter()
+            .find(|(_, identity)| identity.character_id == first.character_id)
+            .map(|(key, _)| key.clone())
+            .expect("first guest identity");
+        let second_key = state
+            .identities
+            .iter()
+            .find(|(_, identity)| identity.character_id == second.character_id)
+            .map(|(key, _)| key.clone())
+            .expect("second guest identity");
+        let account_id = state
+            .identities
+            .get(&first_key)
+            .expect("first identity")
+            .account_id
+            .clone();
+        state
+            .identities
+            .get_mut(&second_key)
+            .expect("second identity")
+            .account_id = account_id;
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
