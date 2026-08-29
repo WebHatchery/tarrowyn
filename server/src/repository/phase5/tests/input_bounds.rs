@@ -40,6 +40,54 @@ fn route_and_travel_selectors_reject_unbounded_or_controlled_ids() {
 }
 
 #[test]
+fn travel_actions_reject_a_stale_current_journey_selector() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = guest(&repository, "phase5-stale-travel");
+    let started = repository
+        .travel(
+            &session.account_token,
+            TravelRequest {
+                request_id: "stale-travel-start".to_owned(),
+                action: TravelAction::Start,
+                route_id: Some("north-pack-road".to_owned()),
+                travel_id: None,
+            },
+        )
+        .expect("journey should start")
+        .data;
+    assert!(started.accepted);
+
+    let response = repository
+        .travel(
+            &session.account_token,
+            TravelRequest {
+                request_id: "stale-travel-interrupt".to_owned(),
+                action: TravelAction::Interrupt,
+                route_id: None,
+                travel_id: Some("travel-from-an-old-client".to_owned()),
+            },
+        )
+        .expect("stale journey should return a response")
+        .data;
+
+    assert!(!response.accepted);
+    assert_eq!(
+        response.reason.as_deref(),
+        Some("That journey is no longer current.")
+    );
+    assert_eq!(
+        response
+            .travel
+            .as_ref()
+            .map(|travel| travel.travel_id.as_str()),
+        started
+            .travel
+            .as_ref()
+            .map(|travel| travel.travel_id.as_str())
+    );
+}
+
+#[test]
 fn market_selectors_reject_unbounded_or_controlled_ids() {
     let repository = WorldRepository::new(ServerConfig::default());
     let session = guest(&repository, "phase5-market-input");

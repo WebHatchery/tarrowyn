@@ -247,7 +247,7 @@ impl WorldRepository {
             "invalid_route_id",
             "A regional route selector must be bounded and contain no control characters.",
         )?;
-        let _travel_id = super::validate_optional_identifier(
+        let travel_id = super::validate_optional_identifier(
             request.travel_id.as_deref(),
             "invalid_travel_id",
             "A travel selector must be bounded and contain no control characters.",
@@ -380,7 +380,12 @@ impl WorldRepository {
                     return response;
                 };
                 {
-                    if travel.status != TravelStatus::Travelling {
+                    if travel_id
+                        .as_deref()
+                        .is_some_and(|travel_id| travel_id != travel.travel_id)
+                    {
+                        reason = Some("That journey is no longer current.".to_owned());
+                    } else if travel.status != TravelStatus::Travelling {
                         reason = Some("Only a journey in progress can be interrupted.".to_owned());
                     } else {
                         travel.status = TravelStatus::Interrupted;
@@ -410,7 +415,12 @@ impl WorldRepository {
                     return response;
                 };
                 {
-                    if travel.status != TravelStatus::Interrupted {
+                    if travel_id
+                        .as_deref()
+                        .is_some_and(|travel_id| travel_id != travel.travel_id)
+                    {
+                        reason = Some("That journey is no longer current.".to_owned());
+                    } else if travel.status != TravelStatus::Interrupted {
                         reason = Some("That journey is not waiting for recovery.".to_owned());
                     } else {
                         travel.status = TravelStatus::Travelling;
