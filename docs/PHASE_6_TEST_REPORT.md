@@ -21,6 +21,10 @@ settlement, region, household, infrastructure, calendar, and game-config
 manifests with required record shapes, exact schema membership, and duplicate
 ID checks before the Rust build; typed server cross-reference checks then reject
 missing launch IDs and incompatible records at startup.
+The launch-default regression confirms the server's world dimensions, day
+length, starting gold, and starting seeds follow the shared game-config
+manifest; the guest identity and offline fixture checks cover the same initial
+seed supply at their respective authority boundaries.
 The server crop-rotation regression confirms planting follows the validated
 crop manifest rather than a separate hard-coded order.
 The server event-template regression confirms regional event seeding follows
@@ -38,6 +42,9 @@ topology, timing, risk, capacity, and status follow the validated region
 manifest.
 The location-profile regression confirms authoritative names, kinds, positions,
 roles, resources, services, and condition follow the validated region manifest.
+The fresh-world farming regression confirms the shared plot projection and
+field tiles initialize from the same validated region plot positions rather
+than a separate legacy grid.
 The contract-template regression confirms the repeatable Brambleback watch
 uses the validated contract manifest for its target and progression contract.
 The threat-template regression confirms the launch wilderness threat follows
