@@ -8,10 +8,17 @@ impl OnlineClient {
         if request.request_id.trim().is_empty() {
             request.request_id = self.next_request_id("trade");
         }
-        self.pending_request_type = Some(format!("trade::{:?}", request.action));
-        self.pending_request_id = Some(request.request_id.clone());
-        self.status_message = "Trade command sent; waiting for the ledger…".to_owned();
-        self.trade_queue.push_back(request);
+        let action = request.action;
+        let request_id = request.request_id.clone();
+        if super::queue::try_push(&mut self.trade_queue, request) {
+            self.pending_request_type = Some(format!("trade::{action:?}"));
+            self.pending_request_id = Some(request_id);
+            self.status_message = "Trade command sent; waiting for the ledger…".to_owned();
+        } else {
+            self.status_message =
+                "The trade ledger is busy; wait for current actions before trying again."
+                    .to_owned();
+        }
     }
 
     pub(super) fn poll_trade_requests(&mut self, dt: f32, notices: &mut Vec<NetworkNotice>) {

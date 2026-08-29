@@ -92,6 +92,11 @@ completed those checks with the warning allowlisted, but required 82,299.85 ms
 for 2,500 requests; that result is capacity evidence against promoting the
 current one-worker snapshot bridge to the several-hundred-player direction.
 
+The browser client also caps each movement, chat, farming, trade, and
+cross-phase command buffer at 32 pending entries. A saturated buffer leaves
+the current action state retryable instead of advertising a request that was
+never queued.
+
 ### Long-term world and content operations
 
 - Lock the real-time lengths of days, seasons, and years, including how those

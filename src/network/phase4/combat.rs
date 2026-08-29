@@ -7,17 +7,20 @@ impl Phase4Client {
             Some(tarrowyn_protocol::LocalCombatStatus::KnockedOut) => LocalCombatAction::Retreat,
             _ => LocalCombatAction::Prepare,
         };
-        self.commands
-            .push_back(Phase4Command::Combat(LocalCombatRequest {
+        super::super::queue::try_push(
+            &mut self.commands,
+            Phase4Command::Combat(LocalCombatRequest {
                 request_id,
                 action,
                 weapon: next_combat_weapon(self.combat.as_ref().map(|combat| combat.weapon)),
-            }));
+            }),
+        );
     }
 
     pub(super) fn queue_combat_action(&mut self, request_id: String, action: LocalCombatAction) {
-        self.commands
-            .push_back(Phase4Command::Combat(LocalCombatRequest {
+        super::super::queue::try_push(
+            &mut self.commands,
+            Phase4Command::Combat(LocalCombatRequest {
                 request_id,
                 action,
                 weapon: self
@@ -25,6 +28,7 @@ impl Phase4Client {
                     .as_ref()
                     .map(|combat| combat.weapon)
                     .unwrap_or(WeaponKind::IronSword),
-            }));
+            }),
+        );
     }
 }

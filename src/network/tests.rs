@@ -159,3 +159,69 @@ fn online_commands_are_not_queued_while_disconnected() {
     assert_eq!(client.movement_queue.len(), 1);
     assert_eq!(client.chat_queue.len(), 1);
 }
+
+#[test]
+fn client_pending_queues_stop_at_the_backpressure_limit() {
+    let mut queue = VecDeque::new();
+    for value in 0..(super::queue::MAX_PENDING_COMMANDS + 4) {
+        assert_eq!(
+            super::queue::try_push(&mut queue, value),
+            value < super::queue::MAX_PENDING_COMMANDS
+        );
+    }
+    assert_eq!(queue.len(), super::queue::MAX_PENDING_COMMANDS);
+}
+
+#[test]
+fn farming_backpressure_does_not_claim_pending_confirmation() {
+    let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
+    client.state = ConnectionState::Online;
+    client.projection.world.tiles = FlatGrid::new(3, 2, TileKind::Field);
+    client.projection.player_position = TilePos::new(1, 1);
+    for index in 0..super::queue::MAX_PENDING_COMMANDS {
+        client.farming_queue.push_back(FarmingRequest {
+            request_id: format!("queued-{index}"),
+            action: FarmingAction::Plant,
+            position: Position { x: 0, y: 0 },
+        });
+    }
+
+    client.queue_farming(FarmingAction::Tend);
+
+    assert!(!client.action_awaiting_confirmation);
+    assert!(client.pending_request_id.is_none());
+    assert!(client.status_message.contains("ledger is busy"));
+    assert_eq!(
+        client.farming_queue.len(),
+        super::queue::MAX_PENDING_COMMANDS
+    );
+}
+
+#[test]
+fn trade_backpressure_does_not_claim_pending_confirmation() {
+    let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
+    client.state = ConnectionState::Online;
+    for index in 0..super::queue::MAX_PENDING_COMMANDS {
+        client.trade_queue.push_back(TradeRequest {
+            request_id: format!("queued-{index}"),
+            action: tarrowyn_protocol::TradeAction::Review,
+            trade_id: None,
+            recipient_account_id: None,
+            offer: None,
+            request: None,
+        });
+    }
+
+    client.queue_trade(TradeRequest {
+        request_id: "dropped".to_owned(),
+        action: tarrowyn_protocol::TradeAction::Review,
+        trade_id: None,
+        recipient_account_id: None,
+        offer: None,
+        request: None,
+    });
+
+    assert!(client.pending_request_id.is_none());
+    assert!(client.status_message.contains("trade ledger is busy"));
+    assert_eq!(client.trade_queue.len(), super::queue::MAX_PENDING_COMMANDS);
+}

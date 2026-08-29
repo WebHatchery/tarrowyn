@@ -313,7 +313,7 @@ impl Phase4Client {
             }
         });
         if let Some(request) = action {
-            self.commands.push_back(Phase4Command::Governance(request));
+            super::queue::try_push(&mut self.commands, Phase4Command::Governance(request));
         }
     }
 
@@ -331,8 +331,9 @@ impl Phase4Client {
             5 => 10,
             _ => 0,
         };
-        self.commands
-            .push_back(Phase4Command::Governance(GovernanceRequest {
+        super::queue::try_push(
+            &mut self.commands,
+            Phase4Command::Governance(GovernanceRequest {
                 request_id,
                 action: GovernanceAction::SetTaxRate,
                 office_id: None,
@@ -341,7 +342,8 @@ impl Phase4Client {
                 target: None,
                 cost: None,
                 tax_rate_percent: Some(next),
-            }));
+            }),
+        );
     }
 
     fn queue_order(&mut self, request_id: String) {
@@ -418,7 +420,7 @@ impl Phase4Client {
                 timing_score: None,
             })
         };
-        self.commands.push_back(action);
+        super::queue::try_push(&mut self.commands, action);
     }
 
     fn begin_crafting(&mut self, order_id: &str) {
@@ -448,16 +450,19 @@ impl Phase4Client {
         let center = (challenge.target_start + challenge.target_end) * 0.5;
         let distance = (challenge.progress - center).abs();
         let timing_score = (100.0 - distance * 140.0).clamp(0.0, 100.0) as u8;
-        self.commands
-            .push_back(Phase4Command::Profession(ProfessionRequest {
-                request_id,
-                action: ProfessionAction::CompleteOrder,
-                order_id: Some(challenge.order_id),
-                profession: None,
-                capability_id: None,
-                service: None,
-                timing_score: Some(timing_score),
-            }));
+        let request = Phase4Command::Profession(ProfessionRequest {
+            request_id,
+            action: ProfessionAction::CompleteOrder,
+            order_id: Some(challenge.order_id.clone()),
+            profession: None,
+            capability_id: None,
+            service: None,
+            timing_score: Some(timing_score),
+        });
+        if !super::queue::try_push(&mut self.commands, request) {
+            self.crafting = Some(challenge);
+            return false;
+        }
         true
     }
 
@@ -473,8 +478,9 @@ impl Phase4Client {
                     .any(|id| id == "moonberry-tending")
             })
             .unwrap_or(false);
-        self.commands
-            .push_back(Phase4Command::Knowledge(KnowledgeRequest {
+        super::queue::try_push(
+            &mut self.commands,
+            Phase4Command::Knowledge(KnowledgeRequest {
                 request_id,
                 action: if known {
                     KnowledgeAction::Apply
@@ -483,7 +489,8 @@ impl Phase4Client {
                 },
                 knowledge_id: Some("moonberry-tending".to_owned()),
                 target_account_id: None,
-            }));
+            }),
+        );
     }
 
     pub(super) fn queue_school(&mut self, request_id: String, target_account_id: String) -> bool {
@@ -493,13 +500,16 @@ impl Phase4Client {
                 lesson.learner_account_id == own && lesson.teacher_account_id == target_account_id
             })
         }) {
-            self.commands.push_back(Phase4Command::Skill(SkillRequest {
-                request_id,
-                action: SkillAction::CompleteLesson,
-                lesson_id: Some(lesson.lesson_id.clone()),
-                skill_id: Some(lesson.skill_id.clone()),
-                target_account_id: Some(lesson.teacher_account_id.clone()),
-            }));
+            super::queue::try_push(
+                &mut self.commands,
+                Phase4Command::Skill(SkillRequest {
+                    request_id,
+                    action: SkillAction::CompleteLesson,
+                    lesson_id: Some(lesson.lesson_id.clone()),
+                    skill_id: Some(lesson.skill_id.clone()),
+                    target_account_id: Some(lesson.teacher_account_id.clone()),
+                }),
+            );
             return true;
         }
         let Some(skill) = self.skills.as_ref().and_then(|skills| {
@@ -509,13 +519,16 @@ impl Phase4Client {
         }) else {
             return false;
         };
-        self.commands.push_back(Phase4Command::Skill(SkillRequest {
-            request_id,
-            action: SkillAction::BeginLesson,
-            lesson_id: None,
-            skill_id: Some(skill.skill_id.clone()),
-            target_account_id: Some(target_account_id),
-        }));
+        super::queue::try_push(
+            &mut self.commands,
+            Phase4Command::Skill(SkillRequest {
+                request_id,
+                action: SkillAction::BeginLesson,
+                lesson_id: None,
+                skill_id: Some(skill.skill_id.clone()),
+                target_account_id: Some(target_account_id),
+            }),
+        );
         true
     }
 
@@ -528,13 +541,16 @@ impl Phase4Client {
         }) else {
             return;
         };
-        self.commands.push_back(Phase4Command::Skill(SkillRequest {
-            request_id,
-            action: SkillAction::Practice,
-            lesson_id: None,
-            skill_id: Some(skill.skill_id.clone()),
-            target_account_id: None,
-        }));
+        super::queue::try_push(
+            &mut self.commands,
+            Phase4Command::Skill(SkillRequest {
+                request_id,
+                action: SkillAction::Practice,
+                lesson_id: None,
+                skill_id: Some(skill.skill_id.clone()),
+                target_account_id: None,
+            }),
+        );
     }
 
     fn apply_command(&mut self, response: Phase4CommandResponse, notices: &mut Vec<NetworkNotice>) {

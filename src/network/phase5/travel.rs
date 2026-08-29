@@ -32,13 +32,15 @@ impl Phase5Client {
         let Some(route) = route else {
             return;
         };
-        self.commands
-            .push_back(Phase5Command::Travel(TravelRequest {
+        super::super::queue::try_push(
+            &mut self.commands,
+            Phase5Command::Travel(TravelRequest {
                 request_id,
                 action: TravelAction::Start,
                 route_id: Some(route.route_id.clone()),
                 travel_id: None,
-            }));
+            }),
+        );
     }
 
     pub(super) fn queue_travel_action(&mut self, request_id: String, action: TravelAction) {
@@ -47,12 +49,14 @@ impl Phase5Client {
             .as_ref()
             .and_then(|region| region.travel.as_ref())
             .map(|travel| travel.travel_id.clone());
-        self.commands
-            .push_back(Phase5Command::Travel(TravelRequest {
+        super::super::queue::try_push(
+            &mut self.commands,
+            Phase5Command::Travel(TravelRequest {
                 request_id,
                 action,
                 route_id: None,
                 travel_id,
-            }));
+            }),
+        );
     }
 }

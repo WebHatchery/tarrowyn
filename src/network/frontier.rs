@@ -164,12 +164,14 @@ impl FrontierClient {
     }
 
     pub(super) fn queue_contract(&mut self, request_id: String, action: ContractAction) {
-        self.commands
-            .push_back(FrontierCommand::Contract(ContractRequest {
+        super::queue::try_push(
+            &mut self.commands,
+            FrontierCommand::Contract(ContractRequest {
                 request_id,
                 action,
                 contract_id: "brambleback-watch".to_owned(),
-            }));
+            }),
+        );
     }
 
     pub(super) fn queue_combat(
@@ -178,30 +180,32 @@ impl FrontierClient {
         action: CombatAction,
         weapon: WeaponKind,
     ) {
-        self.commands
-            .push_back(FrontierCommand::Combat(CombatRequest {
+        super::queue::try_push(
+            &mut self.commands,
+            FrontierCommand::Combat(CombatRequest {
                 request_id,
                 action,
                 weapon,
-            }));
+            }),
+        );
     }
 
     pub(super) fn queue_recovery(&mut self, request_id: String, choice: RecoveryChoice) {
-        self.commands
-            .push_back(FrontierCommand::Recovery(RecoveryRequest {
-                request_id,
-                choice,
-            }));
+        super::queue::try_push(
+            &mut self.commands,
+            FrontierCommand::Recovery(RecoveryRequest { request_id, choice }),
+        );
     }
 
     pub(super) fn queue_claim(&mut self, request_id: String, action: ClaimAction) {
-        self.commands
-            .push_back(FrontierCommand::Claim(ClaimRequest { request_id, action }));
+        super::queue::try_push(
+            &mut self.commands,
+            FrontierCommand::Claim(ClaimRequest { request_id, action }),
+        );
     }
 
     pub(super) fn queue_expedition(&mut self, request: ExpeditionRequest) {
-        self.commands
-            .push_back(FrontierCommand::Expedition(request));
+        super::queue::try_push(&mut self.commands, FrontierCommand::Expedition(request));
     }
 
     fn apply_command(

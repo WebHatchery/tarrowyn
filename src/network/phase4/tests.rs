@@ -1,7 +1,7 @@
 use super::*;
 use tarrowyn_protocol::{
-    LocalCombatAction, LocalCombatState, ProfessionAction, SkillAction, SkillLesson, SkillStatus,
-    SkillView, SkillsResponse, WeaponKind,
+    LocalCombatAction, LocalCombatRequest, LocalCombatState, ProfessionAction, SkillAction,
+    SkillLesson, SkillStatus, SkillView, SkillsResponse, WeaponKind,
 };
 
 #[test]
@@ -68,6 +68,28 @@ fn crafting_tap_becomes_a_bounded_completion_request() {
     assert_eq!(request.action, ProfessionAction::CompleteOrder);
     assert_eq!(request.order_id.as_deref(), Some("service-order-2"));
     assert!(request.timing_score.is_some_and(|score| score <= 100));
+}
+
+#[test]
+fn crafting_completion_stays_available_when_the_command_queue_is_full() {
+    let mut client = Phase4Client::new();
+    client.begin_crafting("service-order-full");
+    for index in 0..super::super::queue::MAX_PENDING_COMMANDS {
+        client
+            .commands
+            .push_back(Phase4Command::Combat(LocalCombatRequest {
+                request_id: format!("queued-{index}"),
+                action: LocalCombatAction::Prepare,
+                weapon: WeaponKind::IronSword,
+            }));
+    }
+
+    assert!(!client.submit_crafting("craft-full".to_owned()));
+    assert!(client.crafting_view().is_some());
+    assert_eq!(
+        client.commands.len(),
+        super::super::queue::MAX_PENDING_COMMANDS
+    );
 }
 
 #[test]

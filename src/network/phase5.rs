@@ -246,32 +246,41 @@ impl Phase5Client {
             "recover-travel" => self.queue_travel_action(request_id, TravelAction::Recover),
             "market-region" => self.queue_market(request_id),
             "region-event" => self.queue_event(request_id),
-            "account" => self
-                .commands
-                .push_back(Phase5Command::Link(AuthLinkRequest {
-                    request_id,
-                    provider: "webhatchery-identity-oidc".to_owned(),
-                    subject: self
-                        .own_account_id
-                        .clone()
-                        .unwrap_or_else(|| "guest-subject".to_owned()),
-                    display_name: None,
-                })),
-            "logout" => self.commands.push_back(Phase5Command::Revoke(
-                tarrowyn_protocol::AuthRevokeRequest {
-                    request_id,
-                    revoke_all: true,
-                },
-            )),
-            "report" => self
-                .commands
-                .push_back(Phase5Command::Report(ModerationReportRequest {
-                    request_id,
-                    target_account_id: None,
-                    message_id: None,
-                    category: "player_report".to_owned(),
-                    note: "Report submitted from the visible touch control.".to_owned(),
-                })),
+            "account" => {
+                let _ = super::queue::try_push(
+                    &mut self.commands,
+                    Phase5Command::Link(AuthLinkRequest {
+                        request_id,
+                        provider: "webhatchery-identity-oidc".to_owned(),
+                        subject: self
+                            .own_account_id
+                            .clone()
+                            .unwrap_or_else(|| "guest-subject".to_owned()),
+                        display_name: None,
+                    }),
+                );
+            }
+            "logout" => {
+                let _ = super::queue::try_push(
+                    &mut self.commands,
+                    Phase5Command::Revoke(tarrowyn_protocol::AuthRevokeRequest {
+                        request_id,
+                        revoke_all: true,
+                    }),
+                );
+            }
+            "report" => {
+                let _ = super::queue::try_push(
+                    &mut self.commands,
+                    Phase5Command::Report(ModerationReportRequest {
+                        request_id,
+                        target_account_id: None,
+                        message_id: None,
+                        category: "player_report".to_owned(),
+                        note: "Report submitted from the visible touch control.".to_owned(),
+                    }),
+                );
+            }
             "delete-account" => {
                 let Some(account) = self
                     .account
@@ -282,11 +291,13 @@ impl Phase5Client {
                 };
                 if self.deletion_armed {
                     self.deletion_armed = false;
-                    self.commands
-                        .push_back(Phase5Command::Delete(AccountDeletionRequest {
+                    super::queue::try_push(
+                        &mut self.commands,
+                        Phase5Command::Delete(AccountDeletionRequest {
                             request_id,
                             account_id: account.account_id.clone(),
-                        }));
+                        }),
+                    );
                 } else {
                     self.deletion_armed = true;
                 }
@@ -311,11 +322,14 @@ impl Phase5Client {
                 let Some(route_id) = route_id else {
                     return;
                 };
-                self.commands.push_back(Phase5Command::Route(RouteRequest {
-                    request_id,
-                    route_id,
-                    action: RouteAction::Repair,
-                }));
+                super::queue::try_push(
+                    &mut self.commands,
+                    Phase5Command::Route(RouteRequest {
+                        request_id,
+                        route_id,
+                        action: RouteAction::Repair,
+                    }),
+                );
             }
             _ => {}
         }
@@ -332,15 +346,17 @@ impl Phase5Client {
                     && order.destination_location_id == location
             })
         }) {
-            self.commands
-                .push_back(Phase5Command::Market(MarketOrderRequest {
+            super::queue::try_push(
+                &mut self.commands,
+                Phase5Command::Market(MarketOrderRequest {
                     request_id,
                     action: MarketOrderAction::Fulfil,
                     order_id: Some(order.order_id.clone()),
                     destination_location_id: None,
                     commodity: None,
                     quantity: None,
-                }));
+                }),
+            );
         } else if location == "hearth"
             && !self.market.as_ref().is_some_and(|market| {
                 market.orders.iter().any(|order| {
@@ -352,15 +368,17 @@ impl Phase5Client {
                 })
             })
         {
-            self.commands
-                .push_back(Phase5Command::Market(MarketOrderRequest {
+            super::queue::try_push(
+                &mut self.commands,
+                Phase5Command::Market(MarketOrderRequest {
                     request_id,
                     action: MarketOrderAction::Create,
                     order_id: None,
                     destination_location_id: Some("saltmere".to_owned()),
                     commodity: Some(tarrowyn_protocol::CommodityKind::Seeds),
                     quantity: Some(1),
-                }));
+                }),
+            );
         }
     }
 
@@ -404,7 +422,7 @@ impl Phase5Client {
             }
             Some(_) => return,
         };
-        self.commands.push_back(Phase5Command::Event(request));
+        super::queue::try_push(&mut self.commands, Phase5Command::Event(request));
     }
 
     fn apply_command(

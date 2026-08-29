@@ -51,12 +51,14 @@ impl Phase4Client {
                 (action, Some(claim.claim_id.clone()))
             }
         };
-        self.commands
-            .push_back(Phase4Command::Claim(ClaimLifecycleRequest {
+        super::super::queue::try_push(
+            &mut self.commands,
+            Phase4Command::Claim(ClaimLifecycleRequest {
                 request_id,
                 action,
                 claim_id,
                 target_account_id: None,
-            }));
+            }),
+        );
     }
 }

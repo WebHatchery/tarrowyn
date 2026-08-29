@@ -4,7 +4,6 @@ use crate::data::GameConfig;
 use crate::state::{TileKind, WorldState};
 use macroquad_toolkit::grid::{FlatGrid, TilePos};
 use macroquad_toolkit::net::{HttpClient, Pending};
-use serde::Serialize;
 use std::collections::VecDeque;
 use tarrowyn_protocol::{
     ApiResponse, ChatMessage, ChatRequest, ChronicleEntry, ChronicleSummary, EventsResponse,
@@ -21,6 +20,7 @@ mod frontier;
 mod maintenance;
 mod phase4;
 mod phase5;
+mod queue;
 mod requests;
 mod trade_client;
 mod types;
@@ -374,8 +374,10 @@ impl OnlineClient {
             return;
         }
         let request_id = self.next_request_id("move");
-        self.movement_queue
-            .push_back(MovementIntent { request_id, dx, dy });
+        queue::try_push(
+            &mut self.movement_queue,
+            MovementIntent { request_id, dx, dy },
+        );
     }
 
     pub fn queue_move_toward(&mut self, target: TilePos) {
@@ -397,11 +399,14 @@ impl OnlineClient {
             return;
         }
         let request_id = self.next_request_id("chat");
-        self.chat_queue.push_back(ChatRequest {
-            request_id,
-            channel: "settlement".to_owned(),
-            text,
-        });
+        queue::try_push(
+            &mut self.chat_queue,
+            ChatRequest {
+                request_id,
+                channel: "settlement".to_owned(),
+                text,
+            },
+        );
     }
 
     pub fn queue_farming(&mut self, action: FarmingAction) {
@@ -423,18 +428,27 @@ impl OnlineClient {
             return;
         };
         let request_id = self.next_request_id("farm");
-        self.pending_request_type = Some(format!("farming::{action:?}"));
-        self.pending_request_id = Some(request_id.clone());
-        self.action_awaiting_confirmation = true;
-        self.status_message = "Command sent; waiting for the settlement ledger…".to_owned();
-        self.farming_queue.push_back(FarmingRequest {
-            request_id,
-            action,
-            position: tarrowyn_protocol::Position {
-                x: target.x,
-                y: target.y,
+        let queued = queue::try_push(
+            &mut self.farming_queue,
+            FarmingRequest {
+                request_id: request_id.clone(),
+                action,
+                position: tarrowyn_protocol::Position {
+                    x: target.x,
+                    y: target.y,
+                },
             },
-        });
+        );
+        if queued {
+            self.pending_request_type = Some(format!("farming::{action:?}"));
+            self.pending_request_id = Some(request_id);
+            self.action_awaiting_confirmation = true;
+            self.status_message = "Command sent; waiting for the settlement ledger…".to_owned();
+        } else {
+            self.status_message =
+                "The settlement ledger is busy; wait for current actions before trying again."
+                    .to_owned();
+        }
     }
 
     pub fn refresh_tavern(&mut self) {
@@ -780,9 +794,6 @@ fn short_error(error: &str) -> String {
         .take(120)
         .collect()
 }
-
-#[allow(dead_code)]
-fn _assert_request_serializable<T: Serialize>() {}
 
 #[cfg(test)]
 mod tests;
