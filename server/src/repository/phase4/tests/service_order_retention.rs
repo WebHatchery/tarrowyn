@@ -108,3 +108,29 @@ fn service_order_history_evicts_settled_records_and_preserves_live_escrow() {
     );
     assert_eq!(blocked.professions.orders.len(), 64);
 }
+
+#[test]
+fn service_order_id_stays_at_the_numeric_ceiling() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = guest(&repository, "service-order-id-ceiling");
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state.phase4.next_order_id = u64::MAX;
+    }
+
+    let response = repository
+        .profession_order(
+            &session.account_token,
+            create_request("service-order-id-ceiling-request"),
+        )
+        .expect("service order response")
+        .data;
+
+    assert!(response.accepted);
+    assert_eq!(
+        response.order.expect("created service order").order_id,
+        format!("service-order-{}", u64::MAX)
+    );
+    let state = repository.state.lock().expect("repository lock");
+    assert_eq!(state.phase4.next_order_id, u64::MAX);
+}

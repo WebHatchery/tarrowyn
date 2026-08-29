@@ -141,7 +141,7 @@ impl super::super::WorldRepository {
                             created_tick: state.tick,
                             completed_tick: None,
                         };
-                        state.phase4.next_order_id += 1;
+                        state.phase4.next_order_id = state.phase4.next_order_id.saturating_add(1);
                         response.order = Some(order.clone());
                         state.phase4.orders.push(order);
                         response.accepted = true;
