@@ -339,6 +339,44 @@ fn invalid_phase4_bounds_degrade_readiness() {
 }
 
 #[test]
+fn invalid_phase4_claim_position_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = super::guest(&repository, "integrity-phase4-claim-position");
+    repository
+        .claim_lifecycle(
+            &session.account_token,
+            ClaimLifecycleRequest {
+                request_id: "integrity-phase4-claim-position-request".to_owned(),
+                action: ClaimLifecycleAction::Request,
+                claim_id: None,
+                target_account_id: None,
+            },
+        )
+        .expect("claim request");
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state.phase4.claims[0].position.x = -1;
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
+fn invalid_phase4_available_plot_position_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state.phase4.available_plots[0].y = -1;
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
 fn missing_phase4_foundation_collections_degrade_readiness() {
     for missing in [
         "offices",

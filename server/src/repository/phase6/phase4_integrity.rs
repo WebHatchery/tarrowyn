@@ -1,10 +1,11 @@
 use super::super::models::RepositoryState;
+use crate::config::ServerConfig;
 use std::collections::HashSet;
 
 const DELETED_ACCOUNT: &str = "former-resident";
 const MAX_TAX_RATE_PERCENT: u8 = 10;
 
-pub(super) fn ok(state: &RepositoryState) -> bool {
+pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
     let account_ids: HashSet<&str> = state
         .identities
         .values()
@@ -105,7 +106,9 @@ pub(super) fn ok(state: &RepositoryState) -> bool {
             .iter()
             .map(|claim| claim.plot_id.as_str()),
     ) && state.phase4.claims.iter().all(|claim| {
-        optional_account_reference_ok(claim.owner_account_id.as_deref(), &account_ids)
+        !claim.plot_id.trim().is_empty()
+            && position_in_world(claim.position, config)
+            && optional_account_reference_ok(claim.owner_account_id.as_deref(), &account_ids)
             && optional_account_reference_ok(claim.approved_by.as_deref(), &account_ids)
             && claim.lease_days > 0
     });
@@ -215,7 +218,11 @@ pub(super) fn ok(state: &RepositoryState) -> bool {
             .available_plots
             .iter()
             .map(|position| (position.x, position.y)),
-    );
+    ) && state
+        .phase4
+        .available_plots
+        .iter()
+        .all(|position| position_in_world(*position, config));
 
     governance_ok
         && infrastructure_ok
@@ -247,4 +254,11 @@ fn unique_non_empty<'a>(mut values: impl Iterator<Item = &'a str>) -> bool {
 fn unique_positions(mut positions: impl Iterator<Item = (i32, i32)>) -> bool {
     let mut seen = HashSet::new();
     positions.all(|position| seen.insert(position))
+}
+
+fn position_in_world(position: tarrowyn_protocol::Position, config: &ServerConfig) -> bool {
+    position.x >= 0
+        && position.y >= 0
+        && (position.x as u32) < config.world_width
+        && (position.y as u32) < config.world_height
 }

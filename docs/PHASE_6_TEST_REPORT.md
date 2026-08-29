@@ -436,3 +436,8 @@ collections—offices, infrastructure, households, knowledge, and animals—to
 remain present after restore or repair. One focused regression exercises each
 missing collection; the dynamic available-plot list remains allowed to be empty
 when all recognised plots are occupied.
+
+Phase 4 land-registry integrity now also rejects claim and available-plot
+positions outside the configured world bounds, while retaining dynamic plot
+layouts for migration compatibility. Two focused regressions cover malformed
+claim and free-plot positions.

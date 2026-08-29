@@ -497,7 +497,7 @@ fn integrity_ok(state: &RepositoryState, config: &ServerConfig) -> bool {
             .map(|identity| identity.character_id.as_str()),
     );
     identity_ids_ok
-        && super::phase4_integrity::ok(state)
+        && super::phase4_integrity::ok(state, config)
         && super::persistent_integrity::ok(state, config)
         && super::production_integrity::ok(state)
         && !state.phase5.locations.is_empty()
