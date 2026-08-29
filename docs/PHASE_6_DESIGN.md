@@ -58,6 +58,10 @@ encounter, require mastered Wind, Water, and Electricity Magic, and reveal the
 server-owned merger after 25 successful interactions. The existing touch Spell
 control presents the discovered Storm technique without exposing hidden
 prerequisite data.
+Account deletion work is a live queue rather than replay history: repeated
+requests for one account coalesce onto its pending operation, pending records
+are never evicted by replay-cache maintenance, and admission is capped at 128
+accounts until the next authoritative processing tick.
 Every mutation replay cache is trimmed to a 512-entry per-scope bound on the
 authoritative world tick, including identity, regional, support, authentication,
 moderation, and earlier-phase command results.

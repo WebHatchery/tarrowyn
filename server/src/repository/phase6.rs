@@ -27,6 +27,7 @@ const IDENTITY_PROVIDER: &str = "webhatchery-identity-oidc";
 const PRIVACY_POLICY_VERSION: &str = "2026-08-19";
 pub(super) const MAX_MODERATION_REPORTS: usize = 512;
 pub(super) const MODERATION_REPORT_RETENTION_SECONDS: u64 = 90 * 24 * 60 * 60;
+pub(super) const MAX_PENDING_DELETIONS: usize = 128;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub(super) struct ProductionAccount {
@@ -463,12 +464,46 @@ impl WorldRepository {
                 data: deletion::scheduled_response(pending),
             });
         }
+        if let Some(pending) = state
+            .phase6
+            .deletion_requests
+            .values()
+            .find(|pending| pending.account_id == account)
+            .cloned()
+        {
+            let mut response = deletion::scheduled_response(&pending);
+            response.request_id = request.request_id;
+            return Ok(ApiResponse {
+                meta: meta(
+                    state.tick,
+                    Some(response.request_id.clone()),
+                    Some(state.cursor),
+                ),
+                data: response,
+            });
+        }
         let character_id = state
             .identities
             .get(&key)
             .expect("identity exists")
             .character_id
             .clone();
+        if state.phase6.deletion_requests.len() >= MAX_PENDING_DELETIONS {
+            return Ok(ApiResponse {
+                meta: meta(state.tick, Some(request.request_id.clone()), Some(state.cursor)),
+                data: AccountDeletionResponse {
+                    request_id: request.request_id,
+                    account_id: account,
+                    character_id,
+                    accepted: false,
+                    status: "blocked".to_owned(),
+                    reason: Some(
+                        "The account-deletion queue is full; wait for the next authoritative tick before trying again."
+                            .to_owned(),
+                    ),
+                },
+            });
+        }
         let pending = PendingAccountDeletion {
             request_id: request.request_id.clone(),
             account_id: account.clone(),
@@ -512,7 +547,6 @@ pub(super) fn phase6_tick(state: &mut RepositoryState, config: &ServerConfig) ->
     trim_replay_cache(&mut state.phase4.request_results);
     trim_replay_cache(&mut state.phase5.request_results);
     trim_replay_cache(&mut state.phase6.request_results);
-    trim_replay_cache(&mut state.phase6.deletion_requests);
     trim_moderation_reports(&mut state.phase6, super::phase4::unix_time_seconds());
     for identity in state.identities.values_mut() {
         trim_replay_cache(&mut identity.farming_results);
