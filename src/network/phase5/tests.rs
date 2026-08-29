@@ -147,6 +147,52 @@ fn regional_cursor_reset_discards_stale_events_and_restarts_refresh() {
     assert_eq!(client.refresh_timer, 0.0);
 }
 
+#[test]
+fn regional_summary_shows_local_condition_and_recovery_signal() {
+    let mut client = Phase5Client::new();
+    client.region = Some(tarrowyn_protocol::RegionSnapshot {
+        region_id: "hearthlands".to_owned(),
+        season: "thaw".to_owned(),
+        calendar_day: 1,
+        locations: Vec::new(),
+        routes: Vec::new(),
+        visible_settlements: Vec::new(),
+        player_location_id: "saltmere".to_owned(),
+        travel: None,
+        interest_radius: 12,
+        cursor: 7,
+    });
+    client.settlements = Some(tarrowyn_protocol::SettlementsResponse {
+        settlements: vec![tarrowyn_protocol::SettlementProjection {
+            settlement_id: "saltmere-settlement".to_owned(),
+            name: "Saltmere Landing".to_owned(),
+            location_id: "saltmere".to_owned(),
+            population: 18,
+            food: 40,
+            safety: 42,
+            infrastructure: 45,
+            industry: 38,
+            governance: 40,
+            player_activity: 10,
+            condition: tarrowyn_protocol::SettlementCondition::Strained,
+            milestones: Vec::new(),
+            vacancies: vec!["ferry hand".to_owned()],
+            demand: vec!["timber".to_owned()],
+            abundant_goods: Vec::new(),
+            scarce_goods: Vec::new(),
+            price_index_percent: 120,
+            chronicle: Vec::new(),
+            recovery_opportunity: Some("Repair the ferry route.".to_owned()),
+        }],
+        cursor: 7,
+    });
+
+    let first_line = client.summary().lines().next().unwrap().to_owned();
+    assert!(first_line.contains("saltmere"));
+    assert!(first_line.contains("Strained"));
+    assert!(first_line.contains("recovery open"));
+}
+
 fn regional_event(
     event_id: &str,
     stage: tarrowyn_protocol::RegionalEventStage,

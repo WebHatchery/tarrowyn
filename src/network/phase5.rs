@@ -11,6 +11,8 @@ use tarrowyn_protocol::{
     RouteResponse, SettlementsResponse, TravelAction, TravelRequest, TravelResponse, TravelStatus,
 };
 
+mod summary;
+
 enum Phase5Command {
     Travel(TravelRequest),
     Route(RouteRequest),
@@ -554,67 +556,7 @@ impl Phase5Client {
     }
 
     pub(super) fn summary(&self) -> String {
-        let region = self
-            .region
-            .as_ref()
-            .map(|region| {
-                let travel = region
-                    .travel
-                    .as_ref()
-                    .map(|travel| format!("{:?} {}%", travel.status, travel.progress))
-                    .unwrap_or_else(|| "ready".to_owned());
-                format!("{} • {} travel", region.player_location_id, travel)
-            })
-            .unwrap_or_else(|| "Regional map loading".to_owned());
-        let settlements = self
-            .settlements
-            .as_ref()
-            .map(|settlements| {
-                settlements
-                    .settlements
-                    .iter()
-                    .map(|settlement| format!("{} {:?}", settlement.name, settlement.condition))
-                    .collect::<Vec<_>>()
-                    .join(" • ")
-            })
-            .unwrap_or_else(|| "Settlements loading".to_owned());
-        let market = self
-            .market
-            .as_ref()
-            .map(|market| {
-                format!(
-                    "{} open orders",
-                    market
-                        .orders
-                        .iter()
-                        .filter(|order| order.status == tarrowyn_protocol::MarketOrderStatus::Open)
-                        .count()
-                )
-            })
-            .unwrap_or_else(|| "Market loading".to_owned());
-        let law = self
-            .law
-            .as_ref()
-            .map(|law| {
-                if law.pvp_enabled {
-                    "PvP opt-in"
-                } else {
-                    "Protected economy"
-                }
-            })
-            .unwrap_or("Law loading");
-        let account = self
-            .account
-            .as_ref()
-            .map(|account| {
-                if account.guest_fixture {
-                    "Guest fixture • tap Account to link"
-                } else {
-                    "Linked account • tap Logout to leave safely"
-                }
-            })
-            .unwrap_or("Account loading");
-        format!("{region}\n{settlements}\n{market} • {law}\n{account}")
+        summary::render(self)
     }
 
     fn next_id(&mut self) -> String {

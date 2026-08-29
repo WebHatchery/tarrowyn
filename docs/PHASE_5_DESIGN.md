@@ -59,6 +59,11 @@ point when nothing is supporting a settlement. Low activity combined with weak
 industry or governance exposes a strained or quiet condition, while the
 existing recovery opportunity remains visible for a later player.
 
+The touch client places the current settlement's condition beside travel status
+and marks a recovery opportunity as open. The comparison data remains
+available in the same projection so a player can see the wider region without
+leaving the shared-road sidebar.
+
 ## Event lifecycle
 
 The seeded `river-thaw` fixture follows signal, escalation, intervention,

@@ -68,6 +68,8 @@ only after the discoverer records them in the guild archive.
 The settlement-activity regression confirms activity is scoped to the touched
 settlement, decays after the last session expires, and exposes a low-activity
 strained condition without deleting the settlement projection.
+The regional-summary regression confirms the touch projection places the
+current settlement condition and recovery-open signal beside travel status.
 The skill-catalogue regressions confirm direct root guidance, non-empty advanced
 discovery requirements, and re-evaluation of stored prerequisite history when a
 new advanced merger becomes eligible.
