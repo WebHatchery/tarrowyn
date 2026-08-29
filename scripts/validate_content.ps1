@@ -112,6 +112,11 @@ Assert-Records "threats" (Get-Records $manifests["threats.json"] "threats" "thre
 Assert-Records "households" (Get-Records $manifests["households.json"] "households" "households") @("name", "occupation", "home_settlement", "service", "clue", "reason", "regional_service") @("members", "history")
 $infrastructureRecords = Get-Records $manifests["infrastructure.json"] "infrastructure" "infrastructure"
 Assert-Records "infrastructure" $infrastructureRecords @("name", "kind", "note") @()
+if (@("north-road", "hearth-services") | Where-Object {
+        @($infrastructureRecords | ForEach-Object { [string]$_.id }) -notcontains $_
+    }) {
+    throw "Infrastructure is missing a required launch record."
+}
 Assert-Records "npc households" (Get-Records $manifests["npc_households.json"] "npc_households" "npc households") @("household_name", "home", "work", "demand", "clue") @("members", "needs")
 Assert-Records "recipes" (Get-Records $manifests["recipes.json"] "recipes" "recipes") @("name", "profession", "service", "benefit") @()
 $settlementRecords = Get-Records $manifests["settlements.json"] "settlements" "settlements"
