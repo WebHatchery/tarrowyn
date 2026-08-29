@@ -29,7 +29,7 @@ The server crop-rotation regression confirms planting follows the validated
 crop manifest rather than a separate hard-coded order.
 The server event-template regression confirms regional event seeding follows
 the validated event manifest, including its narrative, effects, and
-intervention options.
+intervention options, and affected locations.
 The settlement profile regression confirms condition, milestones, vacancies,
 demand, prices, and abundant/scarce goods in the authoritative projections
 follow the validated settlement manifest.

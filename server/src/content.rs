@@ -118,6 +118,7 @@ struct EventManifest {
     kind: String,
     stages: Vec<String>,
     affected_systems: Vec<String>,
+    affected_locations: Vec<String>,
     effects: Vec<String>,
     cause: String,
     intervention_options: Vec<String>,
@@ -128,6 +129,7 @@ pub(crate) struct EventTemplate {
     pub(crate) id: String,
     pub(crate) title: String,
     pub(crate) kind: String,
+    pub(crate) affected_locations: Vec<String>,
     pub(crate) effects: Vec<String>,
     pub(crate) cause: String,
     pub(crate) intervention_options: Vec<String>,
@@ -250,7 +252,7 @@ pub fn validate() -> Result<(), String> {
     validate_actions(&actions)?;
     validate_crops(&crops)?;
     frontier::validate()?;
-    validate_events(&events)?;
+    validate_events(&events, &region)?;
     validate_items(&items)?;
     validate_region(&region, &game_config)?;
     households::validate(&region)?;
@@ -311,7 +313,7 @@ pub(crate) fn regional_event_template(event_index: u64) -> EventTemplate {
     let events = EVENT_CATALOG.get_or_init(|| {
         let events: EventsManifest = parse_json_labeled("events.json", EVENTS_JSON)
             .expect("events content JSON must be valid");
-        validate_events(&events).expect("events content must satisfy its schema");
+        validate_events(&events, region_catalog()).expect("events content must satisfy its schema");
         events.events
     });
     let event = events
@@ -321,6 +323,7 @@ pub(crate) fn regional_event_template(event_index: u64) -> EventTemplate {
         id: event.id.clone(),
         title: event.title.clone(),
         kind: event.kind.clone(),
+        affected_locations: event.affected_locations.clone(),
         effects: event.effects.clone(),
         cause: event.cause.clone(),
         intervention_options: event.intervention_options.clone(),
@@ -528,7 +531,7 @@ fn validate_crops(crops: &[CropManifest]) -> Result<(), String> {
     Ok(())
 }
 
-fn validate_events(events: &EventsManifest) -> Result<(), String> {
+fn validate_events(events: &EventsManifest, region: &RegionManifest) -> Result<(), String> {
     validate_id_list(
         "event",
         events
@@ -543,6 +546,7 @@ fn validate_events(events: &EventsManifest) -> Result<(), String> {
                 || event.kind.trim().is_empty()
                 || event.stages.is_empty()
                 || event.affected_systems.is_empty()
+                || event.affected_locations.is_empty()
                 || event.effects.is_empty()
                 || event.cause.trim().is_empty()
                 || event.intervention_options.is_empty()
@@ -557,9 +561,32 @@ fn validate_events(events: &EventsManifest) -> Result<(), String> {
                         "signal" | "escalation" | "intervention" | "resolution" | "aftermath"
                     )
                 })
+                || event.affected_locations.iter().any(|location| {
+                    location.trim().is_empty()
+                        || !region
+                            .locations
+                            .iter()
+                            .any(|candidate| candidate.id == *location)
+                })
         })
     {
-        return Err("events need IDs, kinds, known stages, and affected systems".to_owned());
+        return Err(
+            "events need IDs, kinds, known stages, affected systems, and known locations"
+                .to_owned(),
+        );
+    }
+    for event in &events.events {
+        let mut locations = HashSet::new();
+        if event
+            .affected_locations
+            .iter()
+            .any(|location| !locations.insert(location.as_str()))
+        {
+            return Err(format!(
+                "event {} cannot repeat an affected location",
+                event.id
+            ));
+        }
     }
     Ok(())
 }

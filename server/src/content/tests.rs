@@ -119,6 +119,14 @@ fn server_event_seed_template_follows_the_validated_manifest() {
     assert_eq!(event.id, "river-thaw");
     assert_eq!(event.kind, "seasonal_supply");
     assert_eq!(event.title, "The river thaw carries a warning");
+    assert_eq!(
+        event.affected_locations,
+        vec![
+            "hearth".to_owned(),
+            "whisperwood-outpost".to_owned(),
+            "saltmere".to_owned()
+        ]
+    );
     assert_eq!(event.effects.len(), 4);
     assert_eq!(event.intervention_options[0], "repair ferry markers");
     assert_eq!(super::regional_event_template(1).id, "river-thaw");

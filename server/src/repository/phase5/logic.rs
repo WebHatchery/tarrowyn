@@ -78,11 +78,7 @@ pub(super) fn seed_event(
         title: template.title,
         kind: template.kind,
         stage: RegionalEventStage::Signal,
-        affected_location_ids: vec![
-            "hearth".to_owned(),
-            "whisperwood-outpost".to_owned(),
-            "saltmere".to_owned(),
-        ],
+        affected_location_ids: template.affected_locations,
         effects: template.effects,
         cause: template.cause,
         intervention_options: template.intervention_options,
@@ -95,9 +91,10 @@ pub(super) fn seed_event(
     state.phase5.next_event_id = state.phase5.next_event_id.saturating_add(1);
     state.phase5.events.push(event.clone());
     trim_event_history(&mut state.phase5);
+    let affected_locations = event_location_refs(&event.affected_location_ids);
     record_regional(
         state,
-        &["hearth", "whisperwood-outpost", "saltmere"],
+        &affected_locations,
         "regional event signal",
         &event.cause,
     );
@@ -158,9 +155,11 @@ pub(super) fn intervene_event(
     state.phase5.events[index].chosen_intervention = Some(intervention.to_owned());
     state.phase5.events[index].updated_tick = state.tick;
     let consequence = apply_event_intervention(state, intervention);
+    let affected_location_ids = state.phase5.events[index].affected_location_ids.clone();
+    let affected_locations = event_location_refs(&affected_location_ids);
     record_regional(
         state,
-        &["hearth", "whisperwood-outpost", "saltmere"],
+        &affected_locations,
         "regional intervention",
         &format!("Players chose {intervention}: {consequence}"),
     );
@@ -265,9 +264,11 @@ fn complete_event_resolution(state: &mut RepositoryState, index: usize) {
         settlement.safety = settlement.safety.saturating_add(4).min(100);
         settlement.price_index_percent = settlement.price_index_percent.saturating_sub(5);
     }
+    let affected_location_ids = state.phase5.events[index].affected_location_ids.clone();
+    let affected_locations = event_location_refs(&affected_location_ids);
     record_regional(
         state,
-        &["hearth", "whisperwood-outpost", "saltmere"],
+        &affected_locations,
         "regional event resolution",
         &outcome,
     );
@@ -311,6 +312,10 @@ pub(super) fn record_regional(
         super::state::trim_settlement_chronicles(&mut state.phase5);
     }
     state.phase5.cursor = state.cursor;
+}
+
+fn event_location_refs(locations: &[String]) -> Vec<&str> {
+    locations.iter().map(String::as_str).collect()
 }
 
 pub(super) fn advance_travel(state: &mut RepositoryState) {
@@ -360,10 +365,15 @@ pub(super) fn advance_events(state: &mut RepositoryState) {
         };
         if event.stage != old {
             event.updated_tick = state.tick;
-            transitions.push((event.event_id.clone(), event.stage));
+            transitions.push((
+                event.event_id.clone(),
+                event.stage,
+                event.affected_location_ids.clone(),
+            ));
         }
     }
-    for (event_id, stage) in transitions {
+    for (event_id, stage, affected_location_ids) in transitions {
+        let affected_locations = event_location_refs(&affected_location_ids);
         match stage {
             RegionalEventStage::Resolution => {
                 if let Some(index) = state
@@ -396,12 +406,12 @@ pub(super) fn advance_events(state: &mut RepositoryState) {
                         "The thaw reduced service until a safe route and supply chain are restored."
                             .to_owned();
                 }
-                record_regional(state, &["hearth", "whisperwood-outpost", "saltmere"], "regional event escalation", &format!("Event {event_id} crossed the region: travel risk, farm supply, prices, and household choices now carry its cause."));
+                record_regional(state, &affected_locations, "regional event escalation", &format!("Event {event_id} crossed the region: travel risk, farm supply, prices, and household choices now carry its cause."));
             }
             RegionalEventStage::Aftermath => {
                 record_regional(
                     state,
-                    &["hearth", "whisperwood-outpost", "saltmere"],
+                    &affected_locations,
                     "regional event aftermath",
                     &format!(
                         "Event {event_id} settled into regional history after its resolution."

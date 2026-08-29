@@ -101,7 +101,8 @@ if ($gameConfig.world_width -lt 1 -or $gameConfig.world_height -lt 1 -or
 Assert-Records "actions" (Get-Records $manifests["actions.json"] $null "actions") @("name", "description", "kind") @()
 Assert-Records "crops" (Get-Records $manifests["crops.json"] $null "crops") @("name", "description") @()
 Assert-Records "contracts" (Get-Records $manifests["contracts.json"] "contracts" "contracts") @("title", "description", "target") @()
-Assert-Records "events" (Get-Records $manifests["events.json"] "events" "events") @("title", "kind", "cause") @("stages", "affected_systems", "effects", "intervention_options")
+$eventRecords = Get-Records $manifests["events.json"] "events" "events"
+Assert-Records "events" $eventRecords @("title", "kind", "cause") @("stages", "affected_systems", "affected_locations", "effects", "intervention_options")
 Assert-Records "items" (Get-Records $manifests["items.json"] "items" "items") @("kind", "sink") @()
 Assert-Records "threats" (Get-Records $manifests["threats.json"] "threats" "threats") @("name", "monster", "resource_demand", "rumour") @()
 Assert-Records "households" (Get-Records $manifests["households.json"] "households" "households") @("name", "occupation", "home_settlement", "service", "clue", "reason", "regional_service") @("members", "history")
@@ -163,6 +164,13 @@ if (@($region.farm_plots | Where-Object {
 $farmPlots = @($region.farm_plots | ForEach-Object { "$($_.x),$($_.y)" })
 if ($locations.Count -ne ($locations | Sort-Object -Unique).Count) { throw "Region location IDs must be unique." }
 if ($routes.Count -ne ($routes | Sort-Object -Unique).Count) { throw "Region route IDs must be unique." }
+foreach ($event in $eventRecords) {
+    $affectedLocations = @($event.affected_locations | ForEach-Object { [string]$_ })
+    if ($affectedLocations.Count -eq 0 -or $affectedLocations.Count -ne ($affectedLocations | Sort-Object -Unique).Count -or
+        @($affectedLocations | Where-Object { $locations -notcontains $_ }).Count -gt 0) {
+        throw "Event $($event.id) needs unique affected locations from the regional manifest."
+    }
+}
 if ($farmPlots.Count -lt 1 -or $farmPlots.Count -ne ($farmPlots | Sort-Object -Unique).Count) { throw "Region farm plot positions must be present and unique." }
 if ($null -eq $region.farm_animal_position -or
     $null -eq $region.farm_animal_position.x -or $null -eq $region.farm_animal_position.y) {

@@ -6,6 +6,7 @@
       "kind": "seasonal_supply",
       "stages": ["signal", "escalation", "intervention", "resolution", "aftermath"],
       "affected_systems": ["travel", "farming", "prices", "households", "chronicle"],
+      "affected_locations": ["hearth", "whisperwood-outpost", "saltmere"],
       "effects": [
         "north-road risk rises",
         "farming supply arrives late",
