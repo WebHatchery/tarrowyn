@@ -1,6 +1,7 @@
 use super::super::{ServerConfig, WorldRepository};
 use tarrowyn_protocol::{
-    ClaimAction, ClaimRequest, ContractAction, ContractRequest, GuestSessionRequest,
+    ClaimAction, ClaimRequest, ContractAction, ContractRequest, ExpeditionAction,
+    ExpeditionRequest, ExpeditionRole, GuestSessionRequest,
 };
 
 fn seeded_claim(repository: &WorldRepository) -> String {
@@ -21,6 +22,32 @@ fn seeded_claim(repository: &WorldRepository) -> String {
         )
         .expect("claim request");
     session.client_key
+}
+
+fn seeded_expedition(repository: &WorldRepository) {
+    let session = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("phase3-expedition-state".to_owned()),
+            reset: false,
+        })
+        .expect("guest session")
+        .data;
+    repository
+        .expedition(
+            &session.account_token,
+            ExpeditionRequest {
+                request_id: "phase3-expedition-request".to_owned(),
+                action: ExpeditionAction::Announce,
+                expedition_id: None,
+                role: Some(ExpeditionRole::Scout),
+                food: 0,
+                tools: 0,
+                materials: 0,
+                safety: 0,
+                outpost_name: Some("Lantern Rest".to_owned()),
+            },
+        )
+        .expect("expedition announcement");
 }
 
 #[test]
@@ -102,6 +129,47 @@ fn zero_phase3_claim_reclaim_window_degrades_readiness() {
             .as_mut()
             .expect("claim")
             .reclaim_after_ticks = 0;
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
+fn malformed_phase3_expedition_name_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    seeded_expedition(&repository);
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state
+            .phase3
+            .expedition
+            .as_mut()
+            .expect("expedition")
+            .outpost_name = "bad\nname".to_owned();
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
+fn malformed_phase3_expedition_member_name_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    seeded_expedition(&repository);
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state
+            .phase3
+            .expedition
+            .as_mut()
+            .expect("expedition")
+            .members
+            .first_mut()
+            .expect("expedition member")
+            .display_name = "x".repeat(81);
     }
 
     let health = repository.ops_health().data;

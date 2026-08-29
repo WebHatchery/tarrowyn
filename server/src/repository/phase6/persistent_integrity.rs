@@ -5,6 +5,7 @@ use tarrowyn_protocol::{ClaimStatus, ContractStatus, ExpeditionStatus, TradeStat
 
 const DELETED_ACCOUNT: &str = "former-resident";
 const MAX_EXPEDITION_SUPPLY: u32 = 99;
+const MAX_PHASE3_NAME_CHARS: usize = 80;
 
 pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
     let account_ids: HashSet<&str> = state
@@ -150,8 +151,8 @@ fn phase3_ok(state: &RepositoryState, config: &ServerConfig, account_ids: &HashS
             )
     });
     let expedition_ok = state.phase3.expedition.as_ref().is_none_or(|expedition| {
-        !expedition.expedition_id.trim().is_empty()
-            && !expedition.outpost_name.trim().is_empty()
+        bounded_text(&expedition.expedition_id, MAX_PHASE3_NAME_CHARS)
+            && bounded_text(&expedition.outpost_name, MAX_PHASE3_NAME_CHARS)
             && account_reference_ok(&expedition.leader_account_id, account_ids)
             && position_in_world(expedition.outpost_position, config)
             && expedition.food <= MAX_EXPEDITION_SUPPLY
@@ -165,10 +166,10 @@ fn phase3_ok(state: &RepositoryState, config: &ServerConfig, account_ids: &HashS
                     .iter()
                     .map(|member| member.account_id.as_str()),
             )
-            && expedition
-                .members
-                .iter()
-                .all(|member| account_reference_ok(&member.account_id, account_ids))
+            && expedition.members.iter().all(|member| {
+                account_reference_ok(&member.account_id, account_ids)
+                    && bounded_text(&member.display_name, MAX_PHASE3_NAME_CHARS)
+            })
             && (expedition
                 .members
                 .iter()
@@ -255,6 +256,12 @@ fn position_in_world(position: tarrowyn_protocol::Position, config: &ServerConfi
 fn account_reference_ok(account_id: &str, account_ids: &HashSet<&str>) -> bool {
     !account_id.trim().is_empty()
         && (account_ids.contains(account_id) || account_id == DELETED_ACCOUNT)
+}
+
+fn bounded_text(value: &str, max_chars: usize) -> bool {
+    !value.trim().is_empty()
+        && value.chars().count() <= max_chars
+        && !value.chars().any(char::is_control)
 }
 
 fn unique_non_empty<'a>(mut values: impl Iterator<Item = &'a str>) -> bool {
