@@ -5,14 +5,16 @@ impl Phase5Client {
         let Some(region) = self.region.as_ref() else {
             return;
         };
-        if let Some(travel) = region.travel.as_ref() {
-            let action = if travel.status == TravelStatus::Interrupted {
-                TravelAction::Recover
-            } else {
-                TravelAction::Interrupt
-            };
-            self.queue_travel_action(request_id, action);
-            return;
+        match region.travel.as_ref().map(|travel| travel.status) {
+            Some(TravelStatus::Interrupted) => {
+                self.queue_travel_action(request_id, TravelAction::Recover);
+                return;
+            }
+            Some(TravelStatus::Travelling | TravelStatus::Recovering) => {
+                self.queue_travel_action(request_id, TravelAction::Interrupt);
+                return;
+            }
+            Some(TravelStatus::Idle | TravelStatus::Arrived) | None => {}
         }
         let route = region
             .routes
