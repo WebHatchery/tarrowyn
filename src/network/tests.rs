@@ -254,6 +254,44 @@ fn movement_and_chat_backpressure_explain_the_retry_path() {
 }
 
 #[test]
+fn farming_without_a_nearby_target_explains_where_to_go() {
+    let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
+    client.state = ConnectionState::Online;
+    client.projection.world.tiles = FlatGrid::new(3, 2, TileKind::Meadow);
+    client.projection.player_position = TilePos::new(1, 1);
+
+    client.queue_farming(FarmingAction::Plant);
+
+    assert!(client.farming_queue.is_empty());
+    assert!(client.status_message.contains("shared field plot"));
+}
+
+#[test]
+fn animal_care_targets_the_nearby_animal() {
+    let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
+    client.state = ConnectionState::Online;
+    client.projection.player_position = TilePos::new(1, 1);
+    client.projection.animals = vec![FarmAnimal {
+        animal_id: "bellweather-goat".to_owned(),
+        name: "Bellweather".to_owned(),
+        kind: tarrowyn_protocol::FarmAnimalKind::Goat,
+        position: Position { x: 1, y: 1 },
+        condition: 2,
+        max_condition: 3,
+        last_cared_tick: 0,
+        last_cared_day: 1,
+    }];
+
+    client.queue_farming(FarmingAction::TendAnimal);
+
+    assert!(matches!(
+        client.farming_queue.front(),
+        Some(request) if request.action == FarmingAction::TendAnimal
+            && request.position == Position { x: 1, y: 1 }
+    ));
+}
+
+#[test]
 fn farming_backpressure_does_not_claim_pending_confirmation() {
     let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
     client.state = ConnectionState::Online;

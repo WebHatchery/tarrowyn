@@ -53,18 +53,37 @@ impl OnlineClient {
         if self.state != ConnectionState::Online {
             return;
         }
-        let Some(target) = self
-            .projection
-            .world
-            .tiles
-            .iter_with_pos()
-            .filter(|(pos, tile)| {
-                **tile == TileKind::Field
-                    && pos.manhattan_distance(&self.projection.player_position) <= 1
-            })
-            .map(|(pos, _)| pos)
-            .next()
-        else {
+        let target = if action == FarmingAction::TendAnimal {
+            self.projection
+                .animals
+                .iter()
+                .find(|animal| {
+                    animal
+                        .position
+                        .manhattan_distance(tarrowyn_protocol::Position {
+                            x: self.projection.player_position.x,
+                            y: self.projection.player_position.y,
+                        })
+                        <= 1
+                })
+                .map(|animal| animal.position)
+        } else {
+            self.projection
+                .world
+                .tiles
+                .iter_with_pos()
+                .find(|(pos, tile)| {
+                    **tile == TileKind::Field
+                        && pos.manhattan_distance(&self.projection.player_position) <= 1
+                })
+                .map(|(pos, _)| tarrowyn_protocol::Position { x: pos.x, y: pos.y })
+        };
+        let Some(target) = target else {
+            self.status_message = if action == FarmingAction::TendAnimal {
+                "Stand beside Bellweather near the shared fields before caring for it.".to_owned()
+            } else {
+                "Stand beside a shared field plot before tending crops.".to_owned()
+            };
             return;
         };
         let request_id = self.next_request_id("farm");
