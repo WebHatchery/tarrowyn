@@ -12,6 +12,7 @@ mod chat_validation;
 mod events;
 mod movement_validation;
 mod persistence;
+mod request_validation;
 mod reset;
 mod telemetry;
 mod trade_retention;

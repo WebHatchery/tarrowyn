@@ -37,13 +37,7 @@ impl WorldRepository {
         let mut state = self.state.lock().expect("world repository lock poisoned");
         expire_sessions(&mut state, &self.config);
         let identity_key = authenticate(&mut state, token, &self.config)?;
-        if request.request_id.trim().is_empty() || request.request_id.len() > 64 {
-            return Err(RepositoryError::new(
-                400,
-                "invalid_request_id",
-                "Trade request IDs must contain 1 to 64 characters.",
-            ));
-        }
+        validate_request_id(&request.request_id)?;
         if let Some(previous) = state
             .identities
             .get(&identity_key)

@@ -9,6 +9,7 @@ impl WorldRepository {
         let mut state = self.state.lock().expect("world repository lock poisoned");
         expire_sessions(&mut state, &self.config);
         let key = authenticate(&mut state, token, &self.config)?;
+        validate_request_id(&request.request_id)?;
         if let Some(previous) = state
             .identities
             .get(&key)
@@ -37,9 +38,7 @@ impl WorldRepository {
             .get(token)
             .and_then(|session| session.last_chat_tick)
             .is_some_and(|last| last == state.tick);
-        if request.request_id.trim().is_empty() || request.request_id.len() > 64 {
-            response.reason = Some("Chat request IDs must contain 1 to 64 characters.".to_owned());
-        } else if text.is_empty() {
+        if text.is_empty() {
             response.reason = Some("A message cannot be empty.".to_owned());
         } else if text.chars().count() > self.config.chat_max_length.min(MAX_CHAT_MESSAGE_LENGTH) {
             response.reason = Some(format!(

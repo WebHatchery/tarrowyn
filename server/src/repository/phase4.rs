@@ -16,6 +16,8 @@ mod combat;
 mod governance;
 mod households;
 mod knowledge;
+
+pub(super) use super::validate_request_id;
 mod professions;
 pub(super) use claims::trim_claim_history;
 
@@ -330,18 +332,6 @@ pub(super) fn infrastructure_status(condition: u8) -> tarrowyn_protocol::Infrast
         25..=59 => InfrastructureStatus::NeedsRepair,
         60..=79 => InfrastructureStatus::Recovering,
         _ => InfrastructureStatus::Operational,
-    }
-}
-
-pub(super) fn validate_request_id(request_id: &str) -> Result<(), super::RepositoryError> {
-    if request_id.trim().is_empty() || request_id.len() > 64 {
-        Err(super::RepositoryError::new(
-            400,
-            "invalid_request_id",
-            "Phase 4 request IDs must contain 1 to 64 characters.",
-        ))
-    } else {
-        Ok(())
     }
 }
 

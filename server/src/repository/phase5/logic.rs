@@ -5,18 +5,6 @@ use super::super::*;
 use super::*;
 use tarrowyn_protocol::{CommodityKind, MarketOrderStatus, RegionalEventStage, TravelStatus};
 
-pub(super) fn validate_request_id(request_id: &str) -> Result<(), RepositoryError> {
-    if request_id.trim().is_empty() || request_id.len() > 64 {
-        Err(RepositoryError::new(
-            400,
-            "invalid_request_id",
-            "Regional request IDs must contain 1 to 64 characters.",
-        ))
-    } else {
-        Ok(())
-    }
-}
-
 pub(super) fn cache_key(account: &str, request_id: &str) -> String {
     format!("phase5:{account}:{request_id}")
 }

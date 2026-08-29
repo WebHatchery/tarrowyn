@@ -1,6 +1,4 @@
-use super::phase3::{
-    cache_key, frontier_event, has_roles, record, validate_request_id, Phase3Response,
-};
+use super::phase3::{cache_key, frontier_event, has_roles, record, Phase3Response};
 use super::*;
 use tarrowyn_protocol::{
     ApiResponse, ClaimAction, ClaimRequest, ClaimResponse, ClaimStatus, Expedition,

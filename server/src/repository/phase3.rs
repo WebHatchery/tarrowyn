@@ -631,18 +631,6 @@ impl WorldRepository {
     }
 }
 
-pub(super) fn validate_request_id(request_id: &str) -> Result<(), RepositoryError> {
-    if request_id.trim().is_empty() || request_id.len() > 64 {
-        Err(RepositoryError::new(
-            400,
-            "invalid_request_id",
-            "Frontier request IDs must contain 1 to 64 characters.",
-        ))
-    } else {
-        Ok(())
-    }
-}
-
 pub(super) fn cache_key(account: &str, request_id: &str) -> String {
     format!("{account}:{request_id}")
 }

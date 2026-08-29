@@ -612,18 +612,6 @@ fn stable_fingerprint(value: &str) -> u64 {
     hash
 }
 
-fn validate_request_id(request_id: &str) -> Result<(), RepositoryError> {
-    if request_id.trim().is_empty() || request_id.len() > 64 {
-        Err(RepositoryError::new(
-            400,
-            "invalid_request_id",
-            "Production request IDs must contain 1 to 64 characters.",
-        ))
-    } else {
-        Ok(())
-    }
-}
-
 fn issue_session(
     state: &mut RepositoryState,
     config: &ServerConfig,

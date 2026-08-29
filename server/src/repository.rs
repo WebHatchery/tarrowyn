@@ -292,13 +292,7 @@ impl WorldRepository {
         let mut state = self.state.lock().expect("world repository lock poisoned");
         expire_sessions(&mut state, &self.config);
         let key = authenticate(&mut state, token, &self.config)?;
-        if intent.request_id.trim().is_empty() || intent.request_id.len() > 64 {
-            return Err(RepositoryError::new(
-                400,
-                "invalid_request_id",
-                "Movement request IDs must contain 1 to 64 characters.",
-            ));
-        }
+        validate_request_id(&intent.request_id)?;
         if let Some(previous) = state
             .identities
             .get(&key)
@@ -623,6 +617,21 @@ fn meta(tick: u64, request_id: Option<String>, cursor: Option<u64>) -> ApiMeta {
     meta.request_id = request_id;
     meta.cursor = cursor;
     meta
+}
+
+pub(super) fn validate_request_id(request_id: &str) -> Result<(), RepositoryError> {
+    if request_id.trim().is_empty()
+        || request_id.chars().count() > 64
+        || request_id.chars().any(char::is_control)
+    {
+        Err(RepositoryError::new(
+            400,
+            "invalid_request_id",
+            "Request IDs must contain 1 to 64 characters and no control characters.",
+        ))
+    } else {
+        Ok(())
+    }
 }
 
 pub(super) fn validate_event_cursor(
