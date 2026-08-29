@@ -3,12 +3,16 @@
 use super::{NetworkNotice, OnlineClient, WorldProjection};
 use tarrowyn_protocol::TavernFeedResponse;
 
-pub(super) fn is_cursor_ahead_error(error: &str) -> bool {
+pub(super) fn is_cursor_recovery_error(error: &str) -> bool {
     error.contains("cursor_ahead")
-        || (error.contains("GET /v1/events?") && error.contains("status code 409"))
+        || error.contains("cursor_stale")
+        || (error.contains("GET /v1/events") && error.contains("status code 409"))
 }
 
-pub(super) fn recover_from_restore(client: &mut OnlineClient, notices: &mut Vec<NetworkNotice>) {
+pub(super) fn recover_from_cursor_boundary(
+    client: &mut OnlineClient,
+    notices: &mut Vec<NetworkNotice>,
+) {
     reset_projection_history(&mut client.projection);
     client.pending_state = None;
     client.pending_events = None;
@@ -18,9 +22,9 @@ pub(super) fn recover_from_restore(client: &mut OnlineClient, notices: &mut Vec<
     client.phase4.recover_regional_cursor();
     client.frontier.clear();
     client.status_message =
-        "The shared road was restored; reloading the latest history…".to_owned();
+        "The shared history window changed; reloading the latest state…".to_owned();
     notices.push(NetworkNotice::Warning(
-        "The shared history was restored; the latest settlement state is reloading.".to_owned(),
+        "The shared history window changed; the latest settlement state is reloading.".to_owned(),
     ));
 }
 

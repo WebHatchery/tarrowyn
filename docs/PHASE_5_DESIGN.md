@@ -19,7 +19,9 @@ record and event cursor. Repeating a request ID returns the original response.
 The client advances the regional event stream from the returned cursor and
 merges changed event records by stable event ID, so a stage transition does
 not erase earlier regional history. If a restore moves the cursor backward,
-the regional stream drops its cache and restarts from cursor zero.
+the regional stream drops its cache and restarts from cursor zero. If a cursor
+falls before the retained event window, the server returns `cursor_stale`; the
+client uses the same bounded-history reset rather than accepting a silent gap.
 
 Travel and combat recovery are also an explicit boundary: a knocked-out
 character cannot start, resume, or alter a regional journey until a recovery

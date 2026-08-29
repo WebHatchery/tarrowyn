@@ -477,13 +477,7 @@ impl WorldRepository {
         let mut state = self.state.lock().expect("world repository lock poisoned");
         expire_sessions(&mut state, &self.config);
         authenticate(&mut state, token, &self.config)?;
-        if since > state.cursor {
-            return Err(RepositoryError::new(
-                409,
-                "cursor_ahead",
-                "The regional event cursor is ahead of this world.",
-            ));
-        }
+        super::validate_event_cursor(&state, since, "regional")?;
         Ok(ApiResponse {
             meta: meta(state.tick, None, Some(state.cursor)),
             data: RegionalEventsResponse {

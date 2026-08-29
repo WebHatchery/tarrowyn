@@ -98,7 +98,9 @@ must update only from an accepted server projection.
 
 Protocol types should be versioned and tested against malformed, stale, replayed,
 and partially missing requests. The server should return a stable error code
-plus readable context; the client can localize/present the message later.
+plus readable context; the client can localize/present the message later. Event
+cursors older than the bounded retained stream return `cursor_stale` so a client
+reloads authoritative state instead of accepting an incomplete event history.
 
 ## Acceptance test
 

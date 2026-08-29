@@ -16,17 +16,23 @@ fn config() -> GameConfig {
 }
 
 #[test]
-fn cursor_ahead_detection_accepts_shared_api_and_native_status_shapes() {
-    assert!(is_cursor_ahead_error(
+fn cursor_boundary_detection_accepts_shared_api_and_native_status_shapes() {
+    assert!(is_cursor_recovery_error(
         "HTTP API error in 'GET /v1/events?since=9' [cursor_ahead]: The requested cursor is ahead."
     ));
-    assert!(is_cursor_ahead_error(
+    assert!(is_cursor_recovery_error(
+        "HTTP API error in 'GET /v1/events?since=9' [cursor_stale]: The requested history is gone."
+    ));
+    assert!(is_cursor_recovery_error(
         "HTTP request 'GET /v1/events?since=9' returned status code 409"
     ));
-    assert!(!is_cursor_ahead_error(
+    assert!(is_cursor_recovery_error(
+        "HTTP request 'GET /v1/events/region?since=9' returned status code 409"
+    ));
+    assert!(!is_cursor_recovery_error(
         "HTTP API error in 'GET /v1/chat' [rate_limited]: Try again later."
     ));
-    assert!(!is_cursor_ahead_error(
+    assert!(!is_cursor_recovery_error(
         "HTTP request 'GET /v1/chat' returned status code 409"
     ));
 }
@@ -48,7 +54,7 @@ fn restore_recovery_discards_stale_history_and_schedules_state_reload() {
     client.state_refresh = 4.0;
     let mut notices = Vec::new();
 
-    recover_from_restore(&mut client, &mut notices);
+    recover_from_cursor_boundary(&mut client, &mut notices);
 
     assert_eq!(client.projection.cursor, 0);
     assert_eq!(client.projection.server_tick, 0);
@@ -60,6 +66,6 @@ fn restore_recovery_discards_stale_history_and_schedules_state_reload() {
     assert!(client.status_message.contains("reloading"));
     assert!(notices.iter().any(|notice| matches!(
         notice,
-        NetworkNotice::Warning(message) if message.contains("shared history was restored")
+        NetworkNotice::Warning(message) if message.contains("shared history window changed")
     )));
 }

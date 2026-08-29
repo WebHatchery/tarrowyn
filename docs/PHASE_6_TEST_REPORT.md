@@ -134,8 +134,8 @@ the durable travel/order/event cursors; a duplicate request returns its cached
 result instead of paying twice.
 
 On 2026-08-29, `scripts/phase6_load_test.ps1` passed its isolated regional drill
-with 24 clients and three rounds: 624 HTTP requests completed in 4,693.53 ms of
-mixed-load wall time, with 106 accepted and 158 rejected command outcomes. The
+with 24 clients and three rounds: 624 HTTP requests completed in 5,390.96 ms of
+mixed-load wall time, with 110 accepted and 154 rejected command outcomes. The
 run exercised state, events, movement, chat, markets, travel, the autonomous
 tick, scheduled backup, operator metrics, server-owned arrival, and restart
 recovery. The result is evidence for the bounded 24-client regional target, not
@@ -153,8 +153,8 @@ checks with the warning allowlisted: 2,500 requests in 82,299.85 ms, with 1,000
 accepted and 250 deterministic rejections. The long wall time is evidence that
 the current one-worker snapshot bridge has not met the GDD's several-hundred
 concurrent-player direction; the supported release target remains 24 clients.
-The latest 24-client baseline also recorded 57.14 MB of server working set
-after load and 2,730.84 ms from worker stop through restart readiness. These
+The latest 24-client baseline also recorded 67.06 MB of server working set
+after load and 2,837.56 ms from worker stop through restart readiness. These
 are repeatable local evidence fields, not production memory or recovery SLOs;
 the target deployment must establish those limits on its own hardware.
 The standalone `scripts/phase6_failure_drill.ps1` also passed on the same date:
@@ -167,15 +167,18 @@ credentials are absent, and confirms an ordinary player receives HTTP 403.
 Before the load begins, it also verifies that both shared and regional event
 endpoints return the structured HTTP 409 `cursor_ahead` boundary for a cursor
 ahead of the live world.
+The same drill then uses a temporary 1 ms server cadence to cross the 2,048
+record retention window and verifies structured HTTP 409 `cursor_stale` responses
+from both event endpoints before returning to the normal 250 ms cadence.
 It also verifies the economy and population monitoring fields in the operator
 metrics response and confirms those metrics remain operator-only. The harness
 records server working set and stop/start-to-readiness recovery alongside the
-mixed-load wall time; the latest 24-client baseline measured 57.14 MB and
-2,730.84 ms.
+mixed-load wall time; the latest 24-client baseline measured 67.06 MB and
+2,837.56 ms.
 
-The shared client recovery tests also cover the restore-era `cursor_ahead`
-boundary. Structured API errors remain identifiable through the shared native
-and browser HTTP paths; the client clears stale cursor-derived projections and
+The shared client recovery tests also cover the restore-era `cursor_ahead` and
+retention-era `cursor_stale` boundaries. Structured API errors remain identifiable
+through the shared native and browser HTTP paths; the client clears stale cursor-derived projections and
 schedules a fresh authoritative state/history load without dropping to the
 generic disconnected state. Regional event tests also pin cursor advancement,
 stable-ID stage merging, and cache reset after a restore.

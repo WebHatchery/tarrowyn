@@ -106,7 +106,7 @@ function Assert-ForbiddenGet([string]$path, [hashtable]$headers, [string]$messag
     Assert-True $forbidden $message
 }
 
-function Assert-CursorAheadGet([string]$path, [hashtable]$headers, [string]$message) {
+function Assert-CursorErrorGet([string]$path, [hashtable]$headers, [string]$expectedCode, [string]$message) {
     $status = 0
     $body = $null
     try {
@@ -130,9 +130,18 @@ function Assert-CursorAheadGet([string]$path, [hashtable]$headers, [string]$mess
     if ($null -ne $body) {
         try { $error = $body | ConvertFrom-Json } catch { }
     }
-    $cursorAhead = $status -eq 409 -and $null -ne $error `
-        -and $error.error.code -eq "cursor_ahead"
-    Assert-True $cursorAhead $message
+    $cursorError = $status -eq 409 -and $null -ne $error `
+        -and $error.error.code -eq $expectedCode
+    Assert-True $cursorError $message
+}
+
+function Wait-EventCursor([hashtable]$headers, [uint64]$minimum) {
+    for ($attempt = 0; $attempt -lt 120; $attempt++) {
+        $state = Invoke-RestMethod -Method Get -Uri "http://$ServerAddress/v1/state" -Headers $headers
+        if ([uint64]$state.data.world.cursor -gt $minimum) { return $state }
+        Start-Sleep -Milliseconds 100
+    }
+    throw "Phase 6 load test failed: the event cursor did not cross the retained-history boundary"
 }
 
 function Invoke-MixedClientLoad {
@@ -304,9 +313,9 @@ try {
     $ordinaryHeaders = @{ Authorization = "Bearer $($sessions[1].data.account_token)" }
     Assert-ForbiddenGet "/v1/support/account?account_id=$($sessions[0].data.account_id)" `
         $ordinaryHeaders "an ordinary player could read the support account view"
-    Assert-CursorAheadGet "/v1/events?since=999999999" $headers `
+    Assert-CursorErrorGet "/v1/events?since=999999999" $headers "cursor_ahead" `
         "the shared event endpoint did not expose its cursor_ahead boundary"
-    Assert-CursorAheadGet "/v1/events/region?since=999999999" $headers `
+    Assert-CursorErrorGet "/v1/events/region?since=999999999" $headers "cursor_ahead" `
         "the regional event endpoint did not expose its cursor_ahead boundary"
     $seed = Invoke-PostJson "/v1/events/region" `
         @{ request_id = "phase6-load-$runId-event"; action = "seed" } $headers
@@ -334,6 +343,25 @@ try {
     $alertFlags = @($metrics.data.alert_flags)
     $unexpectedAlertFlags = @($alertFlags | Where-Object { $AllowedAlertFlags -notcontains $_ })
     Assert-True ($unexpectedAlertFlags.Count -eq 0) ("the mixed load raised unexpected alerts: " + ($unexpectedAlertFlags -join ", "))
+
+    $normalTickMs = $env:TARROWYN_TICK_MS
+    Stop-Phase6Server $server
+    $server = $null
+    $env:TARROWYN_TICK_MS = "1"
+    $server = Start-Phase6Server
+    $null = Wait-Healthy
+    $staleSession = New-GuestSession "phase6-load-$runId-stale" $true
+    $staleHeaders = @{ Authorization = "Bearer $($staleSession.data.account_token)" }
+    $null = Wait-EventCursor $staleHeaders 2048
+    Assert-CursorErrorGet "/v1/events?since=0" $staleHeaders "cursor_stale" `
+        "the shared event endpoint did not expose its retained-history boundary"
+    Assert-CursorErrorGet "/v1/events/region?since=0" $staleHeaders "cursor_stale" `
+        "the regional event endpoint did not expose its retained-history boundary"
+    Stop-Phase6Server $server
+    $server = $null
+    $env:TARROWYN_TICK_MS = $normalTickMs
+    $server = Start-Phase6Server
+    $null = Wait-Healthy
 
     $restartTimer = [System.Diagnostics.Stopwatch]::StartNew()
     Stop-Phase6Server $server

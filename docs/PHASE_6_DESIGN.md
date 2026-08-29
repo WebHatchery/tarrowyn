@@ -53,6 +53,10 @@ the per-character skill ledger while retaining defaults for Phase 1–6 files.
 Every mutation replay cache is trimmed to a 512-entry per-scope bound on the
 authoritative world tick, including identity, regional, support, authentication,
 moderation, and earlier-phase command results.
+The shared event stream is also bounded at 2,048 records. Requests whose cursor
+predates the first retained record fail with structured `cursor_stale` rather
+than returning a successful but incomplete stream; the client clears its
+cursor-derived projections and reloads authoritative state and history.
 The repository now has two selectable backends: JSON with atomic temporary-file
 replacement for deterministic fixtures. A configured JSON snapshot that cannot
 be read or parsed fails closed without being replaced by a fresh world. MySQL

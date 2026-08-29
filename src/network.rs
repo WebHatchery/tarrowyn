@@ -568,8 +568,8 @@ impl OnlineClient {
                     );
                 }
             }
-            Err(error) if cursor::is_cursor_ahead_error(&error) => {
-                cursor::recover_from_restore(self, notices)
+            Err(error) if cursor::is_cursor_recovery_error(&error) => {
+                cursor::recover_from_cursor_boundary(self, notices)
             }
             Err(error) => self.connection_failed(error, notices),
         }

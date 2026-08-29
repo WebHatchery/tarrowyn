@@ -706,10 +706,10 @@ impl Phase5Client {
         self.pending_events = None;
         match result {
             Ok(response) => merge_regional_events(&mut self.events, response.data),
-            Err(error) if super::cursor::is_cursor_ahead_error(&error) => {
+            Err(error) if super::cursor::is_cursor_recovery_error(&error) => {
                 self.reset_event_cursor();
                 notices.push(NetworkNotice::Warning(
-                    "The regional history was restored; reloading its latest events.".to_owned(),
+                    "The regional history window changed; reloading its latest events.".to_owned(),
                 ));
             }
             Err(error) => notices.push(NetworkNotice::Warning(format!(

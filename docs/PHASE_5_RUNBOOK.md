@@ -33,7 +33,8 @@ destination, and fulfil it. Record the order status, inventory projection,
 gold, and price index before and after settlement. Seed a regional event with
 `POST /v1/events/region`, wait for escalation, choose an intervention, and then
 resolve it. Poll with the returned cursor; a cursor ahead of the server must
-return a readable `cursor_ahead` error.
+return a readable `cursor_ahead` error. A cursor older than the retained event
+window must return `cursor_stale` rather than an incomplete event list.
 The client handles that boundary without disconnecting: it clears the regional
 event cache, returns to cursor zero, and reloads the latest event stages. The
 Phase 6 client recovery path also resets this regional stream when the shared

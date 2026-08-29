@@ -151,7 +151,8 @@ production account: tap Delete once to arm it, then tap the relabelled
 Tap again control to submit `/v1/account/delete`. The response is scheduled
 for the next authoritative tick; the client clears the session and exposes
 Reconnect so the player can return as a fresh guest. A development guest must
-link first. During a restore-era cursor mismatch, the client recognizes the
-`cursor_ahead` API code, clears stale cursor-derived projections, cancels the
-old history requests, reloads authoritative state from cursor zero, and does
-not present cached history as a current reward.
+link first. During a restore-era or retention-era cursor mismatch, the client
+recognizes the `cursor_ahead` or `cursor_stale` API code, clears stale
+cursor-derived projections, cancels the old history requests, reloads
+authoritative state from cursor zero, and does not present cached history as a
+current reward.

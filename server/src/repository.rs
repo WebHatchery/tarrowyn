@@ -412,13 +412,7 @@ impl WorldRepository {
         let mut state = self.state.lock().expect("world repository lock poisoned");
         expire_sessions(&mut state, &self.config);
         authenticate(&mut state, token, &self.config)?;
-        if since > state.cursor {
-            return Err(RepositoryError::new(
-                409,
-                "cursor_ahead",
-                "The requested event cursor is ahead of the settlement.",
-            ));
-        }
+        validate_event_cursor(&state, since, "requested")?;
         let events = state
             .events
             .iter()
@@ -716,6 +710,34 @@ fn meta(tick: u64, request_id: Option<String>, cursor: Option<u64>) -> ApiMeta {
     meta.request_id = request_id;
     meta.cursor = cursor;
     meta
+}
+
+pub(super) fn validate_event_cursor(
+    state: &RepositoryState,
+    since: u64,
+    stream: &str,
+) -> Result<(), RepositoryError> {
+    if since > state.cursor {
+        return Err(RepositoryError::new(
+            409,
+            "cursor_ahead",
+            format!("The {stream} event cursor is ahead of the settlement."),
+        ));
+    }
+    if state
+        .events
+        .front()
+        .is_some_and(|record| since.saturating_add(1) < record.cursor)
+    {
+        return Err(RepositoryError::new(
+            409,
+            "cursor_stale",
+            format!(
+                "The {stream} event history is no longer retained; reload authoritative state."
+            ),
+        ));
+    }
+    Ok(())
 }
 
 fn push_event(state: &mut RepositoryState, event: WorldEvent) -> u64 {
