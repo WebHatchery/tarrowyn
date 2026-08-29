@@ -13,7 +13,7 @@ $env:TARROWYN_STATE_PATH = "D:\temp\tarrowyn-phase3.json"
 cargo run -p tarrowyn-server
 ```
 
-The storage version is `2`. Loading a Phase 2 version-1 document fills the
+At the Phase 3 checkpoint, the storage version was `2`. Loading a Phase 2 version-1 document fills the
 new frontier state from safe defaults; guest sessions and bearer tokens remain
 ephemeral, while the same `client_key` resumes the durable character.
 

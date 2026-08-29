@@ -20,7 +20,7 @@ identity and clears the prior guest's private farming, trade, travel,
 profession, and replay state before the replacement session is issued. Public
 world history remains part of the development fixture.
 
-The current repository storage version is `12`. JSON migrations read older
+At the Phase 2 checkpoint, the repository storage version was `12`. JSON migrations read older
 documents through serde defaults and write the upgraded document. The MySQL
 backend applies its checked-in schema migration at startup and keeps the same
 storage version inside its authoritative snapshot. Any future migration must
