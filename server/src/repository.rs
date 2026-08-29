@@ -16,6 +16,7 @@ const MAX_EVENTS: usize = 2048;
 const MAX_CHAT_HISTORY: usize = 64;
 const MAX_NOTICES: usize = 32;
 const MAX_TRADES: usize = 128;
+const MAX_CLIENT_KEY_CHARS: usize = 128;
 pub(super) const FIELD_TOOL_MAX_CONDITION: u8 = 3;
 
 mod adventurer;
@@ -127,8 +128,21 @@ impl WorldRepository {
         request: GuestSessionRequest,
     ) -> Result<ApiResponse<GuestSessionResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
+        if request.client_key.as_deref().is_some_and(|key| {
+            let trimmed = key.trim();
+            !trimmed.is_empty()
+                && (trimmed.chars().count() > MAX_CLIENT_KEY_CHARS
+                    || trimmed.chars().any(char::is_control))
+        }) {
+            return Err(RepositoryError::new(
+                400,
+                "invalid_client_key",
+                "The client key must be at most 128 characters and contain no control characters.",
+            ));
+        }
         let client_key = request
             .client_key
+            .map(|key| key.trim().to_owned())
             .filter(|key| !key.trim().is_empty())
             .unwrap_or_else(|| format!("guest-client-{}", state.next_guest));
         if state

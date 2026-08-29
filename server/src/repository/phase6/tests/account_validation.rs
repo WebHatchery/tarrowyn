@@ -33,3 +33,22 @@ fn account_link_rejects_unbounded_or_controlled_display_names() {
         assert_eq!(error.error.code, "invalid_display_name");
     }
 }
+
+#[test]
+fn guest_session_rejects_unbounded_or_controlled_client_keys() {
+    let repository = WorldRepository::new(ServerConfig::default());
+
+    for (index, client_key) in ["x".repeat(129), "stable\tkey".to_owned()]
+        .into_iter()
+        .enumerate()
+    {
+        let error = repository
+            .guest_session(GuestSessionRequest {
+                client_key: Some(client_key),
+                reset: false,
+            })
+            .expect_err("invalid client key should be rejected");
+        assert_eq!(error.status, 400, "fixture {index}");
+        assert_eq!(error.error.code, "invalid_client_key", "fixture {index}");
+    }
+}
