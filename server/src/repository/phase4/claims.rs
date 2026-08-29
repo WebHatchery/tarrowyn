@@ -208,6 +208,9 @@ impl super::super::WorldRepository {
                     response.reason = Some(
                         "Only the recognised holder may transfer or bequeath the claim.".to_owned(),
                     );
+                } else if !transferable_status(state.phase4.claims[index].status) {
+                    response.reason =
+                        Some("Only an active lease can be transferred or inherited.".to_owned());
                 } else {
                     let tick = state.tick;
                     let target_name = account_name(&state, &target_key);
@@ -251,6 +254,9 @@ impl super::super::WorldRepository {
                 {
                     response.reason =
                         Some("Only the recognised holder may abandon this lease.".to_owned());
+                } else if !abandonable_status(state.phase4.claims[index].status) {
+                    response.reason =
+                        Some("Only a requested or active lease can be abandoned.".to_owned());
                 } else {
                     let tick = state.tick;
                     let claim = &mut state.phase4.claims[index];
@@ -437,6 +443,27 @@ fn find_claim<'a>(
                 .find(|claim| claim.claim_id == claim_id)
         })
         .or_else(|| state.phase4.claims.last())
+}
+
+fn transferable_status(status: ClaimLifecycleStatus) -> bool {
+    matches!(
+        status,
+        ClaimLifecycleStatus::Active
+            | ClaimLifecycleStatus::Renewed
+            | ClaimLifecycleStatus::Transferred
+            | ClaimLifecycleStatus::Inherited
+    )
+}
+
+fn abandonable_status(status: ClaimLifecycleStatus) -> bool {
+    matches!(
+        status,
+        ClaimLifecycleStatus::Requested
+            | ClaimLifecycleStatus::Active
+            | ClaimLifecycleStatus::Renewed
+            | ClaimLifecycleStatus::Transferred
+            | ClaimLifecycleStatus::Inherited
+    )
 }
 
 pub(super) fn tick(state: &mut super::super::models::RepositoryState, config: &ServerConfig) {
