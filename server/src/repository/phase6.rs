@@ -17,6 +17,7 @@ mod deletion;
 mod maintenance;
 mod moderation;
 mod operations;
+mod persistent_integrity;
 mod phase4_integrity;
 mod repair;
 mod retention;

@@ -1,8 +1,8 @@
 use super::super::{ServerConfig, WorldRepository};
 use tarrowyn_protocol::{
-    ClaimLifecycleAction, ClaimLifecycleRequest, CommodityKind, GovernanceRequest, MarketOrder,
-    MarketOrderStatus, RegionalEvent, RegionalEventStage, RegionalHousehold, TravelState,
-    TravelStatus,
+    ClaimLifecycleAction, ClaimLifecycleRequest, CommodityKind, CropKind, CropState,
+    GovernanceRequest, MarketOrder, MarketOrderStatus, RegionalEvent, RegionalEventStage,
+    RegionalHousehold, TradeBundle, TradeOffer, TradeStatus, TravelState, TravelStatus,
 };
 
 #[test]
@@ -330,6 +330,102 @@ fn invalid_phase4_bounds_degrade_readiness() {
     {
         let mut state = repository.state.lock().expect("repository lock");
         state.phase4.households[0].food = 101;
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
+fn invalid_player_position_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = super::guest(&repository, "integrity-player-position");
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state
+            .identities
+            .get_mut(&session.client_key)
+            .expect("guest identity")
+            .position = tarrowyn_protocol::Position { x: -1, y: 6 };
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
+fn invalid_saved_crop_state_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state.plots[0].crop = Some(CropState {
+            kind: CropKind::Wheat,
+            stage: 4,
+            quality: 80,
+            planted_tick: 0,
+            last_tended_tick: None,
+        });
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
+fn invalid_frontier_threat_state_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state.phase3.zone.monster_health = 99;
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
+fn invalid_trade_record_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let creator = super::guest(&repository, "integrity-trade-creator");
+    let recipient = super::guest(&repository, "integrity-trade-recipient");
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state.trades.insert(
+            "wrong-trade-key".to_owned(),
+            TradeOffer {
+                trade_id: "integrity-trade".to_owned(),
+                creator_account_id: creator.account_id,
+                creator_name: "Creator".to_owned(),
+                recipient_account_id: recipient.account_id,
+                recipient_name: "Recipient".to_owned(),
+                offer: TradeBundle::default(),
+                request: TradeBundle::default(),
+                status: TradeStatus::Pending,
+                created_tick: 1,
+                expires_tick: 2,
+            },
+        );
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
+fn invalid_event_cursor_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state
+            .events
+            .front_mut()
+            .expect("startup notice event")
+            .cursor = 0;
     }
 
     let health = repository.ops_health().data;

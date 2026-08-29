@@ -3,6 +3,7 @@ use super::super::{
     WorldRepository, PROTOCOL_VERSION,
 };
 use super::is_support_operator;
+use crate::config::ServerConfig;
 use std::collections::HashSet;
 use tarrowyn_protocol::{
     AccountResponse, ApiResponse, ChronicleSearchResponse, OpsHealthResponse, OpsMetricsResponse,
@@ -122,7 +123,7 @@ impl WorldRepository {
             .backup_failed
             .lock()
             .expect("backup status lock poisoned");
-        let integrity_ok = integrity_ok(&state);
+        let integrity_ok = integrity_ok(&state, &self.config);
         let ready = integrity_ok && !persistence_failed && !backup_failed;
         ApiResponse {
             meta: meta(state.tick, None, Some(state.cursor)),
@@ -296,6 +297,7 @@ impl WorldRepository {
                 newcomer_access,
                 alert_flags: alert_flags(
                     &state,
+                    &self.config,
                     persistence_failed,
                     backup_failed,
                     telemetry.last_tick_drift,
@@ -362,7 +364,7 @@ impl WorldRepository {
     }
 }
 
-fn integrity_ok(state: &RepositoryState) -> bool {
+fn integrity_ok(state: &RepositoryState, config: &ServerConfig) -> bool {
     let location_ids: HashSet<&str> = state
         .phase5
         .locations
@@ -496,6 +498,7 @@ fn integrity_ok(state: &RepositoryState) -> bool {
     );
     identity_ids_ok
         && super::phase4_integrity::ok(state)
+        && super::persistent_integrity::ok(state, config)
         && !state.phase5.locations.is_empty()
         && !state.phase5.routes.is_empty()
         && !state.phase5.settlements.is_empty()
@@ -532,6 +535,7 @@ fn unique_non_empty<'a>(mut values: impl Iterator<Item = &'a str>) -> bool {
 
 fn alert_flags(
     state: &RepositoryState,
+    config: &ServerConfig,
     persistence_failed: bool,
     backup_failed: bool,
     tick_drift: bool,
@@ -546,7 +550,7 @@ fn alert_flags(
     if tick_drift {
         flags.push("tick_drift".to_owned());
     }
-    if !integrity_ok(state) {
+    if !integrity_ok(state, config) {
         flags.push("integrity_check_failed".to_owned());
     }
     if state

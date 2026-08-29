@@ -7,7 +7,7 @@ use tarrowyn_protocol::{
 #[test]
 fn operational_alerts_cover_tick_regional_and_economy_boundaries() {
     let mut state = RepositoryState::fresh(&ServerConfig::default());
-    let quiet = super::alert_flags(&state, false, false, false);
+    let quiet = super::alert_flags(&state, &ServerConfig::default(), false, false, false);
     assert!(quiet.is_empty());
 
     state
@@ -45,7 +45,7 @@ fn operational_alerts_cover_tick_regional_and_economy_boundaries() {
         fallback_used: false,
     });
 
-    let flags = super::alert_flags(&state, false, false, true);
+    let flags = super::alert_flags(&state, &ServerConfig::default(), false, false, true);
     assert!(flags.iter().any(|flag| flag == "tick_drift"));
     assert!(flags.iter().any(|flag| flag == "regional_event_backlog"));
     assert!(flags.iter().any(|flag| flag == "economy_anomaly"));

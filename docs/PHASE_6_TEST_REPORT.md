@@ -411,3 +411,13 @@ a focused regression for a stock entry that names a missing location.
 Identity readiness now checks both non-empty account IDs and character IDs for
 uniqueness, matching the MySQL account-index key boundary; a focused regression
 covers duplicate account IDs before persistence can fail.
+
+Persistent-world readiness now validates the stored clock, player positions,
+plots and crops, direct trades, event and history cursors, frontier threat,
+contracts, claims, expeditions, credentials, households, chronicle entries, and
+outpost state before operational readiness is reported. Five focused regressions
+cover malformed player position, saved crop stage, frontier threat health, trade
+map identity, and event cursor state. The cross-subsystem release gate passed on
+2026-08-30: 14 protocol tests, 252 server tests, and 93 client tests, followed
+by asset and code-standard checks, clippy, Windows and WebGL release builds,
+packaging, Preview deployment, and catalog synchronization.
