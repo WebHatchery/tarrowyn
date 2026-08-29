@@ -15,6 +15,7 @@ mod account_validation;
 mod audit_retention;
 mod chronicle_search;
 mod deletion_queue;
+mod input_bounds;
 mod long_session;
 mod moderation_cooldown;
 mod moderation_retention;

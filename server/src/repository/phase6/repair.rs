@@ -46,7 +46,31 @@ impl WorldRepository {
                 data: previous.clone(),
             });
         }
-        let target_account = request.account_id.clone().unwrap_or_else(|| actor.clone());
+        let target_account = request
+            .account_id
+            .as_deref()
+            .map(|account_id| {
+                validate_bounded_text(
+                    account_id,
+                    160,
+                    "invalid_repair_account",
+                    "A support repair account ID must be bounded and contain no control characters.",
+                )
+            })
+            .transpose()?
+            .unwrap_or_else(|| actor.clone());
+        let target_id = request
+            .target_id
+            .as_deref()
+            .map(|target_id| {
+                validate_bounded_text(
+                    target_id,
+                    160,
+                    "invalid_repair_target",
+                    "A support repair target ID must be bounded and contain no control characters.",
+                )
+            })
+            .transpose()?;
         let target_key = state
             .identities
             .iter()
@@ -57,18 +81,17 @@ impl WorldRepository {
                 super::super::phase5::clear_stuck_travel(&mut state, target_key)
             }
             SupportRepairAction::NormalizeInventory => normalize_inventory(&mut state, target_key),
-            SupportRepairAction::ReconcileTrade => super::super::phase5::reconcile_market_order(
-                &mut state,
-                request.target_id.as_deref(),
-            ),
+            SupportRepairAction::ReconcileTrade => {
+                super::super::phase5::reconcile_market_order(&mut state, target_id.as_deref())
+            }
             SupportRepairAction::RestoreClaim => {
-                restore_claim(&mut state, &target_account, request.target_id.as_deref())
+                restore_claim(&mut state, &target_account, target_id.as_deref())
             }
             SupportRepairAction::MergeHousehold => {
-                merge_household(&mut state, request.target_id.as_deref())
+                merge_household(&mut state, target_id.as_deref())
             }
             SupportRepairAction::ResolveModeration => {
-                resolve_moderation(&mut state, request.target_id.as_deref())
+                resolve_moderation(&mut state, target_id.as_deref())
             }
         };
         let audit_id = audit(

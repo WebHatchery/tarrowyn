@@ -1,5 +1,6 @@
 use super::super::{
-    authenticate, meta, models::RepositoryState, RepositoryError, WorldRepository, PROTOCOL_VERSION,
+    authenticate, meta, models::RepositoryState, validate_bounded_text, RepositoryError,
+    WorldRepository, PROTOCOL_VERSION,
 };
 use super::is_support_operator;
 use tarrowyn_protocol::{
@@ -31,14 +32,12 @@ impl WorldRepository {
                 "A configured support operator account is required for account views.",
             ));
         }
-        let target_account_id = target_account_id.trim();
-        if target_account_id.is_empty() || target_account_id.len() > 160 {
-            return Err(RepositoryError::new(
-                400,
-                "invalid_account_id",
-                "A bounded target account ID is required for support views.",
-            ));
-        }
+        let target_account_id = validate_bounded_text(
+            target_account_id,
+            160,
+            "invalid_account_id",
+            "A bounded target account ID without control characters is required for support views.",
+        )?;
         let Some((target_key, identity)) = state
             .identities
             .iter()
@@ -52,7 +51,7 @@ impl WorldRepository {
         };
         let target_key = target_key.clone();
         let identity = identity.clone();
-        let production = state.phase6.accounts.get(target_account_id);
+        let production = state.phase6.accounts.get(&target_account_id);
         let session_expires_at_tick = state
             .phase6
             .sessions
@@ -98,7 +97,7 @@ impl WorldRepository {
                     .phase4
                     .claims
                     .iter()
-                    .filter(|claim| claim.owner_account_id.as_deref() == Some(target_account_id))
+                    .filter(|claim| claim.owner_account_id.as_deref() == Some(&target_account_id))
                     .cloned()
                     .collect(),
                 trades,
