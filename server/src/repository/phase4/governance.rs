@@ -170,7 +170,7 @@ impl super::super::WorldRepository {
                 } else {
                     let created_tick = state.tick;
                     let proposal_id = format!("public-work-{}", state.phase4.next_proposal_id);
-                    state.phase4.next_proposal_id += 1;
+                    state.phase4.next_proposal_id = state.phase4.next_proposal_id.saturating_add(1);
                     state.phase4.governance.proposals.push(PublicProposal {
                         proposal_id,
                         proposer_account_id: actor_id.clone(),
@@ -283,7 +283,7 @@ impl super::super::WorldRepository {
                             service_affected: proposal.target.clone(),
                             created_tick: tick,
                         });
-                    state.phase4.next_decision_id += 1;
+                    state.phase4.next_decision_id = state.phase4.next_decision_id.saturating_add(1);
                     super::retain_recent(
                         &mut state.phase4.governance.decisions,
                         super::MAX_GOVERNANCE_DECISIONS,
@@ -614,7 +614,7 @@ fn collect_taxes(state: &mut super::super::models::RepositoryState) {
     let payer_count = payers.len();
     for (account_id, payer_name, amount) in payers {
         let collection_id = format!("tax-{}", state.phase4.next_tax_id);
-        state.phase4.next_tax_id += 1;
+        state.phase4.next_tax_id = state.phase4.next_tax_id.saturating_add(1);
         state.phase4.governance.tax_ledger.push(TaxCollection {
             collection_id,
             payer_account_id: account_id,
