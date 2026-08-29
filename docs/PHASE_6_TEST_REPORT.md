@@ -275,8 +275,12 @@ a focused protocol boundary regression.
 The offline inventory total follows the same saturation policy when saved crop
 counts are already at their ceiling.
 Regional household movement history also keeps its latest 64 entries on runtime
-updates and snapshot load. The full release gate is reserved for the next major
-milestone or a change that crosses subsystem boundaries.
+updates and snapshot load. On 2026-08-30, the long-run boundary reliability
+milestone passed the full release gate: 14 protocol tests, 242 server tests, 92
+client tests, asset and code-standard checks, workspace clippy, Windows and
+WebGL release builds, and Preview deployment. The next full release gate
+remains reserved for a new major milestone or a change that crosses subsystem
+boundaries.
 
 The accumulated maintenance batch published successfully through
 `publish.ps1` on 2026-08-29: Windows and WebGL packages built and deployed to
