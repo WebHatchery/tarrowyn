@@ -149,7 +149,7 @@ expedition outpost names, account-deletion account IDs, moderation targets and
 notes, support account and repair selectors, request-ID and 64 KiB request-body
 validation, bounded Phase 3, Phase 4, and Phase 5 selectors and event
 interventions, bounded refresh tokens, unknown knowledge and claim selectors,
-idempotent
+bounded chronicle queries, idempotent
 regional mutations, expired/revoked
 access, refresh rotation, chat limits, and the protected no-PvP law response. Chat metadata,
 direct trades, claims, governance, moderation reports, and support repairs are

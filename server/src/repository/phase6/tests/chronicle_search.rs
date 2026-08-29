@@ -32,3 +32,23 @@ fn chronicle_search_returns_a_bounded_page_with_a_continuation_cursor() {
         search.entries.last().map(|entry| entry.cursor)
     );
 }
+
+#[test]
+fn chronicle_search_rejects_unbounded_or_controlled_queries() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("chronicle-search-input".to_owned()),
+            reset: false,
+        })
+        .expect("guest session")
+        .data;
+
+    for query in ["x".repeat(81), "search\nwith-control".to_owned()] {
+        let error = repository
+            .chronicle_search(&session.account_token, &query, 0)
+            .expect_err("invalid chronicle query should be rejected");
+        assert_eq!(error.status, 400);
+        assert_eq!(error.error.code, "invalid_chronicle_query");
+    }
+}
