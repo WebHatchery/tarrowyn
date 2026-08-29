@@ -523,7 +523,8 @@ stale cursor-derived projections before reloading authoritative state and
 history from cursor zero. A restore must never turn cached history into a new
 reward. The regional event view follows the same cursor contract, merging
 stage updates by stable event ID and restarting from cursor zero when a restore
-invalidates its cached regional cursor.
+invalidates its cached regional cursor; the regional map, settlement, household,
+market, law, and event projections are cleared together before that reload.
 The server also rejects a cursor that predates the bounded event window with a
 structured `cursor_stale` error instead of returning an incomplete stream. The
 client handles that retention boundary through the same state-and-history reload

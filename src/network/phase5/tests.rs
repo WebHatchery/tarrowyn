@@ -261,6 +261,24 @@ fn regional_event_cursor_merges_updates_without_dropping_known_events() {
 #[test]
 fn regional_cursor_reset_discards_stale_events_and_restarts_refresh() {
     let mut client = Phase5Client::new();
+    client.region = Some(tarrowyn_protocol::RegionSnapshot {
+        region_id: "hearthlands".to_owned(),
+        season: "thaw".to_owned(),
+        calendar_day: 1,
+        locations: Vec::new(),
+        routes: Vec::new(),
+        visible_settlements: Vec::new(),
+        player_location_id: "hearth".to_owned(),
+        travel: None,
+        interest_radius: 12,
+        cursor: 9,
+    });
+    client.market = Some(MarketSnapshot {
+        orders: Vec::new(),
+        stock_notes: Vec::new(),
+        prices: Vec::new(),
+        cursor: 9,
+    });
     client.events = Some(RegionalEventsResponse {
         events: vec![regional_event(
             "event-1",
@@ -273,6 +291,8 @@ fn regional_cursor_reset_discards_stale_events_and_restarts_refresh() {
 
     client.reset_event_cursor();
 
+    assert!(client.region.is_none());
+    assert!(client.market.is_none());
     assert!(client.events.is_none());
     assert_eq!(client.refresh_timer, 0.0);
 }

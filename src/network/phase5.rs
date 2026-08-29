@@ -567,7 +567,7 @@ impl Phase5Client {
 
     pub(super) fn reset_event_cursor(&mut self) {
         self.pending_events = None;
-        self.events = None;
+        self.clear_cached_projections();
         self.refresh_timer = 0.0;
     }
 

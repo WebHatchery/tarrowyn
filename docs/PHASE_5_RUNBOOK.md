@@ -46,9 +46,10 @@ resolve it. Poll with the returned cursor; a cursor ahead of the server must
 return a readable `cursor_ahead` error. A cursor older than the retained event
 window must return `cursor_stale` rather than an incomplete event list.
 The client handles that boundary without disconnecting: it clears the regional
-event cache, returns to cursor zero, and reloads the latest event stages. The
-Phase 6 client recovery path also resets this regional stream when the shared
-settlement event cursor reports a restore.
+map, settlement, household, market, law, and event projections, returns to
+cursor zero, and reloads the latest regional state. The Phase 6 client recovery
+path also resets this regional stream when the shared settlement event cursor
+reports a restore.
 
 ## Identity, operations, and support
 
