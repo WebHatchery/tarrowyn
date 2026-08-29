@@ -1,3 +1,4 @@
+use macroquad_toolkit::data_loader::parse_json_labeled;
 use serde::Deserialize;
 use std::sync::OnceLock;
 use tarrowyn_protocol::{HouseholdLifeStatus, HouseholdMemberRecord, HouseholdRecord};
@@ -36,17 +37,21 @@ struct NpcHouseholdMemberManifest {
 }
 
 pub(super) fn validate() -> Result<(), String> {
-    let households: NpcHouseholdsManifest =
-        serde_json::from_str(include_str!("../../../assets/data/npc_households.json"))
-            .map_err(|error| format!("NPC households JSON is invalid: {error}"))?;
+    let households: NpcHouseholdsManifest = parse_json_labeled(
+        "npc_households.json",
+        macroquad_toolkit::include_json_str!("../../../assets/data/npc_households.json"),
+    )
+    .map_err(|error| format!("NPC households JSON is invalid: {error}"))?;
     validate_manifest(&households)
 }
 
 pub(crate) fn household(household_id: &str) -> HouseholdRecord {
     let households = NPC_HOUSEHOLD_CATALOG.get_or_init(|| {
-        let households: NpcHouseholdsManifest =
-            serde_json::from_str(include_str!("../../../assets/data/npc_households.json"))
-                .expect("NPC households content JSON must be valid");
+        let households: NpcHouseholdsManifest = parse_json_labeled(
+            "npc_households.json",
+            macroquad_toolkit::include_json_str!("../../../assets/data/npc_households.json"),
+        )
+        .expect("NPC households content JSON must be valid");
         validate_manifest(&households).expect("NPC household content must satisfy its schema");
         households.npc_households
     });

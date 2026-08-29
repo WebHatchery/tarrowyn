@@ -2,6 +2,7 @@
 
 use super::models::{RepositoryState, SkillLedger};
 use super::*;
+use macroquad_toolkit::data_loader::parse_json_labeled;
 use serde::Deserialize;
 use std::collections::HashSet;
 use std::sync::OnceLock;
@@ -10,7 +11,7 @@ use tarrowyn_protocol::{
     SkillsResponse, WeaponKind,
 };
 
-const SKILLS_JSON: &str = include_str!("../../../assets/data/skills.json");
+const SKILLS_JSON: &str = macroquad_toolkit::include_json_str!("../../../assets/data/skills.json");
 
 #[derive(Debug, Deserialize)]
 struct SkillManifest {
@@ -44,15 +45,15 @@ static CATALOG: OnceLock<SkillManifest> = OnceLock::new();
 
 fn catalog() -> &'static SkillManifest {
     CATALOG.get_or_init(|| {
-        let manifest: SkillManifest =
-            serde_json::from_str(SKILLS_JSON).expect("skills content JSON must be valid");
+        let manifest: SkillManifest = parse_json_labeled("skills.json", SKILLS_JSON)
+            .expect("skills content JSON must be valid");
         validate_manifest(&manifest).expect("skills content must satisfy its schema");
         manifest
     })
 }
 
 pub(crate) fn validate_catalog() -> Result<(), String> {
-    let manifest: SkillManifest = serde_json::from_str(SKILLS_JSON)
+    let manifest: SkillManifest = parse_json_labeled("skills.json", SKILLS_JSON)
         .map_err(|error| format!("skills JSON is invalid: {error}"))?;
     validate_manifest(&manifest)
 }

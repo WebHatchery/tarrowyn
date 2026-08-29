@@ -1,3 +1,4 @@
+use macroquad_toolkit::data_loader::parse_json_labeled;
 use serde::Deserialize;
 use std::sync::OnceLock;
 use tarrowyn_protocol::{HouseholdMember, HouseholdStatus};
@@ -62,9 +63,11 @@ pub(crate) struct RegionalHouseholdTemplate {
 }
 
 pub(super) fn validate(region: &super::RegionManifest) -> Result<(), String> {
-    let households: HouseholdsManifest =
-        serde_json::from_str(include_str!("../../../assets/data/households.json"))
-            .map_err(|error| format!("households JSON is invalid: {error}"))?;
+    let households: HouseholdsManifest = parse_json_labeled(
+        "households.json",
+        macroquad_toolkit::include_json_str!("../../../assets/data/households.json"),
+    )
+    .map_err(|error| format!("households JSON is invalid: {error}"))?;
     super::validate_id_list(
         "household",
         households
@@ -160,9 +163,11 @@ pub(crate) fn regional_household_template(household_id: &str) -> RegionalHouseho
 
 fn household(household_id: &str) -> &HouseholdManifest {
     let households = HOUSEHOLD_CATALOG.get_or_init(|| {
-        let households: HouseholdsManifest =
-            serde_json::from_str(include_str!("../../../assets/data/households.json"))
-                .expect("households content JSON must be valid");
+        let households: HouseholdsManifest = parse_json_labeled(
+            "households.json",
+            macroquad_toolkit::include_json_str!("../../../assets/data/households.json"),
+        )
+        .expect("households content JSON must be valid");
         let region = super::region_catalog();
         validate(region).expect("households content must satisfy its schema");
         households.households

@@ -1619,6 +1619,7 @@ dependencies = [
 name = "tarrowyn-server"
 version = "0.1.0"
 dependencies = [
+ "macroquad-toolkit",
  "mysql",
  "serde",
  "serde_json",

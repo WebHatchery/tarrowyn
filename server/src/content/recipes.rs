@@ -1,3 +1,4 @@
+use macroquad_toolkit::data_loader::parse_json_labeled;
 use serde::Deserialize;
 use std::sync::OnceLock;
 use tarrowyn_protocol::{MaterialStock, ProfessionKind};
@@ -34,17 +35,21 @@ pub(crate) struct RecipeTemplate {
 }
 
 pub(super) fn validate() -> Result<(), String> {
-    let recipes: RecipesManifest =
-        serde_json::from_str(include_str!("../../../assets/data/recipes.json"))
-            .map_err(|error| format!("recipes JSON is invalid: {error}"))?;
+    let recipes: RecipesManifest = parse_json_labeled(
+        "recipes.json",
+        macroquad_toolkit::include_json_str!("../../../assets/data/recipes.json"),
+    )
+    .map_err(|error| format!("recipes JSON is invalid: {error}"))?;
     validate_recipes(&recipes)
 }
 
 pub(crate) fn recipe_template(recipe_id: &str) -> RecipeTemplate {
     let recipes = RECIPE_CATALOG.get_or_init(|| {
-        let recipes: RecipesManifest =
-            serde_json::from_str(include_str!("../../../assets/data/recipes.json"))
-                .expect("recipes content JSON must be valid");
+        let recipes: RecipesManifest = parse_json_labeled(
+            "recipes.json",
+            macroquad_toolkit::include_json_str!("../../../assets/data/recipes.json"),
+        )
+        .expect("recipes content JSON must be valid");
         validate_recipes(&recipes).expect("recipes content must satisfy its schema");
         recipes.recipes
     });

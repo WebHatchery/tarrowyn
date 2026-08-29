@@ -1,3 +1,4 @@
+use macroquad_toolkit::data_loader::parse_json_labeled;
 use serde::Deserialize;
 use std::sync::OnceLock;
 use tarrowyn_protocol::{MonsterKind, Position};
@@ -61,12 +62,16 @@ pub(crate) struct ThreatTemplate {
 }
 
 pub(super) fn validate() -> Result<(), String> {
-    let contracts: ContractsManifest =
-        serde_json::from_str(include_str!("../../../assets/data/contracts.json"))
-            .map_err(|error| format!("contracts JSON is invalid: {error}"))?;
-    let threats: ThreatsManifest =
-        serde_json::from_str(include_str!("../../../assets/data/threats.json"))
-            .map_err(|error| format!("threats JSON is invalid: {error}"))?;
+    let contracts: ContractsManifest = parse_json_labeled(
+        "contracts.json",
+        macroquad_toolkit::include_json_str!("../../../assets/data/contracts.json"),
+    )
+    .map_err(|error| format!("contracts JSON is invalid: {error}"))?;
+    let threats: ThreatsManifest = parse_json_labeled(
+        "threats.json",
+        macroquad_toolkit::include_json_str!("../../../assets/data/threats.json"),
+    )
+    .map_err(|error| format!("threats JSON is invalid: {error}"))?;
     validate_contracts(&contracts)?;
     validate_threats(&threats)?;
     Ok(())
@@ -74,9 +79,11 @@ pub(super) fn validate() -> Result<(), String> {
 
 pub(crate) fn contract_template(contract_id: &str) -> ContractTemplate {
     let contracts = CONTRACT_CATALOG.get_or_init(|| {
-        let contracts: ContractsManifest =
-            serde_json::from_str(include_str!("../../../assets/data/contracts.json"))
-                .expect("contracts content JSON must be valid");
+        let contracts: ContractsManifest = parse_json_labeled(
+            "contracts.json",
+            macroquad_toolkit::include_json_str!("../../../assets/data/contracts.json"),
+        )
+        .expect("contracts content JSON must be valid");
         validate_contracts(&contracts).expect("contracts content must satisfy its schema");
         contracts.contracts
     });
@@ -99,9 +106,11 @@ pub(crate) fn contract_template(contract_id: &str) -> ContractTemplate {
 
 pub(crate) fn threat_template(threat_id: &str) -> ThreatTemplate {
     let threats = THREAT_CATALOG.get_or_init(|| {
-        let threats: ThreatsManifest =
-            serde_json::from_str(include_str!("../../../assets/data/threats.json"))
-                .expect("threats content JSON must be valid");
+        let threats: ThreatsManifest = parse_json_labeled(
+            "threats.json",
+            macroquad_toolkit::include_json_str!("../../../assets/data/threats.json"),
+        )
+        .expect("threats content JSON must be valid");
         validate_threats(&threats).expect("threats content must satisfy its schema");
         threats.threats
     });

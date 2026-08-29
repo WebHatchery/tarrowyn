@@ -1,5 +1,6 @@
 //! Runtime validation for the data-driven regional content manifests.
 
+use macroquad_toolkit::data_loader::parse_json_labeled;
 use serde::Deserialize;
 use std::collections::HashSet;
 use std::sync::OnceLock;
@@ -69,9 +70,9 @@ struct CropManifest {
     description: String,
 }
 
-const CROPS_JSON: &str = include_str!("../../assets/data/crops.json");
+const CROPS_JSON: &str = macroquad_toolkit::include_json_str!("../../assets/data/crops.json");
 static CROP_CATALOG: OnceLock<Vec<CropManifest>> = OnceLock::new();
-const EVENTS_JSON: &str = include_str!("../../assets/data/events.json");
+const EVENTS_JSON: &str = macroquad_toolkit::include_json_str!("../../assets/data/events.json");
 static EVENT_CATALOG: OnceLock<Vec<EventManifest>> = OnceLock::new();
 
 #[derive(Debug, Deserialize)]
@@ -194,26 +195,41 @@ pub(crate) struct RegionLocationProfile {
 }
 
 pub fn validate() -> Result<(), String> {
-    let schema: ContentSchemaManifest =
-        serde_json::from_str(include_str!("../../assets/data/content_schema.json"))
-            .map_err(|error| format!("content schema JSON is invalid: {error}"))?;
-    let game_config: GameConfigManifest =
-        serde_json::from_str(include_str!("../../assets/data/game_config.json"))
-            .map_err(|error| format!("game config JSON is invalid: {error}"))?;
-    let actions: Vec<ActionManifest> =
-        serde_json::from_str(include_str!("../../assets/data/actions.json"))
-            .map_err(|error| format!("actions JSON is invalid: {error}"))?;
-    let crops: Vec<CropManifest> =
-        serde_json::from_str(include_str!("../../assets/data/crops.json"))
-            .map_err(|error| format!("crops JSON is invalid: {error}"))?;
-    let events: EventsManifest =
-        serde_json::from_str(include_str!("../../assets/data/events.json"))
-            .map_err(|error| format!("events JSON is invalid: {error}"))?;
-    let items: ItemsManifest = serde_json::from_str(include_str!("../../assets/data/items.json"))
-        .map_err(|error| format!("items JSON is invalid: {error}"))?;
-    let region: RegionManifest =
-        serde_json::from_str(include_str!("../../assets/data/region.json"))
-            .map_err(|error| format!("region JSON is invalid: {error}"))?;
+    let schema: ContentSchemaManifest = parse_json_labeled(
+        "content_schema.json",
+        macroquad_toolkit::include_json_str!("../../assets/data/content_schema.json"),
+    )
+    .map_err(|error| format!("content schema JSON is invalid: {error}"))?;
+    let game_config: GameConfigManifest = parse_json_labeled(
+        "game_config.json",
+        macroquad_toolkit::include_json_str!("../../assets/data/game_config.json"),
+    )
+    .map_err(|error| format!("game config JSON is invalid: {error}"))?;
+    let actions: Vec<ActionManifest> = parse_json_labeled(
+        "actions.json",
+        macroquad_toolkit::include_json_str!("../../assets/data/actions.json"),
+    )
+    .map_err(|error| format!("actions JSON is invalid: {error}"))?;
+    let crops: Vec<CropManifest> = parse_json_labeled(
+        "crops.json",
+        macroquad_toolkit::include_json_str!("../../assets/data/crops.json"),
+    )
+    .map_err(|error| format!("crops JSON is invalid: {error}"))?;
+    let events: EventsManifest = parse_json_labeled(
+        "events.json",
+        macroquad_toolkit::include_json_str!("../../assets/data/events.json"),
+    )
+    .map_err(|error| format!("events JSON is invalid: {error}"))?;
+    let items: ItemsManifest = parse_json_labeled(
+        "items.json",
+        macroquad_toolkit::include_json_str!("../../assets/data/items.json"),
+    )
+    .map_err(|error| format!("items JSON is invalid: {error}"))?;
+    let region: RegionManifest = parse_json_labeled(
+        "region.json",
+        macroquad_toolkit::include_json_str!("../../assets/data/region.json"),
+    )
+    .map_err(|error| format!("region JSON is invalid: {error}"))?;
 
     validate_schema(&schema)?;
     validate_game_config(&game_config, &region)?;
@@ -234,7 +250,7 @@ pub fn validate() -> Result<(), String> {
 pub(crate) fn crop_kind_for_seed(seed_index: u32) -> CropKind {
     let crops = CROP_CATALOG.get_or_init(|| {
         let crops: Vec<CropManifest> =
-            serde_json::from_str(CROPS_JSON).expect("crops content JSON must be valid");
+            parse_json_labeled("crops.json", CROPS_JSON).expect("crops content JSON must be valid");
         validate_crops(&crops).expect("crops content must satisfy its schema");
         crops
     });
@@ -251,8 +267,8 @@ pub(crate) fn crop_kind_for_seed(seed_index: u32) -> CropKind {
 
 pub(crate) fn regional_event_template(event_index: u64) -> EventTemplate {
     let events = EVENT_CATALOG.get_or_init(|| {
-        let events: EventsManifest =
-            serde_json::from_str(EVENTS_JSON).expect("events content JSON must be valid");
+        let events: EventsManifest = parse_json_labeled("events.json", EVENTS_JSON)
+            .expect("events content JSON must be valid");
         validate_events(&events).expect("events content must satisfy its schema");
         events.events
     });
@@ -271,9 +287,11 @@ pub(crate) fn regional_event_template(event_index: u64) -> EventTemplate {
 
 pub(crate) fn item_base_price(item_id: &str) -> u32 {
     let items = ITEM_CATALOG.get_or_init(|| {
-        let items: ItemsManifest =
-            serde_json::from_str(include_str!("../../assets/data/items.json"))
-                .expect("items content JSON must be valid");
+        let items: ItemsManifest = parse_json_labeled(
+            "items.json",
+            macroquad_toolkit::include_json_str!("../../assets/data/items.json"),
+        )
+        .expect("items content JSON must be valid");
         validate_items(&items).expect("items content must satisfy its schema");
         items.items
     });
@@ -349,9 +367,11 @@ pub(crate) fn region_location_profile(location_id: &str) -> RegionLocationProfil
 
 fn region_catalog() -> &'static RegionManifest {
     REGION_CATALOG.get_or_init(|| {
-        let region: RegionManifest =
-            serde_json::from_str(include_str!("../../assets/data/region.json"))
-                .expect("region content JSON must be valid");
+        let region: RegionManifest = parse_json_labeled(
+            "region.json",
+            macroquad_toolkit::include_json_str!("../../assets/data/region.json"),
+        )
+        .expect("region content JSON must be valid");
         if region.calendar.season_days == 0 || region.calendar.seasons.is_empty() {
             panic!("region content must define a non-empty calendar");
         }

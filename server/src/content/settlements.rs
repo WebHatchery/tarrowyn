@@ -1,3 +1,4 @@
+use macroquad_toolkit::data_loader::parse_json_labeled;
 use serde::Deserialize;
 use std::collections::HashSet;
 use std::sync::OnceLock;
@@ -83,12 +84,16 @@ pub(crate) struct InfrastructureProfile {
 }
 
 pub(super) fn validate(region: &super::RegionManifest) -> Result<(), String> {
-    let settlements: SettlementsManifest =
-        serde_json::from_str(include_str!("../../../assets/data/settlements.json"))
-            .map_err(|error| format!("settlements JSON is invalid: {error}"))?;
-    let infrastructure: InfrastructureManifest =
-        serde_json::from_str(include_str!("../../../assets/data/infrastructure.json"))
-            .map_err(|error| format!("infrastructure JSON is invalid: {error}"))?;
+    let settlements: SettlementsManifest = parse_json_labeled(
+        "settlements.json",
+        macroquad_toolkit::include_json_str!("../../../assets/data/settlements.json"),
+    )
+    .map_err(|error| format!("settlements JSON is invalid: {error}"))?;
+    let infrastructure: InfrastructureManifest = parse_json_labeled(
+        "infrastructure.json",
+        macroquad_toolkit::include_json_str!("../../../assets/data/infrastructure.json"),
+    )
+    .map_err(|error| format!("infrastructure JSON is invalid: {error}"))?;
     validate_settlements(&settlements, region)?;
     validate_infrastructure(&infrastructure)?;
     Ok(())
@@ -96,9 +101,11 @@ pub(super) fn validate(region: &super::RegionManifest) -> Result<(), String> {
 
 pub(crate) fn settlement_profile(settlement_id: &str) -> SettlementProfile {
     let settlements = SETTLEMENT_CATALOG.get_or_init(|| {
-        let settlements: SettlementsManifest =
-            serde_json::from_str(include_str!("../../../assets/data/settlements.json"))
-                .expect("settlements content JSON must be valid");
+        let settlements: SettlementsManifest = parse_json_labeled(
+            "settlements.json",
+            macroquad_toolkit::include_json_str!("../../../assets/data/settlements.json"),
+        )
+        .expect("settlements content JSON must be valid");
         validate_settlements(&settlements, super::region_catalog())
             .expect("settlements content must satisfy its schema");
         settlements.settlements
@@ -129,9 +136,11 @@ pub(crate) fn settlement_profile(settlement_id: &str) -> SettlementProfile {
 
 pub(crate) fn infrastructure_profiles() -> Vec<InfrastructureProfile> {
     let infrastructure = INFRASTRUCTURE_CATALOG.get_or_init(|| {
-        let infrastructure: InfrastructureManifest =
-            serde_json::from_str(include_str!("../../../assets/data/infrastructure.json"))
-                .expect("infrastructure content JSON must be valid");
+        let infrastructure: InfrastructureManifest = parse_json_labeled(
+            "infrastructure.json",
+            macroquad_toolkit::include_json_str!("../../../assets/data/infrastructure.json"),
+        )
+        .expect("infrastructure content JSON must be valid");
         validate_infrastructure(&infrastructure)
             .expect("infrastructure content must satisfy its schema");
         infrastructure.infrastructure
