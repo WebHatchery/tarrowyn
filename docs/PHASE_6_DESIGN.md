@@ -50,7 +50,9 @@ also has length and per-tick limits, and chronicle search accepts only bounded
 control-free queries while preserving an empty query for browsing;
 chat metadata, trades, claims, governance, moderation, and support repairs are
 recorded in the audit stream without copying private chat text into audit
-notes. The no-PvP law boundary is still active.
+notes. API responses carry `Cache-Control: no-store` so access and refresh
+responses are not retained by intermediaries. The no-PvP law boundary is still
+active.
 
 ## Persistence, backups, and repair
 

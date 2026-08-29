@@ -562,6 +562,7 @@ fn content_type() -> Header {
 
 fn with_cors<R: Read>(response: Response<R>) -> Response<R> {
     response
+        .with_header(Header::from_bytes("Cache-Control", "no-store").expect("valid header"))
         .with_header(Header::from_bytes("Access-Control-Allow-Origin", "*").expect("valid header"))
         .with_header(
             Header::from_bytes(

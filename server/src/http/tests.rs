@@ -50,3 +50,12 @@ fn tick_deadline_stays_fixed_until_an_overrun_needs_recovery() {
         start + Duration::from_millis(850)
     );
 }
+
+#[test]
+fn api_responses_disable_intermediary_caching() {
+    let response = json_response(StatusCode(200), serde_json::json!({ "status": "ok" }));
+
+    assert!(response.headers().iter().any(|header| {
+        header.field.equiv("Cache-Control") && header.value.as_str() == "no-store"
+    }));
+}
