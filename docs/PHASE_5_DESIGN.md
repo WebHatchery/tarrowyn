@@ -82,9 +82,11 @@ free-plot, and public-work counts.
 The shared-road sidebar also exposes compact road availability/risk, open market
 orders, and the protected-law boundary. A visible Inspect control opens the
 authoritative route names, status, condition, and risk beside the first stock
-and price notes without squeezing them into the touch summary. The latest
-regional event stage is shown beside that compact telemetry so signals and
-escalations remain visible before intervention. The map draws the region's
+and price notes without squeezing them into the touch summary. The same panel
+offers visible Escort and Improve controls for the first open route connected
+to the current location, while Repair remains in the sidebar recovery row.
+The latest regional event stage is shown beside that compact telemetry so
+signals and escalations remain visible before intervention. The map draws the region's
 server-owned location positions and route status colours; offline play keeps its
 local-only landmark fixture.
 The client polls the regional household endpoint and shows the current travelling

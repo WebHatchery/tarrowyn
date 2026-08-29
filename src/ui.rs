@@ -51,7 +51,13 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
     draw_footer(&ctx);
 
     if ctx.regional_inspection.is_some() {
-        actions.retain(|action| matches!(action, UiAction::Interact(id) if id == "region-details"));
+        actions.retain(|action| {
+            matches!(
+                action,
+                UiAction::Interact(id)
+                    if matches!(id.as_str(), "region-details" | "route-escort" | "route-improve")
+            )
+        });
     }
 
     actions

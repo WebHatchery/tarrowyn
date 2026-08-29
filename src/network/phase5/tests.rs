@@ -122,6 +122,24 @@ fn route_repair_button_queues_an_authoritative_repair() {
     ));
 
     client.commands.clear();
+    client.queue_cycle("route-escort");
+    assert!(matches!(
+        client.commands.front(),
+        Some(Phase5Command::Route(request))
+            if request.route_id == "north-pack-road"
+                && request.action == RouteAction::Escort
+    ));
+
+    client.commands.clear();
+    client.queue_cycle("route-improve");
+    assert!(matches!(
+        client.commands.front(),
+        Some(Phase5Command::Route(request))
+            if request.route_id == "north-pack-road"
+                && request.action == RouteAction::Improve
+    ));
+
+    client.commands.clear();
     client
         .region
         .as_mut()

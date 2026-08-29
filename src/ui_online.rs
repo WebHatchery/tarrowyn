@@ -426,6 +426,18 @@ pub(super) fn draw_regional_inspection(
         3.0,
         CREAM,
     );
+    draw_button_row(
+        Rect::new(panel.x + 20.0, panel.bottom() - 82.0, panel.w - 40.0, 28.0),
+        panel.bottom() - 82.0,
+        28.0,
+        mouse,
+        &[
+            ("route-escort", "Escort road", true, ButtonTone::Positive),
+            ("route-improve", "Improve road", true, ButtonTone::Primary),
+        ],
+        ctx,
+        actions,
+    );
     if virtual_button(
         Rect::new(panel.right() - 126.0, panel.bottom() - 42.0, 106.0, 28.0),
         "Close",

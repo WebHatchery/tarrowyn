@@ -15,6 +15,7 @@ use tarrowyn_protocol::{
 const MAX_CACHED_REGIONAL_EVENTS: usize = 2048;
 
 mod market;
+mod routes;
 mod summary;
 mod travel;
 
@@ -316,33 +317,13 @@ impl Phase5Client {
                 }
             }
             "route-repair" => {
-                let route_id = self.region.as_ref().and_then(|region| {
-                    region
-                        .routes
-                        .iter()
-                        .find(|route| {
-                            route.origin_location_id == region.player_location_id
-                                && route.status != tarrowyn_protocol::RouteStatus::Operational
-                        })
-                        .or_else(|| {
-                            region.routes.iter().find(|route| {
-                                route.destination_location_id == region.player_location_id
-                                    && route.status != tarrowyn_protocol::RouteStatus::Operational
-                            })
-                        })
-                        .map(|route| route.route_id.clone())
-                });
-                let Some(route_id) = route_id else {
-                    return false;
-                };
-                super::queue::try_push(
-                    &mut self.commands,
-                    Phase5Command::Route(RouteRequest {
-                        request_id,
-                        route_id,
-                        action: RouteAction::Repair,
-                    }),
-                );
+                self.queue_route_action(request_id, RouteAction::Repair);
+            }
+            "route-escort" => {
+                self.queue_route_action(request_id, RouteAction::Escort);
+            }
+            "route-improve" => {
+                self.queue_route_action(request_id, RouteAction::Improve);
             }
             _ => {}
         }

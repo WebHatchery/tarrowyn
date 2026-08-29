@@ -34,8 +34,11 @@ with the same request boundary.
 
 Tap `Inspect` to open the authoritative regional detail panel. It lists each
 visible route by name with status, risk, and condition, followed by the first
-market stock and price notes. Use it to read the detail behind the compact
-sidebar telemetry; it does not mutate the regional ledger.
+market stock and price notes. Use the visible `Escort road` control to reduce
+route risk, or `Improve road` to increase route capacity and shorten its travel
+time. Both actions select the first open route connected to the current
+location and remain server-authoritative; the panel also remains the place to
+read the detail behind the compact sidebar telemetry.
 
 ## Market and event inspection
 
