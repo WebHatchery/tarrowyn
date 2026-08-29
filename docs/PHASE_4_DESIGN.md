@@ -202,6 +202,12 @@ from resolving several actions; `TARROWYN_COMBAT_ACTION_COOLDOWN_TICKS` can
 shorten or lengthen that deployment boundary. The response exposes the next
 available tick, and the client shows the remaining window beside the action
 bar so timing is readable without requiring a keyboard.
+Recovery choices are explicit rather than a single generic escape: `Self`
+spends one carried seed and reduces one injury, `Rescuer` returns the traveller
+with a small reputation gain, and `Healer` clears injuries for the displayed
+gold cost. If the carried seed or healer gold is unavailable, the server keeps
+the character knocked out and names the remaining visible choices. The shared
+recovery endpoint resets the local encounter only after an accepted choice.
 When Wind Magic, Water Magic, and Electricity Magic are each mastered, the
 same visible Spell control becomes a severe-weather three-element working.
 Each encounter can contribute one successful interaction, and 25 such
