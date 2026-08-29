@@ -146,7 +146,8 @@ startup instead of being allowed to overwrite an in-memory snapshot.
 Representative checks cover unsupported identity providers, bounded provider
 subjects and linked display names, bounded guest client keys, proposal targets,
 expedition outpost names, moderation targets and notes, support notes, request-ID
-and 64 KiB request-body validation, idempotent regional mutations, expired/revoked
+and 64 KiB request-body validation, unknown knowledge selectors, idempotent
+regional mutations, expired/revoked
 access, refresh rotation, chat limits, and the protected no-PvP law response. Chat metadata,
 direct trades, claims, governance, moderation reports, and support repairs are
 audit-linked without copying chat text into the audit stream. Moderation reports are queued and audit-linked. The

@@ -123,3 +123,29 @@ fn undiscovered_knowledge_stays_private_until_taught_or_recorded() {
         "Moonberry trellis method"
     );
 }
+
+#[test]
+fn unknown_knowledge_selector_does_not_fall_back_to_the_first_clue() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = guest(&repository, "knowledge-selector-boundary");
+
+    let response = repository
+        .knowledge(
+            &session.account_token,
+            KnowledgeRequest {
+                request_id: "unknown-knowledge-selector".to_owned(),
+                action: KnowledgeAction::Discover,
+                knowledge_id: Some("missing-knowledge".to_owned()),
+                target_account_id: None,
+            },
+        )
+        .expect("unknown knowledge should return a readable rejection")
+        .data;
+
+    assert!(!response.accepted);
+    assert_eq!(
+        response.reason.as_deref(),
+        Some("That knowledge item is not discoverable in this settlement.")
+    );
+    assert!(response.knowledge.known_by_player.is_empty());
+}

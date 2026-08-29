@@ -218,15 +218,14 @@ fn item_index(
     state: &super::super::models::RepositoryState,
     knowledge_id: Option<&str>,
 ) -> Option<usize> {
-    knowledge_id
-        .and_then(|id| {
-            state
-                .phase4
-                .knowledge
-                .iter()
-                .position(|item| item.knowledge_id == id)
-        })
-        .or_else(|| (!state.phase4.knowledge.is_empty()).then_some(0))
+    match knowledge_id {
+        Some(id) => state
+            .phase4
+            .knowledge
+            .iter()
+            .position(|item| item.knowledge_id == id),
+        None => (!state.phase4.knowledge.is_empty()).then_some(0),
+    }
 }
 
 fn known(state: &super::super::models::RepositoryState, key: &str, item_id: &str) -> bool {
