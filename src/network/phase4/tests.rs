@@ -98,6 +98,15 @@ fn registry_button_chooses_the_current_account_claim() {
     };
     assert_eq!(request.action, ClaimLifecycleAction::Renew);
     assert_eq!(request.claim_id.as_deref(), Some("own-lease"));
+
+    client.commands.clear();
+    client.own_account_id = Some("account-3".to_owned());
+    client.queue_cycle("registry", "registry-2".to_owned());
+    let Some(Phase4Command::Claim(request)) = client.commands.pop_front() else {
+        panic!("a new account should queue a fresh claim request");
+    };
+    assert_eq!(request.action, ClaimLifecycleAction::Request);
+    assert!(request.claim_id.is_none());
 }
 
 #[test]

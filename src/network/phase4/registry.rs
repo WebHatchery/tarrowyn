@@ -3,10 +3,12 @@ use super::*;
 impl Phase4Client {
     pub(super) fn queue_claim(&mut self, request_id: String) {
         let own_account_id = self.own_account_id.as_deref();
-        let is_steward = self.governance.as_ref().is_some_and(|governance| {
-            governance.offices.iter().any(|office| {
-                office.kind == tarrowyn_protocol::OfficeKind::Steward
-                    && office.holder_account_id.as_deref() == own_account_id
+        let is_steward = own_account_id.is_some_and(|account_id| {
+            self.governance.as_ref().is_some_and(|governance| {
+                governance.offices.iter().any(|office| {
+                    office.kind == tarrowyn_protocol::OfficeKind::Steward
+                        && office.holder_account_id.as_deref() == Some(account_id)
+                })
             })
         });
         let claim = self.claims.as_ref().and_then(|claims| {
