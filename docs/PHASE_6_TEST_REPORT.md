@@ -20,7 +20,8 @@ The release validator also parses the canonical action, crop, item, event,
 settlement, region, household, infrastructure, calendar, and game-config
 manifests with required record shapes, exact schema membership, and duplicate
 ID checks before the Rust build, including supported action kinds, positive market base prices,
-calendar compatibility, and required launch IDs and links; typed server
+calendar compatibility, and required launch IDs and links across every
+runtime-authoritative catalog; typed server
 cross-reference checks then reject incompatible records at startup, including
 missing infrastructure anchors.
 The launch-default regression confirms the server's world dimensions, day

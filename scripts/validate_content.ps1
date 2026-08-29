@@ -46,6 +46,15 @@ function Assert-Records([string]$label, [object[]]$records, [string[]]$textField
     Assert-ArrayFields $label $records $arrayFields
 }
 
+function Assert-RequiredRecordIds([string]$label, [object[]]$records, [string[]]$requiredIds) {
+    $availableIds = @($records | ForEach-Object { [string]$_.id })
+    foreach ($requiredId in $requiredIds) {
+        if ($availableIds -notcontains $requiredId) {
+            throw "$label are missing launch record $requiredId."
+        }
+    }
+}
+
 function Get-Records([object]$document, [string]$property, [string]$label) {
     if ([string]::IsNullOrEmpty($property)) {
         if ($document -isnot [array]) { throw "$label manifest must be an array." }
@@ -111,6 +120,7 @@ $requiredActions = @{
     "harvest" = "harvest"
     "listen" = "listen"
 }
+Assert-RequiredRecordIds "Actions" $actionRecords @($requiredActions.Keys)
 foreach ($actionId in $requiredActions.Keys) {
     $action = $actionRecords | Where-Object { [string]$_.id -eq $actionId } | Select-Object -First 1
     if ($null -eq $action) {
@@ -120,14 +130,15 @@ foreach ($actionId in $requiredActions.Keys) {
         throw "Launch action $actionId must use kind $($requiredActions[$actionId])."
     }
 }
-Assert-Records "crops" (Get-Records $manifests["crops.json"] $null "crops") @("name", "description") @()
-Assert-Records "contracts" (Get-Records $manifests["contracts.json"] "contracts" "contracts") @("title", "description", "target") @()
+$cropRecords = Get-Records $manifests["crops.json"] $null "crops"
+Assert-Records "crops" $cropRecords @("name", "description") @()
+Assert-RequiredRecordIds "Crops" $cropRecords @("wheat", "turnip", "moonberry")
+$contractRecords = Get-Records $manifests["contracts.json"] "contracts" "contracts"
+Assert-Records "contracts" $contractRecords @("title", "description", "target") @()
+Assert-RequiredRecordIds "Contracts" $contractRecords @("brambleback-watch")
 $eventRecords = Get-Records $manifests["events.json"] "events" "events"
 Assert-Records "events" $eventRecords @("title", "kind", "cause") @("stages", "affected_systems", "affected_locations", "effects", "intervention_options")
-$eventIds = @($eventRecords | ForEach-Object { [string]$_.id })
-if ($eventIds -notcontains "river-thaw") {
-    throw "Events are missing the river-thaw launch event."
-}
+Assert-RequiredRecordIds "Events" $eventRecords @("river-thaw")
 $supportedEventInterventions = @("repair ferry markers", "escort the grain caravan", "open the frontier storehouse")
 foreach ($event in $eventRecords) {
     foreach ($intervention in @($event.intervention_options)) {
@@ -138,23 +149,28 @@ foreach ($event in $eventRecords) {
 }
 $itemRecords = Get-Records $manifests["items.json"] "items" "items"
 Assert-Records "items" $itemRecords @("kind", "sink") @()
+Assert-RequiredRecordIds "Items" $itemRecords @("wheat", "turnips", "moonberries", "seeds", "timber", "stone", "bandages")
 if (@($itemRecords | Where-Object { [int]$_.base_price -lt 1 }).Count -gt 0) {
     throw "Items must define positive base_price values."
 }
 $threatRecords = Get-Records $manifests["threats.json"] "threats" "threats"
 Assert-Records "threats" $threatRecords @("name", "monster", "resource_demand", "rumour") @()
-Assert-Records "households" (Get-Records $manifests["households.json"] "households" "households") @("name", "occupation", "home_settlement", "service", "clue", "reason", "regional_service") @("members", "history")
+Assert-RequiredRecordIds "Threats" $threatRecords @("whisperwood-edge")
+$householdRecords = Get-Records $manifests["households.json"] "households" "households"
+Assert-Records "households" $householdRecords @("name", "occupation", "home_settlement", "service", "clue", "reason", "regional_service") @("members", "history")
+Assert-RequiredRecordIds "Households" $householdRecords @("household-maren")
 $infrastructureRecords = Get-Records $manifests["infrastructure.json"] "infrastructure" "infrastructure"
 Assert-Records "infrastructure" $infrastructureRecords @("name", "kind", "note") @()
-if (@("north-road", "hearth-services") | Where-Object {
-        @($infrastructureRecords | ForEach-Object { [string]$_.id }) -notcontains $_
-    }) {
-    throw "Infrastructure is missing a required launch record."
-}
-Assert-Records "npc households" (Get-Records $manifests["npc_households.json"] "npc_households" "npc households") @("household_name", "home", "work", "demand", "clue") @("members", "needs")
-Assert-Records "recipes" (Get-Records $manifests["recipes.json"] "recipes" "recipes") @("name", "profession", "service", "benefit") @()
+Assert-RequiredRecordIds "Infrastructure" $infrastructureRecords @("north-road", "hearth-services")
+$npcHouseholdRecords = Get-Records $manifests["npc_households.json"] "npc_households" "npc households"
+Assert-Records "npc households" $npcHouseholdRecords @("household_name", "home", "work", "demand", "clue") @("members", "needs")
+Assert-RequiredRecordIds "NPC households" $npcHouseholdRecords @("bellweather")
+$recipeRecords = Get-Records $manifests["recipes.json"] "recipes" "recipes"
+Assert-Records "recipes" $recipeRecords @("name", "profession", "service", "benefit") @()
+Assert-RequiredRecordIds "Recipes" $recipeRecords @("field-tool-repair")
 $settlementRecords = Get-Records $manifests["settlements.json"] "settlements" "settlements"
 Assert-Records "settlements" $settlementRecords @("location", "name", "governance", "condition") @("infrastructure", "milestones", "vacancies", "demand", "abundant", "scarce", "initial_stock")
+Assert-RequiredRecordIds "Settlements" $settlementRecords @("hearth-settlement", "whisperwood-settlement", "saltmere-settlement")
 Assert-Records "skills" (Get-Records $manifests["skills.json"] "skills" "skills") @("name", "family", "description", "entry_hint") @()
 $skillsVersion = $manifests["skills.json"].version
 if ($skillsVersion -lt 1) { throw "Skills manifest needs a positive version." }
