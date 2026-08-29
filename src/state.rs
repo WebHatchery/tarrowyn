@@ -335,7 +335,7 @@ impl GameSession {
 
     fn plant_crop(&mut self) -> ActionResult {
         if self.player.inventory.seeds == 0 {
-            return failure("Your seed pouch is empty; a trader may help in a later phase.");
+            return failure("Your seed pouch is empty; reconnect to use the shared-road market.");
         }
         let Some(tile) = self.nearby_field(|crop| crop.is_none()) else {
             return failure("Stand near an empty shared field plot to plant.");

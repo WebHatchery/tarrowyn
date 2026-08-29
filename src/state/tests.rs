@@ -49,6 +49,18 @@ fn tending_then_harvesting_changes_local_progression() {
 }
 
 #[test]
+fn empty_seed_pouch_points_to_the_shared_road_market() {
+    let config = test_config();
+    let mut session = GameSession::new(&config);
+    session.player.inventory.seeds = 0;
+
+    let result = session.apply_action(&action("plant", ActionKind::Plant));
+
+    assert!(!result.success);
+    assert!(result.message.contains("shared-road market"));
+}
+
+#[test]
 fn day_rollover_advances_the_clock_and_crops() {
     let config = test_config();
     let mut session = GameSession::new(&config);
