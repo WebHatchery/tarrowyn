@@ -16,6 +16,11 @@ pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
 }
 
 fn core_ok(state: &RepositoryState, config: &ServerConfig, account_ids: &HashSet<&str>) -> bool {
+    let sequence_ok = state.next_guest > 0
+        && state.next_message > 0
+        && state.next_token > 0
+        && state.next_trade > 0
+        && state.next_notice > 0;
     let clock_ok = state.clock.day > 0
         && state.clock.day_length_seconds.is_finite()
         && state.clock.day_length_seconds > 0.0
@@ -76,7 +81,14 @@ fn core_ok(state: &RepositoryState, config: &ServerConfig, account_ids: &HashSet
                 )
         });
 
-    clock_ok && identities_ok && plots_ok && events_ok && chat_ok && notices_ok && trades_ok
+    sequence_ok
+        && clock_ok
+        && identities_ok
+        && plots_ok
+        && events_ok
+        && chat_ok
+        && notices_ok
+        && trades_ok
 }
 
 fn phase3_ok(state: &RepositoryState, config: &ServerConfig, account_ids: &HashSet<&str>) -> bool {

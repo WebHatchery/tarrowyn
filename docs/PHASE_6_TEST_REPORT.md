@@ -496,3 +496,7 @@ Phase 3 replay-cache integrity now validates cache size, bounded identity/reques
 keys, current identity ownership, and response/key request agreement across
 contracts, combat, recovery, claims, and expeditions. Two focused regressions
 cover an orphaned identity key and a mismatched cached request ID.
+
+Core repository sequence integrity now requires positive guest, message, token,
+trade, and notice counters before readiness is reported. One focused regression
+covers a zeroed notice sequence.
