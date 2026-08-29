@@ -394,12 +394,15 @@ impl Phase5Client {
                     intervention: Some("repair ferry markers".to_owned()),
                 }
             }
-            Some(event) => RegionalEventRequest {
-                request_id,
-                action: RegionalEventAction::Resolve,
-                event_id: Some(event.event_id.clone()),
-                intervention: None,
-            },
+            Some(event) if event.stage == tarrowyn_protocol::RegionalEventStage::Intervention => {
+                RegionalEventRequest {
+                    request_id,
+                    action: RegionalEventAction::Resolve,
+                    event_id: Some(event.event_id.clone()),
+                    intervention: None,
+                }
+            }
+            Some(_) => return,
         };
         self.commands.push_back(Phase5Command::Event(request));
     }

@@ -229,6 +229,22 @@ fn market_button_waits_for_the_order_destination() {
 }
 
 #[test]
+fn event_button_waits_during_the_resolution_window() {
+    let mut client = Phase5Client::new();
+    client.events = Some(RegionalEventsResponse {
+        events: vec![regional_event(
+            "event-resolution",
+            tarrowyn_protocol::RegionalEventStage::Resolution,
+            1,
+        )],
+        cursor: 1,
+    });
+
+    client.queue_cycle("region-event");
+    assert!(client.commands.is_empty());
+}
+
+#[test]
 fn linked_production_session_replaces_the_guest_projection() {
     let mut client = Phase5Client::new();
     client.linked_account = Some(AuthLinkResponse {
