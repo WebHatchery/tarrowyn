@@ -17,6 +17,7 @@ mod chronicle_search;
 mod deletion_queue;
 mod input_bounds;
 mod long_session;
+mod metrics;
 mod moderation_cooldown;
 mod moderation_retention;
 mod moderation_validation;

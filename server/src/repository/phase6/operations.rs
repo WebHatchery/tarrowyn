@@ -239,6 +239,14 @@ impl WorldRepository {
                 .settlements
                 .iter()
                 .any(|settlement| !settlement.vacancies.is_empty());
+        let open_market_fallback_orders = state
+            .phase5
+            .market_orders
+            .iter()
+            .filter(|order| {
+                order.status == tarrowyn_protocol::MarketOrderStatus::Open && order.fallback_used
+            })
+            .count() as u32;
         Ok(ApiResponse {
             meta: meta(state.tick, None, Some(state.cursor)),
             data: OpsMetricsResponse {
@@ -267,6 +275,7 @@ impl WorldRepository {
                     .iter()
                     .filter(|order| order.status == tarrowyn_protocol::MarketOrderStatus::Open)
                     .count() as u32,
+                open_market_fallback_orders,
                 travelling_players: state
                     .phase5
                     .travel

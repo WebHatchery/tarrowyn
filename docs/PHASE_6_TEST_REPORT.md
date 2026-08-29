@@ -55,6 +55,8 @@ outside the visible 0–100 interaction range before completing the order.
 The fixed-NPC household regression confirms the Bellweather service household
 follows validated NPC-household content without exposing a general family
 simulation contract.
+The focused operations regression counts active travelling fallback market
+orders separately from the general open-order backlog for support monitoring.
 The local-combat regression confirms accepted actions publish a persisted
 server-tick action window, reject same-tick bursts, and become available again
 after the authoritative tick advances. Older local-combat snapshots default
@@ -78,9 +80,9 @@ It also confirms the shared-road sidebar keeps the wider comparison visible by
 showing each settlement's condition and open-vacancy count alongside the local
 line.
 The regional telemetry regression also confirms the sidebar projection exposes
-authoritative road availability/risk, open market orders, and the protected-law
-boundary plus the latest regional event stage instead of leaving those loaded
-records hidden behind the controls.
+authoritative road availability/risk, open market orders, active fallback
+shipments, and the protected-law boundary plus the latest regional event stage
+instead of leaving those loaded records hidden behind the controls.
 The regional map presentation also uses the loaded server location positions and
 route statuses for its online overlay; the offline fixture remains explicitly
 local rather than pretending to be a shared map.

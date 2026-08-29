@@ -173,6 +173,8 @@ pub struct OpsMetricsResponse {
     pub event_cursor: u64,
     pub regional_event_backlog: u32,
     pub open_market_orders: u32,
+    #[serde(default)]
+    pub open_market_fallback_orders: u32,
     pub travelling_players: u32,
     pub rejected_commands: u64,
     pub completed_commands: u64,
