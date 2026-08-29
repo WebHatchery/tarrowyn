@@ -65,6 +65,9 @@ accounts until the next authoritative processing tick.
 Production access records are retained only while their access token is active
 or their refresh token remains valid; revoked and fully expired sessions are
 removed during session maintenance without interrupting a valid refresh.
+Moderation cooldowns are identity-lifecycle state rather than replay history:
+they remain for every extant identity and are removed only when that identity
+leaves the world, so report rate limits are not defeated by cache eviction.
 Every mutation replay cache is trimmed to a 512-entry per-scope bound on the
 authoritative world tick, including identity, regional, support, authentication,
 moderation, and earlier-phase command results.

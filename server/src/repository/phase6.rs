@@ -542,7 +542,7 @@ pub(super) fn phase6_tick(state: &mut RepositoryState, config: &ServerConfig) ->
     trim_replay_cache(&mut state.phase6.auth_refresh_results);
     trim_replay_cache(&mut state.phase6.auth_revoke_results);
     trim_replay_cache(&mut state.phase6.moderation_results);
-    trim_replay_cache(&mut state.phase6.moderation_last_report_ticks);
+    prune_moderation_cooldowns(state);
     trim_replay_cache(&mut state.phase3.request_results);
     trim_replay_cache(&mut state.phase4.request_results);
     trim_replay_cache(&mut state.phase5.request_results);
@@ -709,6 +709,13 @@ pub(super) fn trim_moderation_reports(phase6: &mut Phase6State, now: u64) {
         phase6.reports.remove(&report_id);
         phase6.report_created_at.remove(&report_id);
     }
+}
+
+pub(super) fn prune_moderation_cooldowns(state: &mut RepositoryState) {
+    state
+        .phase6
+        .moderation_last_report_ticks
+        .retain(|identity_key, _| state.identities.contains_key(identity_key));
 }
 
 #[cfg(test)]

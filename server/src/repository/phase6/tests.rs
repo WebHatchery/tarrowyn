@@ -14,6 +14,7 @@ mod account_cleanup;
 mod audit_retention;
 mod deletion_queue;
 mod long_session;
+mod moderation_cooldown;
 mod moderation_retention;
 mod service_orders;
 mod support_inventory;

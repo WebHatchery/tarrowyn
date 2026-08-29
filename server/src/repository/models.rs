@@ -190,7 +190,9 @@ impl RepositoryState {
         trim_replay_cache(&mut phase6.auth_refresh_results);
         trim_replay_cache(&mut phase6.auth_revoke_results);
         trim_replay_cache(&mut phase6.moderation_results);
-        trim_replay_cache(&mut phase6.moderation_last_report_ticks);
+        phase6
+            .moderation_last_report_ticks
+            .retain(|identity_key, _| identities.contains_key(identity_key));
         trim_replay_cache(&mut phase6.request_results);
         super::phase6::trim_audits(&mut phase6.audits);
         if phase4.animals.is_empty() {
