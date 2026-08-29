@@ -64,6 +64,23 @@ fn skill_manifest_rejects_zero_advanced_discovery_thresholds() {
 }
 
 #[test]
+fn weapon_discovery_counts_saturate_when_each_family_reaches_the_ceiling() {
+    let definition = catalog()
+        .skills
+        .iter()
+        .find(|skill| skill.id == "weapon-fighting")
+        .expect("weapon fighting definition should be present");
+    let mut ledger = SkillLedger::default();
+    for family in ["sword", "spear", "axe"] {
+        ledger
+            .qualifying_events
+            .insert(format!("weapon_defeats:{family}"), u32::MAX);
+    }
+
+    assert!(qualifying_requirements_met(&ledger, definition));
+}
+
+#[test]
 fn a_root_can_begin_through_an_idempotent_first_practice() {
     let repository = WorldRepository::new(ServerConfig {
         backup_path: None,

@@ -700,7 +700,8 @@ fn qualifying_requirements_met(ledger: &SkillLedger, definition: &SkillDefinitio
             });
             let counts: Vec<u32> = family_counts.collect();
             let minimum = definition.minimum_per_prerequisite.unwrap_or(0);
-            counts.iter().sum::<u32>() >= needed && counts.iter().all(|count| *count >= minimum)
+            counts.iter().copied().fold(0, u32::saturating_add) >= needed
+                && counts.iter().all(|count| *count >= minimum)
         }
         Some(event) => ledger.qualifying_events.get(event).copied().unwrap_or(0) >= needed,
         None => false,
