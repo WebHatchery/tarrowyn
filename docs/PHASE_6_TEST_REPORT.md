@@ -472,3 +472,8 @@ known endpoints, in-world location positions, non-empty service data, route
 operational ranges, and action ticks that cannot point into the future. Two
 focused regressions cover a malformed location access note and a future route
 action timestamp.
+
+Market-order integrity now validates bounded order identity text, the supported
+one-to-99 quantity range, creation ticks, and status-consistent settlement
+timestamps. Two focused regressions cover an oversized quantity and an open
+order carrying a settled timestamp.

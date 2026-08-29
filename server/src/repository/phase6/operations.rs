@@ -423,15 +423,27 @@ fn integrity_ok(state: &RepositoryState, config: &ServerConfig) -> bool {
         else {
             return false;
         };
-        location_ids.contains(order.origin_location_id.as_str())
+        bounded_market(&order.order_id, 160)
+            && bounded_market(&order.owner_account_id, 160)
+            && bounded_market(&order.owner_name, 160)
+            && location_ids.contains(order.origin_location_id.as_str())
             && location_ids.contains(order.destination_location_id.as_str())
             && (account_ids.contains(order.owner_account_id.as_str())
                 || order.owner_account_id == "former-resident")
             && route.origin_location_id == order.origin_location_id
             && route.destination_location_id == order.destination_location_id
-            && order.quantity > 0
+            && (1..=99).contains(&order.quantity)
             && order.unit_price > 0
             && order.total_price == order.unit_price.saturating_mul(order.quantity)
+            && order.created_tick <= state.tick
+            && match order.status {
+                tarrowyn_protocol::MarketOrderStatus::Open
+                | tarrowyn_protocol::MarketOrderStatus::Failed => order.settled_tick.is_none(),
+                tarrowyn_protocol::MarketOrderStatus::Fulfilled
+                | tarrowyn_protocol::MarketOrderStatus::Cancelled => order
+                    .settled_tick
+                    .is_some_and(|tick| tick >= order.created_tick && tick <= state.tick),
+            }
     });
     let travel_ids_ok = unique_non_empty(
         state
@@ -540,6 +552,12 @@ fn integrity_ok(state: &RepositoryState, config: &ServerConfig) -> bool {
 fn unique_non_empty<'a>(mut values: impl Iterator<Item = &'a str>) -> bool {
     let mut seen = HashSet::new();
     values.all(|value| !value.trim().is_empty() && seen.insert(value))
+}
+
+fn bounded_market(value: &str, max_chars: usize) -> bool {
+    !value.trim().is_empty()
+        && value.chars().count() <= max_chars
+        && !value.chars().any(char::is_control)
 }
 
 fn alert_flags(

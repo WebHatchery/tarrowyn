@@ -12,6 +12,7 @@ mod chat_validation;
 mod events;
 mod input_bounds;
 mod integrity;
+mod market_integrity;
 mod movement_validation;
 mod numeric_boundaries;
 mod persistence;
