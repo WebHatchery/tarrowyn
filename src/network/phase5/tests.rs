@@ -174,6 +174,61 @@ fn route_repair_button_queues_an_authoritative_repair() {
 }
 
 #[test]
+fn market_button_waits_for_the_order_destination() {
+    let mut client = Phase5Client::new();
+    client.own_account_id = Some("account-1".to_owned());
+    client.region = Some(tarrowyn_protocol::RegionSnapshot {
+        region_id: "hearthlands".to_owned(),
+        season: "thaw".to_owned(),
+        calendar_day: 1,
+        locations: Vec::new(),
+        routes: Vec::new(),
+        visible_settlements: Vec::new(),
+        player_location_id: "hearth".to_owned(),
+        travel: None,
+        interest_radius: 12,
+        cursor: 0,
+    });
+    client.market = Some(MarketSnapshot {
+        orders: vec![MarketOrder {
+            order_id: "saltmere-seeds".to_owned(),
+            owner_account_id: "account-1".to_owned(),
+            owner_name: "The traveller".to_owned(),
+            origin_location_id: "hearth".to_owned(),
+            destination_location_id: "saltmere".to_owned(),
+            commodity: tarrowyn_protocol::CommodityKind::Seeds,
+            quantity: 1,
+            unit_price: 4,
+            total_price: 4,
+            status: tarrowyn_protocol::MarketOrderStatus::Open,
+            created_tick: 1,
+            settled_tick: None,
+            route_id: "hearth-road".to_owned(),
+            fallback_used: false,
+        }],
+        stock_notes: Vec::new(),
+        prices: Vec::new(),
+        cursor: 1,
+    });
+
+    client.queue_cycle("market-region");
+    assert!(client.commands.is_empty());
+
+    client
+        .region
+        .as_mut()
+        .expect("regional projection")
+        .player_location_id = "saltmere".to_owned();
+    client.queue_cycle("market-region");
+    assert!(matches!(
+        client.commands.front(),
+        Some(Phase5Command::Market(request))
+            if request.action == MarketOrderAction::Fulfil
+                && request.order_id.as_deref() == Some("saltmere-seeds")
+    ));
+}
+
+#[test]
 fn linked_production_session_replaces_the_guest_projection() {
     let mut client = Phase5Client::new();
     client.linked_account = Some(AuthLinkResponse {

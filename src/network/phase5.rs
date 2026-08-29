@@ -325,11 +325,12 @@ impl Phase5Client {
         let Some(region) = self.region.as_ref() else {
             return;
         };
+        let location = region.player_location_id.as_str();
         if let Some(order) = self.market.as_ref().and_then(|market| {
-            market
-                .orders
-                .iter()
-                .find(|order| order.status == tarrowyn_protocol::MarketOrderStatus::Open)
+            market.orders.iter().find(|order| {
+                order.status == tarrowyn_protocol::MarketOrderStatus::Open
+                    && order.destination_location_id == location
+            })
         }) {
             self.commands
                 .push_back(Phase5Command::Market(MarketOrderRequest {
@@ -340,7 +341,17 @@ impl Phase5Client {
                     commodity: None,
                     quantity: None,
                 }));
-        } else if region.player_location_id == "hearth" {
+        } else if location == "hearth"
+            && !self.market.as_ref().is_some_and(|market| {
+                market.orders.iter().any(|order| {
+                    order.status == tarrowyn_protocol::MarketOrderStatus::Open
+                        && self
+                            .own_account_id
+                            .as_deref()
+                            .is_some_and(|account_id| order.owner_account_id == account_id)
+                })
+            })
+        {
             self.commands
                 .push_back(Phase5Command::Market(MarketOrderRequest {
                     request_id,
