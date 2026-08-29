@@ -449,6 +449,32 @@ fn integrity_ok(state: &RepositoryState) -> bool {
             && travel.progress <= 100
             && travel.risk_percent <= 100
     });
+    let events_ok = unique_non_empty(
+        state
+            .phase5
+            .events
+            .iter()
+            .map(|event| event.event_id.as_str()),
+    ) && state.phase5.events.iter().all(|event| {
+        !event.affected_location_ids.is_empty()
+            && event
+                .affected_location_ids
+                .iter()
+                .all(|location_id| location_ids.contains(location_id.as_str()))
+    });
+    let households_ok = unique_non_empty(
+        state
+            .phase5
+            .households
+            .iter()
+            .map(|household| household.household_id.as_str()),
+    ) && state.phase5.households.iter().all(|household| {
+        location_ids.contains(household.origin_location_id.as_str())
+            && household
+                .destination_location_id
+                .as_deref()
+                .is_none_or(|location_id| location_ids.contains(location_id))
+    });
     let unique_characters = state
         .identities
         .values()
@@ -463,6 +489,8 @@ fn integrity_ok(state: &RepositoryState) -> bool {
         && regional_topology_ok
         && market_orders_ok
         && travel_ids_ok
+        && events_ok
+        && households_ok
         && state.phase5.routes.iter().all(|route| {
             route.length > 0
                 && route.risk_percent <= 100

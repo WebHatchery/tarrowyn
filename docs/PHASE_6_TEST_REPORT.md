@@ -362,3 +362,7 @@ unknown routes or locations, and restored journeys whose route reference or
 endpoints no longer resolve. Focused repository regressions cover both failure
 boundaries; this maintenance slice used the targeted server test and did not
 rerun the full release gate.
+
+The same check now rejects regional event records with empty or unknown
+affected-location IDs and household records with unknown movement endpoints.
+Focused regressions cover those two restore boundaries as well.

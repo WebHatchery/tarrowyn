@@ -1,5 +1,8 @@
 use super::super::{ServerConfig, WorldRepository};
-use tarrowyn_protocol::{CommodityKind, MarketOrder, MarketOrderStatus, TravelState, TravelStatus};
+use tarrowyn_protocol::{
+    CommodityKind, MarketOrder, MarketOrderStatus, RegionalEvent, RegionalEventStage,
+    RegionalHousehold, TravelState, TravelStatus,
+};
 
 #[test]
 fn invalid_regional_route_bounds_degrade_readiness() {
@@ -126,6 +129,57 @@ fn invalid_travel_reference_degrades_readiness() {
                 recovery_note: None,
             },
         );
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
+fn invalid_event_location_reference_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state.phase5.events.push(RegionalEvent {
+            event_id: "integrity-event".to_owned(),
+            title: "A malformed signal".to_owned(),
+            kind: "weather".to_owned(),
+            stage: RegionalEventStage::Signal,
+            affected_location_ids: vec!["missing-location".to_owned()],
+            effects: vec!["The signal cannot be placed".to_owned()],
+            cause: "integrity test".to_owned(),
+            intervention_options: vec!["watch".to_owned()],
+            chosen_intervention: None,
+            outcome: None,
+            started_tick: 0,
+            updated_tick: 0,
+            cursor: 0,
+        });
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
+fn invalid_household_location_reference_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state.phase5.households.push(RegionalHousehold {
+            household_id: "integrity-household".to_owned(),
+            household_name: "A malformed household".to_owned(),
+            origin_location_id: "missing-location".to_owned(),
+            destination_location_id: Some("hearth".to_owned()),
+            status: "considering".to_owned(),
+            reason: "integrity test".to_owned(),
+            service: "test service".to_owned(),
+            departure_tick: None,
+            arrival_tick: None,
+            history: vec!["integrity test".to_owned()],
+        });
     }
 
     let health = repository.ops_health().data;
