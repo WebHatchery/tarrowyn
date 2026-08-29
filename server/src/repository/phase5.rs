@@ -19,7 +19,7 @@ mod state;
 use logic::*;
 pub(super) use market::{
     cancel_order, close_deleted_account_orders, create_order, fulfil_order, reconcile_market_order,
-    trim_market_orders,
+    trim_market_orders, MAX_MARKET_ORDERS,
 };
 pub(super) use recovery::clear_stuck_travel;
 use settlements::{refresh_settlement_facilities, update_households, update_settlements};

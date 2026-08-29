@@ -88,3 +88,27 @@ fn market_order_history_evicts_settled_records_and_preserves_live_escrow() {
         5
     );
 }
+
+#[test]
+fn over_capacity_market_history_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = guest(&repository, "phase5-market-integrity");
+    repository
+        .market_order(
+            &session.account_token,
+            create_request("market-integrity-seed"),
+        )
+        .expect("market order");
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        let order = state
+            .phase5
+            .market_orders
+            .first()
+            .cloned()
+            .expect("market order");
+        state.phase5.market_orders.resize(129, order);
+    }
+
+    assert!(!repository.ops_health().data.integrity_ok);
+}
