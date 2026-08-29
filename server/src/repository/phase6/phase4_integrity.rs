@@ -101,11 +101,13 @@ pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
                 .iter()
                 .map(|record| record.infrastructure_id.as_str()),
         )
-        && state
-            .phase4
-            .infrastructure
-            .iter()
-            .all(|record| record.condition <= 100 && record.service_quality <= 100);
+        && state.phase4.infrastructure.iter().all(|record| {
+            position_in_world(record.position, config)
+                && record.condition <= 100
+                && record.service_quality <= 100
+                && record.status == super::super::phase4::infrastructure_status(record.condition)
+                && record.last_maintained_tick <= state.tick
+        });
 
     let claims_ok = unique_non_empty(
         state

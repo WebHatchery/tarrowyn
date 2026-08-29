@@ -129,3 +129,60 @@ fn requested_phase4_claim_cannot_have_building_access() {
     assert!(!health.ready);
     assert!(!health.integrity_ok);
 }
+
+#[test]
+fn out_of_bounds_phase4_infrastructure_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state
+            .phase4
+            .infrastructure
+            .first_mut()
+            .expect("infrastructure")
+            .position
+            .x = state.phase5.locations.len() as i32 + 100;
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
+fn mismatched_phase4_infrastructure_status_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        let record = state
+            .phase4
+            .infrastructure
+            .first_mut()
+            .expect("infrastructure");
+        record.condition = 0;
+        record.status = tarrowyn_protocol::InfrastructureStatus::Operational;
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
+fn future_phase4_infrastructure_maintenance_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        let future_tick = state.tick.saturating_add(1);
+        state
+            .phase4
+            .infrastructure
+            .first_mut()
+            .expect("infrastructure")
+            .last_maintained_tick = future_tick;
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
