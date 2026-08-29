@@ -49,28 +49,19 @@ impl Default for Phase5State {
 
 pub(crate) fn fresh(_config: &ServerConfig) -> Phase5State {
     let household = crate::content::regional_household_template("household-maren");
-    let locations = vec![
-        location("hearth"),
-        location("whisperwood-outpost"),
-        location("saltmere"),
-    ];
-    let routes = vec![
-        route("north-pack-road"),
-        route("saltmere-ferry"),
-        route("watch-trail"),
-    ];
-    let settlements = vec![
-        settlement("hearth-settlement"),
-        settlement("whisperwood-settlement"),
-        settlement("saltmere-settlement"),
-    ];
+    let locations = crate::content::region_location_ids()
+        .iter()
+        .map(|id| location(id))
+        .collect();
+    let routes = crate::content::region_route_ids()
+        .iter()
+        .map(|id| route(id))
+        .collect();
+    let settlement_ids = crate::content::settlement_ids();
+    let settlements = settlement_ids.iter().map(|id| settlement(id)).collect();
     let mut stock = HashMap::new();
-    for settlement_id in [
-        "hearth-settlement",
-        "whisperwood-settlement",
-        "saltmere-settlement",
-    ] {
-        let profile = crate::content::settlement_profile(settlement_id);
+    for settlement_id in settlement_ids {
+        let profile = crate::content::settlement_profile(&settlement_id);
         let location = profile.location;
         for entry in profile.initial_stock {
             stock.insert(stock_key(&location, &entry.commodity), entry.quantity);

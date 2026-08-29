@@ -45,6 +45,9 @@ topology, timing, risk, capacity, and status follow the validated region
 manifest.
 The location-profile regression confirms authoritative names, kinds, positions,
 roles, resources, services, and condition follow the validated region manifest.
+The regional-bootstrap regression confirms fresh location, route, settlement,
+and initial-stock collections are assembled from validated catalog IDs rather
+than a second hard-coded launch list.
 The fresh-world farming regression confirms the shared plot projection and
 field tiles initialize from the same validated region plot positions rather
 than a separate legacy grid.

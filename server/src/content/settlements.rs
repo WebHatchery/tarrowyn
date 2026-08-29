@@ -121,8 +121,8 @@ pub(super) fn validate(
     Ok(())
 }
 
-pub(crate) fn settlement_profile(settlement_id: &str) -> SettlementProfile {
-    let settlements = SETTLEMENT_CATALOG.get_or_init(|| {
+fn settlement_catalog() -> &'static Vec<SettlementManifest> {
+    SETTLEMENT_CATALOG.get_or_init(|| {
         let settlements: SettlementsManifest = parse_json_labeled(
             "settlements.json",
             macroquad_toolkit::include_json_str!("../../../assets/data/settlements.json"),
@@ -132,7 +132,18 @@ pub(crate) fn settlement_profile(settlement_id: &str) -> SettlementProfile {
         validate_settlements(&settlements, super::region_catalog(), &item_ids)
             .expect("settlements content must satisfy its schema");
         settlements.settlements
-    });
+    })
+}
+
+pub(crate) fn settlement_ids() -> Vec<String> {
+    settlement_catalog()
+        .iter()
+        .map(|settlement| settlement.id.clone())
+        .collect()
+}
+
+pub(crate) fn settlement_profile(settlement_id: &str) -> SettlementProfile {
+    let settlements = settlement_catalog();
     let settlement = settlements
         .iter()
         .find(|settlement| settlement.id == settlement_id)

@@ -204,6 +204,34 @@ fn farm_animal_position_follows_the_validated_region_manifest() {
 }
 
 #[test]
+fn regional_bootstrap_ids_follow_the_validated_catalogs() {
+    assert_eq!(
+        super::region_location_ids(),
+        vec![
+            "hearth".to_owned(),
+            "whisperwood-outpost".to_owned(),
+            "saltmere".to_owned()
+        ]
+    );
+    assert_eq!(
+        super::region_route_ids(),
+        vec![
+            "north-pack-road".to_owned(),
+            "saltmere-ferry".to_owned(),
+            "watch-trail".to_owned()
+        ]
+    );
+    assert_eq!(
+        super::settlement_ids(),
+        vec![
+            "hearth-settlement".to_owned(),
+            "whisperwood-settlement".to_owned(),
+            "saltmere-settlement".to_owned()
+        ]
+    );
+}
+
+#[test]
 fn route_profiles_follow_the_validated_region_manifest() {
     let ferry = super::region_route_profile("saltmere-ferry");
     assert_eq!(ferry.name, "Saltmere ferry");

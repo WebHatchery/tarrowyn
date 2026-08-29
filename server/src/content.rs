@@ -17,7 +17,9 @@ pub(crate) use frontier::{contract_template, threat_template};
 pub(crate) use households::{opportunity_template, regional_household_template};
 pub(crate) use npcs::household as npc_household;
 pub(crate) use recipes::recipe_template;
-pub(crate) use settlements::{infrastructure_profiles, settlement_profile, InfrastructureProfile};
+pub(crate) use settlements::{
+    infrastructure_profiles, settlement_ids, settlement_profile, InfrastructureProfile,
+};
 
 const REQUIRED_MANIFESTS: &[&str] = &[
     "game_config.json",
@@ -373,6 +375,22 @@ pub(crate) fn farm_plot_positions() -> Vec<Position> {
 
 pub(crate) fn farm_animal_position() -> Position {
     region_catalog().farm_animal_position
+}
+
+pub(crate) fn region_location_ids() -> Vec<String> {
+    region_catalog()
+        .locations
+        .iter()
+        .map(|location| location.id.clone())
+        .collect()
+}
+
+pub(crate) fn region_route_ids() -> Vec<String> {
+    region_catalog()
+        .routes
+        .iter()
+        .map(|route| route.id.clone())
+        .collect()
 }
 
 pub(crate) fn region_route_profile(route_id: &str) -> RegionRouteProfile {
