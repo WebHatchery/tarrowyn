@@ -4,7 +4,8 @@ use crate::state::WorldState;
 use macroquad_toolkit::grid::TilePos;
 use macroquad_toolkit::ui::VirtualUi;
 use tarrowyn_protocol::{
-    ChatMessage, ChronicleEntry, ChronicleSummary, OpportunitySignal, WildernessZone,
+    ChatMessage, ChronicleEntry, ChronicleSummary, LocalCombatState, OpportunitySignal,
+    WildernessZone,
 };
 
 #[derive(Debug, Clone, PartialEq)]
@@ -54,6 +55,7 @@ pub struct UiContext<'a> {
     pub phase5_summary: &'a str,
     pub account_deletion_armed: bool,
     pub crafting: Option<CraftingView>,
+    pub combat: Option<&'a LocalCombatState>,
     pub knocked_out: bool,
     pub ui: &'a VirtualUi,
 }

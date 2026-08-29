@@ -9,6 +9,7 @@ use tarrowyn_protocol::{
 fn local_combat_accepts_one_opening_weapon_technique() {
     let repo = WorldRepository::new(ServerConfig {
         movement_cooldown_ticks: 0,
+        combat_action_cooldown_ticks: 0,
         ..ServerConfig::default()
     });
     let session = guest(&repo, "phase4-technique");
@@ -100,9 +101,75 @@ fn local_combat_accepts_one_opening_weapon_technique() {
 }
 
 #[test]
+fn local_combat_rejects_same_tick_actions_until_the_server_window_opens() {
+    let repo = WorldRepository::new(ServerConfig {
+        movement_cooldown_ticks: 0,
+        combat_action_cooldown_ticks: 1,
+        ..ServerConfig::default()
+    });
+    let session = guest(&repo, "phase4-combat-timing");
+    for (index, (dx, dy)) in [(1, 0), (1, 0), (0, -1), (0, -1)].into_iter().enumerate() {
+        repo.movement(
+            &session.account_token,
+            tarrowyn_protocol::MovementIntent {
+                request_id: format!("timing-move-{index}"),
+                dx,
+                dy,
+            },
+        )
+        .unwrap();
+    }
+    let prepared = repo
+        .local_combat(
+            &session.account_token,
+            LocalCombatRequest {
+                request_id: "timing-prepare".to_owned(),
+                action: LocalCombatAction::Prepare,
+                weapon: WeaponKind::IronSword,
+            },
+        )
+        .unwrap()
+        .data;
+    assert!(prepared.accepted);
+    assert_eq!(prepared.combat.action_available_at_tick, 1);
+
+    let too_soon = repo
+        .local_combat(
+            &session.account_token,
+            LocalCombatRequest {
+                request_id: "timing-too-soon".to_owned(),
+                action: LocalCombatAction::Strike,
+                weapon: WeaponKind::IronSword,
+            },
+        )
+        .unwrap()
+        .data;
+    assert!(!too_soon.accepted);
+    assert!(too_soon.reason.unwrap().contains("server beat 1"));
+    assert_eq!(too_soon.combat.turn, 0);
+
+    repo.tick();
+    let after_window = repo
+        .local_combat(
+            &session.account_token,
+            LocalCombatRequest {
+                request_id: "timing-after-window".to_owned(),
+                action: LocalCombatAction::Strike,
+                weapon: WeaponKind::IronSword,
+            },
+        )
+        .unwrap()
+        .data;
+    assert!(after_window.accepted);
+    assert_eq!(after_window.combat.turn, 1);
+    assert_eq!(after_window.combat.enemy_health, 1);
+}
+
+#[test]
 fn local_combat_can_spend_a_bandage_after_a_bounded_injury() {
     let repo = WorldRepository::new(ServerConfig {
         movement_cooldown_ticks: 0,
+        combat_action_cooldown_ticks: 0,
         ..ServerConfig::default()
     });
     let session = guest(&repo, "phase4-bandage");
@@ -159,6 +226,7 @@ fn local_combat_can_spend_a_bandage_after_a_bounded_injury() {
 fn local_combat_reposition_protects_the_next_strike() {
     let repo = WorldRepository::new(ServerConfig {
         movement_cooldown_ticks: 0,
+        combat_action_cooldown_ticks: 0,
         ..ServerConfig::default()
     });
     let session = guest(&repo, "phase4-reposition");
@@ -215,6 +283,7 @@ fn local_combat_reposition_protects_the_next_strike() {
 fn knocked_out_local_player_cannot_reenter_before_recovery() {
     let repo = WorldRepository::new(ServerConfig {
         movement_cooldown_ticks: 0,
+        combat_action_cooldown_ticks: 0,
         ..ServerConfig::default()
     });
     let session = guest(&repo, "phase4-combat-recovery-boundary");
@@ -351,6 +420,7 @@ fn knocked_out_local_player_cannot_reenter_before_recovery() {
 fn local_combat_can_cast_one_wind_spark_per_encounter() {
     let repo = WorldRepository::new(ServerConfig {
         movement_cooldown_ticks: 0,
+        combat_action_cooldown_ticks: 0,
         ..ServerConfig::default()
     });
     let session = guest(&repo, "phase4-spell");

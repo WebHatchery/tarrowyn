@@ -55,6 +55,10 @@ outside the visible 0–100 interaction range before completing the order.
 The fixed-NPC household regression confirms the Bellweather service household
 follows validated NPC-household content without exposing a general family
 simulation contract.
+The local-combat regression confirms accepted actions publish a persisted
+server-tick action window, reject same-tick bursts, and become available again
+after the authoritative tick advances. Older local-combat snapshots default
+the new window boundary to tick zero.
 The skill-catalogue regressions confirm direct root guidance, non-empty advanced
 discovery requirements, and re-evaluation of stored prerequisite history when a
 new advanced merger becomes eligible.

@@ -39,6 +39,8 @@ pub(super) fn draw_sidebar(
     );
     draw_move_pad(content.x + 238.0, top + 47.0, mouse, actions);
 
+    draw_combat_status(ctx, content, top);
+
     draw_button_row(
         content,
         top + 141.0,
@@ -300,6 +302,44 @@ pub(super) fn draw_sidebar(
         content.x,
         top + 431.0,
         TextStyle::new(9.0, dark::TEXT_DIM).params(),
+    );
+}
+
+fn draw_combat_status(ctx: &UiContext<'_>, content: Rect, top: f32) {
+    let Some(combat) = ctx.combat else {
+        return;
+    };
+    let available_in = combat
+        .action_available_at_tick
+        .saturating_sub(ctx.server_tick);
+    let timing = if available_in == 0 {
+        "Action ready".to_owned()
+    } else {
+        format!(
+            "Action opens in {available_in} beat{}",
+            if available_in == 1 { "" } else { "s" }
+        )
+    };
+    let status = match combat.status {
+        tarrowyn_protocol::LocalCombatStatus::Ready => "ready",
+        tarrowyn_protocol::LocalCombatStatus::Engaged => "engaged",
+        tarrowyn_protocol::LocalCombatStatus::Victorious => "victorious",
+        tarrowyn_protocol::LocalCombatStatus::KnockedOut => "knocked out",
+        tarrowyn_protocol::LocalCombatStatus::Retreated => "retreated",
+    };
+    draw_surface(
+        Rect::new(content.x, top + 101.0, content.w, 34.0),
+        &SurfaceStyle::new(Color::new(0.075, 0.105, 0.115, 1.0))
+            .with_border(1.0, Color::new(0.62, 0.42, 0.22, 0.7)),
+    );
+    draw_ui_text_ex(
+        &format!(
+            "Encounter {status}  •  enemy {}  •  you {}  •  {timing}",
+            combat.enemy_health, combat.player_health
+        ),
+        content.x + 8.0,
+        top + 115.0,
+        TextStyle::new(10.0, GOLD).params(),
     );
 }
 

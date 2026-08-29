@@ -513,6 +513,8 @@ pub struct LocalCombatState {
     pub carried_risk: String,
     pub recovery_cost: u32,
     #[serde(default)]
+    pub action_available_at_tick: u64,
+    #[serde(default)]
     pub reposition_ready: bool,
     #[serde(default)]
     pub spell_ready: bool,

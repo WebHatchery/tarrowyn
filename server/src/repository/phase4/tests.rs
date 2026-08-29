@@ -486,6 +486,7 @@ fn professions_knowledge_and_households_make_the_settlement_interdependent() {
 fn local_combat_has_readable_recovery_and_safe_storage_rules() {
     let repo = WorldRepository::new(ServerConfig {
         movement_cooldown_ticks: 0,
+        combat_action_cooldown_ticks: 0,
         ..ServerConfig::default()
     });
     let session = guest(&repo, "phase4-combat");
@@ -561,6 +562,7 @@ fn local_combat_has_readable_recovery_and_safe_storage_rules() {
 fn local_combat_records_spear_and_axe_experience() {
     let repo = WorldRepository::new(ServerConfig {
         movement_cooldown_ticks: 0,
+        combat_action_cooldown_ticks: 0,
         ..ServerConfig::default()
     });
     let session = guest(&repo, "phase4-weapon-families");
@@ -634,10 +636,36 @@ fn phase_four_records_survive_restart_and_missing_phase_four_data_migrates() {
     ));
     let config = ServerConfig {
         persistence_path: Some(path.to_string_lossy().into_owned()),
+        movement_cooldown_ticks: 0,
+        combat_action_cooldown_ticks: 1,
         ..ServerConfig::default()
     };
     let first = WorldRepository::new(config.clone());
     let session = guest(&first, "phase4-restart");
+    for (index, (dx, dy)) in [(1, 0), (1, 0), (0, -1), (0, -1)].into_iter().enumerate() {
+        first
+            .movement(
+                &session.account_token,
+                tarrowyn_protocol::MovementIntent {
+                    request_id: format!("restart-move-{index}"),
+                    dx,
+                    dy,
+                },
+            )
+            .unwrap();
+    }
+    let prepared = first
+        .local_combat(
+            &session.account_token,
+            LocalCombatRequest {
+                request_id: "restart-combat-prepare".to_owned(),
+                action: LocalCombatAction::Prepare,
+                weapon: WeaponKind::IronSword,
+            },
+        )
+        .unwrap()
+        .data;
+    assert_eq!(prepared.combat.action_available_at_tick, 1);
     let mut office = governance_request(GovernanceAction::ClaimOffice, "restart-office");
     office.office_id = Some("steward".to_owned());
     assert!(
@@ -652,6 +680,14 @@ fn phase_four_records_survive_restart_and_missing_phase_four_data_migrates() {
     let resumed = WorldRepository::new(config.clone());
     let resumed_session = guest(&resumed, "phase4-restart");
     assert_eq!(resumed_session.character_id, session.character_id);
+    assert_eq!(
+        resumed
+            .combat_status(&resumed_session.account_token)
+            .unwrap()
+            .data
+            .action_available_at_tick,
+        1
+    );
     let governance = resumed
         .governance(
             &resumed_session.account_token,

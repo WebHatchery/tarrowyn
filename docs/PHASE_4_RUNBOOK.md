@@ -56,7 +56,10 @@ After obtaining a guest token from `POST /v1/session/guest`, inspect:
 - `GET /v1/knowledge` and `POST /v1/knowledge` for discover, record, teach,
   and apply; and
 - `GET /v1/households`, `GET /v1/combat/local`, and
-  `POST /v1/combat/local` for local-life clues and combat recovery.
+  `POST /v1/combat/local` for local-life clues and combat recovery. Combat
+  responses include `action_available_at_tick`; the default one-tick server
+  action window rejects same-tick bursts and is configurable with
+  `TARROWYN_COMBAT_ACTION_COOLDOWN_TICKS`.
 
 The repository fixtures cover these checks without a live server. Run the
 focused Phase 4 fixture with:
@@ -90,7 +93,9 @@ In the online client, use only visible controls:
 7. Walk near Whisperwood, tap `Local fight`, and use the visible buttons to
    prepare, try the first-exchange `Technique`, then strike or guard. Use
    `Bandage`, `Reposition`, or `Spell` as the encounter permits, and tap the
-   existing `Recover` control after a knockout.
+    existing `Recover` control after a knockout. After each accepted action,
+    read the visible `Action ready` or `Action opens in … beat` status before
+    sending the next action.
 
 `Reconnect` is the recovery path for timeouts and rejected commands; no step in
 this checklist requires a physical keyboard.

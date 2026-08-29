@@ -212,6 +212,7 @@ impl Game {
                     phase5_summary: &client.phase5_summary(),
                     account_deletion_armed: client.account_deletion_armed(),
                     crafting: client.crafting_view(),
+                    combat: client.combat_state(),
                     knocked_out: client
                         .projection
                         .player
@@ -261,6 +262,7 @@ impl Game {
                         "Regional map and production account are available on the shared road.",
                     account_deletion_armed: false,
                     crafting: None,
+                    combat: None,
                     knocked_out: false,
                     ui: &virtual_ui,
                 })

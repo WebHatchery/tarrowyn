@@ -85,6 +85,7 @@ fn guard_button_queues_an_explicit_local_defense() {
         stored_property_safe: true,
         carried_risk: "A seed may be risked.".to_owned(),
         recovery_cost: 4,
+        action_available_at_tick: 0,
         reposition_ready: false,
         spell_ready: false,
     });
@@ -111,6 +112,7 @@ fn technique_button_queues_an_explicit_opening() {
         stored_property_safe: true,
         carried_risk: "A seed may be risked.".to_owned(),
         recovery_cost: 4,
+        action_available_at_tick: 0,
         reposition_ready: false,
         spell_ready: false,
     });
@@ -137,6 +139,7 @@ fn bandage_button_queues_an_explicit_item_use() {
         stored_property_safe: true,
         carried_risk: "A seed may be risked.".to_owned(),
         recovery_cost: 4,
+        action_available_at_tick: 0,
         reposition_ready: false,
         spell_ready: false,
     });
@@ -163,6 +166,7 @@ fn reposition_button_queues_an_explicit_movement_action() {
         stored_property_safe: true,
         carried_risk: "A seed may be risked.".to_owned(),
         recovery_cost: 4,
+        action_available_at_tick: 0,
         reposition_ready: false,
         spell_ready: false,
     });
@@ -189,6 +193,7 @@ fn spell_button_queues_an_explicit_cast() {
         stored_property_safe: true,
         carried_risk: "A seed may be risked.".to_owned(),
         recovery_cost: 4,
+        action_available_at_tick: 0,
         reposition_ready: false,
         spell_ready: true,
     });

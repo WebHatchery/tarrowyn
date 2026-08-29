@@ -160,7 +160,12 @@ clears the state. Every active encounter command also remains bound to the
 threat's local range; walking away pauses the encounter until the character
 returns to Whisperwood Edge. Stored property is always safe. At most one
 carried seed is shown as the risk, and the recovery cost is visible before a
-recovery choice.
+recovery choice. Accepted local actions also advance a persisted server-side
+action window. The default one-tick window prevents same-tick request bursts
+from resolving several actions; `TARROWYN_COMBAT_ACTION_COOLDOWN_TICKS` can
+shorten or lengthen that deployment boundary. The response exposes the next
+available tick, and the client shows the remaining window beside the action
+bar so timing is readable without requiring a keyboard.
 The existing Phase 3 combat/recovery contract remains available for the
 Brambleback contract; the Phase 4 local endpoint completes the readable
 multi-turn loop.
@@ -171,6 +176,7 @@ The repository storage version is now 15. `StoredState.phase4` is serde-defaulte
 so Phase 1–3 documents without the field load a fresh, safe Phase 4 society.
 Existing identities, inventory, plots, Phase 3 claims, events, and chronicle
 entries are retained, and older local-combat records default the new
-reposition opening and wind spark to closed. New request caches use stable account/request keys and
+action window to tick zero, with the reposition opening and wind spark closed.
+New request caches use stable account/request keys and
 are persisted with the new records, so replaying a request returns its original
 authoritative result without paying twice.

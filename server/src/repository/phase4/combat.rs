@@ -80,6 +80,14 @@ impl super::super::WorldRepository {
                 "Return to Whisperwood Edge before continuing the local encounter.".to_owned(),
             );
             return finish_local_combat(self, &mut state, cache, response);
+        } else if combat.action_available_at_tick > state.tick {
+            response.reason = Some(format!(
+                "The encounter is still in motion; the next action opens at server beat {}.",
+                combat.action_available_at_tick
+            ));
+            response.prompt =
+                "Wait for the visible action window, then choose a combat control.".to_owned();
+            return finish_local_combat(self, &mut state, cache, response);
         }
         match request.action {
             LocalCombatAction::Prepare => {
@@ -290,6 +298,11 @@ impl super::super::WorldRepository {
                 }
             }
         }
+        if response.accepted {
+            combat.action_available_at_tick = state
+                .tick
+                .saturating_add(self.config.combat_action_cooldown_ticks);
+        }
         if response.accepted
             && request.action == LocalCombatAction::CastSpell
             && combat.status != LocalCombatStatus::Victorious
@@ -339,6 +352,7 @@ fn default_combat() -> LocalCombatState {
         carried_risk: "At most one carried seed is risked on knockout; the choice is shown first."
             .to_owned(),
         recovery_cost: 4,
+        action_available_at_tick: 0,
         reposition_ready: false,
         spell_ready: true,
     }

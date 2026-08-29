@@ -565,11 +565,13 @@ impl WorldRepository {
             }
         }
         if response.accepted {
+            let recovery_tick = state.tick;
             if let Some(local) = state.phase4.combat.get_mut(&key) {
                 local.status = tarrowyn_protocol::LocalCombatStatus::Ready;
                 local.enemy_health = 3;
                 local.player_health = 2;
                 local.turn = 0;
+                local.action_available_at_tick = recovery_tick;
             }
         }
         response.player = projection_for(&state, &key);

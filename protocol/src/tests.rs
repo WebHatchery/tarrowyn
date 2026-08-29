@@ -107,3 +107,22 @@ fn phase_three_frontier_commands_round_trip_with_stable_wire_names() {
     assert!(encoded.contains("\"action\":\"supply\""));
     assert!(encoded.contains("\"role\":\"builder\""));
 }
+
+#[test]
+fn local_combat_state_defaults_the_action_window_for_older_snapshots() {
+    let json = serde_json::json!({
+        "encounter_id": "whisperwood-local-1",
+        "enemy_name": "Brambleback scout",
+        "enemy_health": 3,
+        "player_health": 2,
+        "turn": 0,
+        "status": "ready",
+        "weapon": "iron_sword",
+        "injury_limit": 3,
+        "stored_property_safe": true,
+        "carried_risk": "A seed may be risked.",
+        "recovery_cost": 4
+    });
+    let state: LocalCombatState = serde_json::from_value(json).unwrap();
+    assert_eq!(state.action_available_at_tick, 0);
+}

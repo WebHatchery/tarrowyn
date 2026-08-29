@@ -11,6 +11,7 @@ use tarrowyn_protocol::{
     SkillResponse, SkillStatus, SkillsResponse, WeaponKind,
 };
 
+mod combat;
 mod recovery;
 mod summary;
 
@@ -550,33 +551,6 @@ impl Phase4Client {
         }));
     }
 
-    fn queue_combat(&mut self, request_id: String) {
-        let action = match self.combat.as_ref().map(|combat| combat.status) {
-            Some(tarrowyn_protocol::LocalCombatStatus::Engaged) => LocalCombatAction::Strike,
-            Some(tarrowyn_protocol::LocalCombatStatus::KnockedOut) => LocalCombatAction::Retreat,
-            _ => LocalCombatAction::Prepare,
-        };
-        self.commands
-            .push_back(Phase4Command::Combat(LocalCombatRequest {
-                request_id,
-                action,
-                weapon: next_combat_weapon(self.combat.as_ref().map(|combat| combat.weapon)),
-            }));
-    }
-
-    fn queue_combat_action(&mut self, request_id: String, action: LocalCombatAction) {
-        self.commands
-            .push_back(Phase4Command::Combat(LocalCombatRequest {
-                request_id,
-                action,
-                weapon: self
-                    .combat
-                    .as_ref()
-                    .map(|combat| combat.weapon)
-                    .unwrap_or(WeaponKind::IronSword),
-            }));
-    }
-
     fn apply_command(&mut self, response: Phase4CommandResponse, notices: &mut Vec<NetworkNotice>) {
         match response {
             Phase4CommandResponse::Governance(response) => {
@@ -775,6 +749,10 @@ impl OnlineClient {
                 target_start,
                 target_end,
             })
+    }
+
+    pub(crate) fn combat_state(&self) -> Option<&LocalCombatState> {
+        self.phase4.combat.as_ref()
     }
 
     pub(crate) fn queue_crafting_timing(&mut self) {

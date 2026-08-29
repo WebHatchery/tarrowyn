@@ -50,6 +50,8 @@ and public tax receipts,
 the regional state,
 production session/audit records, and queued account-deletion work, and
 the per-character skill ledger while retaining defaults for Phase 1–6 files.
+Local combat additionally persists its next server-tick action window, with
+serde defaults keeping older combat records available after upgrade.
 Every mutation replay cache is trimmed to a 512-entry per-scope bound on the
 authoritative world tick, including identity, regional, support, authentication,
 moderation, and earlier-phase command results.

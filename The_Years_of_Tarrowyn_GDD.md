@@ -299,7 +299,7 @@ The economy should be simulated in detail where transactions create visible fant
 
 Combat plays in real time. Every meaningful action is a skill use selected from visible touch/click controls: a basic melee attack, weapon technique, block, movement skill, item use, or spell cast. A physical keyboard may provide shortcuts, but the complete combat loop must remain playable from the on-screen action bar.
 
-Weapons, positioning, timing, range, cast time, recovery, resources, and enemy intent create tactical decisions without changing combat into a turn-based exchange. The authoritative server validates targets, timing, resources, movement, hits, effects, and defeat; the client presents immediate readable feedback and prediction only where it cannot decide outcomes unfairly.
+Weapons, positioning, timing, range, cast time, recovery, resources, and enemy intent create tactical decisions without changing combat into a turn-based exchange. The authoritative server validates targets, timing, resources, movement, hits, effects, and defeat; each accepted local action opens the next server-tick action window so request bursts cannot resolve several combat actions at once. The client presents the next available tick as a visible action-window status and gives immediate readable feedback, with prediction only where it cannot decide outcomes unfairly.
 
 ### Normal Defeat
 
