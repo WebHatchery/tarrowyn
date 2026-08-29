@@ -45,6 +45,7 @@ pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
         )
         && governance.offices.iter().all(|office| {
             optional_account_reference_ok(office.holder_account_id.as_deref(), &account_ids)
+                && office.last_active_tick <= state.tick
                 && office.vacant == office.holder_account_id.is_none()
         })
         && unique_non_empty(
@@ -58,6 +59,10 @@ pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
                 && optional_account_reference_ok(proposal.approved_by.as_deref(), &account_ids)
                 && !proposal.target.trim().is_empty()
                 && proposal.cost > 0
+                && proposal.created_tick <= state.tick
+                && proposal
+                    .completed_tick
+                    .is_none_or(|tick| tick >= proposal.created_tick && tick <= state.tick)
         })
         && unique_non_empty(
             governance
