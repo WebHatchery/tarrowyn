@@ -21,6 +21,7 @@ mod persistence;
 mod phase3;
 mod phase3_replay_integrity;
 mod phase3_state_integrity;
+mod phase4_claim_integrity;
 mod phase4_governance_integrity;
 mod phase4_infrastructure_integrity;
 mod phase4_replay_integrity;

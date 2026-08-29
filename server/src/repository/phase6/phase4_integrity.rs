@@ -177,19 +177,29 @@ pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
                 | tarrowyn_protocol::ClaimLifecycleStatus::Transferred
                 | tarrowyn_protocol::ClaimLifecycleStatus::Inherited
         );
-        !claim.plot_id.trim().is_empty()
+        bounded_text(&claim.claim_id, MAX_KNOWLEDGE_ID_CHARS)
+            && bounded_text(&claim.plot_id, MAX_KNOWLEDGE_ID_CHARS)
             && position_in_world(claim.position, config)
             && optional_account_reference_ok(claim.owner_account_id.as_deref(), &account_ids)
             && optional_account_reference_ok(claim.approved_by.as_deref(), &account_ids)
+            && claim.owner_account_id.is_some() == claim.owner_name.is_some()
+            && claim
+                .owner_name
+                .as_deref()
+                .is_none_or(|name| bounded_text(name, MAX_HOUSEHOLD_TEXT_CHARS))
             && claim.lease_days > 0
             && claim.started_tick <= state.tick
             && claim.expires_tick >= claim.started_tick
             && claim.last_active_tick <= state.tick
+            && (claim.started_at_unix_seconds == 0 && claim.expires_at_unix_seconds == 0
+                || claim.expires_at_unix_seconds > claim.started_at_unix_seconds)
             && claim.building_access == active_status
             && (claim.owner_account_id.is_some()
                 || claim.status == tarrowyn_protocol::ClaimLifecycleStatus::Reclaimed)
             && (claim.status != tarrowyn_protocol::ClaimLifecycleStatus::Requested
                 || claim.approved_by.is_none())
+            && bounded_text(&claim.protected_goods_policy, MAX_KNOWLEDGE_TEXT_CHARS)
+            && bounded_text(&claim.inspection_note, MAX_KNOWLEDGE_TEXT_CHARS)
     });
 
     let households_ok = !state.phase4.households.is_empty()
