@@ -314,6 +314,34 @@ fn event_button_waits_during_the_resolution_window() {
 }
 
 #[test]
+fn event_button_uses_the_server_listed_intervention() {
+    let mut client = Phase5Client::new();
+    let mut event = regional_event(
+        "event-intervention",
+        tarrowyn_protocol::RegionalEventStage::Escalation,
+        1,
+    );
+    event.intervention_options = vec![
+        "protect grain stores".to_owned(),
+        "close the ford".to_owned(),
+    ];
+    client.events = Some(RegionalEventsResponse {
+        events: vec![event],
+        cursor: 1,
+    });
+
+    client.queue_cycle("region-event");
+    let Some(Phase5Command::Event(request)) = client.commands.pop_front() else {
+        panic!("an active event should queue an intervention");
+    };
+    assert_eq!(request.action, RegionalEventAction::Intervene);
+    assert_eq!(
+        request.intervention.as_deref(),
+        Some("protect grain stores")
+    );
+}
+
+#[test]
 fn linked_production_session_replaces_the_guest_projection() {
     let mut client = Phase5Client::new();
     client.linked_account = Some(AuthLinkResponse {

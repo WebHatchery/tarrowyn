@@ -372,7 +372,7 @@ impl Phase5Client {
                     request_id,
                     action: RegionalEventAction::Intervene,
                     event_id: Some(event.event_id.clone()),
-                    intervention: Some("repair ferry markers".to_owned()),
+                    intervention: event.intervention_options.first().cloned(),
                 }
             }
             Some(event) if event.stage == tarrowyn_protocol::RegionalEventStage::Intervention => {
