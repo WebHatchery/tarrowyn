@@ -52,6 +52,13 @@ the seasons thaw, greenrise, harvest, and
 deepwinter. Seasons change opportunity and route pressure but do not close
 essential services. Phase 6 owns the long-session calendar compatibility check.
 
+Settlement activity is local rather than a regional broadcast: active character
+presence supports the nearest settlement, and open market orders pulse activity
+at their origin or destination. Each decision interval removes one activity
+point when nothing is supporting a settlement. Low activity combined with weak
+industry or governance exposes a strained or quiet condition, while the
+existing recovery opportunity remains visible for a later player.
+
 ## Event lifecycle
 
 The seeded `river-thaw` fixture follows signal, escalation, intervention,

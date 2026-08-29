@@ -3,6 +3,7 @@
 use super::super::models::RepositoryState;
 use super::super::*;
 use super::*;
+use std::collections::HashSet;
 use tarrowyn_protocol::{
     CommodityKind, MarketOrderStatus, RegionalEventStage, SettlementCondition, TravelStatus,
 };
@@ -71,25 +72,21 @@ pub(super) fn travel_response(
 }
 
 pub(super) fn update_settlements(state: &mut RepositoryState) {
-    let open_orders = state
-        .phase5
-        .market_orders
-        .iter()
-        .filter(|order| order.status == MarketOrderStatus::Open)
-        .count() as u8;
-    let travelling = state
-        .phase5
-        .travel
-        .values()
-        .filter(|travel| travel.status == TravelStatus::Travelling)
-        .count() as u8;
     let mut transitions = Vec::new();
-    for settlement in &mut state.phase5.settlements {
+    for index in 0..state.phase5.settlements.len() {
+        let location_id = state.phase5.settlements[index].location_id.clone();
+        let local_players = active_players_at(state, &location_id);
+        let local_orders = open_orders_at(state, &location_id);
+        let activity_pulse = local_players
+            .saturating_mul(4)
+            .saturating_add(local_orders.min(3).saturating_mul(2));
+        let settlement = &mut state.phase5.settlements[index];
         let is_hearth = settlement.location_id == "hearth";
         settlement.player_activity = settlement
             .player_activity
-            .saturating_add(if travelling > 0 { 2 } else { 0 })
-            .saturating_add(open_orders.min(3));
+            .saturating_sub(1)
+            .saturating_add(activity_pulse)
+            .min(100);
         if is_hearth {
             settlement.food = settlement.food.saturating_add(2).min(100);
             settlement.infrastructure = settlement.infrastructure.saturating_add(1).min(100);
@@ -103,9 +100,17 @@ pub(super) fn update_settlements(state: &mut RepositoryState) {
             settlement.population = settlement.population.saturating_add(1).min(99);
         }
         let old = settlement.condition;
-        settlement.condition = if settlement.food < 35 || settlement.population <= 6 {
+        let low_activity = settlement.player_activity < 15;
+        settlement.condition = if settlement.food < 35
+            || settlement.population <= 6
+            || (low_activity && settlement.governance < 50)
+        {
             SettlementCondition::Quiet
-        } else if settlement.safety < 45 || settlement.infrastructure < 45 {
+        } else if settlement.safety < 45
+            || settlement.infrastructure < 45
+            || settlement.governance < 45
+            || (low_activity && settlement.industry < 45)
+        {
             SettlementCondition::Strained
         } else if settlement.condition == SettlementCondition::Quiet
             && settlement.food > 50
@@ -143,6 +148,31 @@ pub(super) fn update_settlements(state: &mut RepositoryState) {
     for (location, old, new) in transitions {
         record_regional(state, &[location.as_str()], "settlement condition", &format!("A settlement moved from {old:?} to {new:?}; its vacancies and recovery work remain visible."));
     }
+}
+
+fn active_players_at(state: &RepositoryState, location_id: &str) -> u8 {
+    let mut identity_keys = HashSet::new();
+    state
+        .sessions
+        .values()
+        .filter(|session| identity_keys.insert(session.identity_key.as_str()))
+        .filter(|session| player_location(state, &session.identity_key) == location_id)
+        .count()
+        .min(u8::MAX as usize) as u8
+}
+
+fn open_orders_at(state: &RepositoryState, location_id: &str) -> u8 {
+    state
+        .phase5
+        .market_orders
+        .iter()
+        .filter(|order| {
+            order.status == MarketOrderStatus::Open
+                && (order.origin_location_id == location_id
+                    || order.destination_location_id == location_id)
+        })
+        .count()
+        .min(u8::MAX as usize) as u8
 }
 
 pub(super) fn update_households(state: &mut RepositoryState) {

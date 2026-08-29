@@ -15,6 +15,12 @@ effects on route safety, prices, and settlement confidence. The Maren household
 changed from considering to travelling or arrived as the bounded household
 interval advanced. `/v1/law` returned the protected no-PvP boundary.
 
+The settlement regression also leaves the Hearth supported by an active
+character while Saltmere loses unattended activity locally. After the session
+expires, the Hearth activity signal declines and Saltmere exposes a strained
+condition through its low activity and weak industry, without removing access
+to the regional projection.
+
 The server tests cover travel interruption/recovery, market settlement,
 regional event cursor recovery, household history, OIDC-style guest linking,
 session refresh, and revocation. The browser-facing touch pass uses the

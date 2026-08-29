@@ -331,6 +331,8 @@ A remote homestead can potentially become a hamlet, village, town, city, duchy, 
 
 Growth emerges from population, infrastructure, food, trade, safety, industry, governance, and player activity.
 
+The regional projection keeps player activity local to each settlement: active characters and open orders support the places they touch, while unattended activity fades between decision intervals. Low activity combined with weak local industry or governance can expose a strained or quiet settlement without making the location immediately unplayable.
+
 ### Decline and Abandonment
 
 Settlements may also shrink. If players leave and no one takes responsibility, businesses can close, NPC families can migrate, infrastructure can deteriorate, and a former town may eventually become an abandoned site.

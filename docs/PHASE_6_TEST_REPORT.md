@@ -65,6 +65,9 @@ leaking an opaque Unix timestamp.
 The knowledge-visibility regression confirms undiscovered methods are redacted
 for unrelated players, become readable for a taught learner, and become public
 only after the discoverer records them in the guild archive.
+The settlement-activity regression confirms activity is scoped to the touched
+settlement, decays after the last session expires, and exposes a low-activity
+strained condition without deleting the settlement projection.
 The skill-catalogue regressions confirm direct root guidance, non-empty advanced
 discovery requirements, and re-evaluation of stored prerequisite history when a
 new advanced merger becomes eligible.
