@@ -51,7 +51,11 @@ impl super::super::WorldRepository {
         match request.action {
             ClaimLifecycleAction::Inspect => {
                 response.claim = find_claim(&state, request.claim_id.as_deref()).cloned();
-                response.accepted = true;
+                if response.claim.is_some() {
+                    response.accepted = true;
+                } else {
+                    response.reason = Some("That claim is not in the land registry.".to_owned());
+                }
             }
             ClaimLifecycleAction::Request => {
                 if !claim_room(&mut state.phase4.claims) {
@@ -434,15 +438,14 @@ fn find_claim<'a>(
     state: &'a super::super::models::RepositoryState,
     claim_id: Option<&str>,
 ) -> Option<&'a ClaimRecord> {
-    claim_id
-        .and_then(|claim_id| {
-            state
-                .phase4
-                .claims
-                .iter()
-                .find(|claim| claim.claim_id == claim_id)
-        })
-        .or_else(|| state.phase4.claims.last())
+    match claim_id {
+        Some(claim_id) => state
+            .phase4
+            .claims
+            .iter()
+            .find(|claim| claim.claim_id == claim_id),
+        None => state.phase4.claims.last(),
+    }
 }
 
 fn transferable_status(status: ClaimLifecycleStatus) -> bool {

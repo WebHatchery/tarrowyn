@@ -97,3 +97,40 @@ fn expired_claim_cannot_be_reassigned_or_extend_reclamation_grace() {
     assert_eq!(claim.last_active_tick, 7);
     assert!(!claim.building_access);
 }
+
+#[test]
+fn unknown_claim_inspection_does_not_fall_back_to_the_latest_record() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = guest(&repository, "unknown-claim-selector");
+    repository
+        .claim_lifecycle(
+            &session.account_token,
+            ClaimLifecycleRequest {
+                request_id: "known-claim-request".to_owned(),
+                action: ClaimLifecycleAction::Request,
+                claim_id: None,
+                target_account_id: None,
+            },
+        )
+        .expect("claim request");
+
+    let response = repository
+        .claim_lifecycle(
+            &session.account_token,
+            ClaimLifecycleRequest {
+                request_id: "unknown-claim-inspect".to_owned(),
+                action: ClaimLifecycleAction::Inspect,
+                claim_id: Some("missing-claim".to_owned()),
+                target_account_id: None,
+            },
+        )
+        .expect("unknown claim inspection")
+        .data;
+
+    assert!(!response.accepted);
+    assert_eq!(response.claim, None);
+    assert_eq!(
+        response.reason.as_deref(),
+        Some("That claim is not in the land registry.")
+    );
+}
