@@ -7,6 +7,8 @@ use tarrowyn_protocol::{
     SupportAccountResponse,
 };
 
+const MAX_CHRONICLE_SEARCH_RESULTS: usize = 128;
+
 impl WorldRepository {
     pub fn support_account(
         &self,
@@ -303,6 +305,7 @@ impl WorldRepository {
         };
         let entries: Vec<_> = super::super::phase3::chronicle_entries(&state.phase3)
             .filter(matches)
+            .take(MAX_CHRONICLE_SEARCH_RESULTS)
             .cloned()
             .collect();
         let archived_matches: Vec<_> = state
@@ -316,6 +319,7 @@ impl WorldRepository {
                             .to_lowercase()
                             .contains(&needle))
             })
+            .take(MAX_CHRONICLE_SEARCH_RESULTS)
             .cloned()
             .collect();
         let next_cursor = entries.last().map(|entry| entry.cursor);
