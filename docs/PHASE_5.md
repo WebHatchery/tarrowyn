@@ -120,8 +120,9 @@ recovery signal, while chronicle context remains on the next line. Crossing a
 region must not freeze the render loop or silently discard an accepted command.
 The same sidebar now exposes compact authoritative road availability and risk,
 open market orders, and the protected-law boundary, so the Travel and Market
-controls have visible regional telemetry while richer inspection remains an
-appropriate follow-up surface.
+controls have visible regional telemetry. Its visible Inspect control opens
+route names/status/condition/risk plus the first stock and price notes without
+displacing the touch recovery controls.
 It also keeps the latest regional event stage visible beside that telemetry, so
 an event signal or escalation remains readable between refreshes and its Event
 control remains discoverable.
