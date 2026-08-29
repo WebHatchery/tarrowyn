@@ -20,7 +20,7 @@ The release validator also parses the canonical action, crop, item, event,
 settlement, region, household, infrastructure, calendar, and game-config
 manifests with required record shapes, exact schema membership, and duplicate
 ID checks before the Rust build; typed server cross-reference checks then reject
-incompatible records at startup.
+missing launch IDs and incompatible records at startup.
 The server crop-rotation regression confirms planting follows the validated
 crop manifest rather than a separate hard-coded order.
 The server event-template regression confirms regional event seeding follows

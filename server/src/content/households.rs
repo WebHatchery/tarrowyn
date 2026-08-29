@@ -1,5 +1,6 @@
 use macroquad_toolkit::data_loader::parse_json_labeled;
 use serde::Deserialize;
+use std::collections::HashSet;
 use std::sync::OnceLock;
 use tarrowyn_protocol::{HouseholdMember, HouseholdStatus};
 
@@ -76,6 +77,12 @@ pub(super) fn validate(region: &super::RegionManifest) -> Result<(), String> {
             .map(|household| household.id.as_str())
             .collect(),
     )?;
+    let household_ids: HashSet<&str> = households
+        .households
+        .iter()
+        .map(|household| household.id.as_str())
+        .collect();
+    super::validate_required_ids("household", &household_ids, &["household-maren"])?;
     let location_ids: std::collections::HashSet<&str> = region
         .locations
         .iter()

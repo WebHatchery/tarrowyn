@@ -509,6 +509,20 @@ fn validate_items(items: &ItemsManifest) -> Result<(), String> {
         "item",
         items.items.iter().map(|item| item.id.as_str()).collect(),
     )?;
+    let item_ids: HashSet<&str> = items.items.iter().map(|item| item.id.as_str()).collect();
+    validate_required_ids(
+        "item",
+        &item_ids,
+        &[
+            "wheat",
+            "turnips",
+            "moonberries",
+            "seeds",
+            "timber",
+            "stone",
+            "bandages",
+        ],
+    )?;
     if items.items.is_empty()
         || items.items.iter().any(|item| {
             item.kind.trim().is_empty() || item.sink.trim().is_empty() || item.base_price == 0
@@ -621,11 +635,58 @@ fn validate_region(
         .iter()
         .map(|location| location.id.as_str())
         .collect();
+    validate_required_ids(
+        "location",
+        &location_ids,
+        &["hearth", "whisperwood-outpost", "saltmere"],
+    )?;
     if region.routes.iter().any(|route| {
         !location_ids.contains(route.origin.as_str())
             || !location_ids.contains(route.destination.as_str())
     }) {
         return Err("region route references an unknown location".to_owned());
+    }
+    let route_ids: HashSet<&str> = region
+        .routes
+        .iter()
+        .map(|route| route.id.as_str())
+        .collect();
+    validate_required_ids(
+        "route",
+        &route_ids,
+        &["north-pack-road", "saltmere-ferry", "watch-trail"],
+    )?;
+    for (route_id, origin, destination) in [
+        ("north-pack-road", "hearth", "whisperwood-outpost"),
+        ("saltmere-ferry", "hearth", "saltmere"),
+        ("watch-trail", "whisperwood-outpost", "saltmere"),
+    ] {
+        let route = region
+            .routes
+            .iter()
+            .find(|route| route.id == route_id)
+            .expect("required launch route exists after validation");
+        if route.origin != origin || route.destination != destination {
+            return Err(format!(
+                "launch route {route_id} must connect {origin} to {destination}"
+            ));
+        }
+    }
+    Ok(())
+}
+
+fn validate_required_ids(
+    label: &str,
+    available: &HashSet<&str>,
+    required: &[&str],
+) -> Result<(), String> {
+    if let Some(missing) = required
+        .iter()
+        .find(|required_id| !available.contains(**required_id))
+    {
+        return Err(format!(
+            "{label} catalog is missing required launch ID {missing}"
+        ));
     }
     Ok(())
 }

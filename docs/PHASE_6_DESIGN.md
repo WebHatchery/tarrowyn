@@ -182,8 +182,9 @@ record IDs, required text fields, and required arrays to be present and valid
 JSON, while server startup parses typed action, crop, item, event, settlement,
 region, household, infrastructure, NPC-household, recipe, calendar, and game-config
 records and rejects duplicate IDs, incomplete
-records, unknown route or settlement locations, invalid event stages, and a
-day-length mismatch. The validator protects future content additions; wiring
+records, unknown route or settlement locations, missing launch IDs, incompatible
+launch route and settlement links, invalid event stages, and a day-length
+mismatch. The validator protects future content additions; wiring
 the skill catalogue into the authenticated skills read also rechecks stored
 prerequisite practice and qualifying history, persisting a newly eligible
 discovery after a content release without requiring repeated play.

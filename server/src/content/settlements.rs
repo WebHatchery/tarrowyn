@@ -191,6 +191,16 @@ fn validate_infrastructure(infrastructure: &InfrastructureManifest) -> Result<()
             .map(|record| record.id.as_str())
             .collect(),
     )?;
+    let infrastructure_ids: HashSet<&str> = infrastructure
+        .infrastructure
+        .iter()
+        .map(|record| record.id.as_str())
+        .collect();
+    super::validate_required_ids(
+        "infrastructure",
+        &infrastructure_ids,
+        &["north-road", "hearth-services"],
+    )?;
     if infrastructure.infrastructure.is_empty()
         || infrastructure.infrastructure.iter().any(|record| {
             record.name.trim().is_empty()
@@ -223,6 +233,20 @@ fn validate_settlements(
             .iter()
             .map(|settlement| settlement.id.as_str())
             .collect(),
+    )?;
+    let settlement_ids: HashSet<&str> = settlements
+        .settlements
+        .iter()
+        .map(|settlement| settlement.id.as_str())
+        .collect();
+    super::validate_required_ids(
+        "settlement",
+        &settlement_ids,
+        &[
+            "hearth-settlement",
+            "whisperwood-settlement",
+            "saltmere-settlement",
+        ],
     )?;
     let location_ids: HashSet<&str> = region
         .locations
@@ -274,6 +298,22 @@ fn validate_settlements(
             "settlements need complete conditions, opportunities, known locations, and supply notes"
                 .to_owned(),
         );
+    }
+    for (settlement_id, location_id) in [
+        ("hearth-settlement", "hearth"),
+        ("whisperwood-settlement", "whisperwood-outpost"),
+        ("saltmere-settlement", "saltmere"),
+    ] {
+        let settlement = settlements
+            .settlements
+            .iter()
+            .find(|settlement| settlement.id == settlement_id)
+            .expect("required launch settlement exists after validation");
+        if settlement.location != location_id {
+            return Err(format!(
+                "launch settlement {settlement_id} must belong to {location_id}"
+            ));
+        }
     }
     Ok(())
 }

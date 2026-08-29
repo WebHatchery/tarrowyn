@@ -11,6 +11,41 @@ fn content_ids_must_be_unique_and_non_empty() {
 }
 
 #[test]
+fn launch_content_ids_are_required_by_the_runtime_contract() {
+    let available = std::collections::HashSet::from(["hearth", "saltmere"]);
+    assert!(super::validate_required_ids("location", &available, &["hearth"]).is_ok());
+    let error =
+        super::validate_required_ids("location", &available, &["hearth", "whisperwood-outpost"])
+            .expect_err("a missing launch location must fail content validation");
+    assert!(error.contains("whisperwood-outpost"));
+}
+
+#[test]
+fn launch_route_topology_cannot_drift_from_runtime_contract() {
+    let mut region: super::RegionManifest = macroquad_toolkit::data_loader::parse_json_labeled(
+        "region.json",
+        macroquad_toolkit::include_json_str!("../../../assets/data/region.json"),
+    )
+    .expect("checked-in region content should parse");
+    region
+        .routes
+        .iter_mut()
+        .find(|route| route.id == "north-pack-road")
+        .expect("the launch road should exist")
+        .origin = "saltmere".to_owned();
+    let game_config: super::GameConfigManifest =
+        macroquad_toolkit::data_loader::parse_json_labeled(
+            "game_config.json",
+            macroquad_toolkit::include_json_str!("../../../assets/data/game_config.json"),
+        )
+        .expect("checked-in game config should parse");
+    let error = super::validate_region(&region, &game_config)
+        .expect_err("a launch route with the wrong endpoint must fail validation");
+    assert!(error.contains("north-pack-road"));
+    assert!(error.contains("hearth"));
+}
+
+#[test]
 fn server_crop_rotation_follows_the_validated_manifest() {
     assert_eq!(
         super::crop_kind_for_seed(0),
