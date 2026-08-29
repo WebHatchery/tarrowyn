@@ -370,6 +370,9 @@ fn integrity_ok(state: &RepositoryState) -> bool {
         .len()
         == state.identities.len();
     unique_characters
+        && !state.phase5.locations.is_empty()
+        && !state.phase5.routes.is_empty()
+        && !state.phase5.settlements.is_empty()
         && state.phase5.routes.iter().all(|route| {
             route.length > 0
                 && route.risk_percent <= 100
