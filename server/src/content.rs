@@ -598,6 +598,10 @@ fn validate_events(events: &EventsManifest, region: &RegionManifest) -> Result<(
                 || event.kind.trim().is_empty()
                 || event.stages.is_empty()
                 || event.affected_systems.is_empty()
+                || event
+                    .affected_systems
+                    .iter()
+                    .any(|system| system.trim().is_empty())
                 || event.affected_locations.is_empty()
                 || event.effects.is_empty()
                 || event.cause.trim().is_empty()

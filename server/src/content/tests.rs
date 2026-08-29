@@ -77,6 +77,25 @@ fn event_interventions_must_have_an_implemented_effect() {
 }
 
 #[test]
+fn event_affected_systems_must_not_contain_blank_entries() {
+    let mut events: super::EventsManifest = macroquad_toolkit::data_loader::parse_json_labeled(
+        "events.json",
+        macroquad_toolkit::include_json_str!("../../../assets/data/events.json"),
+    )
+    .expect("checked-in events content should parse");
+    events
+        .events
+        .first_mut()
+        .expect("the events manifest should have a launch record")
+        .affected_systems
+        .push("  ".to_owned());
+
+    let error = super::validate_events(&events, super::region_catalog())
+        .expect_err("blank affected systems must fail validation");
+    assert!(error.contains("affected systems"));
+}
+
+#[test]
 fn event_interventions_must_include_their_effect_location() {
     let mut events: super::EventsManifest = macroquad_toolkit::data_loader::parse_json_labeled(
         "events.json",
