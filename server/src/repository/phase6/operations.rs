@@ -3,6 +3,7 @@ use super::super::{
     WorldRepository, PROTOCOL_VERSION,
 };
 use super::is_support_operator;
+use std::collections::HashSet;
 use tarrowyn_protocol::{
     AccountResponse, ApiResponse, ChronicleSearchResponse, OpsHealthResponse, OpsMetricsResponse,
     SupportAccountResponse,
@@ -362,6 +363,44 @@ impl WorldRepository {
 }
 
 fn integrity_ok(state: &RepositoryState) -> bool {
+    let location_ids: HashSet<&str> = state
+        .phase5
+        .locations
+        .iter()
+        .map(|location| location.location_id.as_str())
+        .collect();
+    let regional_topology_ok = unique_non_empty(
+        state
+            .phase5
+            .locations
+            .iter()
+            .map(|location| location.location_id.as_str()),
+    ) && unique_non_empty(
+        state
+            .phase5
+            .routes
+            .iter()
+            .map(|route| route.route_id.as_str()),
+    ) && unique_non_empty(
+        state
+            .phase5
+            .settlements
+            .iter()
+            .map(|settlement| settlement.settlement_id.as_str()),
+    ) && unique_non_empty(
+        state
+            .phase5
+            .settlements
+            .iter()
+            .map(|settlement| settlement.location_id.as_str()),
+    ) && state.phase5.routes.iter().all(|route| {
+        location_ids.contains(route.origin_location_id.as_str())
+            && location_ids.contains(route.destination_location_id.as_str())
+    }) && state
+        .phase5
+        .settlements
+        .iter()
+        .all(|settlement| location_ids.contains(settlement.location_id.as_str()));
     let unique_characters = state
         .identities
         .values()
@@ -373,6 +412,7 @@ fn integrity_ok(state: &RepositoryState) -> bool {
         && !state.phase5.locations.is_empty()
         && !state.phase5.routes.is_empty()
         && !state.phase5.settlements.is_empty()
+        && regional_topology_ok
         && state.phase5.routes.iter().all(|route| {
             route.length > 0
                 && route.risk_percent <= 100
@@ -391,6 +431,11 @@ fn integrity_ok(state: &RepositoryState) -> bool {
                 && settlement.player_activity <= 100
                 && settlement.price_index_percent > 0
         })
+}
+
+fn unique_non_empty<'a>(mut values: impl Iterator<Item = &'a str>) -> bool {
+    let mut seen = HashSet::new();
+    values.all(|value| !value.trim().is_empty() && seen.insert(value))
 }
 
 fn alert_flags(

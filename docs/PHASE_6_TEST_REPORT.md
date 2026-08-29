@@ -113,6 +113,8 @@ The readiness regressions also reject malformed bounded route and settlement
 projections instead of reporting an operationally healthy regional state.
 They also reject an empty regional collection rather than allowing the
 integrity check to succeed vacuously.
+Regional topology regressions also reject unknown route endpoints and duplicate
+settlement locations before readiness can report a healthy world.
 The local-combat regression confirms accepted actions publish a persisted
 server-tick action window, reject same-tick bursts, and become available again
 after the authoritative tick advances. Older local-combat snapshots default
