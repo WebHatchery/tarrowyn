@@ -103,7 +103,11 @@ Assert-Records "crops" (Get-Records $manifests["crops.json"] $null "crops") @("n
 Assert-Records "contracts" (Get-Records $manifests["contracts.json"] "contracts" "contracts") @("title", "description", "target") @()
 $eventRecords = Get-Records $manifests["events.json"] "events" "events"
 Assert-Records "events" $eventRecords @("title", "kind", "cause") @("stages", "affected_systems", "affected_locations", "effects", "intervention_options")
-Assert-Records "items" (Get-Records $manifests["items.json"] "items" "items") @("kind", "sink") @()
+$itemRecords = Get-Records $manifests["items.json"] "items" "items"
+Assert-Records "items" $itemRecords @("kind", "sink") @()
+if (@($itemRecords | Where-Object { [int]$_.base_price -lt 1 }).Count -gt 0) {
+    throw "Items must define positive base_price values."
+}
 Assert-Records "threats" (Get-Records $manifests["threats.json"] "threats" "threats") @("name", "monster", "resource_demand", "rumour") @()
 Assert-Records "households" (Get-Records $manifests["households.json"] "households" "households") @("name", "occupation", "home_settlement", "service", "clue", "reason", "regional_service") @("members", "history")
 $infrastructureRecords = Get-Records $manifests["infrastructure.json"] "infrastructure" "infrastructure"
