@@ -24,6 +24,9 @@ Inspect `/v1/region`, `/v1/settlements`, `/v1/routes`,
 `travel_id`. Re-submit the same request ID to verify idempotency. Interrupt
 the journey, reconnect or issue `Recover`, and confirm that the original
 travel ID continues to the destination exactly once.
+The online sidebar's `Repair` control exercises the route action for the
+fixture's north pack road; confirm the route response and refreshed road status
+before repeating the action with the same request boundary.
 
 ## Market and event inspection
 

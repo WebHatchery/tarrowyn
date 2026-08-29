@@ -215,6 +215,7 @@ pub(super) fn draw_sidebar(
         &[
             ("travel", "Travel", true, ButtonTone::Primary),
             ("recover-travel", "Recover", true, ButtonTone::Primary),
+            ("route-repair", "Repair", true, ButtonTone::Positive),
             ("market-region", "Market", true, ButtonTone::Primary),
             ("region-event", "Event", true, ButtonTone::Primary),
         ],

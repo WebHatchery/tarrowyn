@@ -10,6 +10,20 @@ fn refresh_is_scheduled_before_a_production_session_expires() {
 }
 
 #[test]
+fn route_repair_button_queues_an_authoritative_repair() {
+    let mut client = Phase5Client::new();
+
+    client.queue_cycle("route-repair");
+
+    assert!(matches!(
+        client.commands.front(),
+        Some(Phase5Command::Route(request))
+            if request.route_id == "north-pack-road"
+                && request.action == RouteAction::Repair
+    ));
+}
+
+#[test]
 fn linked_production_session_replaces_the_guest_projection() {
     let mut client = Phase5Client::new();
     client.linked_account = Some(AuthLinkResponse {

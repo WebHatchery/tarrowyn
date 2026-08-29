@@ -84,6 +84,8 @@ records hidden behind the controls.
 The regional map presentation also uses the loaded server location positions and
 route statuses for its online overlay; the offline fixture remains explicitly
 local rather than pretending to be a shared map.
+The focused client control regression also confirms the visible Repair action
+queues the existing authoritative route-repair request.
 The calendar presentation regression keeps the server-projected development
 season available to the online header beside the calendar day without locking
 the deferred season/year pacing decision.

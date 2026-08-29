@@ -513,8 +513,8 @@ impl Game {
                             .warning("Another nearby player must be present for a school lesson."),
                     }
                 }
-                "travel" | "recover-travel" | "market-region" | "region-event" | "account"
-                | "logout" | "report" | "delete-account" => client.queue_phase5(id),
+                "travel" | "recover-travel" | "route-repair" | "market-region" | "region-event"
+                | "account" | "logout" | "report" | "delete-account" => client.queue_phase5(id),
                 _ => self.notifications.warning(format!("Unknown action: {id}")),
             }
             return;

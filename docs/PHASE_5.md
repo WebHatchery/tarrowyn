@@ -128,6 +128,9 @@ control remains discoverable.
 The map overlay uses the authoritative location positions and route statuses
 when the regional projection is loaded, while the offline fixture retains its
 local landmarks.
+The visible Repair control queues the existing authenticated route action for
+the current fixture road, so recovery work has a touch path rather than an
+unreachable client-only command.
 The online header also shows the authoritative regional season beside the
 calendar day; the development cadence remains subject to the Phase 6 pacing
 decision.
