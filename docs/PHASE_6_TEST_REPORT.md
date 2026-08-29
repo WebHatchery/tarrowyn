@@ -40,6 +40,8 @@ The market price regression confirms every traded commodity's base price
 comes from the validated item manifest.
 The calendar regression confirms regional season labels follow the validated
 region calendar at season and year boundaries.
+The region-identity regression confirms the regional snapshot emits its ID
+from the validated region manifest rather than a separate endpoint constant.
 The route-profile regression confirms authoritative route transport, endpoint
 topology, timing, risk, capacity, and status follow the validated region
 manifest.

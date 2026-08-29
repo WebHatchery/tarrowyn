@@ -183,6 +183,11 @@ fn season_labels_follow_the_validated_region_calendar() {
 }
 
 #[test]
+fn region_identity_follows_the_validated_region_manifest() {
+    assert_eq!(super::region_id(), "hearthlands");
+}
+
+#[test]
 fn farm_plot_positions_follow_the_validated_region_manifest() {
     assert_eq!(
         super::farm_plot_positions(),

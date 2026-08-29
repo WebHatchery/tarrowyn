@@ -206,7 +206,9 @@ belongs to the server deployment boundary. Route transport, endpoint topology,
 location roles, resources, names, services, positions, route tuning, and the
 shared farm-plot positions now follow the validated region manifest, while
 fresh regional location, route, settlement, and stock collections consume the
-same validated catalog IDs. The launch
+same validated catalog IDs. The regional snapshot also emits its identity
+from that region manifest rather than a duplicate endpoint constant. The
+launch
 field-tool repair order now consumes a typed recipe manifest for its material,
 tool, reward, and benefit values. The repeatable Brambleback
 contract now consumes a typed contract manifest for its narrative, target,

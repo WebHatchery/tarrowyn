@@ -28,7 +28,6 @@ pub(super) use state::{
     Phase5Response, Phase5State,
 };
 
-const REGION_ID: &str = "hearthlands";
 const INTEREST_RADIUS: u32 = 12;
 
 pub(super) fn is_request_cache_for_identity(key: &str, identity_key: &str) -> bool {
@@ -81,7 +80,7 @@ impl WorldRepository {
         Ok(ApiResponse {
             meta: meta(state.tick, None, Some(state.cursor)),
             data: RegionSnapshot {
-                region_id: REGION_ID.to_owned(),
+                region_id: crate::content::region_id(),
                 season: season(state.clock.day),
                 calendar_day: state.clock.day,
                 locations: visible,

@@ -377,6 +377,10 @@ pub(crate) fn farm_animal_position() -> Position {
     region_catalog().farm_animal_position
 }
 
+pub(crate) fn region_id() -> String {
+    region_catalog().region_id.clone()
+}
+
 pub(crate) fn region_location_ids() -> Vec<String> {
     region_catalog()
         .locations
