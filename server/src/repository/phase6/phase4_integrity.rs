@@ -143,8 +143,15 @@ pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
                 .map(|record| record.infrastructure_id.as_str()),
         )
         && state.phase4.infrastructure.iter().all(|record| {
-            position_in_world(record.position, config)
+            bounded_text(&record.infrastructure_id, MAX_KNOWLEDGE_ID_CHARS)
+                && bounded_text(&record.name, MAX_HOUSEHOLD_TEXT_CHARS)
+                && record
+                    .failure_note
+                    .as_deref()
+                    .is_none_or(|note| bounded_text(note, MAX_KNOWLEDGE_TEXT_CHARS))
+                && position_in_world(record.position, config)
                 && record.condition <= 100
+                && record.upkeep_per_day > 0
                 && record.service_quality <= 100
                 && record.status == super::super::phase4::infrastructure_status(record.condition)
                 && record.last_maintained_tick <= state.tick

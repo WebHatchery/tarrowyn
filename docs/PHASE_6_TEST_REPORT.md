@@ -553,6 +553,8 @@ Phase 4 governance metadata now bounds office, proposal, and tax-policy text,
 keeps occupied office names aligned with their holders, and requires completed
 proposals to carry completion records, with three focused governance metadata
 regressions.
+Phase 4 infrastructure persistence now bounds names and failure notes and
+keeps upkeep records nonzero, with two focused infrastructure regressions.
 
 The cross-layer persistence-readiness milestone passed the full release gate on
 2026-08-30 after the core and Phase 3-6 integrity additions: 14 protocol tests,
