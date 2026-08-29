@@ -104,7 +104,9 @@ uses the checked-in
 `0001_initial_world.sql` migration. The MySQL bridge stores the versioned
 authoritative snapshot and a transactional account/character index; it keeps
 the existing protocol and repository rules intact while the schema is being
-proven against a live environment.
+proven against a live environment. Startup also rejects a migration table
+written by a newer server binary rather than attempting to run an older schema
+against it.
 The server writes a scheduled backup to the configured backup path and reports
 the last successful tick through `/v1/ops/health`. A failed authoritative write
 or scheduled backup degrades operator readiness and adds a safe persistence or

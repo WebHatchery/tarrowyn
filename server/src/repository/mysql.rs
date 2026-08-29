@@ -17,6 +17,9 @@ const MIGRATION_TABLE_SQL: &str = "CREATE TABLE IF NOT EXISTS tarrowyn_schema_mi
 ) ENGINE=InnoDB";
 const MIGRATION_SQL: &str = include_str!("../../migrations/0001_initial_world.sql");
 
+#[cfg(test)]
+mod tests;
+
 pub(super) struct MysqlStore {
     pool: Pool,
     authority_connection: Mutex<Option<mysql::PooledConn>>,
@@ -170,15 +173,17 @@ impl MysqlStore {
             ));
         }
         let migration_result = (|| {
-            let applied: Option<u32> = connection
-                .exec_first(
-                    "SELECT version FROM tarrowyn_schema_migrations WHERE version = ?",
-                    (MIGRATION_VERSION,),
-                )
+            let applied_versions: Vec<u32> = connection
+                .query("SELECT version FROM tarrowyn_schema_migrations")
                 .map_err(|_| {
                     PersistenceBackendError::new("the MySQL migration table could not be read")
                 })?;
-            if applied.is_some() {
+            if let Some(version) = unsupported_migration_version(&applied_versions) {
+                return Err(PersistenceBackendError::new(&format!(
+                    "the MySQL schema version {version} is newer than this server"
+                )));
+            }
+            if applied_versions.contains(&MIGRATION_VERSION) {
                 return Ok(());
             }
             let mut transaction =
@@ -213,6 +218,13 @@ impl MysqlStore {
         let _ = connection.exec_drop("SELECT RELEASE_LOCK(?)", (MIGRATION_LOCK_NAME,));
         migration_result
     }
+}
+
+fn unsupported_migration_version(versions: &[u32]) -> Option<u32> {
+    versions
+        .iter()
+        .copied()
+        .find(|version| *version > MIGRATION_VERSION)
 }
 
 impl Drop for MysqlStore {
