@@ -215,6 +215,11 @@ pub(super) fn resolve_event(
         );
     }
     state.phase5.events[index].stage = RegionalEventStage::Resolution;
+    complete_event_resolution(state, index);
+    (true, Some(state.phase5.events[index].clone()), None)
+}
+
+fn complete_event_resolution(state: &mut RepositoryState, index: usize) {
     state.phase5.events[index].outcome = Some("The region keeps the cost of the thaw but the repaired route and open supply chain prevent a collapse.".to_owned());
     state.phase5.events[index].updated_tick = state.tick;
     let outcome = state.phase5.events[index]
@@ -232,7 +237,6 @@ pub(super) fn resolve_event(
         &outcome,
     );
     state.phase5.events[index].cursor = state.cursor;
-    (true, Some(state.phase5.events[index].clone()), None)
 }
 
 pub(super) fn record_regional(
@@ -305,6 +309,16 @@ pub(super) fn advance_events(state: &mut RepositoryState) {
     }
     for (event_id, stage) in transitions {
         match stage {
+            RegionalEventStage::Resolution => {
+                if let Some(index) = state
+                    .phase5
+                    .events
+                    .iter()
+                    .position(|event| event.event_id == event_id)
+                {
+                    complete_event_resolution(state, index);
+                }
+            }
             RegionalEventStage::Escalation => {
                 if let Some(route) = state
                     .phase5

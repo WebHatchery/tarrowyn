@@ -357,6 +357,59 @@ fn regional_event_cursor_and_household_history_survive_ticks() {
 }
 
 #[test]
+fn regional_event_timeout_keeps_resolution_authoritative() {
+    let repository = WorldRepository::new(ServerConfig {
+        tick_interval: Duration::from_millis(1),
+        household_decision_interval_ticks: 1,
+        ..ServerConfig::default()
+    });
+    let session = guest(&repository, "phase5-event-timeout");
+    let seeded = repository
+        .event_action(
+            &session.account_token,
+            RegionalEventRequest {
+                request_id: "timeout-seed".to_owned(),
+                action: RegionalEventAction::Seed,
+                event_id: None,
+                intervention: None,
+            },
+        )
+        .unwrap()
+        .data;
+    let event_id = seeded.event.as_ref().unwrap().event_id.clone();
+    let intervention = repository
+        .event_action(
+            &session.account_token,
+            RegionalEventRequest {
+                request_id: "timeout-intervene".to_owned(),
+                action: RegionalEventAction::Intervene,
+                event_id: Some(event_id.clone()),
+                intervention: Some("repair ferry markers".to_owned()),
+            },
+        )
+        .unwrap()
+        .data;
+    assert!(intervention.accepted);
+    for _ in 0..5 {
+        repository.tick();
+    }
+    let events = repository
+        .events_region(&session.account_token, 0)
+        .unwrap()
+        .data;
+    let resolution = events
+        .events
+        .iter()
+        .find(|event| event.event_id == event_id)
+        .expect("the timed event should remain in the regional stream");
+    assert_eq!(
+        resolution.stage,
+        tarrowyn_protocol::RegionalEventStage::Resolution
+    );
+    assert!(resolution.outcome.is_some());
+}
+
+#[test]
 fn regional_mutation_replays_survive_repository_restart() {
     let path = std::env::temp_dir().join(format!(
         "tarrowyn-regional-replay-{}.json",
