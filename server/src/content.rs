@@ -253,7 +253,7 @@ pub fn validate() -> Result<(), String> {
     validate_game_config(&game_config, &region)?;
     validate_actions(&actions)?;
     validate_crops(&crops)?;
-    frontier::validate()?;
+    frontier::validate(game_config.world_width, game_config.world_height)?;
     validate_events(&events, &region)?;
     validate_items(&items)?;
     validate_region(&region, &game_config)?;

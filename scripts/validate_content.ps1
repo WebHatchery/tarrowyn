@@ -108,7 +108,8 @@ Assert-Records "items" $itemRecords @("kind", "sink") @()
 if (@($itemRecords | Where-Object { [int]$_.base_price -lt 1 }).Count -gt 0) {
     throw "Items must define positive base_price values."
 }
-Assert-Records "threats" (Get-Records $manifests["threats.json"] "threats" "threats") @("name", "monster", "resource_demand", "rumour") @()
+$threatRecords = Get-Records $manifests["threats.json"] "threats" "threats"
+Assert-Records "threats" $threatRecords @("name", "monster", "resource_demand", "rumour") @()
 Assert-Records "households" (Get-Records $manifests["households.json"] "households" "households") @("name", "occupation", "home_settlement", "service", "clue", "reason", "regional_service") @("members", "history")
 $infrastructureRecords = Get-Records $manifests["infrastructure.json"] "infrastructure" "infrastructure"
 Assert-Records "infrastructure" $infrastructureRecords @("name", "kind", "note") @()
@@ -198,6 +199,14 @@ if (@($region.locations | Where-Object {
         [int]$_.position.y -ge [int]$gameConfig.world_height
     }).Count -gt 0) {
     throw "Region locations must be inside the configured world."
+}
+if (@($threatRecords | Where-Object {
+        $null -eq $_.position -or $null -eq $_.position.x -or $null -eq $_.position.y -or
+        [int]$_.position.x -lt 0 -or [int]$_.position.y -lt 0 -or
+        [int]$_.position.x -ge [int]$gameConfig.world_width -or
+        [int]$_.position.y -ge [int]$gameConfig.world_height
+    }).Count -gt 0) {
+    throw "Threat positions must be inside the configured world."
 }
 if (@($region.farm_plots | Where-Object {
         $null -eq $_.x -or $null -eq $_.y -or

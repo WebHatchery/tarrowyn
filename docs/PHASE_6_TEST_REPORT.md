@@ -68,6 +68,8 @@ The contract-template regression confirms the repeatable Brambleback watch
 uses the validated contract manifest for its target and progression contract.
 The threat-template regression confirms the launch wilderness threat follows
 the validated threat manifest for its monster, position, health, and risk.
+The content gate and focused threat regression also reject an authored threat
+position outside the configured world before the wilderness projection loads.
 The household-template regression confirms the opportunity and regional
 household projections share the validated household manifest for identity,
 members, movement, service, and history.

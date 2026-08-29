@@ -31,19 +31,19 @@ pub(crate) struct ContractTemplate {
 }
 
 #[derive(Debug, Deserialize)]
-struct ThreatsManifest {
-    threats: Vec<ThreatManifest>,
+pub(super) struct ThreatsManifest {
+    pub(super) threats: Vec<ThreatManifest>,
 }
 
 static THREAT_CATALOG: OnceLock<Vec<ThreatManifest>> = OnceLock::new();
 
 #[derive(Debug, Deserialize)]
-struct ThreatManifest {
+pub(super) struct ThreatManifest {
     id: String,
     name: String,
     monster: String,
     monster_health: u8,
-    position: Position,
+    pub(super) position: Position,
     price_modifier_percent: i16,
     resource_demand: String,
     rumour: String,
@@ -61,7 +61,7 @@ pub(crate) struct ThreatTemplate {
     pub(crate) rumour: String,
 }
 
-pub(super) fn validate() -> Result<(), String> {
+pub(super) fn validate(world_width: u32, world_height: u32) -> Result<(), String> {
     let contracts: ContractsManifest = parse_json_labeled(
         "contracts.json",
         macroquad_toolkit::include_json_str!("../../../assets/data/contracts.json"),
@@ -73,7 +73,7 @@ pub(super) fn validate() -> Result<(), String> {
     )
     .map_err(|error| format!("threats JSON is invalid: {error}"))?;
     validate_contracts(&contracts)?;
-    validate_threats(&threats)?;
+    validate_threats(&threats, world_width, world_height)?;
     Ok(())
 }
 
@@ -111,7 +111,9 @@ pub(crate) fn threat_template(threat_id: &str) -> ThreatTemplate {
             macroquad_toolkit::include_json_str!("../../../assets/data/threats.json"),
         )
         .expect("threats content JSON must be valid");
-        validate_threats(&threats).expect("threats content must satisfy its schema");
+        let config = super::game_config_defaults();
+        validate_threats(&threats, config.world_width, config.world_height)
+            .expect("threats content must satisfy its schema");
         threats.threats
     });
     let threat = threats
@@ -166,7 +168,11 @@ fn validate_contracts(contracts: &ContractsManifest) -> Result<(), String> {
     Ok(())
 }
 
-fn validate_threats(threats: &ThreatsManifest) -> Result<(), String> {
+pub(super) fn validate_threats(
+    threats: &ThreatsManifest,
+    world_width: u32,
+    world_height: u32,
+) -> Result<(), String> {
     super::validate_id_list(
         "threat",
         threats
@@ -180,13 +186,17 @@ fn validate_threats(threats: &ThreatsManifest) -> Result<(), String> {
             threat.name.trim().is_empty()
                 || threat.monster != "brambleback"
                 || threat.monster_health == 0
+                || threat.position.x < 0
+                || threat.position.y < 0
+                || threat.position.x as u32 >= world_width
+                || threat.position.y as u32 >= world_height
                 || threat.price_modifier_percent < 0
                 || threat.resource_demand.trim().is_empty()
                 || threat.rumour.trim().is_empty()
         })
     {
         return Err(
-            "threats need IDs, names, a known monster, health, pricing, demand, and rumours"
+            "threats need IDs, names, bounded positions, a known monster, health, pricing, demand, and rumours"
                 .to_owned(),
         );
     }

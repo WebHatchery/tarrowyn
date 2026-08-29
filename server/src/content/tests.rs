@@ -286,6 +286,25 @@ fn threat_templates_follow_the_validated_manifest() {
 }
 
 #[test]
+fn threat_positions_must_stay_inside_the_configured_world() {
+    let mut threats: super::frontier::ThreatsManifest =
+        macroquad_toolkit::data_loader::parse_json_labeled(
+            "threats.json",
+            macroquad_toolkit::include_json_str!("../../../assets/data/threats.json"),
+        )
+        .expect("checked-in threats content should parse");
+    threats
+        .threats
+        .first_mut()
+        .expect("the threats manifest should have a launch record")
+        .position = tarrowyn_protocol::Position { x: 99, y: 99 };
+
+    let error = super::frontier::validate_threats(&threats, 18, 12)
+        .expect_err("an off-map threat must fail validation");
+    assert!(error.contains("bounded positions"));
+}
+
+#[test]
 fn household_templates_follow_the_validated_manifest() {
     let opportunity = super::opportunity_template("household-maren");
     assert_eq!(opportunity.household_id, "household-maren");
