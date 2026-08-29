@@ -142,6 +142,8 @@ fn phase3_ok(state: &RepositoryState, config: &ServerConfig, account_ids: &HashS
             && account_reference_ok(&claim.owner_account_id, account_ids)
             && position_in_world(claim.position, config)
             && claim.lease_days > 0
+            && claim.last_active_tick <= state.tick
+            && claim.reclaim_after_ticks > 0
             && matches!(
                 claim.status,
                 ClaimStatus::Active | ClaimStatus::Reclaimed | ClaimStatus::Abandoned

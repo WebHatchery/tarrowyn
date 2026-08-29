@@ -512,6 +512,8 @@ future identity activity tick.
 Phase 3 state integrity now requires a live chronicle sequence counter and
 retains the contract-progress identity cross-reference. Two focused
 regressions cover a zeroed chronicle sequence and orphaned contract progress.
+The same boundary now rejects future claim activity and a zero reclaim window,
+with two claim-focused regressions.
 
 The cross-layer persistence-readiness milestone passed the full release gate on
 2026-08-30 after the core and Phase 3-6 integrity additions: 14 protocol tests,
