@@ -441,3 +441,7 @@ Phase 4 land-registry integrity now also rejects claim and available-plot
 positions outside the configured world bounds, while retaining dynamic plot
 layouts for migration compatibility. Two focused regressions cover malformed
 claim and free-plot positions.
+
+Regional market integrity now also requires every persisted order owner to be a
+current account or the deletion-safe former-resident marker. One focused
+regression covers an order whose owner reference has disappeared.

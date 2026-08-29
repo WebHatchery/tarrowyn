@@ -365,6 +365,11 @@ impl WorldRepository {
 }
 
 fn integrity_ok(state: &RepositoryState, config: &ServerConfig) -> bool {
+    let account_ids: HashSet<&str> = state
+        .identities
+        .values()
+        .map(|identity| identity.account_id.as_str())
+        .collect();
     let location_ids: HashSet<&str> = state
         .phase5
         .locations
@@ -420,6 +425,8 @@ fn integrity_ok(state: &RepositoryState, config: &ServerConfig) -> bool {
         };
         location_ids.contains(order.origin_location_id.as_str())
             && location_ids.contains(order.destination_location_id.as_str())
+            && (account_ids.contains(order.owner_account_id.as_str())
+                || order.owner_account_id == "former-resident")
             && route.origin_location_id == order.origin_location_id
             && route.destination_location_id == order.destination_location_id
             && order.quantity > 0

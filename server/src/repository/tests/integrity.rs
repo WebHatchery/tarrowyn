@@ -101,6 +101,34 @@ fn invalid_market_order_reference_degrades_readiness() {
 }
 
 #[test]
+fn invalid_market_order_account_reference_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state.phase5.market_orders.push(MarketOrder {
+            order_id: "integrity-market-owner".to_owned(),
+            owner_account_id: "missing-account".to_owned(),
+            owner_name: "Missing owner".to_owned(),
+            origin_location_id: "hearth".to_owned(),
+            destination_location_id: "saltmere".to_owned(),
+            commodity: CommodityKind::Stone,
+            quantity: 1,
+            unit_price: 3,
+            total_price: 3,
+            status: MarketOrderStatus::Open,
+            created_tick: 0,
+            settled_tick: None,
+            route_id: "saltmere-ferry".to_owned(),
+            fallback_used: false,
+        });
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
 fn invalid_travel_reference_degrades_readiness() {
     let repository = WorldRepository::new(ServerConfig::default());
     let session = super::guest(&repository, "integrity-travel");
