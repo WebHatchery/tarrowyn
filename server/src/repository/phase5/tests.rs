@@ -8,6 +8,7 @@ use tarrowyn_protocol::{
     TravelRequest,
 };
 
+mod event_choices;
 mod event_retention;
 mod household_history;
 mod input_bounds;

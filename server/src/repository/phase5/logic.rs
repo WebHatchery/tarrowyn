@@ -157,21 +157,69 @@ pub(super) fn intervene_event(
     state.phase5.events[index].stage = RegionalEventStage::Intervention;
     state.phase5.events[index].chosen_intervention = Some(intervention.to_owned());
     state.phase5.events[index].updated_tick = state.tick;
-    if intervention == "repair ferry markers" {
-        if let Some(route) = state
-            .phase5
-            .routes
-            .iter_mut()
-            .find(|route| route.route_id == "saltmere-ferry")
-        {
-            route.condition = route.condition.saturating_add(12).min(100);
-            route.risk_percent = route.risk_percent.saturating_sub(6);
-            route.status = RouteStatus::Operational;
-        }
-    }
-    record_regional(state, &["hearth", "whisperwood-outpost", "saltmere"], "regional intervention", "Players chose an intervention that changed travel, supply, prices, and household confidence.");
+    let consequence = apply_event_intervention(state, intervention);
+    record_regional(
+        state,
+        &["hearth", "whisperwood-outpost", "saltmere"],
+        "regional intervention",
+        &format!("Players chose {intervention}: {consequence}"),
+    );
     state.phase5.events[index].cursor = state.cursor;
     (true, Some(state.phase5.events[index].clone()), None)
+}
+
+fn apply_event_intervention(state: &mut RepositoryState, intervention: &str) -> &'static str {
+    match intervention {
+        "repair ferry markers" => {
+            if let Some(route) = state
+                .phase5
+                .routes
+                .iter_mut()
+                .find(|route| route.route_id == "saltmere-ferry")
+            {
+                route.condition = route.condition.saturating_add(12).min(100);
+                route.risk_percent = route.risk_percent.saturating_sub(6);
+                route.status = RouteStatus::Operational;
+            }
+            "the ferry route is marked safe again"
+        }
+        "escort the grain caravan" => {
+            if let Some(route) = state
+                .phase5
+                .routes
+                .iter_mut()
+                .find(|route| route.route_id == "north-pack-road")
+            {
+                route.condition = route.condition.saturating_add(8).min(100);
+                route.risk_percent = route.risk_percent.saturating_sub(8);
+                route.status = RouteStatus::Delayed;
+            }
+            for settlement in &mut state.phase5.settlements {
+                settlement.food = settlement.food.saturating_add(6).min(100);
+                settlement.price_index_percent = settlement.price_index_percent.saturating_sub(3);
+            }
+            "the escorted grain reaches each settlement under watch"
+        }
+        "open the frontier storehouse" => {
+            let stock = state
+                .phase5
+                .stock
+                .entry(stock_key("whisperwood-outpost", "seeds"))
+                .or_default();
+            *stock = stock.saturating_add(4);
+            if let Some(settlement) = state
+                .phase5
+                .settlements
+                .iter_mut()
+                .find(|settlement| settlement.location_id == "whisperwood-outpost")
+            {
+                settlement.food = settlement.food.saturating_add(4).min(100);
+                settlement.price_index_percent = settlement.price_index_percent.saturating_sub(2);
+            }
+            "frontier reserves open and seed supply reaches the watch"
+        }
+        _ => "the chosen response steadies the region's supply line",
+    }
 }
 
 pub(super) fn resolve_event(
@@ -206,7 +254,8 @@ pub(super) fn resolve_event(
 }
 
 fn complete_event_resolution(state: &mut RepositoryState, index: usize) {
-    state.phase5.events[index].outcome = Some("The region keeps the cost of the thaw but the repaired route and open supply chain prevent a collapse.".to_owned());
+    let chosen = state.phase5.events[index].chosen_intervention.as_deref();
+    state.phase5.events[index].outcome = Some(event_resolution_outcome(chosen));
     state.phase5.events[index].updated_tick = state.tick;
     let outcome = state.phase5.events[index]
         .outcome
@@ -223,6 +272,26 @@ fn complete_event_resolution(state: &mut RepositoryState, index: usize) {
         &outcome,
     );
     state.phase5.events[index].cursor = state.cursor;
+}
+
+fn event_resolution_outcome(chosen: Option<&str>) -> String {
+    match chosen {
+        Some("repair ferry markers") => {
+            "The repaired ferry route keeps the cost of the thaw from becoming a regional collapse."
+                .to_owned()
+        }
+        Some("escort the grain caravan") => {
+            "The escorted grain caravan restores food movement while the roads remain watched."
+                .to_owned()
+        }
+        Some("open the frontier storehouse") => {
+            "The frontier storehouse reserve keeps seed supply moving through the thaw.".to_owned()
+        }
+        Some(intervention) => {
+            format!("The {intervention} response steadies the region after the thaw.")
+        }
+        None => "The region records a response that steadies the thaw's supply line.".to_owned(),
+    }
 }
 
 pub(super) fn record_regional(

@@ -113,7 +113,10 @@ The seeded `river-thaw` fixture follows signal, escalation, intervention,
 resolution, and aftermath. It crosses all three locations and records effects
 on travel risk, farming supply, market prices, and household confidence. The
 server accepts only an exact option from the event's visible intervention list;
-arbitrary client text cannot manufacture a regional choice or effect. Every
+arbitrary client text cannot manufacture a regional choice or effect. The
+current thaw choices have bounded distinct consequences: ferry repair steadies
+the landing route, caravan escort restores food movement while leaving the road
+watched, and the frontier storehouse opens seed reserve at Whisperwood. Every
 cause, intervention, and outcome is recorded through the existing chronicle
 cursor, so a later player can search what the region remembers.
 
