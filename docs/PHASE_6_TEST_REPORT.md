@@ -477,3 +477,8 @@ Market-order integrity now validates bounded order identity text, the supported
 one-to-99 quantity range, creation ticks, and status-consistent settlement
 timestamps. Two focused regressions cover an oversized quantity and an open
 order carrying a settled timestamp.
+
+Phase 5 replay-cache integrity now validates cache size, bounded keys and
+request IDs, live identity ownership, and response/key request agreement. Two
+focused regressions cover an orphaned identity key and a mismatched cached
+request ID.
