@@ -57,6 +57,16 @@ impl super::super::WorldRepository {
             prompt: "Tap PREPARE before choosing a weapon; stored property is safe.".to_owned(),
             reason: None,
         };
+        if state
+            .identities
+            .get(&key)
+            .expect("identity exists")
+            .knocked_out
+        {
+            response.reason =
+                Some("You are knocked out; choose a recovery prompt first.".to_owned());
+            return finish_local_combat(self, &mut state, cache, response);
+        }
         let position = state
             .identities
             .get(&key)
@@ -281,17 +291,30 @@ impl super::super::WorldRepository {
         state.phase4.combat.insert(key.clone(), combat.clone());
         response.combat = combat;
         response.player = super::super::player_projection(&state, &key);
-        state
-            .phase4
-            .request_results
-            .insert(cache, super::Phase4Response::Combat(response.clone()));
-        super::super::record_command_outcome(&mut state, response.accepted);
-        self.persist(&state);
-        Ok(ApiResponse {
-            meta: super::super::meta(state.tick, Some(request.request_id), Some(state.cursor)),
-            data: response,
-        })
+        finish_local_combat(self, &mut state, cache, response)
     }
+}
+
+fn finish_local_combat(
+    repository: &super::super::WorldRepository,
+    state: &mut super::super::models::RepositoryState,
+    cache: String,
+    response: LocalCombatResponse,
+) -> Result<ApiResponse<LocalCombatResponse>, super::super::RepositoryError> {
+    state
+        .phase4
+        .request_results
+        .insert(cache, super::Phase4Response::Combat(response.clone()));
+    super::super::record_command_outcome(state, response.accepted);
+    repository.persist(state);
+    Ok(ApiResponse {
+        meta: super::super::meta(
+            state.tick,
+            Some(response.request_id.clone()),
+            Some(state.cursor),
+        ),
+        data: response,
+    })
 }
 
 fn default_combat() -> LocalCombatState {

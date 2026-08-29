@@ -1,6 +1,8 @@
 use super::super::super::{ServerConfig, WorldRepository};
 use super::guest;
-use tarrowyn_protocol::{LocalCombatAction, LocalCombatRequest, WeaponKind};
+use tarrowyn_protocol::{
+    LocalCombatAction, LocalCombatRequest, RecoveryChoice, RecoveryRequest, WeaponKind,
+};
 
 #[test]
 fn local_combat_accepts_one_opening_weapon_technique() {
@@ -171,6 +173,124 @@ fn local_combat_reposition_protects_the_next_strike() {
     assert!(protected_strike.accepted);
     assert_eq!(protected_strike.combat.player_health, 2);
     assert!(!protected_strike.combat.reposition_ready);
+}
+
+#[test]
+fn knocked_out_local_player_cannot_reenter_before_recovery() {
+    let repo = WorldRepository::new(ServerConfig {
+        movement_cooldown_ticks: 0,
+        ..ServerConfig::default()
+    });
+    let session = guest(&repo, "phase4-combat-recovery-boundary");
+    for (index, (dx, dy)) in [(1, 0), (1, 0), (0, -1), (0, -1)].into_iter().enumerate() {
+        repo.movement(
+            &session.account_token,
+            tarrowyn_protocol::MovementIntent {
+                request_id: format!("recovery-boundary-move-{index}"),
+                dx,
+                dy,
+            },
+        )
+        .unwrap();
+    }
+    repo.local_combat(
+        &session.account_token,
+        LocalCombatRequest {
+            request_id: "recovery-boundary-prepare".to_owned(),
+            action: LocalCombatAction::Prepare,
+            weapon: WeaponKind::Shield,
+        },
+    )
+    .unwrap();
+    repo.local_combat(
+        &session.account_token,
+        LocalCombatRequest {
+            request_id: "recovery-boundary-injury".to_owned(),
+            action: LocalCombatAction::Strike,
+            weapon: WeaponKind::Shield,
+        },
+    )
+    .unwrap();
+    let knockout = repo
+        .local_combat(
+            &session.account_token,
+            LocalCombatRequest {
+                request_id: "recovery-boundary-knockout".to_owned(),
+                action: LocalCombatAction::Strike,
+                weapon: WeaponKind::Shield,
+            },
+        )
+        .unwrap()
+        .data;
+    assert_eq!(
+        knockout.combat.status,
+        tarrowyn_protocol::LocalCombatStatus::KnockedOut
+    );
+    assert!(knockout.player.knocked_out);
+
+    let bypass = repo
+        .local_combat(
+            &session.account_token,
+            LocalCombatRequest {
+                request_id: "recovery-boundary-bypass".to_owned(),
+                action: LocalCombatAction::Prepare,
+                weapon: WeaponKind::IronSword,
+            },
+        )
+        .unwrap()
+        .data;
+    assert!(!bypass.accepted);
+    assert_eq!(
+        bypass.combat.status,
+        tarrowyn_protocol::LocalCombatStatus::KnockedOut
+    );
+    assert!(bypass
+        .reason
+        .as_deref()
+        .is_some_and(|reason| reason.contains("recovery")));
+
+    let recovery = repo
+        .recovery(
+            &session.account_token,
+            RecoveryRequest {
+                request_id: "recovery-boundary-recover".to_owned(),
+                choice: RecoveryChoice::AskRescuer,
+            },
+        )
+        .unwrap()
+        .data;
+    assert!(recovery.accepted);
+    assert!(!recovery.player.knocked_out);
+    for (index, (dx, dy)) in [(1, 0), (1, 0), (1, 0), (1, 0), (0, -1), (0, -1), (0, -1)]
+        .into_iter()
+        .enumerate()
+    {
+        repo.movement(
+            &session.account_token,
+            tarrowyn_protocol::MovementIntent {
+                request_id: format!("recovery-boundary-return-{index}"),
+                dx,
+                dy,
+            },
+        )
+        .unwrap();
+    }
+    let prepared = repo
+        .local_combat(
+            &session.account_token,
+            LocalCombatRequest {
+                request_id: "recovery-boundary-after".to_owned(),
+                action: LocalCombatAction::Prepare,
+                weapon: WeaponKind::IronSword,
+            },
+        )
+        .unwrap()
+        .data;
+    assert!(prepared.accepted);
+    assert_eq!(
+        prepared.combat.status,
+        tarrowyn_protocol::LocalCombatStatus::Engaged
+    );
 }
 
 #[test]

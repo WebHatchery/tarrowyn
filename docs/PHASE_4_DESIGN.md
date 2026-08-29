@@ -153,7 +153,9 @@ practice on victory.
 The server records the matching root practice and sword/spear/axe qualifying
 history. The threat has bounded health,
 the player has bounded health and injuries, and knockout returns the character
-to the Hearth. Stored property is always safe. At most one carried seed is
+to the Hearth. While knocked out, the server rejects local-combat commands,
+including direct attempts to prepare a new encounter, until a recovery choice
+clears the state. Stored property is always safe. At most one carried seed is
 shown as the risk, and the recovery cost is visible before a recovery choice.
 The existing Phase 3 combat/recovery contract remains available for the
 Brambleback contract; the Phase 4 local endpoint completes the readable
