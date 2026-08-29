@@ -1,6 +1,21 @@
 use super::*;
 
 #[test]
+fn repeated_profession_work_keeps_one_matching_credential() {
+    let mut credentials = vec!["completed Repair a field tool".to_owned()];
+
+    super::super::professions::remember_credential(
+        &mut credentials,
+        "completed Repair a field tool".to_owned(),
+    );
+
+    assert_eq!(
+        credentials,
+        vec!["completed Repair a field tool".to_owned()]
+    );
+}
+
+#[test]
 fn service_orders_use_the_validated_recipe_boundary() {
     let repository = WorldRepository::new(ServerConfig::default());
     let session = guest(&repository, "phase4-recipe-authority");

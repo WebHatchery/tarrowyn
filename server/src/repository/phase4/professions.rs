@@ -69,12 +69,11 @@ impl super::super::WorldRepository {
                         ),
                         capabilities: vec![default_capability(profession)],
                     });
-                    state
-                        .phase4
-                        .credentials
-                        .entry(key.clone())
-                        .or_default()
-                        .push(format!("{:?} apprentice credential", profession));
+                    let credentials = state.phase4.credentials.entry(key.clone()).or_default();
+                    remember_credential(
+                        credentials,
+                        format!("{:?} apprentice credential", profession),
+                    );
                     response.accepted = true;
                     record(
                         &mut state,
@@ -240,12 +239,11 @@ impl super::super::WorldRepository {
                                 .field_tool_condition = super::super::FIELD_TOOL_MAX_CONDITION;
                         }
                     }
-                    state
-                        .phase4
-                        .credentials
-                        .entry(key.clone())
-                        .or_default()
-                        .push(format!("completed {}", completed_order.service));
+                    let credentials = state.phase4.credentials.entry(key.clone()).or_default();
+                    remember_credential(
+                        credentials,
+                        format!("completed {}", completed_order.service),
+                    );
                     response.accepted = true;
                     let actor_name = account_name(&state, &key);
                     record(&mut state, "service order completed", "Craft and demand meet at the Hearth", &format!("{} completed {} at {} quality; the requesting role receives the listed benefit.", actor_name, completed_order.service, completed_order.quality));
@@ -313,6 +311,12 @@ fn ensure_player(state: &mut super::super::models::RepositoryState, key: &str) {
             tools: 1,
         });
     state.phase4.credentials.entry(key.to_owned()).or_default();
+}
+
+pub(super) fn remember_credential(credentials: &mut Vec<String>, credential: String) {
+    if !credentials.iter().any(|existing| existing == &credential) {
+        credentials.push(credential);
+    }
 }
 
 fn view(state: &super::super::models::RepositoryState, key: &str) -> ProfessionsResponse {
