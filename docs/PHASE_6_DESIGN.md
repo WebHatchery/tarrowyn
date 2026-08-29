@@ -197,8 +197,8 @@ the skill catalogue into the authenticated skills read also rechecks stored
 prerequisite practice and qualifying history, persisting a newly eligible
 discovery after a content release without requiring repeated play.
 the crop manifest into server planting now follows that validated order, and
-regional event seeding now consumes the validated event narrative by manifest
-order, and settlement projections consume their manifest condition, opportunity,
+regional event seeding now consumes the validated event narrative and affected
+location scope by manifest order, and settlement projections consume their manifest condition, opportunity,
 and supply profiles. Market base prices also consume the item manifest, which
 now covers every traded commodity. Regional season labels now also follow the
 calendar sequence and season length; the configured real-time day length still
