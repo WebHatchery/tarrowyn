@@ -17,7 +17,7 @@ mod governance;
 mod households;
 mod knowledge;
 
-pub(super) use super::validate_request_id;
+pub(super) use super::{validate_optional_identifier, validate_request_id};
 mod professions;
 pub(super) use claims::trim_claim_history;
 

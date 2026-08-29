@@ -1,4 +1,6 @@
-use super::{account_id, account_name, cache_key, record, validate_request_id};
+use super::{
+    account_id, account_name, cache_key, record, validate_optional_identifier, validate_request_id,
+};
 use crate::config::ServerConfig;
 use tarrowyn_protocol::{
     ApiResponse, ClaimLifecycleAction, ClaimLifecycleRequest, ClaimLifecycleResponse,
@@ -30,6 +32,16 @@ impl super::super::WorldRepository {
         super::super::expire_sessions(&mut state, &self.config);
         let key = super::super::authenticate(&mut state, token, &self.config)?;
         validate_request_id(&request.request_id)?;
+        let claim_id = validate_optional_identifier(
+            request.claim_id.as_deref(),
+            "invalid_claim_id",
+            "A claim selector must be bounded and contain no control characters.",
+        )?;
+        let target_account_id = validate_optional_identifier(
+            request.target_account_id.as_deref(),
+            "invalid_target_account_id",
+            "A target account selector must be bounded and contain no control characters.",
+        )?;
         let actor_id = account_id(&state, &key);
         let cache = cache_key(&actor_id, &request.request_id);
         if let Some(super::Phase4Response::Claim(response)) =
@@ -50,7 +62,7 @@ impl super::super::WorldRepository {
         };
         match request.action {
             ClaimLifecycleAction::Inspect => {
-                response.claim = find_claim(&state, request.claim_id.as_deref()).cloned();
+                response.claim = find_claim(&state, claim_id.as_deref()).cloned();
                 if response.claim.is_some() {
                     response.accepted = true;
                 } else {
@@ -105,12 +117,9 @@ impl super::super::WorldRepository {
                 }
             }
             ClaimLifecycleAction::Approve => {
-                let Some(index) = claim_index(
-                    &state,
-                    request.claim_id.as_deref(),
-                    request.action,
-                    &actor_id,
-                ) else {
+                let Some(index) =
+                    claim_index(&state, claim_id.as_deref(), request.action, &actor_id)
+                else {
                     response.reason = Some("Name the requested lease to approve.".to_owned());
                     return finish(self, &mut state, cache, request.request_id, response);
                 };
@@ -147,12 +156,9 @@ impl super::super::WorldRepository {
                 }
             }
             ClaimLifecycleAction::Renew => {
-                let Some(index) = claim_index(
-                    &state,
-                    request.claim_id.as_deref(),
-                    request.action,
-                    &actor_id,
-                ) else {
+                let Some(index) =
+                    claim_index(&state, claim_id.as_deref(), request.action, &actor_id)
+                else {
                     response.reason = Some("Name the lease to renew.".to_owned());
                     return finish(self, &mut state, cache, request.request_id, response);
                 };
@@ -186,16 +192,13 @@ impl super::super::WorldRepository {
                 }
             }
             ClaimLifecycleAction::Transfer | ClaimLifecycleAction::Inherit => {
-                let Some(index) = claim_index(
-                    &state,
-                    request.claim_id.as_deref(),
-                    request.action,
-                    &actor_id,
-                ) else {
+                let Some(index) =
+                    claim_index(&state, claim_id.as_deref(), request.action, &actor_id)
+                else {
                     response.reason = Some("Name the lease to transfer.".to_owned());
                     return finish(self, &mut state, cache, request.request_id, response);
                 };
-                let Some(target) = request.target_account_id.as_deref() else {
+                let Some(target) = target_account_id.as_deref() else {
                     response.reason =
                         Some("A transfer or inheritance needs the receiving account.".to_owned());
                     return finish(self, &mut state, cache, request.request_id, response);
@@ -245,12 +248,9 @@ impl super::super::WorldRepository {
                 }
             }
             ClaimLifecycleAction::Abandon => {
-                let Some(index) = claim_index(
-                    &state,
-                    request.claim_id.as_deref(),
-                    request.action,
-                    &actor_id,
-                ) else {
+                let Some(index) =
+                    claim_index(&state, claim_id.as_deref(), request.action, &actor_id)
+                else {
                     response.reason = Some("Name the lease to abandon.".to_owned());
                     return finish(self, &mut state, cache, request.request_id, response);
                 };
@@ -274,12 +274,9 @@ impl super::super::WorldRepository {
                 }
             }
             ClaimLifecycleAction::Reclaim => {
-                let Some(index) = claim_index(
-                    &state,
-                    request.claim_id.as_deref(),
-                    request.action,
-                    &actor_id,
-                ) else {
+                let Some(index) =
+                    claim_index(&state, claim_id.as_deref(), request.action, &actor_id)
+                else {
                     response.reason =
                         Some("Name the expired or abandoned lease to reclaim.".to_owned());
                     return finish(self, &mut state, cache, request.request_id, response);

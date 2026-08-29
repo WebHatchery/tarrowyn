@@ -39,9 +39,10 @@ can happen. Durable identity and player-provided labels such as account-deletion
 account IDs, linked display names, expedition outpost names, and public proposal
 targets are trimmed,
 bounded, and rejected when they contain control characters; chat text and
-channel names follow the same stored-text boundary. Moderation target IDs and
-notes, plus support account and repair selector IDs and operator notes, use the
-same bounded control-free audit boundary. Chat also has length and per-tick limits;
+channel names follow the same stored-text boundary. Canonical claim, knowledge,
+profession, and lesson selectors, plus moderation target IDs and notes, support
+account and repair selector IDs, and operator notes, use the same bounded
+control-free audit boundary. Chat also has length and per-tick limits;
 chat metadata, trades, claims, governance, moderation, and support repairs are
 recorded in the audit stream without copying private chat text into audit
 notes. The no-PvP law boundary is still active.

@@ -651,6 +651,16 @@ pub(super) fn validate_bounded_text(
     }
 }
 
+pub(super) fn validate_optional_identifier(
+    value: Option<&str>,
+    code: &'static str,
+    message: &'static str,
+) -> Result<Option<String>, RepositoryError> {
+    value
+        .map(|value| validate_bounded_text(value, 160, code, message))
+        .transpose()
+}
+
 pub(super) fn validate_event_cursor(
     state: &RepositoryState,
     since: u64,

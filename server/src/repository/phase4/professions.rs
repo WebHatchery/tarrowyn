@@ -1,4 +1,7 @@
-use super::{account_id, account_name, cache_key, default_capability, record, validate_request_id};
+use super::{
+    account_id, account_name, cache_key, default_capability, record, validate_optional_identifier,
+    validate_request_id,
+};
 use tarrowyn_protocol::{
     ApiResponse, MaterialStock, ProfessionAction, ProfessionKind, ProfessionProfile,
     ProfessionRequest, ProfessionResponse, ProfessionsResponse, ServiceOrder, ServiceOrderStatus,
@@ -28,6 +31,16 @@ impl super::super::WorldRepository {
         super::super::expire_sessions(&mut state, &self.config);
         let key = super::super::authenticate(&mut state, token, &self.config)?;
         validate_request_id(&request.request_id)?;
+        let order_id = validate_optional_identifier(
+            request.order_id.as_deref(),
+            "invalid_order_id",
+            "A service-order selector must be bounded and contain no control characters.",
+        )?;
+        let _capability_id = validate_optional_identifier(
+            request.capability_id.as_deref(),
+            "invalid_capability_id",
+            "A capability selector must be bounded and contain no control characters.",
+        )?;
         ensure_player(&mut state, &key);
         let actor_id = account_id(&state, &key);
         let cache = cache_key(&actor_id, &request.request_id);
@@ -137,7 +150,7 @@ impl super::super::WorldRepository {
                 }
             }
             ProfessionAction::AcceptOrder => {
-                let Some(order_id) = request.order_id.as_deref() else {
+                let Some(order_id) = order_id.as_deref() else {
                     response.reason = Some("Choose the service order to accept.".to_owned());
                     return finish(self, &mut state, cache, request.request_id, response);
                 };
@@ -175,7 +188,7 @@ impl super::super::WorldRepository {
                 }
             }
             ProfessionAction::CompleteOrder => {
-                let Some(order_id) = request.order_id.as_deref() else {
+                let Some(order_id) = order_id.as_deref() else {
                     response.reason =
                         Some("Choose the accepted service order to complete.".to_owned());
                     return finish(self, &mut state, cache, request.request_id, response);

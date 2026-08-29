@@ -155,6 +155,11 @@ impl WorldRepository {
         super::phase4::prune_school_lessons(&mut state);
         let key = authenticate(&mut state, token, &self.config)?;
         super::phase4::validate_request_id(&request.request_id)?;
+        let skill_id = super::phase4::validate_optional_identifier(
+            request.skill_id.as_deref(),
+            "invalid_skill_id",
+            "A skill selector must be bounded and contain no control characters.",
+        )?;
         let actor_account = super::phase4::account_id(&state, &key);
         let cache = format!("skill-practice:{actor_account}:{}", request.request_id);
         if let Some(super::phase4::Phase4Response::Skill(response)) =
@@ -168,14 +173,14 @@ impl WorldRepository {
         let mut response = SkillResponse {
             request_id: request.request_id.clone(),
             accepted: false,
-            skill_id: request.skill_id.clone(),
+            skill_id: skill_id.clone(),
             target_account_id: None,
             skills: skills_view(&state, &key),
             lesson: None,
             message: "Choose a depth-one discipline and take its first practical step.".to_owned(),
             reason: None,
         };
-        let Some(skill_id) = request.skill_id.as_deref() else {
+        let Some(skill_id) = skill_id.as_deref() else {
             response.reason = Some("Name the discipline for this first practice.".to_owned());
             return finish_skill_action(self, &mut state, cache, response);
         };
@@ -233,6 +238,16 @@ impl WorldRepository {
         super::phase4::prune_school_lessons(&mut state);
         let key = authenticate(&mut state, token, &self.config)?;
         super::phase4::validate_request_id(&request.request_id)?;
+        let skill_id = super::phase4::validate_optional_identifier(
+            request.skill_id.as_deref(),
+            "invalid_skill_id",
+            "A skill selector must be bounded and contain no control characters.",
+        )?;
+        let target_account_id = super::phase4::validate_optional_identifier(
+            request.target_account_id.as_deref(),
+            "invalid_target_account_id",
+            "A target account selector must be bounded and contain no control characters.",
+        )?;
         let actor_account = super::phase4::account_id(&state, &key);
         let cache = format!("skill-lesson-begin:{actor_account}:{}", request.request_id);
         if let Some(super::phase4::Phase4Response::Skill(response)) =
@@ -246,19 +261,19 @@ impl WorldRepository {
         let mut response = SkillResponse {
             request_id: request.request_id.clone(),
             accepted: false,
-            skill_id: request.skill_id.clone(),
-            target_account_id: request.target_account_id.clone(),
+            skill_id: skill_id.clone(),
+            target_account_id: target_account_id.clone(),
             skills: skills_view(&state, &key),
             lesson: None,
             message: "A school lesson needs a mastered discipline and a willing neighbour."
                 .to_owned(),
             reason: None,
         };
-        let Some(skill_id) = request.skill_id.as_deref() else {
+        let Some(skill_id) = skill_id.as_deref() else {
             response.reason = Some("Name the mastered skill to teach.".to_owned());
             return finish_skill_action(self, &mut state, cache, response);
         };
-        let Some(target_account) = request.target_account_id.as_deref() else {
+        let Some(target_account) = target_account_id.as_deref() else {
             response.reason = Some("Teaching needs a receiving account.".to_owned());
             return finish_skill_action(self, &mut state, cache, response);
         };
@@ -407,6 +422,21 @@ impl WorldRepository {
         super::phase4::prune_school_lessons(&mut state);
         let key = authenticate(&mut state, token, &self.config)?;
         super::phase4::validate_request_id(&request.request_id)?;
+        let lesson_id = super::phase4::validate_optional_identifier(
+            request.lesson_id.as_deref(),
+            "invalid_lesson_id",
+            "A lesson selector must be bounded and contain no control characters.",
+        )?;
+        let skill_id = super::phase4::validate_optional_identifier(
+            request.skill_id.as_deref(),
+            "invalid_skill_id",
+            "A skill selector must be bounded and contain no control characters.",
+        )?;
+        let target_account_id = super::phase4::validate_optional_identifier(
+            request.target_account_id.as_deref(),
+            "invalid_target_account_id",
+            "A target account selector must be bounded and contain no control characters.",
+        )?;
         let actor_account = super::phase4::account_id(&state, &key);
         let cache = format!(
             "skill-lesson-complete:{actor_account}:{}",
@@ -423,21 +453,21 @@ impl WorldRepository {
         let mut response = SkillResponse {
             request_id: request.request_id.clone(),
             accepted: false,
-            skill_id: request.skill_id.clone(),
-            target_account_id: request.target_account_id.clone(),
+            skill_id: skill_id.clone(),
+            target_account_id: target_account_id.clone(),
             skills: skills_view(&state, &key),
             lesson: None,
             message: "Join an open lesson beside its teacher to take part.".to_owned(),
             reason: None,
         };
-        let Some(lesson_id) = request.lesson_id.as_deref() else {
+        let Some(lesson_id) = lesson_id.as_deref() else {
             response.reason = Some("Choose the open lesson to join.".to_owned());
             return finish_skill_action(self, &mut state, cache, response);
         };
         let Some(lesson_index) = state.phase4.lessons.iter().position(|lesson| {
             lesson.lesson_id == lesson_id
                 && lesson.learner_account_id == actor_account
-                && request.target_account_id.as_deref() == Some(lesson.teacher_account_id.as_str())
+                && target_account_id.as_deref() == Some(lesson.teacher_account_id.as_str())
         }) else {
             response.reason = Some("That lesson is not open for this learner.".to_owned());
             return finish_skill_action(self, &mut state, cache, response);

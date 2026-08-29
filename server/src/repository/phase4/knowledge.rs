@@ -1,4 +1,4 @@
-use super::{account_id, cache_key, record, validate_request_id};
+use super::{account_id, cache_key, record, validate_optional_identifier, validate_request_id};
 use tarrowyn_protocol::{
     ApiResponse, KnowledgeAction, KnowledgeRequest, KnowledgeResponse, KnowledgeState,
 };
@@ -13,6 +13,16 @@ impl super::super::WorldRepository {
         super::super::expire_sessions(&mut state, &self.config);
         let key = super::super::authenticate(&mut state, token, &self.config)?;
         validate_request_id(&request.request_id)?;
+        let knowledge_id = validate_optional_identifier(
+            request.knowledge_id.as_deref(),
+            "invalid_knowledge_id",
+            "A knowledge selector must be bounded and contain no control characters.",
+        )?;
+        let target_account_id = validate_optional_identifier(
+            request.target_account_id.as_deref(),
+            "invalid_target_account_id",
+            "A target account selector must be bounded and contain no control characters.",
+        )?;
         let actor_id = account_id(&state, &key);
         let cache = cache_key(&actor_id, &request.request_id);
         if let Some(super::Phase4Response::Knowledge(response)) =
@@ -33,7 +43,7 @@ impl super::super::WorldRepository {
         match request.action {
             KnowledgeAction::Inspect => response.accepted = true,
             KnowledgeAction::Discover => {
-                let Some(index) = item_index(&state, request.knowledge_id.as_deref()) else {
+                let Some(index) = item_index(&state, knowledge_id.as_deref()) else {
                     response.reason = Some(
                         "That knowledge item is not discoverable in this settlement.".to_owned(),
                     );
@@ -64,11 +74,11 @@ impl super::super::WorldRepository {
                 }
             }
             KnowledgeAction::Teach => {
-                let Some(index) = item_index(&state, request.knowledge_id.as_deref()) else {
+                let Some(index) = item_index(&state, knowledge_id.as_deref()) else {
                     response.reason = Some("Name the knowledge item to teach.".to_owned());
                     return finish(self, &mut state, cache, request.request_id, response);
                 };
-                let Some(target_account) = request.target_account_id.as_deref() else {
+                let Some(target_account) = target_account_id.as_deref() else {
                     response.reason = Some("Teaching needs a receiving account.".to_owned());
                     return finish(self, &mut state, cache, request.request_id, response);
                 };
@@ -103,7 +113,7 @@ impl super::super::WorldRepository {
                 }
             }
             KnowledgeAction::Record => {
-                let Some(index) = item_index(&state, request.knowledge_id.as_deref()) else {
+                let Some(index) = item_index(&state, knowledge_id.as_deref()) else {
                     response.reason =
                         Some("Name the knowledge item to write into the archive.".to_owned());
                     return finish(self, &mut state, cache, request.request_id, response);
@@ -133,7 +143,7 @@ impl super::super::WorldRepository {
                 }
             }
             KnowledgeAction::Apply => {
-                let Some(index) = item_index(&state, request.knowledge_id.as_deref()) else {
+                let Some(index) = item_index(&state, knowledge_id.as_deref()) else {
                     response.reason = Some("Name the knowledge item to apply.".to_owned());
                     return finish(self, &mut state, cache, request.request_id, response);
                 };
