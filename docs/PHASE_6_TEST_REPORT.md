@@ -563,6 +563,8 @@ names paired, and requires completed orders to carry completion ticks, with
 three focused order regressions.
 Phase 4 profession persistence now bounds reputation and the separate
 credential ledger, with two focused profession-state regressions.
+Regional event persistence now requires retained events to remain newer than
+the regional history floor, with one focused history-retention regression.
 
 The cross-layer persistence-readiness milestone passed the full release gate on
 2026-08-30 after the core and Phase 3-6 integrity additions: 14 protocol tests,

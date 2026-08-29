@@ -36,11 +36,10 @@ pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
             .iter()
             .all(|route| route_ok(route, &location_ids, state.tick))
         && unique_event_ids(state)
-        && state
-            .phase5
-            .events
-            .iter()
-            .all(|event| event_ok(event, &location_ids, state.cursor, state.tick))
+        && state.phase5.events.iter().all(|event| {
+            event.cursor > state.phase5.event_history_floor
+                && event_ok(event, &location_ids, state.cursor, state.tick)
+        })
         && !state.phase5.households.is_empty()
         && unique_household_ids(state)
         && state
