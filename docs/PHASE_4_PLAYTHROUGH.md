@@ -29,9 +29,9 @@ in [`PHASE_4_RUNBOOK.md`](PHASE_4_RUNBOOK.md).
    condition 2/3. After a shared-day rollover it falls to 1/3; the first
    character taps Care beside the fields, restores the animal to 3/3, and
    records Animal Husbandry practice.
-7. The first character discovers the Moonberry trellis method and teaches it
-   to the Provider. The Provider applies it from its own server-owned knowledge
-   list.
+7. The first character discovers the Moonberry trellis method, records it in
+   the guild archive, and teaches it to the Provider from beside the second
+   character. The Provider applies it from its own server-owned knowledge list.
 8. The Bellweather household remains visible with miller and herbal-healer
    members, complementary work, needs, service quality, and causal clues. Its
    bounded decision updates on the shared tick.
