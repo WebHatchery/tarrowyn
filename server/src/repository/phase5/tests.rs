@@ -15,6 +15,7 @@ mod route_history;
 mod session_retention;
 mod settlement_chronicle_retention;
 mod settlements;
+mod travel_boundary;
 
 fn guest(repository: &WorldRepository, key: &str) -> tarrowyn_protocol::GuestSessionResponse {
     repository

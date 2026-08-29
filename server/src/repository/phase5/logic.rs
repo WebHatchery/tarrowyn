@@ -259,7 +259,7 @@ pub(super) fn advance_travel(state: &mut RepositoryState) {
         }
         let total = travel.eta_tick.saturating_sub(travel.departure_tick).max(1);
         let elapsed = state.tick.saturating_sub(travel.departure_tick).min(total);
-        travel.progress = ((elapsed * 100) / total).min(100) as u8;
+        travel.progress = ((u128::from(elapsed) * 100) / u128::from(total)).min(100) as u8;
         if state.tick >= travel.eta_tick {
             travel.status = TravelStatus::Arrived;
             travel.progress = 100;
