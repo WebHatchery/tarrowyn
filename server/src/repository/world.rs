@@ -60,12 +60,11 @@ pub(super) fn grow_plots(state: &mut RepositoryState, config: &ServerConfig) {
 }
 
 pub(super) fn farm_plots() -> Vec<FarmPlot> {
-    (3..6)
-        .flat_map(|x| {
-            (4..6).map(move |y| FarmPlot {
-                position: Position { x, y },
-                crop: None,
-            })
+    crate::content::farm_plot_positions()
+        .into_iter()
+        .map(|position| FarmPlot {
+            position,
+            crop: None,
         })
         .collect()
 }
@@ -103,7 +102,7 @@ pub(super) fn tile_at(position: Position, width: u32, height: u32) -> TileKind {
         TileKind::Forest
     } else if ((2..16).contains(&x) && y == 6) || (x == 8 && (4..7).contains(&y)) {
         TileKind::Path
-    } else if (3..6).contains(&x) && (4..6).contains(&y) {
+    } else if crate::content::farm_plot_positions().contains(&position) {
         TileKind::Field
     } else if x == 10 && y == 3 {
         TileKind::Stone

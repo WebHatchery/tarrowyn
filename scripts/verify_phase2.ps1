@@ -76,24 +76,24 @@ try {
     $headers = @($sessions | ForEach-Object { @{ Authorization = "Bearer $($_.data.account_token)" } })
 
     $state = Invoke-RestMethod -Method Get -Uri "http://127.0.0.1:8787/v1/state" -Headers $headers[0]
-    Assert-True ($state.data.world.plots.Count -eq 6) "shared farm plots were not in the state projection"
+    Assert-True ($state.data.world.plots.Count -eq 3) "shared farm plots were not in the state projection"
     Assert-True ($state.data.feed.notices.Count -ge 1) "the tavern notice feed was empty"
 
-    $steps = @(@{ dx = -1; dy = 0 }, @{ dx = -1; dy = 0 }, @{ dx = -1; dy = 0 }, @{ dx = -1; dy = 0 }, @{ dx = 0; dy = -1 })
+    $steps = @(@{ dx = 1; dy = 0 }, @{ dx = 1; dy = 0 }, @{ dx = 0; dy = 1 }, @{ dx = 0; dy = 1 })
     for ($index = 0; $index -lt $steps.Count; $index++) {
         $body = @{ request_id = "phase2-step-$index"; dx = $steps[$index].dx; dy = $steps[$index].dy } | ConvertTo-Json -Compress
         $move = Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:8787/v1/movement" -Headers $headers[0] -ContentType "application/json" -Body $body
         Assert-True $move.data.accepted "farmer could not reach the shared fields"
     }
 
-    $plantBody = @{ request_id = "phase2-plant"; action = "plant"; position = @{ x = 4; y = 4 } } | ConvertTo-Json -Compress
+    $plantBody = @{ request_id = "phase2-plant"; action = "plant"; position = @{ x = 10; y = 8 } } | ConvertTo-Json -Compress
     $plant = Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:8787/v1/farming/actions" -Headers $headers[0] -ContentType "application/json" -Body $plantBody
     $plantRetry = Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:8787/v1/farming/actions" -Headers $headers[0] -ContentType "application/json" -Body $plantBody
     Assert-True $plant.data.accepted "plant action was rejected"
     Assert-True ($plantRetry.data.player.inventory.seeds -eq $plant.data.player.inventory.seeds) "plant retry consumed a second seed"
 
     Start-Sleep -Milliseconds 300
-    $harvestBody = @{ request_id = "phase2-harvest"; action = "harvest"; position = @{ x = 4; y = 4 } } | ConvertTo-Json -Compress
+    $harvestBody = @{ request_id = "phase2-harvest"; action = "harvest"; position = @{ x = 10; y = 8 } } | ConvertTo-Json -Compress
     $harvest = Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:8787/v1/farming/actions" -Headers $headers[0] -ContentType "application/json" -Body $harvestBody
     Assert-True $harvest.data.accepted "shared clock did not mature the crop"
 

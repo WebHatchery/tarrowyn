@@ -1,7 +1,7 @@
 use super::super::super::{ServerConfig, WorldRepository};
 use super::guest;
 use tarrowyn_protocol::{
-    CropKind, CropState, FarmingAction, FarmingRequest, FieldWeather, MovementIntent, Position,
+    CropKind, CropState, FarmingAction, FarmingRequest, FieldWeather, MovementIntent,
     ProfessionAction, ProfessionKind, ProfessionRequest,
 };
 
@@ -150,10 +150,8 @@ fn field_tool_condition_connects_active_farming_to_a_repair_order() {
     });
     let requester = guest(&repo, "phase4-tool-requester");
     let provider = guest(&repo, "phase4-tool-provider");
-    for (index, (dx, dy)) in [(-1, 0), (-1, 0), (-1, 0), (-1, 0), (0, -1)]
-        .into_iter()
-        .enumerate()
-    {
+    let plot_position = crate::content::farm_plot_positions()[2];
+    for (index, (dx, dy)) in [(1, 0), (1, 0), (0, 1), (0, 1)].into_iter().enumerate() {
         repo.movement(
             &requester.account_token,
             MovementIntent {
@@ -170,7 +168,7 @@ fn field_tool_condition_connects_active_farming_to_a_repair_order() {
             FarmingRequest {
                 request_id: "tool-plant".to_owned(),
                 action: FarmingAction::Plant,
-                position: tarrowyn_protocol::Position { x: 4, y: 4 },
+                position: plot_position,
             },
         )
         .unwrap()
@@ -183,7 +181,7 @@ fn field_tool_condition_connects_active_farming_to_a_repair_order() {
             FarmingRequest {
                 request_id: "tool-tend".to_owned(),
                 action: FarmingAction::Tend,
-                position: tarrowyn_protocol::Position { x: 4, y: 4 },
+                position: plot_position,
             },
         )
         .unwrap()
@@ -199,7 +197,7 @@ fn field_tool_condition_connects_active_farming_to_a_repair_order() {
             FarmingRequest {
                 request_id: "tool-harvest".to_owned(),
                 action: FarmingAction::Harvest,
-                position: tarrowyn_protocol::Position { x: 4, y: 4 },
+                position: plot_position,
             },
         )
         .unwrap()
@@ -294,9 +292,20 @@ fn field_outlook_and_recent_tending_buffer_environmental_pressure() {
         ..ServerConfig::default()
     });
     let session = guest(&repo, "phase4-field-pressure");
-    for (index, (dx, dy)) in [(-1, 0), (-1, 0), (-1, 0), (-1, 0), (0, -1)]
-        .into_iter()
-        .enumerate()
+    let first_plot = crate::content::farm_plot_positions()[0];
+    let second_plot = crate::content::farm_plot_positions()[1];
+    for (index, (dx, dy)) in [
+        (-1, 0),
+        (-1, 0),
+        (-1, 0),
+        (-1, 0),
+        (-1, 0),
+        (-1, 0),
+        (0, 1),
+        (0, 1),
+    ]
+    .into_iter()
+    .enumerate()
     {
         repo.movement(
             &session.account_token,
@@ -308,8 +317,6 @@ fn field_outlook_and_recent_tending_buffer_environmental_pressure() {
         )
         .unwrap();
     }
-    let first_plot = tarrowyn_protocol::Position { x: 4, y: 4 };
-    let second_plot = tarrowyn_protocol::Position { x: 5, y: 4 };
     assert!(
         repo.farming(
             &session.account_token,
@@ -326,9 +333,9 @@ fn field_outlook_and_recent_tending_buffer_environmental_pressure() {
     repo.movement(
         &session.account_token,
         MovementIntent {
-            request_id: "pressure-step-sideways".to_owned(),
-            dx: 1,
-            dy: 0,
+            request_id: "pressure-step-down".to_owned(),
+            dx: 0,
+            dy: 1,
         },
     )
     .unwrap();
@@ -393,7 +400,7 @@ fn field_outlook_and_recent_tending_buffer_environmental_pressure() {
 fn farming_rewards_saturate_player_counters_at_the_numeric_ceiling() {
     let repository = WorldRepository::new(ServerConfig::default());
     let session = guest(&repository, "farming-counter-ceiling");
-    let plot_position = Position { x: 4, y: 4 };
+    let plot_position = crate::content::farm_plot_positions()[0];
     {
         let mut state = repository.state.lock().unwrap();
         let identity = state.identities.get_mut("farming-counter-ceiling").unwrap();

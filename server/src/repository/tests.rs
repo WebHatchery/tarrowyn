@@ -151,6 +151,33 @@ fn world_contains_the_phase_zero_collision_map() {
 }
 
 #[test]
+fn fresh_world_farm_plots_follow_the_validated_region_manifest() {
+    let repository = repo();
+    let session = guest(&repository, "manifest-farm-plots");
+    let world = repository.world(&session.account_token).unwrap().data;
+    let expected = crate::content::farm_plot_positions();
+
+    assert_eq!(
+        world
+            .plots
+            .iter()
+            .map(|plot| plot.position)
+            .collect::<Vec<_>>(),
+        expected
+    );
+    for position in expected {
+        assert_eq!(
+            world
+                .tiles
+                .iter()
+                .find(|tile| tile.position == position)
+                .map(|tile| tile.kind),
+            Some(TileKind::Field)
+        );
+    }
+}
+
+#[test]
 fn movement_rate_limit_chat_bound_and_session_expiry_are_server_rules() {
     let repo = repo();
     let session = guest(&repo, "rules");
@@ -254,10 +281,8 @@ fn farming_grows_on_the_shared_clock_and_retries_are_idempotent() {
         ..ServerConfig::default()
     });
     let session = guest(&repo, "farmer");
-    for (index, (dx, dy)) in [(-1, 0), (-1, 0), (-1, 0), (-1, 0), (0, -1)]
-        .into_iter()
-        .enumerate()
-    {
+    let plot_position = crate::content::farm_plot_positions()[2];
+    for (index, (dx, dy)) in [(1, 0), (1, 0), (0, 1), (0, 1)].into_iter().enumerate() {
         repo.movement(
             &session.account_token,
             MovementIntent {
@@ -271,7 +296,7 @@ fn farming_grows_on_the_shared_clock_and_retries_are_idempotent() {
     let request = FarmingRequest {
         request_id: "plant-once".to_owned(),
         action: FarmingAction::Plant,
-        position: Position { x: 4, y: 4 },
+        position: plot_position,
     };
     let planted = repo
         .farming(&session.account_token, request.clone())
@@ -288,7 +313,7 @@ fn farming_grows_on_the_shared_clock_and_retries_are_idempotent() {
         grown
             .plots
             .iter()
-            .find(|plot| plot.position == Position { x: 4, y: 4 })
+            .find(|plot| plot.position == plot_position)
             .unwrap()
             .crop
             .unwrap()
@@ -301,7 +326,7 @@ fn farming_grows_on_the_shared_clock_and_retries_are_idempotent() {
             FarmingRequest {
                 request_id: "harvest-once".to_owned(),
                 action: FarmingAction::Harvest,
-                position: Position { x: 4, y: 4 },
+                position: plot_position,
             },
         )
         .unwrap()
