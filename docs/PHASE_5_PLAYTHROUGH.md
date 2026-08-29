@@ -28,6 +28,7 @@ to the regional projection.
 The server tests cover travel interruption/recovery, market settlement,
 regional event cursor recovery, household history, OIDC-style guest linking,
 session refresh, and revocation. The browser-facing touch pass uses the
-visible Travel, Recover, Market, Event, Account, Logout, Report, Delete, and
-Reconnect controls; linked-account deletion requires two visible taps and
-returns to Reconnect; no keyboard command is required.
+visible Travel, Recover, Repair, Market, Inspect, Event, Account, Logout,
+Report, Delete, and Reconnect controls; an owned open market order also shows
+the visible Cancel recovery control, and linked-account deletion requires two
+visible taps before returning to Reconnect. No keyboard command is required.

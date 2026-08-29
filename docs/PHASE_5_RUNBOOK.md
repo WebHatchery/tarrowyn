@@ -42,7 +42,10 @@ sidebar telemetry; it does not mutate the regional ledger.
 Use `/v1/market/orders` to record stock notes, price notes, and open orders.
 Create a small seed or crop order from The Hearth to Saltmere, travel to the
 destination, and fulfil it. Record the order status, inventory projection,
-gold, and price index before and after settlement. Seed a regional event with
+gold, and price index before and after settlement. Before fulfilment, also
+cancel an owned open order and confirm that its escrow returns to origin stock
+and its status becomes `Cancelled`; the online client exposes this through the
+visible `Cancel` control. Seed a regional event with
 `POST /v1/events/region`, wait for escalation, choose an intervention, and then
 resolve it. Poll with the returned cursor; a cursor ahead of the server must
 return a readable `cursor_ahead` error. A cursor older than the retained event
