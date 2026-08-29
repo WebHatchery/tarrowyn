@@ -477,12 +477,10 @@ impl Game {
                         .account
                         .as_ref()
                         .map(|account| account.account_id.as_str());
-                    if let Some(target) = client
-                        .projection
-                        .players
-                        .iter()
-                        .find(|player| Some(player.account_id.as_str()) != own)
-                    {
+                    if let Some(target) = client.projection.players.iter().find(|player| {
+                        Some(player.account_id.as_str()) != own
+                            && !player.stale(client.projection.server_tick)
+                    }) {
                         client.queue_trade(TradeRequest {
                             request_id: String::new(),
                             action: TradeAction::Create,
