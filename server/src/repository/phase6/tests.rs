@@ -11,6 +11,7 @@ use tarrowyn_protocol::{
 };
 
 mod account_cleanup;
+mod account_validation;
 mod audit_retention;
 mod deletion_queue;
 mod long_session;

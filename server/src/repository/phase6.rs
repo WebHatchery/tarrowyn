@@ -25,6 +25,7 @@ use deletion::PendingAccountDeletion;
 
 const IDENTITY_PROVIDER: &str = "webhatchery-identity-oidc";
 const PRIVACY_POLICY_VERSION: &str = "2026-08-19";
+const MAX_DISPLAY_NAME_CHARS: usize = 80;
 pub(super) const MAX_MODERATION_REPORTS: usize = 512;
 pub(super) const MODERATION_REPORT_RETENTION_SECONDS: u64 = 90 * 24 * 60 * 60;
 pub(super) const MAX_PENDING_DELETIONS: usize = 128;
@@ -132,6 +133,18 @@ impl WorldRepository {
                 "The identity provider subject is required and bounded.",
             ));
         }
+        if request.display_name.as_deref().is_some_and(|name| {
+            let trimmed = name.trim();
+            !trimmed.is_empty()
+                && (trimmed.chars().count() > MAX_DISPLAY_NAME_CHARS
+                    || trimmed.chars().any(char::is_control))
+        }) {
+            return Err(RepositoryError::new(
+                400,
+                "invalid_display_name",
+                "The linked display name must be at most 80 characters and contain no control characters.",
+            ));
+        }
         let cache_key = format!("{}:{}", guest_key, request.request_id);
         if let Some(previous) = state.phase6.auth_link_results.get(&cache_key).cloned() {
             return Ok(ApiResponse {
@@ -175,7 +188,10 @@ impl WorldRepository {
             });
         let display_name = request
             .display_name
-            .filter(|name| !name.trim().is_empty())
+            .as_deref()
+            .map(str::trim)
+            .filter(|name| !name.is_empty())
+            .map(str::to_owned)
             .unwrap_or_else(|| {
                 state
                     .identities
