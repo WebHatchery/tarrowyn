@@ -51,8 +51,9 @@ and bandages use location stock. Saltmere is abundant in stone and bandages;
 Whisperwood is abundant in timber and iron salvage; The Hearth is abundant in
 wheat and seeds. Scarcity, route risk, infrastructure, and settlement
 condition alter the visible price index. Open orders, failed fulfilment, and
-stock notes are exposed as telemetry. A failed order is marked `Failed` rather
-than silently destroying the escrow record; support can reconcile it.
+stock notes are exposed as telemetry, and failed-fulfilment history reaches the
+order's recorded origin and destination. A failed order is marked `Failed`
+rather than silently destroying the escrow record; support can reconcile it.
 If an essential crop or bandage shipment lacks player escrow, a bounded
 travelling-service fallback can carry at most two goods, twice per world day.
 It adds a surcharge, arrives after a short delay, and marks `fallback_used`;

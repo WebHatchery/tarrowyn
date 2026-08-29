@@ -474,13 +474,17 @@ pub(super) fn expire_market_orders(state: &mut RepositoryState) {
             && state.tick.saturating_sub(order.created_tick) > 48
         {
             order.status = MarketOrderStatus::Failed;
-            failed.push(order.order_id.clone());
+            failed.push((
+                order.order_id.clone(),
+                order.origin_location_id.clone(),
+                order.destination_location_id.clone(),
+            ));
         }
     }
-    for order_id in failed {
+    for (order_id, origin, destination) in failed {
         record_regional(
             state,
-            &["hearth"],
+            &[origin.as_str(), destination.as_str()],
             "market fulfilment failed",
             &format!("Order {order_id} expired without hiding its stock or price telemetry."),
         );

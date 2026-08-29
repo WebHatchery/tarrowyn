@@ -135,6 +135,8 @@ The regional telemetry regression also confirms the sidebar projection exposes
 authoritative road availability/risk, open market orders, active fallback
 shipments, and the protected-law boundary plus the latest regional event stage
 instead of leaving those loaded records hidden behind the controls.
+The market-expiry regression confirms failed-fulfilment history reaches the
+recorded order endpoints rather than being attributed to Hearth by default.
 The regional map presentation also uses the loaded server location positions and
 route statuses for its online overlay; the offline fixture remains explicitly
 local rather than pretending to be a shared map.
