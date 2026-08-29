@@ -254,6 +254,7 @@ pub(super) fn record_regional(
                 settlement.chronicle.push(entry.clone());
             }
         }
+        super::state::trim_settlement_chronicles(&mut state.phase5);
     }
     state.phase5.cursor = state.cursor;
 }

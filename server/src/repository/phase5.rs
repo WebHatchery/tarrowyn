@@ -22,7 +22,9 @@ pub(super) use market::{
 };
 pub(super) use recovery::clear_stuck_travel;
 use settlements::{refresh_settlement_facilities, update_households, update_settlements};
-pub(super) use state::{fresh, trim_event_history, Phase5Response, Phase5State};
+pub(super) use state::{
+    fresh, trim_event_history, trim_settlement_chronicles, Phase5Response, Phase5State,
+};
 
 const REGION_ID: &str = "hearthlands";
 const INTEREST_RADIUS: u32 = 12;

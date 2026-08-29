@@ -23,6 +23,11 @@ the regional stream drops its cache and restarts from cursor zero. If a cursor
 falls before the retained event window, the server returns `cursor_stale`; the
 client uses the same bounded-history reset rather than accepting a silent gap.
 
+Each settlement projection retains its newest 64 local chronicle entries. Older
+entries remain available through the shared durable chronicle archive and
+authenticated history search rather than growing the regional projection
+without bound.
+
 Travel and combat recovery are also an explicit boundary: a knocked-out
 character cannot start, resume, or alter a regional journey until a recovery
 choice clears the knockout. The server enforces this even when a client sends a

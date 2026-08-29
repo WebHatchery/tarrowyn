@@ -101,6 +101,7 @@ pub(crate) fn fresh(_config: &ServerConfig) -> Phase5State {
 }
 
 pub(crate) const MAX_REGIONAL_EVENTS: usize = super::super::MAX_EVENTS;
+pub(crate) const MAX_SETTLEMENT_CHRONICLE: usize = 64;
 
 pub(crate) fn trim_event_history(phase: &mut Phase5State) {
     let excess = phase.events.len().saturating_sub(MAX_REGIONAL_EVENTS);
@@ -111,6 +112,18 @@ pub(crate) fn trim_event_history(phase: &mut Phase5State) {
         phase.event_history_floor = phase.event_history_floor.max(removed.cursor);
     }
     phase.events.drain(..excess);
+}
+
+pub(crate) fn trim_settlement_chronicles(phase: &mut Phase5State) {
+    for settlement in &mut phase.settlements {
+        let excess = settlement
+            .chronicle
+            .len()
+            .saturating_sub(MAX_SETTLEMENT_CHRONICLE);
+        if excess > 0 {
+            settlement.chronicle.drain(..excess);
+        }
+    }
 }
 
 fn location(id: &str) -> LocationRecord {
