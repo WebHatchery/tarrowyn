@@ -633,6 +633,8 @@ fn regional_summary_shows_local_condition_and_recovery_signal() {
     assert!(inspection.contains("Saltmere Ferry Threatened"));
     assert!(inspection.contains("Seeds are available at the Hearth."));
     assert!(inspection.contains("Seeds 104%"));
+    assert!(inspection.contains("A hard thaw"));
+    assert!(inspection.contains("repair ferry markers"));
 }
 
 fn regional_event(

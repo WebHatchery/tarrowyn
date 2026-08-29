@@ -183,5 +183,25 @@ pub(super) fn inspection(client: &Phase5Client) -> String {
             format!("Market {open_orders} open • stock: {stock} • prices: {prices}")
         })
         .unwrap_or_else(|| "Market details are still loading.".to_owned());
-    format!("{} details\nRoads: {routes}\n{market}", region.region_id)
+    let event = client
+        .events
+        .as_ref()
+        .and_then(|events| events.events.last())
+        .map(|event| {
+            let choices = if event.intervention_options.is_empty() {
+                "none listed".to_owned()
+            } else {
+                event.intervention_options.join(" | ")
+            };
+            let outcome = event.outcome.as_deref().unwrap_or("pending");
+            format!(
+                "Event {:?}: {} • cause: {} • choices: {} • outcome: {outcome}",
+                event.stage, event.title, event.cause, choices
+            )
+        })
+        .unwrap_or_else(|| "Events quiet".to_owned());
+    format!(
+        "{} details\nRoads: {routes}\n{market}\n{event}",
+        region.region_id
+    )
 }
