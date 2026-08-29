@@ -63,7 +63,7 @@ impl WorldRepository {
                 text,
                 cursor: 0,
             };
-            state.next_message += 1;
+            state.next_message = state.next_message.saturating_add(1);
             let cursor = push_event(&mut state, WorldEvent::Chat(message.clone()));
             message.cursor = cursor;
             if let Some(EventRecord {

@@ -1,4 +1,4 @@
-use super::super::{push_event, MAX_EVENTS};
+use super::super::{add_notice, push_event, MAX_EVENTS};
 use super::{guest, repo};
 use tarrowyn_protocol::WorldEvent;
 
@@ -53,4 +53,23 @@ fn event_cursor_stays_at_the_numeric_ceiling() {
 
     assert_eq!(state.cursor, u64::MAX);
     assert_eq!(state.events.back().expect("ceiling event").cursor, u64::MAX);
+}
+
+#[test]
+fn tavern_notice_id_stays_at_the_numeric_ceiling() {
+    let repository = repo();
+    let mut state = repository.state.lock().expect("world repository lock");
+    state.next_notice = u64::MAX;
+
+    add_notice(
+        &mut state,
+        "numeric-boundary",
+        "The notice remains recorded.",
+    );
+
+    assert_eq!(state.next_notice, u64::MAX);
+    assert_eq!(
+        state.notices.back().expect("ceiling notice").notice_id,
+        u64::MAX
+    );
 }

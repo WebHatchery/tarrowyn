@@ -56,7 +56,7 @@ pub(super) fn push_event(state: &mut RepositoryState, event: WorldEvent) -> u64 
 
 pub(super) fn add_notice(state: &mut RepositoryState, kind: &str, text: &str) {
     let id = state.next_notice;
-    state.next_notice += 1;
+    state.next_notice = state.next_notice.saturating_add(1);
     let mut notice = TavernNotice {
         notice_id: id,
         kind: kind.to_owned(),

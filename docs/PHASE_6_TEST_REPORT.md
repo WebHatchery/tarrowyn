@@ -254,6 +254,8 @@ wrapping. The latest clock-boundary checks also confirm trade expiry, world tick
 calendar day, and restored clock seconds remain safe at their numeric limits.
 The shared event cursor now also saturates at its numeric ceiling instead of
 wrapping or panicking; a focused event-stream regression covers that boundary.
+Chat message and tavern notice identifiers follow the same saturation policy,
+with focused boundary regressions for both durable counters.
 Regional household movement history also keeps its latest 64 entries on runtime
 updates and snapshot load. The full release gate is reserved for the next major
 milestone or a change that crosses subsystem boundaries.
