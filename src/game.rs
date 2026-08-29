@@ -632,6 +632,7 @@ impl Game {
                 }
                 "expedition" => client.queue_expedition_cycle(),
                 "chronicle" => client.refresh_tavern(),
+                "report" => client.queue_report(),
                 "practice" => client.queue_phase4("practice"),
                 "knowledge" => {
                     let own = client
@@ -682,7 +683,7 @@ impl Game {
                 }
                 "travel" | "recover-travel" | "route-repair" | "route-escort" | "route-improve"
                 | "market-region" | "region-event" | "cancel-market" | "account" | "logout"
-                | "report" | "delete-account" => client.queue_phase5(id),
+                | "delete-account" => client.queue_phase5(id),
                 _ => self.notifications.warning(format!("Unknown action: {id}")),
             }
             return;

@@ -653,6 +653,16 @@ impl Phase4Client {
         self.regional.queue_cycle(id)
     }
 
+    pub(super) fn queue_region_report(
+        &mut self,
+        request_id: String,
+        target_account_id: Option<String>,
+        message_id: Option<u64>,
+    ) -> bool {
+        self.regional
+            .queue_report(request_id, target_account_id, message_id)
+    }
+
     pub(super) fn region_summary(&self) -> String {
         self.regional.summary()
     }

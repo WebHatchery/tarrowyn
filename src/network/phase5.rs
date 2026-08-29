@@ -284,16 +284,7 @@ impl Phase5Client {
                 );
             }
             "report" => {
-                let _ = super::queue::try_push(
-                    &mut self.commands,
-                    Phase5Command::Report(ModerationReportRequest {
-                        request_id,
-                        target_account_id: None,
-                        message_id: None,
-                        category: "player_report".to_owned(),
-                        note: "Report submitted from the visible touch control.".to_owned(),
-                    }),
-                );
+                self.queue_report(request_id, None, None);
             }
             "delete-account" => {
                 let Some(account) = self
@@ -330,6 +321,24 @@ impl Phase5Client {
         self.commands.len() > queue_len
             || refresh_region
             || (id == "delete-account" && self.deletion_armed)
+    }
+
+    pub(super) fn queue_report(
+        &mut self,
+        request_id: String,
+        target_account_id: Option<String>,
+        message_id: Option<u64>,
+    ) -> bool {
+        super::queue::try_push(
+            &mut self.commands,
+            Phase5Command::Report(ModerationReportRequest {
+                request_id,
+                target_account_id,
+                message_id,
+                category: "player_report".to_owned(),
+                note: "Report submitted from the visible touch control.".to_owned(),
+            }),
+        )
     }
 
     pub(super) fn travel_control(&self) -> (&'static str, bool, bool) {

@@ -68,7 +68,10 @@ Use the visible Account control or `POST /v1/auth/link` with the configured
 `webhatchery-identity-oidc` provider fixture. Call `/v1/account`, refresh with
 `POST /v1/auth/refresh`, and revoke with `POST /v1/auth/revoke`. Verify that a
 revoked access token cannot read the account. The visible Report control
-creates a queued moderation report; `/v1/support/repair` is the audited local
+uses the latest non-self chat message as the evidence reference and its author
+as the target, or falls back to a visible other player when chat is quiet. If
+no other player is visible, it still submits a general report. The server
+rejects missing or mismatched chat evidence. `/v1/support/repair` is the audited local
 operator repair surface for stuck travel, inventory normalisation, and failed
 orders. Never include access or refresh tokens in an audit note.
 

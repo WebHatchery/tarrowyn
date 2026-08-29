@@ -14,7 +14,7 @@ impl WorldRepository {
         let mut state = self.state.lock().expect("world repository lock poisoned");
         let key = authenticate(&mut state, token, &self.config)?;
         validate_request_id(&request.request_id)?;
-        validate_bounded_text(
+        let category = validate_bounded_text(
             &request.category,
             MAX_MODERATION_CATEGORY_CHARS,
             "invalid_report",
@@ -38,6 +38,29 @@ impl WorldRepository {
                 )
             })
             .transpose()?;
+        if let Some(message_id) = request.message_id {
+            let Some(message) = state
+                .chat_history
+                .iter()
+                .find(|message| message.message_id == message_id)
+            else {
+                return Err(RepositoryError::new(
+                    400,
+                    "invalid_report_evidence",
+                    "The reported chat message is no longer available as evidence.",
+                ));
+            };
+            if target_account_id
+                .as_deref()
+                .is_some_and(|target| message.account_id != target)
+            {
+                return Err(RepositoryError::new(
+                    400,
+                    "invalid_report_evidence",
+                    "The reported chat message does not belong to the selected account.",
+                ));
+            }
+        }
         let cache = format!("moderation:{}:{}", key, request.request_id);
         if let Some(previous) = state.phase6.moderation_results.get(&cache) {
             return Ok(ApiResponse {
@@ -79,11 +102,17 @@ impl WorldRepository {
             .expect("identity exists")
             .account_id
             .clone();
+        let audit_target = match (target_account_id.as_deref(), request.message_id) {
+            (Some(target), Some(message_id)) => format!("{target} (message {message_id})"),
+            (Some(target), None) => target.to_owned(),
+            (None, Some(message_id)) => format!("message {message_id}"),
+            (None, None) => "message".to_owned(),
+        };
         audit(
             &mut state,
             &actor,
-            "moderation.report",
-            target_account_id.as_deref().unwrap_or("message"),
+            &format!("moderation.report:{category}"),
+            &audit_target,
             "accepted",
             &note,
         );

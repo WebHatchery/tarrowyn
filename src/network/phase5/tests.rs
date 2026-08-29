@@ -376,6 +376,23 @@ fn account_deletion_requires_two_taps_for_a_linked_account() {
 }
 
 #[test]
+fn report_queue_keeps_selected_account_and_chat_evidence() {
+    let mut client = Phase5Client::new();
+
+    assert!(client.queue_report(
+        "report-1".to_owned(),
+        Some("account-2".to_owned()),
+        Some(17),
+    ));
+    assert!(matches!(
+        client.commands.front(),
+        Some(Phase5Command::Report(request))
+            if request.target_account_id.as_deref() == Some("account-2")
+                && request.message_id == Some(17)
+    ));
+}
+
+#[test]
 fn guest_account_cannot_arm_deletion() {
     let mut client = Phase5Client::new();
     client.account = Some(account_response(true));

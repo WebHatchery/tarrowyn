@@ -32,6 +32,61 @@ impl OnlineClient {
         }
     }
 
+    pub(crate) fn queue_report(&mut self) {
+        if self.state != ConnectionState::Online {
+            return;
+        }
+        let own_account_id = self
+            .account
+            .as_ref()
+            .map(|account| account.account_id.as_str());
+        let evidence = self
+            .projection
+            .chat
+            .iter()
+            .rev()
+            .find(|message| Some(message.account_id.as_str()) != own_account_id)
+            .map(|message| {
+                (
+                    Some(message.account_id.clone()),
+                    Some(message.message_id),
+                    Some(message.display_name.clone()),
+                )
+            })
+            .or_else(|| {
+                self.projection
+                    .players
+                    .iter()
+                    .find(|player| {
+                        Some(player.account_id.as_str()) != own_account_id
+                            && !player.stale(self.projection.server_tick)
+                    })
+                    .map(|player| {
+                        (
+                            Some(player.account_id.clone()),
+                            None,
+                            Some(player.display_name.clone()),
+                        )
+                    })
+            })
+            .unwrap_or((None, None, None));
+        let request_id = self.next_request_id("report");
+        if self
+            .phase4
+            .queue_region_report(request_id, evidence.0, evidence.1)
+        {
+            self.status_message = match evidence.2 {
+                Some(name) => {
+                    format!("Report prepared for {name}; waiting for the moderation ledger…")
+                }
+                None => "General report prepared; waiting for the moderation ledger…".to_owned(),
+            };
+        } else {
+            self.status_message =
+                "The moderation queue is busy; wait before submitting another report.".to_owned();
+        }
+    }
+
     pub(crate) fn can_abandon_claim(&self) -> bool {
         self.phase4.can_abandon_claim()
     }
