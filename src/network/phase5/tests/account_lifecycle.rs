@@ -47,6 +47,45 @@ fn logout_signal_is_consumed_once() {
 }
 
 #[test]
+fn refresh_failure_discards_authenticated_projections() {
+    let mut client = Phase5Client::new();
+    client.pending_refresh = Some(Pending::failed("expired session"));
+    client.account = Some(account_response(false));
+    client.refresh_token = Some("refresh-secret".to_owned());
+    client.region = Some(tarrowyn_protocol::RegionSnapshot {
+        region_id: "hearthlands".to_owned(),
+        season: "thaw".to_owned(),
+        calendar_day: 1,
+        locations: Vec::new(),
+        routes: Vec::new(),
+        visible_settlements: Vec::new(),
+        player_location_id: "hearth".to_owned(),
+        travel: None,
+        interest_radius: 12,
+        cursor: 1,
+    });
+    client.market = Some(tarrowyn_protocol::MarketSnapshot {
+        orders: Vec::new(),
+        stock_notes: Vec::new(),
+        prices: Vec::new(),
+        cursor: 1,
+    });
+
+    let mut api = HttpClient::new("https://example.test");
+    api.set_bearer_token(Some("expired-access"));
+    let mut notices = Vec::new();
+    client.poll_refresh(0.0, &mut api, &mut notices);
+
+    assert!(client.pending_refresh.is_none());
+    assert!(client.account.is_none());
+    assert!(client.refresh_token.is_none());
+    assert!(client.region.is_none());
+    assert!(client.market.is_none());
+    assert!(client.logged_out);
+    assert_eq!(notices.len(), 1);
+}
+
+#[test]
 fn account_deletion_requires_two_taps_for_a_linked_account() {
     let mut client = Phase5Client::new();
     client.account = Some(account_response(false));

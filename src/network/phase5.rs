@@ -596,6 +596,8 @@ impl Phase5Client {
                 self.refresh_token = None;
                 self.auth_refresh_timer = f32::MAX;
                 self.refresh_timer = f32::MAX;
+                self.clear_cached_projections();
+                api.set_bearer_token(None);
                 self.deletion_armed = false;
                 self.logged_out = true;
                 notices.push(NetworkNotice::Warning(format!(
