@@ -22,3 +22,22 @@ fn audit_retention_keeps_the_newest_records() {
     assert_eq!(state.phase6.audits.front().unwrap().audit_id, "audit-1");
     assert_eq!(state.phase6.audits.back().unwrap().audit_id, "audit-512");
 }
+
+#[test]
+fn audit_appends_keep_the_window_bounded_before_a_tick() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let mut state = repository.state.lock().expect("repository lock");
+    for _ in 0..=super::super::MAX_AUDITS {
+        super::super::audit(
+            &mut state,
+            "account",
+            "test",
+            "retention",
+            "accepted",
+            "The audit window stays bounded after each append.",
+        );
+    }
+
+    assert_eq!(state.phase6.audits.len(), super::super::MAX_AUDITS);
+    assert_eq!(state.phase6.audits.front().unwrap().audit_id, "audit-2");
+}

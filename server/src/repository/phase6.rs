@@ -636,6 +636,7 @@ fn audit(
         tick: state.tick,
         note: note.chars().take(240).collect(),
     });
+    trim_audits(&mut state.phase6.audits);
     audit_id
 }
 
