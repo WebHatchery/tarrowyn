@@ -550,6 +550,16 @@ fn phase_four_cycle_reports_when_no_command_is_ready() {
     assert!(client.commands.is_empty());
 }
 
+#[test]
+fn phase_four_error_summary_keeps_an_api_rejection_code() {
+    assert_eq!(
+        super::short_error(
+            "HTTP API error in 'POST /v1/knowledge' [not_ready]: Record the method first."
+        ),
+        "HTTP API error in 'POST /v1/knowledge' [not_ready]: Record the method first."
+    );
+}
+
 fn claim_for_test(
     claim_id: &str,
     owner_account_id: Option<&str>,

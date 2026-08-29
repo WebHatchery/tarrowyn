@@ -188,7 +188,7 @@ impl Phase4Client {
             match result {
                 Ok(response) => self.apply_command(response.data, notices),
                 Err(error) => notices.push(NetworkNotice::Warning(format!(
-                    "The Phase 4 action timed out; tap the visible control again. {}",
+                    "The Phase 4 action could not be confirmed; tap the visible control to retry. {}",
                     short_error(&error)
                 ))),
             }
