@@ -123,3 +123,21 @@ fn trade_id_stays_at_the_numeric_ceiling() {
     let state = repository.state.lock().expect("world repository lock");
     assert_eq!(state.next_trade, u64::MAX);
 }
+
+#[test]
+fn over_capacity_trade_history_degrades_readiness() {
+    let repository = repo();
+    let creator = guest(&repository, "trade-integrity-creator");
+    let recipient = guest(&repository, "trade-integrity-recipient");
+    {
+        let mut state = repository.state.lock().expect("world repository lock");
+        for index in 0..129 {
+            state.trades.insert(
+                format!("trade-integrity-{index}"),
+                trade(&creator, &recipient, index, TradeStatus::Accepted),
+            );
+        }
+    }
+
+    assert!(!repository.ops_health().data.integrity_ok);
+}

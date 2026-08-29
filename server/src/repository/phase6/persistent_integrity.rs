@@ -74,7 +74,8 @@ fn core_ok(state: &RepositoryState, config: &ServerConfig, account_ids: &HashSet
                 && notice.created_tick <= state.tick
                 && cursor_in_world(notice.cursor, state.cursor)
         });
-    let trades_ok = unique_non_empty(state.trades.values().map(|trade| trade.trade_id.as_str()))
+    let trades_ok = state.trades.len() <= super::super::MAX_TRADES
+        && unique_non_empty(state.trades.values().map(|trade| trade.trade_id.as_str()))
         && state.trades.iter().all(|(key, trade)| {
             key == &trade.trade_id
                 && account_reference_ok(&trade.creator_account_id, account_ids)

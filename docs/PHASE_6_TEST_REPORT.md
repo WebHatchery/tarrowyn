@@ -619,6 +619,10 @@ Regional readiness now also rejects a market-order ledger above its existing
 128-record retention cap, with the market retention regression exercising the
 changed Phase 5 boundary.
 
+Core trade readiness now rejects a direct-trade ledger above its existing
+128-record retention cap, with a focused trade-retention regression covering the
+same restored-state boundary.
+
 The cross-layer persistence-readiness milestone passed the full release gate on
 2026-08-30 after the core and Phase 3-6 integrity additions: 14 protocol tests,
 282 server tests, and 93 client tests, followed by asset/code-standard checks,
