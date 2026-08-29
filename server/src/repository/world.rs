@@ -69,6 +69,30 @@ pub(super) fn farm_plots() -> Vec<FarmPlot> {
         .collect()
 }
 
+pub(super) fn restore_plots(stored: Vec<FarmPlot>) -> Vec<FarmPlot> {
+    if stored.is_empty() || is_empty_legacy_plot_layout(&stored) {
+        farm_plots()
+    } else {
+        stored
+    }
+}
+
+fn is_empty_legacy_plot_layout(plots: &[FarmPlot]) -> bool {
+    const LEGACY_POSITIONS: [Position; 6] = [
+        Position { x: 3, y: 4 },
+        Position { x: 3, y: 5 },
+        Position { x: 4, y: 4 },
+        Position { x: 4, y: 5 },
+        Position { x: 5, y: 4 },
+        Position { x: 5, y: 5 },
+    ];
+    plots.len() == LEGACY_POSITIONS.len()
+        && plots
+            .iter()
+            .zip(LEGACY_POSITIONS)
+            .all(|(plot, position)| plot.position == position && plot.crop.is_none())
+}
+
 pub(super) fn world_tiles(width: u32, height: u32) -> Vec<WorldTile> {
     (0..height)
         .flat_map(|y| {

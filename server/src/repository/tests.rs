@@ -2,10 +2,10 @@ use super::*;
 use crate::config::ServerConfig;
 use tarrowyn_protocol::{
     ChatRequest, ClaimAction, ClaimRequest, ClaimStatus, CombatAction, CombatRequest,
-    ContractAction, ContractRequest, ExpeditionAction, ExpeditionRequest, ExpeditionRole,
-    FarmingAction, FarmingRequest, GuestSessionRequest, HouseholdStatus, MovementIntent, Position,
-    SupportRepairAction, SupportRepairRequest, TileKind, TradeAction, TradeBundle, TradeRequest,
-    TradeStatus, WeaponKind, WorldEvent,
+    ContractAction, ContractRequest, CropKind, CropState, ExpeditionAction, ExpeditionRequest,
+    ExpeditionRole, FarmingAction, FarmingRequest, GuestSessionRequest, HouseholdStatus,
+    MovementIntent, Position, SupportRepairAction, SupportRepairRequest, TileKind, TradeAction,
+    TradeBundle, TradeRequest, TradeStatus, WeaponKind, WorldEvent,
 };
 
 mod chat_validation;
@@ -179,6 +179,48 @@ fn fresh_world_farm_plots_follow_the_validated_region_manifest() {
             Some(TileKind::Field)
         );
     }
+}
+
+#[test]
+fn empty_legacy_farm_layout_upgrades_without_moving_crop_state() {
+    let legacy = [(3, 4), (3, 5), (4, 4), (4, 5), (5, 4), (5, 5)]
+        .into_iter()
+        .map(|(x, y)| tarrowyn_protocol::FarmPlot {
+            position: Position { x, y },
+            crop: None,
+        })
+        .collect();
+
+    let restored = super::world::restore_plots(legacy);
+
+    assert_eq!(
+        restored
+            .iter()
+            .map(|plot| plot.position)
+            .collect::<Vec<_>>(),
+        crate::content::farm_plot_positions()
+    );
+    assert!(restored.iter().all(|plot| plot.crop.is_none()));
+}
+
+#[test]
+fn populated_legacy_farm_layout_remains_unchanged() {
+    let stored = [(3, 4), (3, 5), (4, 4), (4, 5), (5, 4), (5, 5)]
+        .into_iter()
+        .enumerate()
+        .map(|(index, (x, y))| tarrowyn_protocol::FarmPlot {
+            position: Position { x, y },
+            crop: (index == 0).then_some(CropState {
+                kind: CropKind::Wheat,
+                stage: 1,
+                quality: 2,
+                planted_tick: 4,
+                last_tended_tick: None,
+            }),
+        })
+        .collect::<Vec<_>>();
+
+    assert_eq!(super::world::restore_plots(stored.clone()), stored);
 }
 
 #[test]

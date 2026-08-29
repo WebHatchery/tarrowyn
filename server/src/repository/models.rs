@@ -267,11 +267,7 @@ impl RepositoryState {
             next_notice: stored.next_notice.max(1),
             identities,
             sessions,
-            plots: if stored.plots.is_empty() {
-                super::world::farm_plots()
-            } else {
-                stored.plots
-            },
+            plots: super::world::restore_plots(stored.plots),
             events: trim_queue(stored.events, MAX_EVENTS),
             chat_history: trim_queue(stored.chat_history, MAX_CHAT_HISTORY),
             notices: trim_queue(stored.notices, MAX_NOTICES),
