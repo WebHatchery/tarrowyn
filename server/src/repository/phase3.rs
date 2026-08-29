@@ -50,6 +50,8 @@ pub(super) struct Phase3State {
     pub(super) chronicle_archive: Vec<ChronicleEntry>,
     pub(super) claim: Option<LandClaim>,
     pub(super) expedition: Option<Expedition>,
+    #[serde(default)]
+    pub(super) expedition_credentials: Vec<String>,
     pub(super) outpost: Option<Position>,
     pub(super) request_results: HashMap<String, Phase3Response>,
 }
@@ -90,6 +92,7 @@ impl Default for Phase3State {
             chronicle_archive: Vec::new(),
             claim: None,
             expedition: None,
+            expedition_credentials: Vec::new(),
             outpost: None,
             request_results: HashMap::new(),
         }

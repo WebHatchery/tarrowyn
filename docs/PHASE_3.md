@@ -56,7 +56,10 @@ not a global level: a completed Brambleback watch grants the Trailhand
 credential, a successful pioneer expedition advances a participating player to
 Pathfinder, and sustained Hearth standing plus repeated watch reports can earn
 Road Warden. The rank and earned credentials are derived by the server and
-appear in every player projection; they do not grant raw combat power.
+appear in every player projection. Expedition participation is retained as a
+durable credential when a later expedition replaces the current registry
+record, while account linking, development reset, and deletion keep that
+identity boundary clean. Credentials do not grant raw combat power.
 
 ### History, claims, and the frontier
 

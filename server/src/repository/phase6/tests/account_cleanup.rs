@@ -38,6 +38,10 @@ fn account_deletion_removes_phase4_and_phase5_replay_payloads() {
             .identity_key
             .clone()
     };
+    {
+        let mut state = repository.state.lock().unwrap();
+        state.phase3.expedition_credentials.push(account_id.clone());
+    }
 
     repository
         .profession_order(
@@ -162,6 +166,11 @@ fn account_deletion_removes_phase4_and_phase5_replay_payloads() {
         .request_results
         .keys()
         .any(|key| key.starts_with(&format!("phase5:{identity_key}:"))));
+    assert!(!state
+        .phase3
+        .expedition_credentials
+        .iter()
+        .any(|id| id == &account_id));
 }
 
 #[test]
@@ -199,6 +208,13 @@ fn account_link_preserves_phase4_and_skill_replay_idempotency() {
     repository
         .practice_skill(&guest.account_token, skill_request.clone())
         .unwrap();
+    {
+        let mut state = repository.state.lock().unwrap();
+        state
+            .phase3
+            .expedition_credentials
+            .push(guest.account_id.clone());
+    }
 
     let linked = repository
         .auth_link(
@@ -241,4 +257,14 @@ fn account_link_preserves_phase4_and_skill_replay_idempotency() {
             .copied(),
         Some(1)
     );
+    assert!(state
+        .phase3
+        .expedition_credentials
+        .iter()
+        .any(|id| id == &linked.account_id));
+    assert!(!state
+        .phase3
+        .expedition_credentials
+        .iter()
+        .any(|id| id == &guest.account_id));
 }

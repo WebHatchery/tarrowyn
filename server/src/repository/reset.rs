@@ -21,6 +21,10 @@ pub(super) fn reset_guest(state: &mut RepositoryState, identity_key: &str) {
     state.phase3.contracts.remove(identity_key);
     state
         .phase3
+        .expedition_credentials
+        .retain(|account_id| account_id != &old_account_id);
+    state
+        .phase3
         .request_results
         .retain(|key, _| !key.starts_with(&format!("{identity_key}:")));
     state.phase4.profiles.remove(identity_key);

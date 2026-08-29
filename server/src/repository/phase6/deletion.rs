@@ -63,6 +63,10 @@ fn erase_account(state: &mut RepositoryState, request: &PendingAccountDeletion) 
     state.phase3.contracts.remove(&request.identity_key);
     state
         .phase3
+        .expedition_credentials
+        .retain(|account_id| account_id != &request.account_id);
+    state
+        .phase3
         .request_results
         .retain(|key, _| !key.starts_with(&format!("{}:", request.identity_key)));
     state.phase4.request_results.retain(|key, _| {

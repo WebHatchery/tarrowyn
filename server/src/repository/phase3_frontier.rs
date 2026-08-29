@@ -344,6 +344,18 @@ impl WorldRepository {
                         (expedition.outpost_position, expedition.clone())
                     };
                     state.phase3.outpost = Some(outpost_position);
+                    for member in &completed.members {
+                        if !state
+                            .phase3
+                            .expedition_credentials
+                            .contains(&member.account_id)
+                        {
+                            state
+                                .phase3
+                                .expedition_credentials
+                                .push(member.account_id.clone());
+                        }
+                    }
                     response.accepted = true;
                     response.expedition = Some(completed);
                     record(

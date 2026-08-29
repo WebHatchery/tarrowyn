@@ -257,6 +257,11 @@ fn migrate_phase3(
     if let Some(expedition) = state.phase3.expedition.as_mut() {
         migrate_expedition(expedition, old_account_id, new_account_id, new_display_name);
     }
+    for participant in &mut state.phase3.expedition_credentials {
+        replace_id(participant, old_account_id, new_account_id);
+    }
+    state.phase3.expedition_credentials.sort_unstable();
+    state.phase3.expedition_credentials.dedup();
     for entry in state
         .phase3
         .chronicle

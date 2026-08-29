@@ -11,13 +11,18 @@ pub(super) fn profile(state: &RepositoryState, key: &str) -> (AdventurerRank, Ve
         .get(key)
         .map(|contract| contract.completion_count)
         .unwrap_or(0);
-    let successful_expedition = state.phase3.expedition.as_ref().is_some_and(|expedition| {
-        expedition.status == ExpeditionStatus::Succeeded
-            && expedition
-                .members
-                .iter()
-                .any(|member| member.account_id == identity.account_id)
-    });
+    let successful_expedition = state
+        .phase3
+        .expedition_credentials
+        .iter()
+        .any(|account_id| account_id == &identity.account_id)
+        || state.phase3.expedition.as_ref().is_some_and(|expedition| {
+            expedition.status == ExpeditionStatus::Succeeded
+                && expedition
+                    .members
+                    .iter()
+                    .any(|member| member.account_id == identity.account_id)
+        });
     let settled_standing = identity.reputation >= 3;
     let mut credentials = Vec::new();
     if completed_contracts > 0 {
