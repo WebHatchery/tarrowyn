@@ -617,7 +617,7 @@ fn regional_summary_shows_local_condition_and_recovery_signal() {
             created_tick: 3,
             settled_tick: None,
             route_id: "north-pack-road".to_owned(),
-            fallback_used: false,
+            fallback_used: true,
         }],
         stock_notes: vec!["Seeds are available at the Hearth.".to_owned()],
         prices: vec!["Seeds 104%".to_owned()],
@@ -655,6 +655,7 @@ fn regional_summary_shows_local_condition_and_recovery_signal() {
     let economy = client.summary().lines().nth(2).unwrap().to_owned();
     assert!(economy.contains("Roads 2/2 • risk 1"));
     assert!(economy.contains("Orders 1"));
+    assert!(economy.contains("1 fallback"));
     assert!(economy.contains("Protected"));
     assert!(economy.contains("Event escalation"));
     assert!(economy.contains("Service travelling"));
@@ -663,6 +664,7 @@ fn regional_summary_shows_local_condition_and_recovery_signal() {
     assert!(inspection.contains("Saltmere Ferry Threatened"));
     assert!(inspection.contains("Seeds are available at the Hearth."));
     assert!(inspection.contains("Seeds 104%"));
+    assert!(inspection.contains("fallback 1"));
     assert!(inspection.contains("A hard thaw"));
     assert!(inspection.contains("repair ferry markers"));
     assert!(inspection.contains("chosen: none"));

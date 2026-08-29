@@ -154,9 +154,10 @@ summary, while authenticated chronicle search scans the recent window and the
 archive. This keeps the client display small without deleting old achievements.
 The account-deletion worker anonymises chronicle text in both windows and in
 the event stream before private identity state is removed. Before that removal,
-any open or failed regional market order owned by the account is cancelled and
-its unsettled escrow is returned to origin stock; the anonymised order remains
-as public settlement history without an ownerless shipment.
+any open or failed regional market order owned by the account is cancelled.
+Real unsettled escrow is returned to origin stock; a travelling fallback order
+has no player escrow and is closed without a refund. The anonymised order
+remains as public settlement history without an ownerless shipment.
 When a provider leaves while holding an accepted service order, the surviving
 requester's typed material and tool escrow is returned before that order is
 cancelled; an order owned by the departing requester is instead removed with

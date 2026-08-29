@@ -76,7 +76,16 @@ pub(super) fn render(client: &Phase5Client) -> String {
                 .iter()
                 .filter(|order| order.status == MarketOrderStatus::Open)
                 .count();
-            format!("Orders {open_orders}")
+            let fallback_orders = market
+                .orders
+                .iter()
+                .filter(|order| order.status == MarketOrderStatus::Open && order.fallback_used)
+                .count();
+            if fallback_orders == 0 {
+                format!("Orders {open_orders}")
+            } else {
+                format!("Orders {open_orders} • {fallback_orders} fallback")
+            }
         })
         .unwrap_or_else(|| "Market loading".to_owned());
     let law = client
@@ -170,6 +179,13 @@ pub(super) fn inspection(client: &Phase5Client) -> String {
                 .iter()
                 .filter(|order| order.status == MarketOrderStatus::Open)
                 .count();
+            let fallback_orders = market
+                .orders
+                .iter()
+                .filter(|order| {
+                    order.status == MarketOrderStatus::Open && order.fallback_used
+                })
+                .count();
             let stock = market
                 .stock_notes
                 .first()
@@ -180,7 +196,9 @@ pub(super) fn inspection(client: &Phase5Client) -> String {
                 .first()
                 .map(String::as_str)
                 .unwrap_or("no price notes");
-            format!("Market {open_orders} open • stock: {stock} • prices: {prices}")
+            format!(
+                "Market {open_orders} open • fallback {fallback_orders} • stock: {stock} • prices: {prices}"
+            )
         })
         .unwrap_or_else(|| "Market details are still loading.".to_owned());
     let event = client

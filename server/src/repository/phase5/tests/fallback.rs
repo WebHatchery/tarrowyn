@@ -130,4 +130,15 @@ fn travelling_fallback_is_bounded_delayed_and_not_refunded() {
         .reason
         .as_deref()
         .is_some_and(|reason| reason.contains("limited travelling fallback")));
+
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state.clock.day = state.clock.day.saturating_add(1);
+    }
+    let reset = repository
+        .market_order(&session.account_token, create_request("fallback-reset"))
+        .expect("next-day fallback response")
+        .data;
+    assert!(reset.accepted);
+    assert!(reset.order.expect("next-day fallback order").fallback_used);
 }

@@ -109,7 +109,8 @@ when investigating older history. After an account deletion, verify the
 recent window, archived records, and retained chronicle event records contain
 `Former resident` rather than the deleted display name. Also verify that any
 open or failed market order owned by the deleted account is cancelled and its
-escrow has returned to the order's origin stock.
+real escrow has returned to the order's origin stock. A travelling fallback
+order is cancelled without a refund because it never held player escrow.
 
 Rollback never replays rewards locally. A deployment mismatch is reported as a
 maintenance/reconnect state and the client waits for an authoritative response.
@@ -126,8 +127,9 @@ restart, duplicate-request, backup, and native dump/restore portion of that
 gate; target-environment failover, concurrency, and rollback drills remain
 explicit. For a stuck journey use `ClearStuckTravel`, for a duplicate or invalid
 inventory use `NormalizeInventory`, and for an open or failed shipment use
-`ReconcileTrade`; the operation restores the origin escrow before closing the
-order. `ClearStuckTravel` returns the character to the journey's recorded origin
+`ReconcileTrade`; the operation restores real origin escrow before closing the
+order. For a travelling fallback order, reconciliation closes it without
+inventing an escrow refund. `ClearStuckTravel` returns the character to the journey's recorded origin
 and rejects an already arrived or missing journey. For a lost access flag on an
 active, non-expired claim, use
 `RestoreClaim` with the target account and claim ID; it never extends the lease
