@@ -482,6 +482,7 @@ impl Phase5Client {
                 self.pending_account = None;
                 self.pending_refresh = None;
                 self.commands.clear();
+                self.clear_cached_projections();
                 self.account = None;
                 self.refresh_token = None;
                 self.refreshed_session = None;
@@ -510,6 +511,7 @@ impl Phase5Client {
                     self.pending_account = None;
                     self.pending_refresh = None;
                     self.commands.clear();
+                    self.clear_cached_projections();
                     self.account = None;
                     self.refresh_token = None;
                     self.refreshed_session = None;
@@ -543,9 +545,8 @@ impl Phase5Client {
         self.pending_refresh = None;
         self.pending_command = None;
         self.commands.clear();
-        self.events = None;
+        self.clear_cached_projections();
         self.account = None;
-        self.households = None;
         self.linked_account = None;
         self.refreshed_session = None;
         self.refresh_token = None;
@@ -553,6 +554,15 @@ impl Phase5Client {
         self.deletion_armed = false;
         self.refresh_timer = 0.0;
         self.auth_refresh_timer = f32::MAX;
+    }
+
+    fn clear_cached_projections(&mut self) {
+        self.region = None;
+        self.settlements = None;
+        self.households = None;
+        self.market = None;
+        self.events = None;
+        self.law = None;
     }
 
     pub(super) fn reset_event_cursor(&mut self) {

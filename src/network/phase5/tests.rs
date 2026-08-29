@@ -10,6 +10,60 @@ fn refresh_is_scheduled_before_a_production_session_expires() {
 }
 
 #[test]
+fn clear_drops_cached_regional_projections() {
+    let mut client = Phase5Client::new();
+    client.region = Some(tarrowyn_protocol::RegionSnapshot {
+        region_id: "hearthlands".to_owned(),
+        season: "thaw".to_owned(),
+        calendar_day: 1,
+        locations: Vec::new(),
+        routes: Vec::new(),
+        visible_settlements: Vec::new(),
+        player_location_id: "hearth".to_owned(),
+        travel: None,
+        interest_radius: 12,
+        cursor: 1,
+    });
+    client.settlements = Some(tarrowyn_protocol::SettlementsResponse {
+        settlements: Vec::new(),
+        cursor: 1,
+    });
+    client.households = Some(tarrowyn_protocol::RegionalHouseholdsResponse {
+        households: Vec::new(),
+        vacancies: Vec::new(),
+        cursor: 1,
+    });
+    client.market = Some(MarketSnapshot {
+        orders: Vec::new(),
+        stock_notes: Vec::new(),
+        prices: Vec::new(),
+        cursor: 1,
+    });
+    client.events = Some(tarrowyn_protocol::RegionalEventsResponse {
+        events: Vec::new(),
+        cursor: 1,
+    });
+    client.law = Some(LawBoundaryResponse {
+        pvp_enabled: false,
+        theft_enabled: false,
+        claims_protected: true,
+        trade_protected: true,
+        travel_protected: true,
+        recovery_path: "Protected recovery".to_owned(),
+        policy_version: "phase5-no-pvp-1".to_owned(),
+    });
+
+    client.clear();
+
+    assert!(client.region.is_none());
+    assert!(client.settlements.is_none());
+    assert!(client.households.is_none());
+    assert!(client.market.is_none());
+    assert!(client.events.is_none());
+    assert!(client.law.is_none());
+}
+
+#[test]
 fn route_repair_button_queues_an_authoritative_repair() {
     let mut client = Phase5Client::new();
     client.region = Some(tarrowyn_protocol::RegionSnapshot {
