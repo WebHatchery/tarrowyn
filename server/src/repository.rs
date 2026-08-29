@@ -634,6 +634,23 @@ pub(super) fn validate_request_id(request_id: &str) -> Result<(), RepositoryErro
     }
 }
 
+pub(super) fn validate_bounded_text(
+    value: &str,
+    max_chars: usize,
+    code: &'static str,
+    message: &'static str,
+) -> Result<String, RepositoryError> {
+    let trimmed = value.trim();
+    if trimmed.is_empty()
+        || trimmed.chars().count() > max_chars
+        || trimmed.chars().any(char::is_control)
+    {
+        Err(RepositoryError::new(400, code, message))
+    } else {
+        Ok(trimmed.to_owned())
+    }
+}
+
 pub(super) fn validate_event_cursor(
     state: &RepositoryState,
     since: u64,

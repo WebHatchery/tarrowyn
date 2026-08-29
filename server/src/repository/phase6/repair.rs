@@ -3,11 +3,13 @@
 use super::super::models::RepositoryState;
 use super::super::phase4::unix_time_seconds;
 use super::super::{meta, record_command_outcome, RepositoryError, WorldRepository};
-use super::{audit, is_support_operator, validate_request_id};
+use super::{audit, is_support_operator, validate_bounded_text, validate_request_id};
 use tarrowyn_protocol::{
     ApiResponse, ClaimLifecycleStatus, SupportRepairAction, SupportRepairRequest,
     SupportRepairResponse,
 };
+
+const MAX_SUPPORT_NOTE_CHARS: usize = 240;
 
 impl WorldRepository {
     pub fn support_repair(
@@ -31,13 +33,12 @@ impl WorldRepository {
                 "A configured support operator account is required for repair actions.",
             ));
         }
-        if request.note.trim().is_empty() {
-            return Err(RepositoryError::new(
-                400,
-                "repair_note_required",
-                "Every support repair needs an operator note.",
-            ));
-        }
+        let note = validate_bounded_text(
+            &request.note,
+            MAX_SUPPORT_NOTE_CHARS,
+            "invalid_repair_note",
+            "Every support repair needs a bounded note without control characters.",
+        )?;
         let cache = format!("repair:{}:{}", actor, request.request_id);
         if let Some(previous) = state.phase6.request_results.get(&cache) {
             return Ok(ApiResponse {
@@ -76,7 +77,7 @@ impl WorldRepository {
             "support.repair",
             &target_account,
             if accepted { "accepted" } else { "rejected" },
-            &request.note,
+            &note,
         );
         let response = SupportRepairResponse {
             request_id: request.request_id.clone(),

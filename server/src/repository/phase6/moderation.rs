@@ -1,6 +1,10 @@
 use super::*;
 use tarrowyn_protocol::{ApiResponse, ModerationReportRequest, ModerationReportResponse};
 
+const MAX_MODERATION_CATEGORY_CHARS: usize = 40;
+const MAX_MODERATION_NOTE_CHARS: usize = 240;
+const MAX_ACCOUNT_ID_CHARS: usize = 160;
+
 impl WorldRepository {
     pub fn moderation_report(
         &self,
@@ -10,13 +14,30 @@ impl WorldRepository {
         let mut state = self.state.lock().expect("world repository lock poisoned");
         let key = authenticate(&mut state, token, &self.config)?;
         validate_request_id(&request.request_id)?;
-        if request.category.trim().is_empty() || request.note.trim().is_empty() {
-            return Err(RepositoryError::new(
-                400,
-                "invalid_report",
-                "A moderation category and note are required.",
-            ));
-        }
+        validate_bounded_text(
+            &request.category,
+            MAX_MODERATION_CATEGORY_CHARS,
+            "invalid_report",
+            "A moderation category is required, bounded, and must contain no control characters.",
+        )?;
+        let note = validate_bounded_text(
+            &request.note,
+            MAX_MODERATION_NOTE_CHARS,
+            "invalid_report",
+            "A moderation note is required, bounded, and must contain no control characters.",
+        )?;
+        let target_account_id = request
+            .target_account_id
+            .as_deref()
+            .map(|target| {
+                validate_bounded_text(
+                    target,
+                    MAX_ACCOUNT_ID_CHARS,
+                    "invalid_report_target",
+                    "A moderation target account ID must be bounded and contain no control characters.",
+                )
+            })
+            .transpose()?;
         let cache = format!("moderation:{}:{}", key, request.request_id);
         if let Some(previous) = state.phase6.moderation_results.get(&cache) {
             return Ok(ApiResponse {
@@ -62,9 +83,9 @@ impl WorldRepository {
             &mut state,
             &actor,
             "moderation.report",
-            request.target_account_id.as_deref().unwrap_or("message"),
+            target_account_id.as_deref().unwrap_or("message"),
             "accepted",
-            &request.note,
+            &note,
         );
         state
             .phase6

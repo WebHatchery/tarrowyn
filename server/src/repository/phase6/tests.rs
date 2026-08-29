@@ -18,6 +18,7 @@ mod deletion_queue;
 mod long_session;
 mod moderation_cooldown;
 mod moderation_retention;
+mod moderation_validation;
 mod service_orders;
 mod support_chronicle;
 mod support_inventory;
