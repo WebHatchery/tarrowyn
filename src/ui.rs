@@ -76,9 +76,13 @@ fn draw_header(ctx: &UiContext<'_>) {
     );
 
     let time = format_clock(ctx.clock_minutes);
+    let day_label = ctx
+        .calendar_season
+        .map(|season| format!("Day {} • {}", ctx.day, season))
+        .unwrap_or_else(|| format!("Day {}", ctx.day));
     draw_badge(
-        Rect::new(rect.right() - 344.0, rect.y + 18.0, 105.0, 28.0),
-        &format!("Day {}", ctx.day),
+        Rect::new(rect.right() - 364.0, rect.y + 18.0, 125.0, 28.0),
+        &day_label,
         Color::new(0.16, 0.24, 0.25, 1.0),
         CREAM,
     );

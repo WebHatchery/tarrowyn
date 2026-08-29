@@ -632,6 +632,10 @@ impl Phase4Client {
         self.regional.summary()
     }
 
+    pub(super) fn regional_season(&self) -> Option<&str> {
+        self.regional.season()
+    }
+
     pub(super) fn take_linked_account(
         &mut self,
         client_key: Option<&str>,

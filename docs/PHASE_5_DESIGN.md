@@ -50,7 +50,9 @@ one game day is 80 real minutes. The 14-day season and four-season year (56
 game days) remain development fixtures pending pacing validation. Phase 5 names
 the seasons thaw, greenrise, harvest, and
 deepwinter. Seasons change opportunity and route pressure but do not close
-essential services. Phase 6 owns the long-session calendar compatibility check.
+essential services. The online header shows the current server-projected season
+beside the calendar day, while Phase 6 owns the long-session calendar
+compatibility check and final pacing decision.
 
 Settlement activity is local rather than a regional broadcast: active character
 presence supports the nearest settlement, and open market orders pulse activity
@@ -64,6 +66,11 @@ and marks a recovery opportunity as open. The comparison data remains
 available in the same projection so a player can see the wider region without
 leaving the shared-road sidebar; the local line also carries compact claim,
 free-plot, and public-work counts.
+
+The shared-road sidebar also exposes compact road availability/risk, open market
+orders, and the protected-law boundary. Detailed route names, stock notes, and
+price notes remain a follow-up inspector surface rather than being squeezed into
+the touch summary.
 
 Each settlement projection also rolls up its nearest recognised claims, free
 plots, and public works. The bounded content fixture therefore gives Hearth,

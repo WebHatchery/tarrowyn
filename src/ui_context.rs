@@ -30,6 +30,7 @@ pub struct UiContext<'a> {
     pub world: &'a WorldState,
     pub player_position: TilePos,
     pub day: u32,
+    pub calendar_season: Option<&'a str>,
     pub clock_minutes: u32,
     pub time_of_day: TimeOfDay,
     pub night: bool,

@@ -80,6 +80,9 @@ line.
 The regional telemetry regression also confirms the sidebar projection exposes
 authoritative road availability/risk, open market orders, and the protected-law
 boundary instead of leaving those loaded records hidden behind the controls.
+The calendar presentation regression keeps the server-projected development
+season available to the online header beside the calendar day without locking
+the deferred season/year pacing decision.
 The settlement-facilities regression confirms the regional projection maps
 claims, free plots, and public works to their nearest settlement while leaving
 the Phase 4 registry and infrastructure records authoritative.

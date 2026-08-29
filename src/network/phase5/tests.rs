@@ -289,6 +289,7 @@ fn regional_summary_shows_local_condition_and_recovery_signal() {
         policy_version: "phase5-no-pvp-1".to_owned(),
     });
 
+    assert_eq!(client.season(), Some("thaw"));
     let first_line = client.summary().lines().next().unwrap().to_owned();
     assert!(first_line.contains("saltmere"));
     assert!(first_line.contains("Strained"));

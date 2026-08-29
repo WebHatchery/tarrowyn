@@ -122,6 +122,9 @@ The same sidebar now exposes compact authoritative road availability and risk,
 open market orders, and the protected-law boundary, so the Travel and Market
 controls have visible regional telemetry while richer inspection remains an
 appropriate follow-up surface.
+The online header also shows the authoritative regional season beside the
+calendar day; the development cadence remains subject to the Phase 6 pacing
+decision.
 
 ## Acceptance test
 
