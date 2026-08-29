@@ -92,6 +92,11 @@ impl super::super::WorldRepository {
                         "The current service order recipe requires the Carpenter profession."
                             .to_owned(),
                     );
+                } else if !super::service_order_room(&mut state.phase4) {
+                    response.reason = Some(
+                        "The service order board is full; complete an existing order before adding another."
+                            .to_owned(),
+                    );
                 } else {
                     let stock = state
                         .phase4
@@ -127,7 +132,6 @@ impl super::super::WorldRepository {
                         state.phase4.next_order_id += 1;
                         response.order = Some(order.clone());
                         state.phase4.orders.push(order);
-                        state.phase4.orders.truncate(64);
                         response.accepted = true;
                         record(&mut state, "service order created", "A need becomes work another profession can answer", "A player escrowed materials and posted a repair order on the settlement board.");
                     }

@@ -4,6 +4,7 @@ mod farming;
 mod governance_retention;
 mod knowledge;
 mod professions;
+mod service_order_retention;
 
 use tarrowyn_protocol::{
     ClaimLifecycleAction, ClaimLifecycleRequest, GovernanceAction, GovernanceRequest,

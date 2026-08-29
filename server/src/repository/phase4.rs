@@ -7,8 +7,8 @@ use tarrowyn_protocol::{
     Capability, ClaimLifecycleResponse, ClaimRecord, FarmAnimal, FarmAnimalKind,
     GovernanceResponse, GovernanceState, HouseholdRecord, InfrastructureRecord, KnowledgeItem,
     KnowledgeResponse, LocalCombatResponse, LocalCombatState, MaterialStock, OfficeKind,
-    OfficeRecord, ProfessionProfile, ProfessionResponse, ServiceOrder, SkillLesson, SkillResponse,
-    TaxPolicy,
+    OfficeRecord, ProfessionProfile, ProfessionResponse, ServiceOrder, ServiceOrderStatus,
+    SkillLesson, SkillResponse, TaxPolicy,
 };
 
 mod claims;
@@ -20,6 +20,7 @@ mod professions;
 
 const DEFAULT_TREASURY: u32 = 48;
 pub(super) const MAX_PROPOSALS: usize = 64;
+pub(super) const MAX_SERVICE_ORDERS: usize = 64;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub(super) enum Phase4Response {
@@ -167,6 +168,37 @@ pub(super) fn proposal_room(governance: &mut GovernanceState) -> bool {
         return false;
     };
     governance.proposals.remove(index);
+    true
+}
+
+pub(super) fn trim_service_orders(phase4: &mut Phase4State) {
+    while phase4.orders.len() > MAX_SERVICE_ORDERS {
+        let Some(index) = phase4.orders.iter().position(|order| {
+            matches!(
+                order.status,
+                ServiceOrderStatus::Completed | ServiceOrderStatus::Cancelled
+            )
+        }) else {
+            break;
+        };
+        phase4.orders.remove(index);
+    }
+}
+
+pub(super) fn service_order_room(phase4: &mut Phase4State) -> bool {
+    trim_service_orders(phase4);
+    if phase4.orders.len() < MAX_SERVICE_ORDERS {
+        return true;
+    }
+    let Some(index) = phase4.orders.iter().position(|order| {
+        matches!(
+            order.status,
+            ServiceOrderStatus::Completed | ServiceOrderStatus::Cancelled
+        )
+    }) else {
+        return false;
+    };
+    phase4.orders.remove(index);
     true
 }
 

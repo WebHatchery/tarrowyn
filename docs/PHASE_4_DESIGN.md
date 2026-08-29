@@ -113,6 +113,11 @@ benefit from the validated recipe manifest. Optional client fields remain
 accepted for older clients, but a conflicting profession is rejected and a
 custom service label cannot change the authoritative order.
 
+The service-order board retains at most 64 records. Completed or cancelled
+history makes room for new work while open and accepted orders remain
+addressable; when every retained slot still carries live work, a new order is
+rejected before its materials or tool are escrowed.
+
 The first discoverable knowledge is the Moonberry trellis method. It can be
 discovered, written into the guild archive, taught to another account, and
 applied. Until the discoverer teaches it or records it, other players receive
