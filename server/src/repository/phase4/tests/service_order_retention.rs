@@ -24,9 +24,11 @@ fn service_order(index: usize, status: ServiceOrderStatus) -> ServiceOrder {
         reward_gold: 8,
         benefit: "The requesting field tool returns to working condition.".to_owned(),
         status,
-        quality: (status == ServiceOrderStatus::Completed)
-            .then_some(100)
-            .unwrap_or(0),
+        quality: if status == ServiceOrderStatus::Completed {
+            100
+        } else {
+            0
+        },
         created_tick: index as u64,
         completed_tick: (status == ServiceOrderStatus::Completed).then_some(index as u64),
     }
