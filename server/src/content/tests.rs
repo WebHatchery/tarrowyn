@@ -486,6 +486,23 @@ fn household_templates_follow_the_validated_manifest() {
 }
 
 #[test]
+fn household_projection_ids_must_be_unique() {
+    let error = super::households::validate_projection_ids(
+        vec!["household-maren", "household-maren"],
+        vec!["household-maren-region", "future-household-region"],
+    )
+    .expect_err("duplicate household projection IDs must fail validation");
+    assert!(error.contains("household opportunity"));
+
+    let error = super::households::validate_projection_ids(
+        vec!["household-maren", "future-household"],
+        vec!["household-maren-region", "household-maren-region"],
+    )
+    .expect_err("duplicate regional projection IDs must fail validation");
+    assert!(error.contains("regional household"));
+}
+
+#[test]
 fn infrastructure_profiles_follow_the_validated_manifest() {
     let profiles = super::infrastructure_profiles();
     assert_eq!(profiles.len(), 6);

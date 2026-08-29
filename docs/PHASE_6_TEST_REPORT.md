@@ -93,6 +93,8 @@ position outside the configured world before the wilderness projection loads.
 The household-template regression confirms the opportunity and regional
 household projections share the validated household manifest for identity,
 members, movement, service, and history.
+The household-content regression also requires the opportunity and regional
+projection identities to remain unique as authored household content expands.
 The infrastructure-profile regression confirms public-work projections follow
 the validated infrastructure manifest for identity, kind, position, maintenance,
 quality, and recovery notes.

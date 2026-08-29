@@ -69,6 +69,13 @@ pub(super) fn validate(region: &super::RegionManifest) -> Result<(), String> {
         macroquad_toolkit::include_json_str!("../../../assets/data/households.json"),
     )
     .map_err(|error| format!("households JSON is invalid: {error}"))?;
+    validate_manifest(&households, region)
+}
+
+fn validate_manifest(
+    households: &HouseholdsManifest,
+    region: &super::RegionManifest,
+) -> Result<(), String> {
     super::validate_id_list(
         "household",
         households
@@ -83,6 +90,18 @@ pub(super) fn validate(region: &super::RegionManifest) -> Result<(), String> {
         .map(|household| household.id.as_str())
         .collect();
     super::validate_required_ids("household", &household_ids, &["household-maren"])?;
+    validate_projection_ids(
+        households
+            .households
+            .iter()
+            .map(|household| household.opportunity_id.as_str())
+            .collect(),
+        households
+            .households
+            .iter()
+            .map(|household| household.regional_id.as_str())
+            .collect(),
+    )?;
     let location_ids: std::collections::HashSet<&str> = region
         .locations
         .iter()
@@ -124,6 +143,14 @@ pub(super) fn validate(region: &super::RegionManifest) -> Result<(), String> {
         );
     }
     Ok(())
+}
+
+pub(super) fn validate_projection_ids(
+    opportunity_ids: Vec<&str>,
+    regional_ids: Vec<&str>,
+) -> Result<(), String> {
+    super::validate_id_list("household opportunity", opportunity_ids)?;
+    super::validate_id_list("regional household", regional_ids)
 }
 
 pub(crate) fn opportunity_template(household_id: &str) -> OpportunityTemplate {

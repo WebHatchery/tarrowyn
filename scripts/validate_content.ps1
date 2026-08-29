@@ -168,8 +168,12 @@ $threatRecords = Get-Records $manifests["threats.json"] "threats" "threats"
 Assert-Records "threats" $threatRecords @("name", "monster", "resource_demand", "rumour") @()
 Assert-RequiredRecordIds "Threats" $threatRecords @("whisperwood-edge")
 $householdRecords = Get-Records $manifests["households.json"] "households" "households"
-Assert-Records "households" $householdRecords @("name", "occupation", "home_settlement", "service", "clue", "reason", "regional_service") @("members", "history")
+Assert-Records "households" $householdRecords @("opportunity_id", "regional_id", "name", "occupation", "home_settlement", "service", "clue", "reason", "regional_service") @("members", "history")
 Assert-RequiredRecordIds "Households" $householdRecords @("household-maren")
+$opportunityIds = @($householdRecords | ForEach-Object { [string]$_.opportunity_id })
+if ($opportunityIds.Count -ne ($opportunityIds | Sort-Object -Unique).Count) { throw "Household opportunity IDs must be unique." }
+$regionalHouseholdIds = @($householdRecords | ForEach-Object { [string]$_.regional_id })
+if ($regionalHouseholdIds.Count -ne ($regionalHouseholdIds | Sort-Object -Unique).Count) { throw "Regional household IDs must be unique." }
 $infrastructureRecords = Get-Records $manifests["infrastructure.json"] "infrastructure" "infrastructure"
 Assert-Records "infrastructure" $infrastructureRecords @("name", "kind", "note") @()
 Assert-RequiredRecordIds "Infrastructure" $infrastructureRecords @("north-road", "hearth-services")
