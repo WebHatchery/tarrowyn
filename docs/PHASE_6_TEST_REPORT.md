@@ -578,8 +578,8 @@ and request, with one focused revoke-key regression.
 Production replay caches now enforce the shared bounded entry window, with one
 focused valid-entry overflow regression.
 Character skill ledgers now validate catalog membership, unique discoveries,
-bounded qualifying history, positive counters, and entry caps, with three
-focused skill-ledger regressions.
+bounded qualifying history, positive counters, entry caps, and qualified
+discovery requirements, with four focused skill-ledger regressions.
 Regional travel persistence now keeps status, progress, and ETA in agreement,
 with one focused travel-timeline regression.
 

@@ -78,3 +78,23 @@ fn malformed_skill_qualifying_history_degrades_readiness() {
     assert!(!health.ready);
     assert!(!health.integrity_ok);
 }
+
+#[test]
+fn unqualified_skill_discovery_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = super::guest(&repository, "skill-discovery-integrity");
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state
+            .identities
+            .get_mut(&session.client_key)
+            .expect("identity")
+            .skills
+            .known
+            .push("weapon-fighting".to_owned());
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}

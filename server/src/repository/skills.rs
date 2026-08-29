@@ -42,7 +42,14 @@ pub(crate) fn skill_ledger_integrity_ok(ledger: &SkillLedger) -> bool {
             manifest
                 .skills
                 .iter()
-                .any(|definition| definition.id == *skill_id && definition.depth > 1)
+                .find(|definition| definition.id == *skill_id && definition.depth > 1)
+                .is_some_and(|definition| {
+                    definition
+                        .prerequisites
+                        .iter()
+                        .all(|prerequisite| mastery(ledger, prerequisite) >= 5)
+                        && qualifying_requirements_met(ledger, definition)
+                })
         });
     let qualifying_ok = ledger.qualifying_events.len() <= MAX_SKILL_LEDGER_ENTRIES
         && ledger.qualifying_events.iter().all(|(event, count)| {
