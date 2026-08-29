@@ -196,6 +196,13 @@ Preview. The publisher reported a non-blocking Project Roost tracking HTTP 500
 and the existing `net2` future-incompatibility warning; neither prevented the
 deployment artifact from being produced.
 
+The subsequent focused client checks cover the visible recovery-safe Retreat
+path for both local and frontier combat, the regional inspection's event cause,
+exact touch-selectable intervention choices, and its pending/resolved outcome
+state. These maintenance changes also passed `publish.ps1` with Windows and
+WebGL Preview deployment; no full release gate was rerun because they stayed
+within the established client/UI boundary.
+
 ## Load and failure gate
 
 The accepted regional target is 24 connected clients, 50 open orders, and a
