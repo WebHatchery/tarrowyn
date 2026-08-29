@@ -101,6 +101,13 @@ fn validate_manifest(households: &NpcHouseholdsManifest) -> Result<(), String> {
             .map(|household| household.id.as_str())
             .collect(),
     )?;
+    validate_projection_ids(
+        households
+            .npc_households
+            .iter()
+            .map(|household| household.household_id.as_str())
+            .collect(),
+    )?;
     if households.npc_households.is_empty()
         || households.npc_households.iter().any(|household| {
             household.household_id.trim().is_empty()
@@ -141,4 +148,8 @@ fn validate_manifest(households: &NpcHouseholdsManifest) -> Result<(), String> {
         return Err("NPC households are missing the launch Bellweather household".to_owned());
     }
     Ok(())
+}
+
+pub(super) fn validate_projection_ids(household_ids: Vec<&str>) -> Result<(), String> {
+    super::validate_id_list("NPC household projection", household_ids)
 }

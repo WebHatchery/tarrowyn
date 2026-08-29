@@ -543,6 +543,16 @@ fn fixed_npc_households_follow_the_validated_manifest() {
 }
 
 #[test]
+fn npc_household_projection_ids_must_be_unique() {
+    let error = super::npcs::validate_projection_ids(vec![
+        "household-bellweather",
+        "household-bellweather",
+    ])
+    .expect_err("duplicate NPC household projection IDs must fail validation");
+    assert!(error.contains("NPC household projection"));
+}
+
+#[test]
 fn recipes_follow_the_validated_manifest() {
     let recipe = super::recipe_template("field-tool-repair");
     assert_eq!(recipe.name, "Field tool repair");

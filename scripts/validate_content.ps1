@@ -178,8 +178,10 @@ $infrastructureRecords = Get-Records $manifests["infrastructure.json"] "infrastr
 Assert-Records "infrastructure" $infrastructureRecords @("name", "kind", "note") @()
 Assert-RequiredRecordIds "Infrastructure" $infrastructureRecords @("north-road", "hearth-services")
 $npcHouseholdRecords = Get-Records $manifests["npc_households.json"] "npc_households" "npc households"
-Assert-Records "npc households" $npcHouseholdRecords @("household_name", "home", "work", "demand", "clue") @("members", "needs")
+Assert-Records "npc households" $npcHouseholdRecords @("household_id", "household_name", "home", "work", "demand", "clue") @("members", "needs")
 Assert-RequiredRecordIds "NPC households" $npcHouseholdRecords @("bellweather")
+$npcHouseholdIds = @($npcHouseholdRecords | ForEach-Object { [string]$_.household_id })
+if ($npcHouseholdIds.Count -ne ($npcHouseholdIds | Sort-Object -Unique).Count) { throw "NPC household projection IDs must be unique." }
 $recipeRecords = Get-Records $manifests["recipes.json"] "recipes" "recipes"
 Assert-Records "recipes" $recipeRecords @("name", "profession", "service", "benefit") @()
 Assert-RequiredRecordIds "Recipes" $recipeRecords @("field-tool-repair")

@@ -105,6 +105,8 @@ outside the visible 0–100 interaction range before completing the order.
 The fixed-NPC household regression confirms the Bellweather service household
 follows validated NPC-household content without exposing a general family
 simulation contract.
+The same content boundary requires emitted NPC household projection identities
+to remain unique as authored households expand.
 The focused operations regression counts active travelling fallback market
 orders separately from the general open-order backlog for support monitoring.
 The local-combat regression confirms accepted actions publish a persisted
