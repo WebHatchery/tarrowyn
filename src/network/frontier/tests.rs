@@ -39,3 +39,24 @@ fn finished_expedition_cycle_announces_a_new_party() {
     assert_eq!(request.action, ExpeditionAction::Announce);
     assert_eq!(request.role, Some(ExpeditionRole::Scout));
 }
+
+#[test]
+fn contract_cycle_waits_through_the_tavern_cooldown() {
+    let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
+    client.state = crate::network::ConnectionState::Online;
+    client.frontier.contracts = vec![AdventurerContract {
+        contract_id: "brambleback-watch".to_owned(),
+        title: "Brambleback watch".to_owned(),
+        description: "A repeatable watch.".to_owned(),
+        target: tarrowyn_protocol::MonsterKind::Brambleback,
+        progress: 3,
+        required_progress: 3,
+        reward_gold: 8,
+        status: ContractStatus::Cooldown,
+        completion_count: 1,
+        available_at_tick: 10,
+    }];
+
+    client.queue_contract_cycle();
+    assert!(client.frontier.commands.is_empty());
+}

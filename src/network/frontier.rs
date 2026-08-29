@@ -320,6 +320,7 @@ fn command_notice(
 impl OnlineClient {
     pub fn queue_contract_cycle(&mut self) {
         let action = match self.frontier.contracts.first() {
+            Some(contract) if contract.status == ContractStatus::Cooldown => return,
             Some(contract)
                 if contract.status == ContractStatus::Accepted && contract.progress < 3 =>
             {
