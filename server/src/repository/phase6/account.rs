@@ -27,6 +27,11 @@ pub(super) fn migrate_guest_account_references(
         old_display_name,
         new_display_name,
     );
+    for settlement in &mut state.phase5.settlements {
+        for entry in &mut settlement.chronicle {
+            migrate_chronicle(entry, old_display_name, new_display_name);
+        }
+    }
     migrate_phase4(state, old_account_id, new_account_id, new_display_name);
     for order in &mut state.phase5.market_orders {
         if replace_id(&mut order.owner_account_id, old_account_id, new_account_id) {

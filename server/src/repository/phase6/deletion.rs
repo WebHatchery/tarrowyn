@@ -270,6 +270,11 @@ fn anonymize_public_history(
     {
         anonymize_chronicle(entry, deleted_display_name);
     }
+    for settlement in &mut state.phase5.settlements {
+        for entry in &mut settlement.chronicle {
+            anonymize_chronicle(entry, deleted_display_name);
+        }
+    }
 }
 
 fn anonymize_event(event: &mut WorldEvent, account_id: &str, deleted_display_name: &str) {
