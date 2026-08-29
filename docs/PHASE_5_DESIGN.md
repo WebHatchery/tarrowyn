@@ -62,7 +62,8 @@ existing recovery opportunity remains visible for a later player.
 The touch client places the current settlement's condition beside travel status
 and marks a recovery opportunity as open. The comparison data remains
 available in the same projection so a player can see the wider region without
-leaving the shared-road sidebar.
+leaving the shared-road sidebar; the local line also carries compact claim,
+free-plot, and public-work counts.
 
 Each settlement projection also rolls up its nearest recognised claims, free
 plots, and public works. The bounded content fixture therefore gives Hearth,

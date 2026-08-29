@@ -174,9 +174,9 @@ fn regional_summary_shows_local_condition_and_recovery_signal() {
             industry: 38,
             governance: 40,
             player_activity: 10,
-            claim_count: 0,
-            available_plot_count: 0,
-            public_works: Vec::new(),
+            claim_count: 2,
+            available_plot_count: 3,
+            public_works: vec!["Quay".to_owned(), "Hall".to_owned()],
             condition: tarrowyn_protocol::SettlementCondition::Strained,
             milestones: Vec::new(),
             vacancies: vec!["ferry hand".to_owned()],
@@ -194,6 +194,9 @@ fn regional_summary_shows_local_condition_and_recovery_signal() {
     assert!(first_line.contains("saltmere"));
     assert!(first_line.contains("Strained"));
     assert!(first_line.contains("recovery open"));
+    assert!(first_line.contains("2 claims"));
+    assert!(first_line.contains("3 free plots"));
+    assert!(first_line.contains("2 works"));
 }
 
 fn regional_event(

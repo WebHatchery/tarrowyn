@@ -69,7 +69,8 @@ The settlement-activity regression confirms activity is scoped to the touched
 settlement, decays after the last session expires, and exposes a low-activity
 strained condition without deleting the settlement projection.
 The regional-summary regression confirms the touch projection places the
-current settlement condition and recovery-open signal beside travel status.
+current settlement condition, recovery-open signal, and compact facility counts
+beside travel status.
 The settlement-facilities regression confirms the regional projection maps
 claims, free plots, and public works to their nearest settlement while leaving
 the Phase 4 registry and infrastructure records authoritative.

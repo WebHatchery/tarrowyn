@@ -22,9 +22,21 @@ pub(super) fn render(client: &Phase5Client) -> String {
                 })
                 .map(|settlement| {
                     if settlement.recovery_opportunity.is_some() {
-                        format!("{:?} • recovery open", settlement.condition)
+                        format!(
+                            "{:?} • recovery open • {} claims • {} free plots • {} works",
+                            settlement.condition,
+                            settlement.claim_count,
+                            settlement.available_plot_count,
+                            settlement.public_works.len()
+                        )
                     } else {
-                        format!("{:?}", settlement.condition)
+                        format!(
+                            "{:?} • {} claims • {} free plots • {} works",
+                            settlement.condition,
+                            settlement.claim_count,
+                            settlement.available_plot_count,
+                            settlement.public_works.len()
+                        )
                     }
                 })
                 .unwrap_or_else(|| "condition loading".to_owned());
