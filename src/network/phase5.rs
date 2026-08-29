@@ -633,6 +633,7 @@ impl Phase5Client {
             Err(error) => {
                 self.pending_region = None;
                 self.pending_settlements = None;
+                self.pending_households = None;
                 self.pending_market = None;
                 self.pending_events = None;
                 self.pending_law = None;
