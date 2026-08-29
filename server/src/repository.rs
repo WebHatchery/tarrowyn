@@ -165,7 +165,7 @@ impl WorldRepository {
         }
         if request.reset || !state.identities.contains_key(&client_key) {
             let number = state.next_guest;
-            state.next_guest += 1;
+            state.next_guest = state.next_guest.saturating_add(1);
             let current_day = state.clock.day;
             state.identities.insert(
                 client_key.clone(),
@@ -210,7 +210,7 @@ impl WorldRepository {
             state.sessions.remove(&token);
         }
         let token = format!("dev-session-{}", state.next_token);
-        state.next_token += 1;
+        state.next_token = state.next_token.saturating_add(1);
         let tick = state.tick;
         state
             .identities
