@@ -31,8 +31,7 @@ fn local_household_status_is_visible_in_the_settlement_summary() {
         cursor: 4,
     });
 
-    assert!(render(&client)
-        .lines()
-        .next()
-        .is_some_and(|line| line.contains("Local life reduced service") && line.contains("72%")));
+    assert!(render(&client).lines().next().is_some_and(|line| {
+        line.starts_with("Local life reduced service") && line.contains("72%")
+    }));
 }

@@ -96,7 +96,7 @@ pub(super) fn render(client: &Phase4Client) -> String {
             )
         })
         .unwrap_or_else(|| "Tax and treasury loading".to_owned());
-    format!("{offices} • {registry} • {household}\n{treasury}\n{orders} • {knowledge} • {skills}")
+    format!("{household} • {offices} • {registry}\n{treasury}\n{orders} • {knowledge} • {skills}")
 }
 
 fn lease_registry_summary(client: &Phase4Client, claims: &ClaimsResponse) -> String {
