@@ -24,6 +24,11 @@ festival, a public work, and a contract-board update. Every completion deducts
 from the public treasury and writes actor, proposal, cost, target service, and
 tick to the governance decision record and settlement chronicle.
 
+The town-hall proposal ledger retains at most 64 entries. Completed or rejected
+proposals leave room for new work while proposed and approved work remains
+addressable; when every retained slot is active, another proposal is rejected
+without changing the ledger.
+
 The launch mayoral loop also posts a narrow public settlement tax. The default
 policy charges 5% of carried gold once per world day from recognised players
 within four Manhattan tiles of the Hearth; the policy never removes items and

@@ -1,6 +1,7 @@
 use super::super::{ServerConfig, WorldRepository};
 mod combat_actions;
 mod farming;
+mod governance_retention;
 mod knowledge;
 mod professions;
 

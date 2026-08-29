@@ -124,6 +124,11 @@ impl super::super::WorldRepository {
                 if cost == 0 || cost > state.phase4.governance.public_treasury {
                     response.reason =
                         Some("The proposal cost must fit the public treasury.".to_owned());
+                } else if !super::proposal_room(&mut state.phase4.governance) {
+                    response.reason = Some(
+                        "The town-hall proposal ledger is full; complete an existing proposal before adding another."
+                            .to_owned(),
+                    );
                 } else {
                     let created_tick = state.tick;
                     let proposal_id = format!("public-work-{}", state.phase4.next_proposal_id);

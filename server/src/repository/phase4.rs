@@ -19,6 +19,7 @@ mod knowledge;
 mod professions;
 
 const DEFAULT_TREASURY: u32 = 48;
+pub(super) const MAX_PROPOSALS: usize = 64;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub(super) enum Phase4Response {
@@ -134,6 +135,39 @@ pub(super) fn fresh(_config: &ServerConfig) -> Phase4State {
         lessons: Vec::new(),
         request_results: HashMap::new(),
     }
+}
+
+pub(super) fn trim_proposals(governance: &mut GovernanceState) {
+    while governance.proposals.len() > MAX_PROPOSALS {
+        let Some(index) = governance.proposals.iter().position(|proposal| {
+            matches!(
+                proposal.status,
+                tarrowyn_protocol::ProposalStatus::Completed
+                    | tarrowyn_protocol::ProposalStatus::Rejected
+            )
+        }) else {
+            break;
+        };
+        governance.proposals.remove(index);
+    }
+}
+
+pub(super) fn proposal_room(governance: &mut GovernanceState) -> bool {
+    trim_proposals(governance);
+    if governance.proposals.len() < MAX_PROPOSALS {
+        return true;
+    }
+    let Some(index) = governance.proposals.iter().position(|proposal| {
+        matches!(
+            proposal.status,
+            tarrowyn_protocol::ProposalStatus::Completed
+                | tarrowyn_protocol::ProposalStatus::Rejected
+        )
+    }) else {
+        return false;
+    };
+    governance.proposals.remove(index);
+    true
 }
 
 pub(super) const FARM_ANIMAL_POSITION: tarrowyn_protocol::Position =
