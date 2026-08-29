@@ -524,7 +524,10 @@ impl Game {
                         .projection
                         .players
                         .iter()
-                        .find(|player| Some(player.account_id.as_str()) != own)
+                        .find(|player| {
+                            Some(player.account_id.as_str()) != own
+                                && !player.stale(client.projection.server_tick)
+                        })
                         .map(|player| player.account_id.clone());
                     match target {
                         Some(target) if client.queue_skill_teach(&target) => {}
