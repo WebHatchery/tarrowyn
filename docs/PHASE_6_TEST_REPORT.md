@@ -529,6 +529,8 @@ Phase 4 land-right persistence now enforces lifecycle access, ownership, and
 timestamp ordering, with two focused claim-state regressions.
 Phase 4 infrastructure persistence now checks world position, condition/status
 agreement, and maintenance timing, with three focused regressions.
+Phase 4 household persistence now bounds member records and decision timing,
+with two focused household regressions.
 
 The cross-layer persistence-readiness milestone passed the full release gate on
 2026-08-30 after the core and Phase 3-6 integrity additions: 14 protocol tests,

@@ -186,3 +186,43 @@ fn future_phase4_infrastructure_maintenance_degrades_readiness() {
     assert!(!health.ready);
     assert!(!health.integrity_ok);
 }
+
+#[test]
+fn malformed_phase4_household_member_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state
+            .phase4
+            .households
+            .first_mut()
+            .expect("household")
+            .members
+            .first_mut()
+            .expect("household member")
+            .role = "role\nwith-control".to_owned();
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
+fn future_phase4_household_decision_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        let future_tick = state.tick.saturating_add(1);
+        state
+            .phase4
+            .households
+            .first_mut()
+            .expect("household")
+            .last_decision_tick = future_tick;
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}

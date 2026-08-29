@@ -4,6 +4,8 @@ use std::collections::HashSet;
 
 const DELETED_ACCOUNT: &str = "former-resident";
 const MAX_TAX_RATE_PERCENT: u8 = 10;
+const MAX_HOUSEHOLD_TEXT_CHARS: usize = 80;
+const MAX_HOUSEHOLD_MEMBERS: usize = 20;
 
 pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
     let account_ids: HashSet<&str> = state
@@ -153,13 +155,23 @@ pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
                 .map(|household| household.household_id.as_str()),
         )
         && state.phase4.households.iter().all(|household| {
-            !household.home.trim().is_empty()
+            bounded_text(&household.household_id, MAX_HOUSEHOLD_TEXT_CHARS)
+                && bounded_text(&household.household_name, MAX_HOUSEHOLD_TEXT_CHARS)
+                && !household.members.is_empty()
+                && household.members.len() <= MAX_HOUSEHOLD_MEMBERS
+                && household.members.iter().all(|member| {
+                    bounded_text(&member.name, MAX_HOUSEHOLD_TEXT_CHARS)
+                        && bounded_text(&member.role, MAX_HOUSEHOLD_TEXT_CHARS)
+                        && bounded_text(&member.service, MAX_HOUSEHOLD_TEXT_CHARS)
+                })
+                && !household.home.trim().is_empty()
                 && household.service_quality <= 100
                 && household.demand <= 100
                 && household.housing <= 100
                 && household.safety <= 100
                 && household.food <= 100
                 && household.competition <= 100
+                && household.last_decision_tick <= state.tick
         });
 
     let orders_ok = unique_non_empty(
@@ -293,4 +305,10 @@ fn position_in_world(position: tarrowyn_protocol::Position, config: &ServerConfi
         && position.y >= 0
         && (position.x as u32) < config.world_width
         && (position.y as u32) < config.world_height
+}
+
+fn bounded_text(value: &str, max_chars: usize) -> bool {
+    !value.trim().is_empty()
+        && value.chars().count() <= max_chars
+        && !value.chars().any(char::is_control)
 }
