@@ -4,6 +4,7 @@ mod farming;
 mod governance_history_retention;
 mod governance_retention;
 mod knowledge;
+mod lesson_retention;
 mod professions;
 mod service_order_retention;
 

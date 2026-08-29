@@ -24,6 +24,7 @@ pub(super) const MAX_SERVICE_ORDERS: usize = 64;
 pub(super) const MAX_GOVERNANCE_DECISIONS: usize = 64;
 pub(super) const MAX_TAX_COLLECTIONS: usize = 64;
 pub(super) const MAX_INFRASTRUCTURE_RECORDS: usize = 32;
+pub(super) const MAX_SCHOOL_LESSONS: usize = 128;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub(super) enum Phase4Response {
@@ -395,10 +396,21 @@ pub(super) fn day_rollover(state: &mut RepositoryState) {
 }
 
 pub(super) fn prune_school_lessons(state: &mut RepositoryState) {
-    state
-        .phase4
-        .lessons
-        .retain(|lesson| lesson.expires_tick > state.tick);
+    trim_school_lessons(&mut state.phase4, state.tick);
+}
+
+pub(super) fn school_lesson_room(state: &mut RepositoryState) -> bool {
+    prune_school_lessons(state);
+    state.phase4.lessons.len() < MAX_SCHOOL_LESSONS
+}
+
+pub(super) fn trim_school_lessons(phase4: &mut Phase4State, tick: u64) {
+    phase4.lessons.retain(|lesson| lesson.expires_tick > tick);
+    phase4.lessons.sort_by_key(|lesson| lesson.started_tick);
+    let excess = phase4.lessons.len().saturating_sub(MAX_SCHOOL_LESSONS);
+    if excess > 0 {
+        phase4.lessons.drain(..excess);
+    }
 }
 
 pub(super) fn default_capability(profession: tarrowyn_protocol::ProfessionKind) -> Capability {

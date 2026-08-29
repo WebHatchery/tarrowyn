@@ -355,6 +355,13 @@ impl WorldRepository {
                 Some("That learner already has an open lesson in this discipline.".to_owned());
             return finish_skill_action(self, &mut state, cache, response);
         }
+        if !super::phase4::school_lesson_room(&mut state) {
+            response.reason = Some(
+                "The school ledger is full; complete or wait for an existing lesson before opening another."
+                    .to_owned(),
+            );
+            return finish_skill_action(self, &mut state, cache, response);
+        }
         let lesson_id = format!("school-lesson-{}", state.phase4.next_lesson_id);
         state.phase4.next_lesson_id = state.phase4.next_lesson_id.saturating_add(1);
         let lesson = SkillLesson {

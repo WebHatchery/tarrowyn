@@ -140,7 +140,9 @@ Formal school lessons use `POST /v1/skills`. A teacher must have mastered the
 subject and have Teaching mastery at least equal to its depth; the learner must
 be present beside the teacher. The teacher opens a persisted lesson and the
 learner joins it through a second visible School action; an abandoned lesson
-expires after a bounded window. A root lesson starts one practice, while an
+expires after a bounded window. The active school ledger retains at most 128
+lessons and rejects another opening while every retained lesson is active. A
+root lesson starts one practice, while an
 advanced lesson grants only the discovery and leaves mastery and all personal
 requirements to the learner. The current client offers mastered roots through
 the visible School control and surfaces open lessons in the skill projection;
