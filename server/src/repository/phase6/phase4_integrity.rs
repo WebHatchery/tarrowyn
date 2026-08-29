@@ -242,11 +242,21 @@ pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
                 && tick >= order.created_tick
                 && tick <= state.tick
         });
-        account_reference_ok(&order.requester_account_id, &account_ids)
+        bounded_text(&order.order_id, MAX_KNOWLEDGE_ID_CHARS)
+            && account_reference_ok(&order.requester_account_id, &account_ids)
+            && bounded_text(&order.requester_name, MAX_HOUSEHOLD_TEXT_CHARS)
             && optional_account_reference_ok(order.provider_account_id.as_deref(), &account_ids)
-            && !order.service.trim().is_empty()
+            && order.provider_account_id.is_some() == order.provider_name.is_some()
+            && order
+                .provider_name
+                .as_deref()
+                .is_none_or(|name| bounded_text(name, MAX_HOUSEHOLD_TEXT_CHARS))
+            && bounded_text(&order.service, MAX_KNOWLEDGE_TEXT_CHARS)
+            && bounded_text(&order.benefit, MAX_KNOWLEDGE_TEXT_CHARS)
             && order.quality <= 100
             && order.created_tick <= state.tick
+            && (order.status == tarrowyn_protocol::ServiceOrderStatus::Completed)
+                == order.completed_tick.is_some()
             && completed_tick_ok
             && (order.status != tarrowyn_protocol::ServiceOrderStatus::Accepted
                 || order.provider_account_id.is_some())

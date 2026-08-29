@@ -24,6 +24,7 @@ mod phase3_state_integrity;
 mod phase4_claim_integrity;
 mod phase4_governance_integrity;
 mod phase4_infrastructure_integrity;
+mod phase4_order_integrity;
 mod phase4_replay_integrity;
 mod phase4_state_integrity;
 mod phase5_metadata_integrity;

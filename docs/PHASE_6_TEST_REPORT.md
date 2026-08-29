@@ -558,6 +558,9 @@ keeps upkeep records nonzero, with two focused infrastructure regressions.
 Phase 4 land-claim persistence now bounds claim narratives and identifiers,
 keeps owner names aligned with owners, and rejects reversed nonzero real-time
 lease bounds, with three focused claim regressions.
+Phase 4 service-order persistence now bounds order text, keeps provider IDs and
+names paired, and requires completed orders to carry completion ticks, with
+three focused order regressions.
 
 The cross-layer persistence-readiness milestone passed the full release gate on
 2026-08-30 after the core and Phase 3-6 integrity additions: 14 protocol tests,
