@@ -1,6 +1,9 @@
 use super::*;
 use crate::data::GameConfig;
-use tarrowyn_protocol::{Position, TileKind as ProtocolTileKind, WorldTile};
+use tarrowyn_protocol::{
+    ChronicleEntry, EventRecord, EventsResponse, Position, TileKind as ProtocolTileKind,
+    WorldClock, WorldEvent, WorldTile,
+};
 
 fn config() -> GameConfig {
     GameConfig {
@@ -45,6 +48,50 @@ fn projection_exposes_the_server_clock_period_without_local_timekeeping() {
         tarrowyn_protocol::TimeOfDay::Afternoon
     );
     assert!(!projection.is_night());
+}
+
+#[test]
+fn chronicle_cache_keeps_the_newest_entries_after_incremental_events() {
+    let mut projection = WorldProjection::new(&config());
+    let events = (0..(super::chronicle::MAX_CACHED_CHRONICLE + 1))
+        .map(|index| {
+            let cursor = (index + 1) as u64;
+            EventRecord {
+                cursor,
+                event: WorldEvent::Chronicle(ChronicleEntry {
+                    event_id: format!("chronicle-{index}"),
+                    kind: "settlement".to_owned(),
+                    title: format!("Settlement record {index}"),
+                    text: "The latest work remains visible.".to_owned(),
+                    created_tick: cursor,
+                    cursor,
+                }),
+            }
+        })
+        .collect();
+    projection.apply_events(
+        EventsResponse {
+            cursor: super::chronicle::MAX_CACHED_CHRONICLE as u64 + 1,
+            clock: WorldClock {
+                day: 1,
+                seconds: 0.0,
+                day_length_seconds: 180.0,
+            },
+            events,
+        },
+        "account",
+        1,
+    );
+
+    assert_eq!(
+        projection.chronicle.len(),
+        super::chronicle::MAX_CACHED_CHRONICLE
+    );
+    assert_eq!(projection.chronicle[0].event_id, "chronicle-1");
+    assert_eq!(
+        projection.chronicle.last().unwrap().event_id,
+        "chronicle-12"
+    );
 }
 
 #[test]

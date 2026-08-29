@@ -15,6 +15,7 @@ use tarrowyn_protocol::{
 };
 
 const REQUEST_TIMEOUT_SECONDS: f32 = 6.0;
+mod chronicle;
 mod cursor;
 mod frontier;
 mod maintenance;
@@ -26,6 +27,7 @@ mod trade_client;
 mod types;
 mod world;
 
+pub(super) use chronicle::merge_chronicle_entry;
 use frontier::FrontierClient;
 pub(crate) use phase4::CraftingView;
 use phase4::Phase4Client;
@@ -162,15 +164,7 @@ impl WorldProjection {
                     }
                 }
                 WorldEvent::Chronicle(entry) => {
-                    if !self
-                        .chronicle
-                        .iter()
-                        .any(|existing| existing.event_id == entry.event_id)
-                    {
-                        self.chronicle.push(entry);
-                        self.chronicle.sort_by_key(|entry| entry.cursor);
-                        self.chronicle.truncate(12);
-                    }
+                    merge_chronicle_entry(&mut self.chronicle, entry);
                 }
                 WorldEvent::Frontier(event) => match event {
                     FrontierEvent::Threat(zone) => self.wilderness = Some(zone),

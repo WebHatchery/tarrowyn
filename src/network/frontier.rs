@@ -84,16 +84,8 @@ impl FrontierClient {
                     projection.chronicle_summary = response.data.summary;
                 }
                 for entry in response.data.entries {
-                    if !projection
-                        .chronicle
-                        .iter()
-                        .any(|existing| existing.event_id == entry.event_id)
-                    {
-                        projection.chronicle.push(entry);
-                    }
+                    super::merge_chronicle_entry(&mut projection.chronicle, entry);
                 }
-                projection.chronicle.sort_by_key(|entry| entry.cursor);
-                projection.chronicle.truncate(12);
             }
         }
         if let Some(result) = self
