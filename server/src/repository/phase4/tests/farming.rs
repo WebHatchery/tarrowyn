@@ -1,8 +1,8 @@
 use super::super::super::{ServerConfig, WorldRepository};
 use super::guest;
 use tarrowyn_protocol::{
-    FarmingAction, FarmingRequest, FieldWeather, MovementIntent, ProfessionAction, ProfessionKind,
-    ProfessionRequest,
+    CropKind, CropState, FarmingAction, FarmingRequest, FieldWeather, MovementIntent, Position,
+    ProfessionAction, ProfessionKind, ProfessionRequest,
 };
 
 #[test]
@@ -387,4 +387,47 @@ fn field_outlook_and_recent_tending_buffer_environmental_pressure() {
             .quality,
         2
     );
+}
+
+#[test]
+fn farming_rewards_saturate_player_counters_at_the_numeric_ceiling() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = guest(&repository, "farming-counter-ceiling");
+    let plot_position = Position { x: 4, y: 4 };
+    {
+        let mut state = repository.state.lock().unwrap();
+        let identity = state.identities.get_mut("farming-counter-ceiling").unwrap();
+        identity.position = plot_position;
+        identity.inventory.wheat = u32::MAX;
+        identity.gold = u32::MAX;
+        identity.skill = u32::MAX;
+        state
+            .plots
+            .iter_mut()
+            .find(|plot| plot.position == plot_position)
+            .unwrap()
+            .crop = Some(CropState {
+            kind: CropKind::Wheat,
+            stage: CropState::MATURE_STAGE,
+            quality: 1,
+            planted_tick: 0,
+            last_tended_tick: None,
+        });
+    }
+
+    let response = repository
+        .farming(
+            &session.account_token,
+            FarmingRequest {
+                request_id: "farming-counter-ceiling-harvest".to_owned(),
+                action: FarmingAction::Harvest,
+                position: plot_position,
+            },
+        )
+        .unwrap()
+        .data;
+    assert!(response.accepted);
+    assert_eq!(response.player.inventory.wheat, u32::MAX);
+    assert_eq!(response.player.gold, u32::MAX);
+    assert_eq!(response.player.skill, u32::MAX);
 }

@@ -122,11 +122,11 @@ impl WorldRepository {
         animal.condition = animal.max_condition;
         animal.last_cared_tick = state.tick;
         animal.last_cared_day = state.clock.day;
-        state
+        let identity = state
             .identities
             .get_mut(identity_key)
-            .expect("identity exists")
-            .skill += 1;
+            .expect("identity exists");
+        identity.skill = identity.skill.saturating_add(1);
         (true, None)
     }
 
@@ -154,7 +154,7 @@ impl WorldRepository {
         }
         let kind = crate::content::crop_kind_for_seed(identity.seeds_planted);
         identity.inventory.seeds -= 1;
-        identity.seeds_planted += 1;
+        identity.seeds_planted = identity.seeds_planted.saturating_add(1);
         state.plots[plot_index].crop = Some(CropState {
             kind,
             stage: 0,
@@ -199,7 +199,7 @@ impl WorldRepository {
             .get_mut(identity_key)
             .expect("identity exists");
         identity.field_tool_condition = identity.field_tool_condition.saturating_sub(1);
-        identity.skill += 1;
+        identity.skill = identity.skill.saturating_add(1);
         (true, None)
     }
 
@@ -223,13 +223,24 @@ impl WorldRepository {
             .get_mut(identity_key)
             .expect("identity exists");
         match crop.kind {
-            CropKind::Wheat => identity.inventory.wheat += 1,
-            CropKind::Turnip => identity.inventory.turnips += 1,
-            CropKind::Moonberry => identity.inventory.moonberries += 1,
+            CropKind::Wheat => {
+                identity.inventory.wheat = identity.inventory.wheat.saturating_add(1)
+            }
+            CropKind::Turnip => {
+                identity.inventory.turnips = identity.inventory.turnips.saturating_add(1)
+            }
+            CropKind::Moonberry => {
+                identity.inventory.moonberries = identity.inventory.moonberries.saturating_add(1)
+            }
         }
         let base_value = crop.kind.value() + crop.quality as u32;
-        identity.gold += super::phase3::harvest_price_bonus(&state.phase3, base_value);
-        identity.skill += 1;
+        identity.gold = identity
+            .gold
+            .saturating_add(super::phase3::harvest_price_bonus(
+                &state.phase3,
+                base_value,
+            ));
+        identity.skill = identity.skill.saturating_add(1);
         state.plots[plot_index].crop = None;
         (true, None)
     }
