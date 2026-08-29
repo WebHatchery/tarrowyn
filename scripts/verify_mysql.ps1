@@ -133,6 +133,18 @@ function Invoke-MySql([string]$executable, [string[]]$arguments) {
     return @($output)
 }
 
+function Assert-MySqlPrerequisites {
+    $mysql = Resolve-MySqlTool "mysql.exe"
+    $null = Resolve-MySqlTool "mysqldump.exe"
+    $env:MYSQL_PWD = $env:DB_PASSWORD
+    $connectionArguments = @(
+        "--host=$env:DB_HOST", "--port=$env:DB_PORT", "--user=$env:DB_USERNAME",
+        "--batch", "--skip-column-names", "--silent", "--execute=SELECT 1"
+    )
+    $result = Invoke-MySql $mysql $connectionArguments
+    Assert-True (($result -join "").Trim() -eq "1") "the configured MySQL connection did not answer SELECT 1"
+}
+
 function Invoke-NativeDatabaseRestore([string]$temporaryRoot, [string]$nonce) {
     $mysql = Resolve-MySqlTool "mysql.exe"
     $dump = Resolve-MySqlTool "mysqldump.exe"
@@ -214,6 +226,7 @@ try {
         $oldEnvironment[$name] = if ($null -eq $item) { $null } else { $item.Value }
     }
     Import-PreviewEnvironment
+    Assert-MySqlPrerequisites
     $backupPath = Join-Path $temporaryRoot "mysql-backup.json"
     $env:TARROWYN_SERVER_ADDR = $ServerAddress
     $env:TARROWYN_BACKUP_PATH = $backupPath
