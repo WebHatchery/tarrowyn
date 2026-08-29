@@ -1,16 +1,21 @@
 use super::super::models::RepositoryState;
+use crate::config::ServerConfig;
 use std::collections::HashSet;
 use tarrowyn_protocol::RegionalEventStage;
 
 const MAX_EVENT_TEXT_CHARS: usize = 512;
 const MAX_EVENT_ID_CHARS: usize = 160;
+const MAX_LOCATION_ID_CHARS: usize = 160;
+const MAX_LOCATION_TEXT_CHARS: usize = 240;
 const MAX_HOUSEHOLD_TEXT_CHARS: usize = 240;
 const MAX_HOUSEHOLD_HISTORY: usize = 64;
+const MAX_ROUTE_ID_CHARS: usize = 160;
+const MAX_ROUTE_TEXT_CHARS: usize = 240;
 const MAX_SETTLEMENT_ID_CHARS: usize = 160;
 const MAX_SETTLEMENT_TEXT_CHARS: usize = 240;
 const MAX_TRAVEL_TEXT_CHARS: usize = 160;
 
-pub(super) fn ok(state: &RepositoryState) -> bool {
+pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
     let location_ids: HashSet<&str> = state
         .phase5
         .locations
@@ -20,6 +25,16 @@ pub(super) fn ok(state: &RepositoryState) -> bool {
     state.phase5.cursor <= state.cursor
         && state.phase5.event_history_floor <= state.phase5.cursor
         && state.phase5.events.len() <= super::super::MAX_EVENTS
+        && state
+            .phase5
+            .locations
+            .iter()
+            .all(|location| location_ok(location, config))
+        && state
+            .phase5
+            .routes
+            .iter()
+            .all(|route| route_ok(route, &location_ids, state.tick))
         && unique_event_ids(state)
         && state
             .phase5
@@ -42,6 +57,46 @@ pub(super) fn ok(state: &RepositoryState) -> bool {
             state.identities.contains_key(identity_key)
                 && travel_ok(travel, &location_ids, state.tick)
         })
+}
+
+fn location_ok(location: &tarrowyn_protocol::LocationRecord, config: &ServerConfig) -> bool {
+    bounded_with_limit(&location.location_id, MAX_LOCATION_ID_CHARS)
+        && bounded_with_limit(&location.name, MAX_LOCATION_TEXT_CHARS)
+        && position_in_world(location.position, config)
+        && bounded_with_limit(&location.role, MAX_LOCATION_TEXT_CHARS)
+        && !location.resources.is_empty()
+        && location
+            .resources
+            .iter()
+            .all(|resource| bounded_with_limit(resource, MAX_LOCATION_TEXT_CHARS))
+        && !location.services.is_empty()
+        && location
+            .services
+            .iter()
+            .all(|service| bounded_with_limit(service, MAX_LOCATION_TEXT_CHARS))
+        && location.condition <= 100
+        && bounded_with_limit(&location.access_note, MAX_LOCATION_TEXT_CHARS)
+}
+
+fn route_ok(
+    route: &tarrowyn_protocol::RouteRecord,
+    location_ids: &HashSet<&str>,
+    current_tick: u64,
+) -> bool {
+    bounded_with_limit(&route.route_id, MAX_ROUTE_ID_CHARS)
+        && bounded_with_limit(&route.name, MAX_ROUTE_TEXT_CHARS)
+        && bounded_with_limit(&route.transport, MAX_ROUTE_TEXT_CHARS)
+        && location_ids.contains(route.origin_location_id.as_str())
+        && location_ids.contains(route.destination_location_id.as_str())
+        && route.origin_location_id != route.destination_location_id
+        && route.length > 0
+        && route.risk_percent <= 100
+        && route.condition <= 100
+        && route.capacity > 0
+        && route.travel_ticks > 0
+        && route.repair_cost > 0
+        && route.last_action_tick <= current_tick
+        && bounded_with_limit(&route.note, MAX_ROUTE_TEXT_CHARS)
 }
 
 fn unique_event_ids(state: &RepositoryState) -> bool {
@@ -269,6 +324,13 @@ fn bounded_with_limit(value: &str, max_chars: usize) -> bool {
     !value.trim().is_empty()
         && value.chars().count() <= max_chars
         && !value.chars().any(char::is_control)
+}
+
+fn position_in_world(position: tarrowyn_protocol::Position, config: &ServerConfig) -> bool {
+    position.x >= 0
+        && position.y >= 0
+        && (position.x as u32) < config.world_width
+        && (position.y as u32) < config.world_height
 }
 
 fn bounded_household(value: &str) -> bool {

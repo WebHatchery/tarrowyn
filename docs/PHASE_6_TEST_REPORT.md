@@ -466,3 +466,9 @@ fields, the runtime population and gauge ranges, and retained local chronicle
 ordering/cursors. Two focused regressions cover a missing settlement milestone
 and an unassigned local chronicle cursor; the scoped server checks remain the
 appropriate validation for this subsystem until the next major milestone.
+
+Regional location and route integrity now validates bounded projection text,
+known endpoints, in-world location positions, non-empty service data, route
+operational ranges, and action ticks that cannot point into the future. Two
+focused regressions cover a malformed location access note and a future route
+action timestamp.

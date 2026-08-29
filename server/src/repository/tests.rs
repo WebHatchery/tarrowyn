@@ -16,6 +16,7 @@ mod movement_validation;
 mod numeric_boundaries;
 mod persistence;
 mod phase3;
+mod regional_record_integrity;
 mod request_validation;
 mod reset;
 mod settlement_integrity;

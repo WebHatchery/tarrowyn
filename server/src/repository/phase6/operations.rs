@@ -507,7 +507,7 @@ fn integrity_ok(state: &RepositoryState, config: &ServerConfig) -> bool {
         && super::phase4_integrity::ok(state, config)
         && super::persistent_integrity::ok(state, config)
         && super::production_integrity::ok(state)
-        && super::regional_integrity::ok(state)
+        && super::regional_integrity::ok(state, config)
         && !state.phase5.locations.is_empty()
         && !state.phase5.routes.is_empty()
         && !state.phase5.settlements.is_empty()
