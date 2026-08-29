@@ -9,6 +9,7 @@ mod infrastructure_history;
 mod input_validation;
 mod knowledge;
 mod lesson_retention;
+mod numeric_boundaries;
 mod professions;
 mod service_order_retention;
 

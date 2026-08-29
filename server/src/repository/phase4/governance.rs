@@ -516,12 +516,12 @@ pub(super) fn tick(state: &mut super::super::models::RepositoryState, config: &S
         }
     }
     if state.tick.is_multiple_of(12) {
-        let upkeep: u32 = state
+        let upkeep = state
             .phase4
             .infrastructure
             .iter()
             .map(|record| record.upkeep_per_day)
-            .sum();
+            .fold(0, u32::saturating_add);
         let funded = state.phase4.governance.public_treasury >= upkeep;
         if funded {
             state.phase4.governance.public_treasury -= upkeep;
