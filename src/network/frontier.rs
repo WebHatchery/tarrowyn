@@ -55,10 +55,11 @@ impl FrontierClient {
         dt: f32,
         online: bool,
         notices: &mut Vec<NetworkNotice>,
-    ) {
+    ) -> bool {
         if !online {
-            return;
+            return false;
         }
+        let mut cursor_boundary = false;
         if let Some(result) = self
             .pending_contracts
             .as_mut()
@@ -79,13 +80,21 @@ impl FrontierClient {
             .and_then(|pending| pending.poll_timed(dt, REQUEST_TIMEOUT_SECONDS))
         {
             self.pending_chronicle = None;
-            if let Ok(response) = result {
-                if response.data.summary.is_some() {
-                    projection.chronicle_summary = response.data.summary;
+            match result {
+                Ok(response) => {
+                    if response.data.summary.is_some() {
+                        projection.chronicle_summary = response.data.summary;
+                    }
+                    for entry in response.data.entries {
+                        super::merge_chronicle_entry(&mut projection.chronicle, entry);
+                    }
                 }
-                for entry in response.data.entries {
-                    super::merge_chronicle_entry(&mut projection.chronicle, entry);
+                Err(error) if super::cursor::is_cursor_recovery_error(&error) => {
+                    cursor_boundary = true;
                 }
+                Err(_) => notices.push(NetworkNotice::Warning(
+                    "The settlement chronicle could not be refreshed.".to_owned(),
+                )),
             }
         }
         if let Some(result) = self
@@ -94,8 +103,11 @@ impl FrontierClient {
             .and_then(|pending| pending.poll_timed(dt, REQUEST_TIMEOUT_SECONDS))
         {
             self.pending_opportunities = None;
-            if let Ok(response) = result {
-                projection.opportunities = response.data.opportunities;
+            match result {
+                Ok(response) => projection.opportunities = response.data.opportunities,
+                Err(_) => notices.push(NetworkNotice::Warning(
+                    "The frontier opportunities could not be refreshed.".to_owned(),
+                )),
             }
         }
         if let Some(result) = self
@@ -111,6 +123,7 @@ impl FrontierClient {
                 )),
             }
         }
+        cursor_boundary
     }
 
     pub(super) fn dispatch(&mut self, api: &mut HttpClient, online: bool, cursor: u64) {

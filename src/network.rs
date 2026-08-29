@@ -326,12 +326,15 @@ impl OnlineClient {
         self.poll_chat(dt, &mut notices);
         self.poll_farming(dt, &mut notices);
         self.poll_trade_requests(dt, &mut notices);
-        self.frontier.update(
+        let frontier_cursor_boundary = self.frontier.update(
             &mut self.projection,
             dt,
             self.state == ConnectionState::Online,
             &mut notices,
         );
+        if frontier_cursor_boundary {
+            cursor::recover_from_cursor_boundary(self, &mut notices);
+        }
         self.phase4.set_account(
             self.account
                 .as_ref()

@@ -31,6 +31,9 @@ fn cursor_boundary_detection_accepts_shared_api_and_native_status_shapes() {
     assert!(is_cursor_recovery_error(
         "HTTP request 'GET /v1/events/region?since=9' returned status code 409"
     ));
+    assert!(is_cursor_recovery_error(
+        "HTTP API error in 'GET /v1/settlement/chronicle?since=9' [cursor_stale]: The requested history is gone."
+    ));
     assert!(!is_cursor_recovery_error(
         "HTTP API error in 'GET /v1/chat' [rate_limited]: Try again later."
     ));

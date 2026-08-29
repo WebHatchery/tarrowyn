@@ -22,6 +22,8 @@ not erase earlier regional history. If a restore moves the cursor backward,
 the regional stream drops its cache and restarts from cursor zero. If a cursor
 falls before the retained event window, the server returns `cursor_stale`; the
 client uses the same bounded-history reset rather than accepting a silent gap.
+The frontier chronicle and opportunity refreshes report ordinary failures and
+send the same reset signal when their chronicle cursor crosses that boundary.
 
 Each settlement projection retains its newest 64 local chronicle entries. Older
 entries remain available through the shared durable chronicle archive and
