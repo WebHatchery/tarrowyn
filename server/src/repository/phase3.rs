@@ -517,6 +517,7 @@ impl WorldRepository {
         let mut state = self.state.lock().expect("world repository lock poisoned");
         expire_sessions(&mut state, &self.config);
         authenticate(&mut state, token, &self.config)?;
+        super::validate_event_cursor(&state, since, "chronicle")?;
         Ok(ApiResponse {
             meta: meta(state.tick, None, Some(state.cursor)),
             data: ChronicleResponse {
