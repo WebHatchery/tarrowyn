@@ -85,7 +85,10 @@ fails the drill.
 ## Deploy, rollback, and maintenance
 
 1. Check `/v1/ops/health`, the last backup tick, `persistence_error`, and
-   `backup_error`; do not admit traffic while readiness is degraded.
+   `backup_error`; the `integrity_ok` field also covers durable
+   cross-references across the world, regional, and production-identity
+   ledgers. Do not admit traffic while readiness is degraded; use the restore
+   or audited support repair path instead of editing a live snapshot in place.
 2. Check authenticated `/v1/ops/metrics` for the measured average and latest
    tick durations, `tick_drift_count`, regional event backlog, and
    `alert_flags`. Also watch average price index, scarce goods, NPC fallback

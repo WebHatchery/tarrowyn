@@ -57,6 +57,16 @@ working preview credentials, target-environment migration, multi-worker
 concurrency, failover, and rollback drills; the JSON backend remains the
 deterministic default for local fixtures.
 
+The operator readiness projection now validates the full durable release
+candidate before admitting traffic: world clock, players, crops, trades,
+event history, frontier records, Phase 4 civic state, Phase 5 regional state,
+and Phase 6 identity, session, audit, moderation, replay, deletion, and backup
+metadata. Broken cross-references report degraded readiness rather than being
+served as authoritative state. These checks are covered by focused repository
+regressions and the recorded cross-subsystem gate; they do not close the
+target-environment MySQL, topology, identity-gateway, TLS, scale, or rollback
+requirements.
+
 ### Deployment and operations
 
 - Select and document the hosting architecture, browser delivery path, TLS,
