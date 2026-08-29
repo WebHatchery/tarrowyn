@@ -543,6 +543,9 @@ property safety, and enforces status/health agreement, with two focused combat
 regressions.
 Phase 4 animal persistence now validates world position, safe names, condition
 limits, and care timing, with two focused farming regressions.
+Phase 4 school-lesson persistence now validates bounded lesson payloads,
+distinct live participants, start/expiry ordering, and the configured lesson
+room cap, with three focused lesson-state regressions.
 
 The cross-layer persistence-readiness milestone passed the full release gate on
 2026-08-30 after the core and Phase 3-6 integrity additions: 14 protocol tests,

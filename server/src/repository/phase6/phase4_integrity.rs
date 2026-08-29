@@ -9,6 +9,7 @@ const MAX_HOUSEHOLD_MEMBERS: usize = 20;
 const MAX_KNOWLEDGE_ID_CHARS: usize = 160;
 const MAX_KNOWLEDGE_TEXT_CHARS: usize = 240;
 const MAX_COMBAT_TEXT_CHARS: usize = 160;
+const MAX_LESSON_TEXT_CHARS: usize = 160;
 
 pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
     let account_ids: HashSet<&str> = state
@@ -199,17 +200,26 @@ pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
                 || order.provider_account_id.is_some())
     });
 
-    let lessons_ok = unique_non_empty(
-        state
-            .phase4
-            .lessons
-            .iter()
-            .map(|lesson| lesson.lesson_id.as_str()),
-    ) && state.phase4.lessons.iter().all(|lesson| {
-        account_ids.contains(lesson.teacher_account_id.as_str())
-            && account_ids.contains(lesson.learner_account_id.as_str())
-            && lesson.teacher_account_id != lesson.learner_account_id
-    });
+    let lessons_ok = state.phase4.lessons.len() <= super::super::phase4::MAX_SCHOOL_LESSONS
+        && unique_non_empty(
+            state
+                .phase4
+                .lessons
+                .iter()
+                .map(|lesson| lesson.lesson_id.as_str()),
+        )
+        && state.phase4.lessons.iter().all(|lesson| {
+            bounded_text(&lesson.lesson_id, MAX_LESSON_TEXT_CHARS)
+                && account_ids.contains(lesson.teacher_account_id.as_str())
+                && account_ids.contains(lesson.learner_account_id.as_str())
+                && lesson.teacher_account_id != lesson.learner_account_id
+                && bounded_text(&lesson.teacher_name, MAX_LESSON_TEXT_CHARS)
+                && bounded_text(&lesson.learner_name, MAX_LESSON_TEXT_CHARS)
+                && bounded_text(&lesson.skill_id, MAX_LESSON_TEXT_CHARS)
+                && bounded_text(&lesson.skill_name, MAX_LESSON_TEXT_CHARS)
+                && lesson.started_tick <= state.tick
+                && lesson.expires_tick > lesson.started_tick
+        });
 
     let knowledge_ok = !state.phase4.knowledge.is_empty()
         && unique_non_empty(

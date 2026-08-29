@@ -2,7 +2,9 @@ use super::super::{ServerConfig, WorldRepository};
 use tarrowyn_protocol::LocalCombatStatus;
 use tarrowyn_protocol::{ClaimLifecycleAction, ClaimLifecycleRequest};
 use tarrowyn_protocol::{GovernanceAction, GovernanceRequest, GuestSessionRequest, PublicAction};
-use tarrowyn_protocol::{MaterialStock, ProfessionKind, ServiceOrder, ServiceOrderStatus};
+use tarrowyn_protocol::{
+    MaterialStock, ProfessionKind, ServiceOrder, ServiceOrderStatus, SkillLesson,
+};
 
 fn seeded_phase4_claim(repository: &WorldRepository) {
     let session = repository
@@ -57,6 +59,36 @@ fn seeded_phase4_order(repository: &WorldRepository) {
         quality: 0,
         created_tick,
         completed_tick: None,
+    });
+}
+
+fn seeded_phase4_lesson(repository: &WorldRepository) {
+    let teacher = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("phase4-lesson-teacher".to_owned()),
+            reset: false,
+        })
+        .expect("teacher session")
+        .data;
+    let learner = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("phase4-lesson-learner".to_owned()),
+            reset: false,
+        })
+        .expect("learner session")
+        .data;
+    let mut state = repository.state.lock().expect("repository lock");
+    let started_tick = state.tick;
+    state.phase4.lessons.push(SkillLesson {
+        lesson_id: "phase4-lesson-record".to_owned(),
+        teacher_account_id: teacher.account_id,
+        teacher_name: teacher.display_name,
+        learner_account_id: learner.account_id,
+        learner_name: learner.display_name,
+        skill_id: "sword-fighting".to_owned(),
+        skill_name: "Sword Fighting".to_owned(),
+        started_tick,
+        expires_tick: started_tick.saturating_add(20),
     });
 }
 
@@ -485,6 +517,74 @@ fn future_phase4_animal_care_degrades_readiness() {
             .first_mut()
             .expect("animal")
             .last_cared_day = future_day;
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
+fn malformed_phase4_lesson_text_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    seeded_phase4_lesson(&repository);
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state.phase4.lessons.last_mut().expect("lesson").skill_name = "x".repeat(161);
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
+fn future_phase4_lesson_start_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    seeded_phase4_lesson(&repository);
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        let future_tick = state.tick.saturating_add(1);
+        state
+            .phase4
+            .lessons
+            .last_mut()
+            .expect("lesson")
+            .started_tick = future_tick;
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
+fn expired_before_start_phase4_lesson_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    seeded_phase4_lesson(&repository);
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        let lesson = state.phase4.lessons.last_mut().expect("lesson");
+        lesson.expires_tick = lesson.started_tick;
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
+fn over_capacity_phase4_lessons_degrade_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    seeded_phase4_lesson(&repository);
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        let template = state.phase4.lessons.first().cloned().expect("lesson");
+        for index in 0..128 {
+            let mut lesson = template.clone();
+            lesson.lesson_id = format!("phase4-lesson-{index}");
+            state.phase4.lessons.push(lesson);
+        }
     }
 
     let health = repository.ops_health().data;
