@@ -255,7 +255,12 @@ pub fn validate() -> Result<(), String> {
     validate_region(&region, &game_config)?;
     households::validate(&region)?;
     recipes::validate()?;
-    settlements::validate(&region, &game_config)?;
+    let item_ids = items
+        .items
+        .iter()
+        .map(|item| item.id.clone())
+        .collect::<HashSet<_>>();
+    settlements::validate(&region, &game_config, &item_ids)?;
     npcs::validate()?;
     crate::repository::validate_skill_catalog()?;
     Ok(())
@@ -337,6 +342,19 @@ pub(crate) fn item_base_price(item_id: &str) -> u32 {
         .find(|item| item.id == item_id)
         .map(|item| item.base_price)
         .expect("validated item catalog must contain the requested item")
+}
+
+pub(super) fn item_ids() -> HashSet<String> {
+    let items = ITEM_CATALOG.get_or_init(|| {
+        let items: ItemsManifest = parse_json_labeled(
+            "items.json",
+            macroquad_toolkit::include_json_str!("../../assets/data/items.json"),
+        )
+        .expect("items content JSON must be valid");
+        validate_items(&items).expect("items content must satisfy its schema");
+        items.items
+    });
+    items.iter().map(|item| item.id.clone()).collect()
 }
 
 pub(crate) fn season_for_day(day: u32) -> String {

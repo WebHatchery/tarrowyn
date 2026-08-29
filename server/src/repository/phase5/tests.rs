@@ -13,6 +13,7 @@ mod event_retention;
 mod fallback;
 mod household_history;
 mod input_bounds;
+mod market_content;
 mod market_history;
 mod market_retention;
 mod moderation;

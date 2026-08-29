@@ -65,15 +65,16 @@ pub(crate) fn fresh(_config: &ServerConfig) -> Phase5State {
         settlement("saltmere-settlement"),
     ];
     let mut stock = HashMap::new();
-    for (location, commodity, quantity) in [
-        ("hearth", "timber", 4),
-        ("hearth", "stone", 6),
-        ("whisperwood-outpost", "timber", 18),
-        ("whisperwood-outpost", "stone", 2),
-        ("saltmere", "stone", 20),
-        ("saltmere", "bandages", 12),
+    for settlement_id in [
+        "hearth-settlement",
+        "whisperwood-settlement",
+        "saltmere-settlement",
     ] {
-        stock.insert(stock_key(location, commodity), quantity);
+        let profile = crate::content::settlement_profile(settlement_id);
+        let location = profile.location;
+        for entry in profile.initial_stock {
+            stock.insert(stock_key(&location, &entry.commodity), entry.quantity);
+        }
     }
     Phase5State {
         next_travel_id: 1,

@@ -109,7 +109,8 @@ $infrastructureRecords = Get-Records $manifests["infrastructure.json"] "infrastr
 Assert-Records "infrastructure" $infrastructureRecords @("name", "kind", "note") @()
 Assert-Records "npc households" (Get-Records $manifests["npc_households.json"] "npc_households" "npc households") @("household_name", "home", "work", "demand", "clue") @("members", "needs")
 Assert-Records "recipes" (Get-Records $manifests["recipes.json"] "recipes" "recipes") @("name", "profession", "service", "benefit") @()
-Assert-Records "settlements" (Get-Records $manifests["settlements.json"] "settlements" "settlements") @("location", "name", "governance", "condition") @("infrastructure", "milestones", "vacancies", "demand", "abundant", "scarce")
+$settlementRecords = Get-Records $manifests["settlements.json"] "settlements" "settlements"
+Assert-Records "settlements" $settlementRecords @("location", "name", "governance", "condition") @("infrastructure", "milestones", "vacancies", "demand", "abundant", "scarce", "initial_stock")
 Assert-Records "skills" (Get-Records $manifests["skills.json"] "skills" "skills") @("name", "family", "description", "entry_hint") @()
 $skillsVersion = $manifests["skills.json"].version
 if ($skillsVersion -lt 1) { throw "Skills manifest needs a positive version." }
@@ -128,6 +129,21 @@ Assert-Records "region locations" $locationsRecords @("name", "kind", "role", "a
 Assert-Records "region routes" $routesRecords @("name", "transport", "origin", "destination", "status", "note") @()
 $locations = @($region.locations | ForEach-Object { $_.id })
 $routes = @($region.routes | ForEach-Object { $_.id })
+$itemIds = @($manifests["items.json"].items | ForEach-Object { [string]$_.id })
+foreach ($settlement in $settlementRecords) {
+    $stockRecords = @($settlement.initial_stock)
+    $stockCommodities = @($stockRecords | ForEach-Object { [string]$_.commodity })
+    if ($stockRecords.Count -eq 0 -or $stockCommodities.Count -ne ($stockCommodities | Sort-Object -Unique).Count) {
+        throw "Settlement $($settlement.id) needs unique initial market stock records."
+    }
+    if (@($stockRecords | Where-Object {
+            [string]::IsNullOrWhiteSpace([string]$_.commodity) -or
+            [int]$_.quantity -lt 1 -or
+            $itemIds -notcontains [string]$_.commodity
+        }).Count -gt 0) {
+        throw "Settlement $($settlement.id) initial stock must use positive quantities and known item IDs."
+    }
+}
 if (@($region.locations | Where-Object {
         $null -eq $_.position -or $null -eq $_.position.x -or $null -eq $_.position.y -or
         [int]$_.position.x -lt 0 -or [int]$_.position.y -lt 0 -or

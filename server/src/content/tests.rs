@@ -143,6 +143,19 @@ fn settlement_profiles_follow_the_validated_manifest() {
         hearth.scarce,
         vec!["timber".to_owned(), "bandages".to_owned()]
     );
+    assert_eq!(
+        hearth.initial_stock,
+        vec![
+            super::settlements::SettlementStock {
+                commodity: "timber".to_owned(),
+                quantity: 4,
+            },
+            super::settlements::SettlementStock {
+                commodity: "stone".to_owned(),
+                quantity: 6,
+            },
+        ]
+    );
 }
 
 #[test]

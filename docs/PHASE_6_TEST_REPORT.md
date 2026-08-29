@@ -33,6 +33,9 @@ intervention options.
 The settlement profile regression confirms condition, milestones, vacancies,
 demand, prices, and abundant/scarce goods in the authoritative projections
 follow the validated settlement manifest.
+The fresh regional-stock regression confirms each launch settlement seeds its
+market ledger from the settlement manifest's validated initial-stock records,
+so launch quantities are not duplicated in repository code.
 The market price regression confirms every traded commodity's base price
 comes from the validated item manifest.
 The calendar regression confirms regional season labels follow the validated

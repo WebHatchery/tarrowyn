@@ -29,7 +29,14 @@ struct SettlementManifest {
     demand: Vec<String>,
     abundant: Vec<String>,
     scarce: Vec<String>,
+    initial_stock: Vec<SettlementStockManifest>,
     price_index_percent: u16,
+}
+
+#[derive(Debug, Deserialize)]
+struct SettlementStockManifest {
+    commodity: String,
+    quantity: u32,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -49,7 +56,14 @@ pub(crate) struct SettlementProfile {
     pub(crate) demand: Vec<String>,
     pub(crate) abundant: Vec<String>,
     pub(crate) scarce: Vec<String>,
+    pub(crate) initial_stock: Vec<SettlementStock>,
     pub(crate) price_index_percent: u16,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct SettlementStock {
+    pub(crate) commodity: String,
+    pub(crate) quantity: u32,
 }
 
 #[derive(Debug, Deserialize)]
@@ -86,6 +100,7 @@ pub(crate) struct InfrastructureProfile {
 pub(super) fn validate(
     region: &super::RegionManifest,
     game_config: &super::GameConfigManifest,
+    item_ids: &HashSet<String>,
 ) -> Result<(), String> {
     let settlements: SettlementsManifest = parse_json_labeled(
         "settlements.json",
@@ -97,7 +112,7 @@ pub(super) fn validate(
         macroquad_toolkit::include_json_str!("../../../assets/data/infrastructure.json"),
     )
     .map_err(|error| format!("infrastructure JSON is invalid: {error}"))?;
-    validate_settlements(&settlements, region)?;
+    validate_settlements(&settlements, region, item_ids)?;
     validate_infrastructure(
         &infrastructure,
         game_config.world_width,
@@ -113,7 +128,8 @@ pub(crate) fn settlement_profile(settlement_id: &str) -> SettlementProfile {
             macroquad_toolkit::include_json_str!("../../../assets/data/settlements.json"),
         )
         .expect("settlements content JSON must be valid");
-        validate_settlements(&settlements, super::region_catalog())
+        let item_ids = super::item_ids();
+        validate_settlements(&settlements, super::region_catalog(), &item_ids)
             .expect("settlements content must satisfy its schema");
         settlements.settlements
     });
@@ -137,6 +153,14 @@ pub(crate) fn settlement_profile(settlement_id: &str) -> SettlementProfile {
         demand: settlement.demand.clone(),
         abundant: settlement.abundant.clone(),
         scarce: settlement.scarce.clone(),
+        initial_stock: settlement
+            .initial_stock
+            .iter()
+            .map(|stock| SettlementStock {
+                commodity: stock.commodity.clone(),
+                quantity: stock.quantity,
+            })
+            .collect(),
         price_index_percent: settlement.price_index_percent,
     }
 }
@@ -241,6 +265,7 @@ pub(super) fn validate_infrastructure(
 fn validate_settlements(
     settlements: &SettlementsManifest,
     region: &super::RegionManifest,
+    item_ids: &HashSet<String>,
 ) -> Result<(), String> {
     super::validate_id_list(
         "settlement",
@@ -306,14 +331,33 @@ fn validate_settlements(
                     .any(|good| good.trim().is_empty())
                 || settlement.scarce.is_empty()
                 || settlement.scarce.iter().any(|good| good.trim().is_empty())
+                || settlement.initial_stock.is_empty()
+                || settlement.initial_stock.iter().any(|stock| {
+                    stock.commodity.trim().is_empty()
+                        || stock.quantity == 0
+                        || !item_ids.contains(&stock.commodity)
+                })
                 || settlement.price_index_percent == 0
                 || !location_ids.contains(settlement.location.as_str())
         })
     {
         return Err(
-            "settlements need complete conditions, opportunities, known locations, and supply notes"
+            "settlements need complete conditions, opportunities, known locations, supply notes, and initial market stock"
                 .to_owned(),
         );
+    }
+    for settlement in &settlements.settlements {
+        let mut commodities = HashSet::new();
+        if settlement
+            .initial_stock
+            .iter()
+            .any(|stock| !commodities.insert(stock.commodity.as_str()))
+        {
+            return Err(format!(
+                "settlement {} cannot repeat an initial market commodity",
+                settlement.id
+            ));
+        }
     }
     for (settlement_id, location_id) in [
         ("hearth-settlement", "hearth"),

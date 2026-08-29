@@ -17,6 +17,10 @@
       "demand": ["bandages", "stone"],
       "abundant": ["wheat", "seeds"],
       "scarce": ["timber", "bandages"],
+      "initial_stock": [
+        {"commodity": "timber", "quantity": 4},
+        {"commodity": "stone", "quantity": 6}
+      ],
       "price_index_percent": 108
     },
     {
@@ -36,6 +40,10 @@
       "demand": ["food", "bandages", "tools"],
       "abundant": ["timber", "iron salvage"],
       "scarce": ["seeds", "stone"],
+      "initial_stock": [
+        {"commodity": "timber", "quantity": 18},
+        {"commodity": "stone", "quantity": 2}
+      ],
       "price_index_percent": 126
     },
     {
@@ -55,6 +63,10 @@
       "demand": ["seeds", "timber"],
       "abundant": ["stone", "bandages"],
       "scarce": ["wheat", "tools"],
+      "initial_stock": [
+        {"commodity": "stone", "quantity": 20},
+        {"commodity": "bandages", "quantity": 12}
+      ],
       "price_index_percent": 94
     }
   ]
