@@ -304,35 +304,49 @@ pub(super) fn advance_events(state: &mut RepositoryState) {
         }
     }
     for (event_id, stage) in transitions {
-        if stage == RegionalEventStage::Escalation {
-            if let Some(route) = state
-                .phase5
-                .routes
-                .iter_mut()
-                .find(|route| route.route_id == "north-pack-road")
-            {
-                route.risk_percent = route.risk_percent.saturating_add(10).min(90);
-                route.status = tarrowyn_protocol::RouteStatus::Threatened;
+        match stage {
+            RegionalEventStage::Escalation => {
+                if let Some(route) = state
+                    .phase5
+                    .routes
+                    .iter_mut()
+                    .find(|route| route.route_id == "north-pack-road")
+                {
+                    route.risk_percent = route.risk_percent.saturating_add(10).min(90);
+                    route.status = tarrowyn_protocol::RouteStatus::Threatened;
+                }
+                for settlement in &mut state.phase5.settlements {
+                    settlement.food = settlement.food.saturating_sub(4);
+                    settlement.price_index_percent =
+                        settlement.price_index_percent.saturating_add(8);
+                }
+                for household in &mut state.phase4.households {
+                    household.service_quality = household.service_quality.saturating_sub(4);
+                    household.clue =
+                        "The thaw reduced service until a safe route and supply chain are restored."
+                            .to_owned();
+                }
+                record_regional(state, &["hearth", "whisperwood-outpost", "saltmere"], "regional event escalation", &format!("Event {event_id} crossed the region: travel risk, farm supply, prices, and household choices now carry its cause."));
             }
-            for settlement in &mut state.phase5.settlements {
-                settlement.food = settlement.food.saturating_sub(4);
-                settlement.price_index_percent = settlement.price_index_percent.saturating_add(8);
+            RegionalEventStage::Aftermath => {
+                record_regional(
+                    state,
+                    &["hearth", "whisperwood-outpost", "saltmere"],
+                    "regional event aftermath",
+                    &format!(
+                        "Event {event_id} settled into regional history after its resolution."
+                    ),
+                );
             }
-            for household in &mut state.phase4.households {
-                household.service_quality = household.service_quality.saturating_sub(4);
-                household.clue =
-                    "The thaw reduced service until a safe route and supply chain are restored."
-                        .to_owned();
-            }
-            record_regional(state, &["hearth", "whisperwood-outpost", "saltmere"], "regional event escalation", &format!("Event {event_id} crossed the region: travel risk, farm supply, prices, and household choices now carry its cause."));
-            if let Some(event) = state
-                .phase5
-                .events
-                .iter_mut()
-                .find(|event| event.event_id == event_id)
-            {
-                event.cursor = state.cursor;
-            }
+            _ => continue,
+        }
+        if let Some(event) = state
+            .phase5
+            .events
+            .iter_mut()
+            .find(|event| event.event_id == event_id)
+        {
+            event.cursor = state.cursor;
         }
     }
 }

@@ -256,7 +256,7 @@ fn regional_event_cursor_and_household_history_survive_ticks() {
         .unwrap()
         .data;
     assert!(seeded.accepted);
-    let event_id = seeded.event.unwrap().event_id;
+    let event_id = seeded.event.as_ref().unwrap().event_id.clone();
     for _ in 0..3 {
         repository.tick();
     }
@@ -305,13 +305,26 @@ fn regional_event_cursor_and_household_history_survive_ticks() {
             RegionalEventRequest {
                 request_id: "resolve".to_owned(),
                 action: RegionalEventAction::Resolve,
-                event_id: Some(event_id),
+                event_id: Some(event_id.clone()),
                 intervention: None,
             },
         )
         .unwrap()
         .data;
     assert!(resolved.accepted);
+    let resolution_cursor = resolved.event.as_ref().unwrap().cursor;
+    for _ in 0..4 {
+        repository.tick();
+    }
+    let aftermath = repository
+        .events_region(&session.account_token, resolution_cursor)
+        .unwrap()
+        .data;
+    assert!(aftermath.events.iter().any(|event| {
+        event.event_id == event_id
+            && event.stage == tarrowyn_protocol::RegionalEventStage::Aftermath
+            && event.cursor > resolution_cursor
+    }));
     let households = repository
         .households_region(&session.account_token)
         .unwrap()
