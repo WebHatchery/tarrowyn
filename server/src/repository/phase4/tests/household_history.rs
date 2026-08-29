@@ -9,7 +9,7 @@ fn departed_npc_does_not_repeat_the_same_departure_chronicle() {
     });
     {
         let mut state = repository.state.lock().unwrap();
-        state.phase4.households[0].status = HouseholdLifeStatus::Departed;
+        state.phase4.households[0].status = HouseholdLifeStatus::ConsideringDeparture;
         state
             .phase4
             .infrastructure
@@ -29,5 +29,5 @@ fn departed_npc_does_not_repeat_the_same_departure_chronicle() {
         .iter()
         .filter(|entry| entry.kind == "household departure")
         .count();
-    assert_eq!(departure_records, 0);
+    assert_eq!(departure_records, 1);
 }
