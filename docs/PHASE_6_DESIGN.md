@@ -62,6 +62,9 @@ Account deletion work is a live queue rather than replay history: repeated
 requests for one account coalesce onto its pending operation, pending records
 are never evicted by replay-cache maintenance, and admission is capped at 128
 accounts until the next authoritative processing tick.
+Production access records are retained only while their access token is active
+or their refresh token remains valid; revoked and fully expired sessions are
+removed during session maintenance without interrupting a valid refresh.
 Every mutation replay cache is trimmed to a 512-entry per-scope bound on the
 authoritative world tick, including identity, regional, support, authentication,
 moderation, and earlier-phase command results.

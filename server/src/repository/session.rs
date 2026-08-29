@@ -64,6 +64,10 @@ pub(super) fn expire_sessions(state: &mut RepositoryState, config: &ServerConfig
             }
         }
     }
+    state.phase6.sessions.retain(|token, session| {
+        state.sessions.contains_key(token)
+            || (!session.revoked && session.refresh_expires_at_tick > state.tick)
+    });
 }
 
 pub(super) fn sorted_presences(state: &RepositoryState) -> Vec<PlayerPresence> {

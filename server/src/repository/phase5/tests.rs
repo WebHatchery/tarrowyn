@@ -10,6 +10,7 @@ use tarrowyn_protocol::{
 
 mod event_retention;
 mod market_retention;
+mod session_retention;
 mod settlement_chronicle_retention;
 mod settlements;
 
