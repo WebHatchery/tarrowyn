@@ -73,6 +73,8 @@ authoritative world tick, including identity, regional, support, authentication,
 moderation, and earlier-phase command results.
 The production audit stream likewise keeps its newest 512 records, dropping
 only the oldest entries when its bounded operational window is full.
+The land registry keeps at most 128 claim records; reclaimed history makes
+room for new requests, while live claim rows are never evicted or displaced.
 Moderation reports retain their creation time, expire after the documented 90
 real days, and are additionally capped at the newest 512 records for bounded
 recovery state.

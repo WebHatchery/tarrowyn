@@ -1,4 +1,5 @@
 use super::super::{ServerConfig, WorldRepository};
+mod claim_retention;
 mod combat_actions;
 mod farming;
 mod governance_history_retention;

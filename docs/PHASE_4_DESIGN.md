@@ -123,6 +123,12 @@ history makes room for new work while open and accepted orders remain
 addressable; when every retained slot still carries live work, a new order is
 rejected before its materials or tool are escrowed.
 
+The land registry retains at most 128 claim records. Reclaimed claim history
+makes room for a new request, while active, requested, expired, and abandoned
+claims remain addressable until their lifecycle can safely continue. If every
+retained row is still live, a new request is rejected before a free plot is
+removed from the available-land ledger.
+
 The public decision and tax ledgers retain their newest 64 records, and the
 infrastructure view retains its newest 32 records, so a bounded projection
 continues to show the latest accepted settlement work and receipts.

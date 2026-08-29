@@ -17,6 +17,7 @@ mod governance;
 mod households;
 mod knowledge;
 mod professions;
+pub(super) use claims::trim_claim_history;
 
 const DEFAULT_TREASURY: u32 = 48;
 pub(super) const MAX_PROPOSALS: usize = 64;
@@ -25,6 +26,7 @@ pub(super) const MAX_GOVERNANCE_DECISIONS: usize = 64;
 pub(super) const MAX_TAX_COLLECTIONS: usize = 64;
 pub(super) const MAX_INFRASTRUCTURE_RECORDS: usize = 32;
 pub(super) const MAX_SCHOOL_LESSONS: usize = 128;
+pub(super) const MAX_CLAIMS: usize = 128;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub(super) enum Phase4Response {

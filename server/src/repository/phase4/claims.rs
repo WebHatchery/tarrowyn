@@ -54,7 +54,12 @@ impl super::super::WorldRepository {
                 response.accepted = true;
             }
             ClaimLifecycleAction::Request => {
-                if let Some(position) = state.phase4.available_plots.pop() {
+                if !claim_room(&mut state.phase4.claims) {
+                    response.reason = Some(
+                        "The claim ledger is full; wait for a reclaimed history row before requesting another plot."
+                            .to_owned(),
+                    );
+                } else if let Some(position) = state.phase4.available_plots.pop() {
                     let actor_name = account_name(&state, &key);
                     let claim = ClaimRecord {
                         claim_id: format!("lease-{}", state.phase4.next_claim_id),
@@ -354,6 +359,31 @@ fn claims_view(
         available_plots: state.phase4.available_plots.clone(),
         lease_duration_days: super::lease_duration_days(config),
         cursor: state.cursor,
+    }
+}
+
+fn claim_room(claims: &mut Vec<ClaimRecord>) -> bool {
+    while claims.len() >= super::MAX_CLAIMS {
+        let Some(index) = claims
+            .iter()
+            .position(|claim| claim.status == ClaimLifecycleStatus::Reclaimed)
+        else {
+            return false;
+        };
+        claims.remove(index);
+    }
+    true
+}
+
+pub fn trim_claim_history(claims: &mut Vec<ClaimRecord>) {
+    while claims.len() > super::MAX_CLAIMS {
+        let Some(index) = claims
+            .iter()
+            .position(|claim| claim.status == ClaimLifecycleStatus::Reclaimed)
+        else {
+            break;
+        };
+        claims.remove(index);
     }
 }
 

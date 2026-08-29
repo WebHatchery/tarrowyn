@@ -165,6 +165,7 @@ impl RepositoryState {
         let mut phase4 = stored.phase4;
         super::phase4::trim_proposals(&mut phase4.governance);
         super::phase4::trim_service_orders(&mut phase4);
+        super::phase4::trim_claim_history(&mut phase4.claims);
         super::phase4::trim_school_lessons(&mut phase4, stored.tick);
         super::phase4::retain_recent(
             &mut phase4.governance.decisions,
