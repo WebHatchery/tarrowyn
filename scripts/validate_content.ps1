@@ -131,8 +131,25 @@ $farmPlots = @($region.farm_plots | ForEach-Object { "$($_.x),$($_.y)" })
 if ($locations.Count -ne ($locations | Sort-Object -Unique).Count) { throw "Region location IDs must be unique." }
 if ($routes.Count -ne ($routes | Sort-Object -Unique).Count) { throw "Region route IDs must be unique." }
 if ($farmPlots.Count -lt 1 -or $farmPlots.Count -ne ($farmPlots | Sort-Object -Unique).Count) { throw "Region farm plot positions must be present and unique." }
+if ($null -eq $region.farm_animal_position -or
+    $null -eq $region.farm_animal_position.x -or $null -eq $region.farm_animal_position.y) {
+    throw "Region farm animal position must be present."
+}
+$animalX = [int]$region.farm_animal_position.x
+$animalY = [int]$region.farm_animal_position.y
+if ($animalX -lt 0 -or $animalY -lt 0 -or
+    $animalX -ge [int]$gameConfig.world_width -or $animalY -ge [int]$gameConfig.world_height) {
+    throw "Region farm animal position must be inside the world."
+}
+if ($farmPlots -contains "$animalX,$animalY") {
+    throw "Region farm animal position must not overlap a farm plot."
+}
+$adjacentPlots = @($region.farm_plots | Where-Object {
+    ([math]::Abs(([int]$_.x) - $animalX) + [math]::Abs(([int]$_.y) - $animalY)) -eq 1
+})
+if ($adjacentPlots.Count -eq 0) { throw "Region farm animal position must be one tile from a farm plot." }
 if ($locations.Count -lt 3) { throw "The regional manifest needs three locations." }
 foreach ($route in $region.routes) {
     if ($locations -notcontains $route.origin -or $locations -notcontains $route.destination) { throw "Route $($route.id) references an unknown location." }
 }
-Write-Host "Content manifests valid: $($required.Count) files, $($locations.Count) locations, $($routes.Count) routes, $($farmPlots.Count) farm plots."
+Write-Host "Content manifests valid: $($required.Count) files, $($locations.Count) locations, $($routes.Count) routes, $($farmPlots.Count) farm plots, animal at $animalX,$animalY."

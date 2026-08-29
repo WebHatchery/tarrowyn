@@ -48,6 +48,8 @@ than a separate legacy grid.
 The authored-animal regression confirms Bellweather's position follows the
 validated region farm position and that the retired saved-world position
 upgrades without changing animal condition or care history.
+The content gate also rejects an authored animal position that leaves the
+world, overlaps a plot, or loses its one-tile relationship to the fields.
 The contract-template regression confirms the repeatable Brambleback watch
 uses the validated contract manifest for its target and progression contract.
 The threat-template regression confirms the launch wilderness threat follows
