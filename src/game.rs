@@ -242,6 +242,13 @@ impl Game {
                                 && !player.stale(client.projection.server_tick)
                                 && player.position == client.projection.player_position
                         }),
+                    knowledge_label: client.knowledge_cycle_label(
+                        client.projection.players.iter().any(|player| {
+                            Some(player.account_id.as_str()) != own_account_id
+                                && !player.stale(client.projection.server_tick)
+                                && player.position == client.projection.player_position
+                        }),
+                    ),
                     ui: &virtual_ui,
                 })
             }
@@ -297,6 +304,7 @@ impl Game {
                     has_open_market_order: false,
                     can_abandon_claim: false,
                     can_transfer_claim: false,
+                    knowledge_label: "Knowledge",
                     ui: &virtual_ui,
                 })
             }
@@ -618,8 +626,25 @@ impl Game {
                 "expedition" => client.queue_expedition_cycle(),
                 "chronicle" => client.refresh_tavern(),
                 "practice" => client.queue_phase4("practice"),
-                "town-hall" | "tax-rate" | "registry" | "order" | "knowledge" | "households"
-                | "local-fight" | "technique" | "guard" | "item" | "reposition" | "spell" => {
+                "knowledge" => {
+                    let own = client
+                        .account
+                        .as_ref()
+                        .map(|account| account.account_id.as_str());
+                    let target = client
+                        .projection
+                        .players
+                        .iter()
+                        .find(|player| {
+                            Some(player.account_id.as_str()) != own
+                                && !player.stale(client.projection.server_tick)
+                                && player.position == client.projection.player_position
+                        })
+                        .map(|player| player.account_id.clone());
+                    client.queue_knowledge_cycle(target);
+                }
+                "town-hall" | "tax-rate" | "registry" | "order" | "households" | "local-fight"
+                | "technique" | "guard" | "item" | "reposition" | "spell" => {
                     client.queue_phase4(id)
                 }
                 "crafting-timing" => client.queue_crafting_timing(),

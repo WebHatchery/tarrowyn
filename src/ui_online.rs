@@ -240,7 +240,12 @@ pub(super) fn draw_sidebar(
         22.0,
         mouse,
         &[
-            ("knowledge", "Knowledge", true, ButtonTone::Secondary),
+            (
+                "knowledge",
+                ctx.knowledge_label,
+                true,
+                ButtonTone::Secondary,
+            ),
             ("households", "Households", true, ButtonTone::Secondary),
             (
                 "local-fight",

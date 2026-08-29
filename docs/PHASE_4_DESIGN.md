@@ -143,8 +143,8 @@ applied. Until the discoverer teaches it or records it, other players receive
 only a redacted clue rather than the method's description or effect. A teaching
 action must name another recognised player and records
 practice in the Teaching root only after the transfer succeeds. The server owns
-all discovery and transfer checks; the client only shows the resulting
-projection.
+all discovery and transfer checks; the client cycles its visible control through
+the record, teach, and apply actions using the resulting projection.
 
 Formal school lessons use `POST /v1/skills`. A teacher must have mastered the
 subject and have Teaching mastery at least equal to its depth; the learner must

@@ -66,5 +66,6 @@ pub struct UiContext<'a> {
     pub has_open_market_order: bool,
     pub can_abandon_claim: bool,
     pub can_transfer_claim: bool,
+    pub knowledge_label: &'a str,
     pub ui: &'a VirtualUi,
 }

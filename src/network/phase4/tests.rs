@@ -1,7 +1,8 @@
 use super::*;
 use tarrowyn_protocol::{
-    LocalCombatAction, LocalCombatRequest, LocalCombatState, ProfessionAction, SkillAction,
-    SkillLesson, SkillStatus, SkillView, SkillsResponse, WeaponKind,
+    KnowledgeAction, KnowledgeItem, KnowledgeResponse, KnowledgeState, LocalCombatAction,
+    LocalCombatRequest, LocalCombatState, ProfessionAction, SkillAction, SkillLesson, SkillStatus,
+    SkillView, SkillsResponse, WeaponKind,
 };
 
 #[test]
@@ -197,6 +198,55 @@ fn lease_controls_queue_abandon_and_visible_transfer_actions() {
         panic!("the transfer control should queue the owned lease");
     };
     assert_eq!(request.action, ClaimLifecycleAction::Transfer);
+    assert_eq!(request.target_account_id.as_deref(), Some("account-2"));
+}
+
+#[test]
+fn knowledge_control_advances_from_record_to_teach() {
+    let mut client = Phase4Client::new();
+    client.own_account_id = Some("account-1".to_owned());
+    client.knowledge = Some(KnowledgeResponse {
+        request_id: "knowledge-view".to_owned(),
+        accepted: true,
+        knowledge: KnowledgeState {
+            items: vec![KnowledgeItem {
+                knowledge_id: "moonberry-tending".to_owned(),
+                title: "Moonberry trellis method".to_owned(),
+                kind: tarrowyn_protocol::KnowledgeKind::CropTechnique,
+                description: "Train the vines along a trellis.".to_owned(),
+                effect: "Moonberries gain quality when tended.".to_owned(),
+                teachable: true,
+                writable: true,
+                discovered_by: vec!["account-1".to_owned()],
+                stored_in: "Private field notes".to_owned(),
+            }],
+            known_by_player: vec!["moonberry-tending".to_owned()],
+            cursor: 2,
+        },
+        message: "The field notes are open.".to_owned(),
+        reason: None,
+    });
+
+    assert_eq!(client.knowledge_cycle_label(false), "Record");
+    assert!(client.queue_knowledge("record-1".to_owned(), None));
+    let Some(Phase4Command::Knowledge(request)) = client.commands.pop_front() else {
+        panic!("the knowledge control should queue a record action");
+    };
+    assert_eq!(request.action, KnowledgeAction::Record);
+
+    client
+        .knowledge
+        .as_mut()
+        .expect("knowledge projection")
+        .knowledge
+        .items[0]
+        .stored_in = "The Hearth guild archive (written)".to_owned();
+    assert_eq!(client.knowledge_cycle_label(true), "Teach");
+    assert!(client.queue_knowledge("teach-1".to_owned(), Some("account-2".to_owned()),));
+    let Some(Phase4Command::Knowledge(request)) = client.commands.pop_front() else {
+        panic!("the knowledge control should queue a teach action");
+    };
+    assert_eq!(request.action, KnowledgeAction::Teach);
     assert_eq!(request.target_account_id.as_deref(), Some("account-2"));
 }
 

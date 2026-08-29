@@ -18,6 +18,20 @@ impl OnlineClient {
         self.phase4.summary()
     }
 
+    pub(crate) fn knowledge_cycle_label(&self, has_target: bool) -> &'static str {
+        self.phase4.knowledge_cycle_label(has_target)
+    }
+
+    pub(crate) fn queue_knowledge_cycle(&mut self, target_account_id: Option<String>) {
+        if self.state == ConnectionState::Online {
+            let request_id = self.next_request_id("knowledge");
+            if !self.phase4.queue_knowledge(request_id, target_account_id) {
+                self.status_message =
+                    "The knowledge archive is busy; wait for its ledger or queue space.".to_owned();
+            }
+        }
+    }
+
     pub(crate) fn can_abandon_claim(&self) -> bool {
         self.phase4.can_abandon_claim()
     }

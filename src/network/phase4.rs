@@ -246,7 +246,9 @@ impl Phase4Client {
             "town-hall" => self.queue_governance(request_id),
             "registry" => self.queue_claim(request_id),
             "order" => self.queue_order(request_id),
-            "knowledge" => self.queue_knowledge(request_id),
+            "knowledge" => {
+                self.queue_knowledge(request_id, None);
+            }
             "local-fight" => self.queue_combat(request_id),
             "technique" => self.queue_combat_action(request_id, LocalCombatAction::Technique),
             "guard" => self.queue_combat_action(request_id, LocalCombatAction::Guard),
@@ -472,31 +474,62 @@ impl Phase4Client {
         true
     }
 
-    fn queue_knowledge(&mut self, request_id: String) {
-        let known = self
+    fn next_knowledge_action(&self, target_account_id: Option<&str>) -> KnowledgeAction {
+        let Some(response) = self.knowledge.as_ref() else {
+            return KnowledgeAction::Discover;
+        };
+        let Some(item) = response
             .knowledge
-            .as_ref()
-            .map(|response| {
-                response
-                    .knowledge
-                    .known_by_player
-                    .iter()
-                    .any(|id| id == "moonberry-tending")
-            })
-            .unwrap_or(false);
+            .items
+            .iter()
+            .find(|item| item.knowledge_id == "moonberry-tending")
+        else {
+            return KnowledgeAction::Discover;
+        };
+        if !response
+            .knowledge
+            .known_by_player
+            .iter()
+            .any(|id| id == "moonberry-tending")
+        {
+            KnowledgeAction::Discover
+        } else if item.writable && !item.stored_in.contains("guild archive") {
+            KnowledgeAction::Record
+        } else if item.teachable && target_account_id.is_some() {
+            KnowledgeAction::Teach
+        } else {
+            KnowledgeAction::Apply
+        }
+    }
+
+    pub(super) fn knowledge_cycle_label(&self, has_target: bool) -> &'static str {
+        match self.next_knowledge_action(has_target.then_some("target")) {
+            KnowledgeAction::Discover => "Discover",
+            KnowledgeAction::Record => "Record",
+            KnowledgeAction::Teach => "Teach",
+            KnowledgeAction::Apply => "Apply",
+            KnowledgeAction::Inspect => "Inspect",
+        }
+    }
+
+    pub(super) fn queue_knowledge(
+        &mut self,
+        request_id: String,
+        target_account_id: Option<String>,
+    ) -> bool {
+        let action = self.next_knowledge_action(target_account_id.as_deref());
+        let target_account_id = (action == KnowledgeAction::Teach)
+            .then_some(target_account_id)
+            .flatten();
         super::queue::try_push(
             &mut self.commands,
             Phase4Command::Knowledge(KnowledgeRequest {
                 request_id,
-                action: if known {
-                    KnowledgeAction::Apply
-                } else {
-                    KnowledgeAction::Discover
-                },
+                action,
                 knowledge_id: Some("moonberry-tending".to_owned()),
-                target_account_id: None,
+                target_account_id,
             }),
-        );
+        )
     }
 
     pub(super) fn queue_school(&mut self, request_id: String, target_account_id: String) -> bool {
