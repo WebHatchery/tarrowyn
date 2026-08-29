@@ -1,7 +1,8 @@
 use super::super::{ServerConfig, WorldRepository};
 use tarrowyn_protocol::{
-    CommodityKind, MarketOrder, MarketOrderStatus, RegionalEvent, RegionalEventStage,
-    RegionalHousehold, TravelState, TravelStatus,
+    ClaimLifecycleAction, ClaimLifecycleRequest, CommodityKind, GovernanceRequest, MarketOrder,
+    MarketOrderStatus, RegionalEvent, RegionalEventStage, RegionalHousehold, TravelState,
+    TravelStatus,
 };
 
 #[test]
@@ -233,6 +234,102 @@ fn duplicate_identity_account_ids_degrade_readiness() {
             .get_mut(&second_key)
             .expect("second identity")
             .account_id = account_id;
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
+fn invalid_phase4_governance_reference_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state.phase4.governance.settlement_id = "missing-settlement".to_owned();
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
+fn duplicate_phase4_claim_ids_degrade_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = super::guest(&repository, "integrity-phase4-claim");
+    repository
+        .claim_lifecycle(
+            &session.account_token,
+            ClaimLifecycleRequest {
+                request_id: "integrity-phase4-claim-request".to_owned(),
+                action: ClaimLifecycleAction::Request,
+                claim_id: None,
+                target_account_id: None,
+            },
+        )
+        .expect("claim request");
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        let duplicate = state.phase4.claims[0].clone();
+        state.phase4.claims.push(duplicate);
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
+fn invalid_phase4_account_reference_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = super::guest(&repository, "integrity-phase4-account");
+    let mut request = GovernanceRequest {
+        request_id: "integrity-phase4-proposal".to_owned(),
+        action: tarrowyn_protocol::GovernanceAction::Propose,
+        office_id: None,
+        proposal_id: None,
+        public_action: None,
+        target: None,
+        cost: None,
+        tax_rate_percent: None,
+    };
+    request.public_action = Some(tarrowyn_protocol::PublicAction::RepairRoad);
+    repository
+        .governance(&session.account_token, request)
+        .expect("proposal request");
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state.phase4.governance.proposals[0].proposer_account_id = "missing-account".to_owned();
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
+fn invalid_phase4_keyed_state_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state
+            .phase4
+            .profiles
+            .insert("missing-identity".to_owned(), Vec::new());
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
+fn invalid_phase4_bounds_degrade_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state.phase4.households[0].food = 101;
     }
 
     let health = repository.ops_health().data;

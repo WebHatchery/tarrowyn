@@ -495,6 +495,7 @@ fn integrity_ok(state: &RepositoryState) -> bool {
             .map(|identity| identity.character_id.as_str()),
     );
     identity_ids_ok
+        && super::phase4_integrity::ok(state)
         && !state.phase5.locations.is_empty()
         && !state.phase5.routes.is_empty()
         && !state.phase5.settlements.is_empty()

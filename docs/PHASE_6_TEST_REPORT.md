@@ -283,6 +283,16 @@ client tests, asset and code-standard checks, workspace clippy, Windows and
 WebGL release builds, and Preview deployment. The next full release gate
 remains reserved for a new major milestone or a change that crosses subsystem
 boundaries.
+The Phase 4 readiness milestone now validates governance, infrastructure,
+leases, households, service orders, school lessons, knowledge, keyed private
+state, animal records, and available-plot identity/reference boundaries before
+`/v1/ops/health` reports a healthy world. Five focused readiness regressions
+cover malformed Phase 4 governance links, duplicate lease IDs, dangling
+account references, dangling identity-keyed state, and out-of-range household
+values. Its cross-subsystem full release gate passed on 2026-08-30 with 14
+protocol tests, 247 server tests, 93 client tests, asset and code-standard
+checks, workspace clippy, Windows and WebGL release builds, and Preview
+deployment.
 
 The accumulated maintenance batch published successfully through
 `publish.ps1` on 2026-08-29: Windows and WebGL packages built and deployed to
