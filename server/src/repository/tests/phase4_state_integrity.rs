@@ -302,3 +302,42 @@ fn open_phase4_service_order_cannot_have_completion_tick() {
     assert!(!health.ready);
     assert!(!health.integrity_ok);
 }
+
+#[test]
+fn malformed_phase4_knowledge_text_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state
+            .phase4
+            .knowledge
+            .first_mut()
+            .expect("knowledge item")
+            .effect = "effect\rwith-control".to_owned();
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
+fn duplicate_phase4_knowledge_discoverer_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("phase4-knowledge-state".to_owned()),
+            reset: false,
+        })
+        .expect("guest session")
+        .data;
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state.phase4.knowledge[0].discovered_by =
+            vec![session.account_id.clone(), session.account_id];
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}

@@ -6,6 +6,8 @@ const DELETED_ACCOUNT: &str = "former-resident";
 const MAX_TAX_RATE_PERCENT: u8 = 10;
 const MAX_HOUSEHOLD_TEXT_CHARS: usize = 80;
 const MAX_HOUSEHOLD_MEMBERS: usize = 20;
+const MAX_KNOWLEDGE_ID_CHARS: usize = 160;
+const MAX_KNOWLEDGE_TEXT_CHARS: usize = 240;
 
 pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
     let account_ids: HashSet<&str> = state
@@ -217,12 +219,16 @@ pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
                 .map(|item| item.knowledge_id.as_str()),
         )
         && state.phase4.knowledge.iter().all(|item| {
-            unique_non_empty(item.discovered_by.iter().map(String::as_str))
+            bounded_text(&item.knowledge_id, MAX_KNOWLEDGE_ID_CHARS)
+                && bounded_text(&item.title, MAX_HOUSEHOLD_TEXT_CHARS)
+                && bounded_text(&item.description, MAX_KNOWLEDGE_TEXT_CHARS)
+                && bounded_text(&item.effect, MAX_KNOWLEDGE_TEXT_CHARS)
+                && unique_non_empty(item.discovered_by.iter().map(String::as_str))
                 && item
                     .discovered_by
                     .iter()
                     .all(|account_id| account_ids.contains(account_id.as_str()))
-                && !item.stored_in.trim().is_empty()
+                && bounded_text(&item.stored_in, MAX_KNOWLEDGE_TEXT_CHARS)
         })
         && state.phase4.known_by.iter().all(|(identity_key, known)| {
             identity_keys.contains(identity_key.as_str())

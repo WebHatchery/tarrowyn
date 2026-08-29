@@ -533,6 +533,8 @@ Phase 4 household persistence now bounds member records and decision timing,
 with two focused household regressions.
 Phase 4 service-order persistence now enforces creation/completion timing and
 status-compatible completion metadata, with two focused order regressions.
+Phase 4 knowledge persistence now bounds item text and rejects duplicate
+discoverer entries, with two focused knowledge regressions.
 
 The cross-layer persistence-readiness milestone passed the full release gate on
 2026-08-30 after the core and Phase 3-6 integrity additions: 14 protocol tests,
