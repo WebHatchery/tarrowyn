@@ -152,6 +152,12 @@ impl RepositoryState {
     }
 
     pub(crate) fn from_stored(stored: StoredState, config: &ServerConfig) -> Self {
+        let day_length_seconds = config.day_length_seconds.max(1.0);
+        let clock_seconds = if stored.clock.seconds.is_finite() {
+            stored.clock.seconds.max(0.0) % day_length_seconds
+        } else {
+            0.0
+        };
         let mut identities = stored.identities;
         for identity in identities.values_mut() {
             trim_replay_cache(&mut identity.farming_results);
@@ -246,7 +252,7 @@ impl RepositoryState {
             tick: stored.tick,
             clock: WorldClock {
                 day: stored.clock.day.max(1),
-                seconds: stored.clock.seconds.max(0.0),
+                seconds: clock_seconds,
                 day_length_seconds: config.day_length_seconds,
             },
             cursor: stored.cursor,
