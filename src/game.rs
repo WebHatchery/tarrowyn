@@ -547,6 +547,30 @@ impl Game {
                             .warning("No pending trade is waiting for this character.");
                     }
                 }
+                "cancel-trade" => {
+                    let own = client
+                        .account
+                        .as_ref()
+                        .map(|account| account.account_id.as_str());
+                    let pending_trade_id = own.and_then(|account_id| {
+                        client
+                            .pending_trade_for(account_id)
+                            .map(|trade| trade.trade_id.clone())
+                    });
+                    if let Some(trade_id) = pending_trade_id {
+                        client.queue_trade(TradeRequest {
+                            request_id: String::new(),
+                            action: TradeAction::Cancel,
+                            trade_id: Some(trade_id),
+                            recipient_account_id: None,
+                            offer: None,
+                            request: None,
+                        });
+                    } else {
+                        self.notifications
+                            .warning("No pending trade is waiting to be cancelled.");
+                    }
+                }
                 "contract" => client.queue_contract_cycle(),
                 "strike" => client.queue_combat(
                     tarrowyn_protocol::CombatAction::Strike,

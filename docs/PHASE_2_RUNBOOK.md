@@ -67,5 +67,8 @@ that the character, clock, and completed trade remain available.
 
 For a visual browser/native check, start the server and client using the main
 README instructions. The online sidebar exposes visible `Plant`, `Tend`, and
-`Harvest` controls beside the movement pad; the player ledger is refreshed from
-`/v1/state`, and command notices distinguish the sent/accepted/rejected path.
+`Harvest` controls beside the movement pad. When a direct offer is present, the
+same touch row exposes `Review`, `Accept` for an incoming offer, and `Cancel`
+for any pending offer addressed to the current character. The player ledger is
+refreshed from `/v1/state`, and command notices distinguish the
+sent/accepted/rejected path.

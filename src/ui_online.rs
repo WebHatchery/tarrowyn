@@ -77,6 +77,12 @@ pub(super) fn draw_sidebar(
                 has_incoming_trade,
                 ButtonTone::Positive,
             ),
+            (
+                "cancel-trade",
+                "Cancel",
+                has_pending_trade,
+                ButtonTone::Secondary,
+            ),
         ],
         ctx,
         actions,
