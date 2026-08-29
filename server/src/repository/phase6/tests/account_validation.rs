@@ -66,6 +66,49 @@ fn account_link_rejects_unbounded_or_controlled_provider_subjects() {
 }
 
 #[test]
+fn account_link_replays_a_lost_response_through_the_rotated_guest_token() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("account-link-replay".to_owned()),
+            reset: false,
+        })
+        .expect("guest session")
+        .data;
+    let request = AuthLinkRequest {
+        request_id: "link-replay".to_owned(),
+        provider: PROVIDER.to_owned(),
+        subject: "link-replay-subject".to_owned(),
+        display_name: Some("Replay resident".to_owned()),
+    };
+
+    let linked = repository
+        .auth_link(&session.account_token, request.clone())
+        .expect("initial account link")
+        .data;
+    assert!(repository.account(&session.account_token).is_err());
+
+    let replay = repository
+        .auth_link(&session.account_token, request)
+        .expect("the rotated guest token should replay its link result")
+        .data;
+    assert_eq!(replay, linked);
+
+    let error = repository
+        .auth_link(
+            &session.account_token,
+            AuthLinkRequest {
+                request_id: "different-request".to_owned(),
+                provider: PROVIDER.to_owned(),
+                subject: "link-replay-subject".to_owned(),
+                display_name: None,
+            },
+        )
+        .expect_err("the rotated token must not authorize a new link request");
+    assert_eq!(error.status, 401);
+}
+
+#[test]
 fn guest_session_rejects_unbounded_or_controlled_client_keys() {
     let repository = WorldRepository::new(ServerConfig::default());
 

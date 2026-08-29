@@ -1,48 +1,25 @@
 //! Touch-driven client projection for the regional map and production boundary.
 
 use super::*;
-use serde::Deserialize;
 use tarrowyn_protocol::{
-    AccountDeletionRequest, AccountDeletionResponse, AccountResponse, ApiResponse, AuthLinkRequest,
-    AuthLinkResponse, AuthRefreshResponse, AuthRevokeResponse, AuthSession, GuestSessionResponse,
-    LawBoundaryResponse, MarketOrderAction, MarketOrderRequest, MarketSnapshot,
-    ModerationReportRequest, ModerationReportResponse, RegionSnapshot, RegionalEventAction,
-    RegionalEventRequest, RegionalEventResponse, RegionalEventsResponse,
-    RegionalHouseholdsResponse, RouteAction, RouteRequest, RouteResponse, SettlementsResponse,
-    TravelAction, TravelRequest, TravelResponse, TravelStatus,
+    AccountDeletionRequest, AccountResponse, ApiResponse, AuthLinkRequest, AuthLinkResponse,
+    AuthRefreshResponse, AuthSession, GuestSessionResponse, LawBoundaryResponse, MarketOrderAction,
+    MarketOrderRequest, MarketSnapshot, ModerationReportRequest, RegionSnapshot,
+    RegionalEventAction, RegionalEventRequest, RegionalEventsResponse, RegionalHouseholdsResponse,
+    RouteAction, RouteRequest, SettlementsResponse, TravelAction, TravelRequest, TravelStatus,
 };
 
 const MAX_CACHED_REGIONAL_EVENTS: usize = 2048;
+const MAX_COMMAND_RETRIES: u8 = 3;
+const COMMAND_RETRY_DELAY_SECONDS: f32 = 1.0;
 
+mod commands;
 mod events;
 mod market;
 mod routes;
 mod summary;
 mod travel;
-
-enum Phase5Command {
-    Travel(TravelRequest),
-    Route(RouteRequest),
-    Market(MarketOrderRequest),
-    Event(RegionalEventRequest),
-    Link(AuthLinkRequest),
-    Revoke(tarrowyn_protocol::AuthRevokeRequest),
-    Report(ModerationReportRequest),
-    Delete(AccountDeletionRequest),
-}
-
-#[derive(Deserialize)]
-#[serde(untagged)]
-enum Phase5CommandResponse {
-    Travel(TravelResponse),
-    Route(RouteResponse),
-    Delete(AccountDeletionResponse),
-    Market(tarrowyn_protocol::MarketOrderResponse),
-    Event(RegionalEventResponse),
-    Link(AuthLinkResponse),
-    Revoke(AuthRevokeResponse),
-    Report(ModerationReportResponse),
-}
+use commands::{Phase5Command, Phase5CommandResponse};
 
 pub(super) struct Phase5Client {
     pending_region: Option<Pending<ApiResponse<RegionSnapshot>>>,
@@ -55,6 +32,7 @@ pub(super) struct Phase5Client {
     pending_refresh: Option<Pending<ApiResponse<AuthRefreshResponse>>>,
     pending_command: Option<Pending<ApiResponse<Phase5CommandResponse>>>,
     pending_market_action: Option<MarketOrderAction>,
+    in_flight_command: Option<Phase5Command>,
     commands: VecDeque<Phase5Command>,
     region: Option<RegionSnapshot>,
     settlements: Option<SettlementsResponse>,
@@ -71,6 +49,8 @@ pub(super) struct Phase5Client {
     own_account_id: Option<String>,
     refresh_timer: f32,
     auth_refresh_timer: f32,
+    command_retry_timer: f32,
+    command_retry_count: u8,
     next_request_id: u64,
 }
 
@@ -87,6 +67,7 @@ impl Phase5Client {
             pending_refresh: None,
             pending_command: None,
             pending_market_action: None,
+            in_flight_command: None,
             commands: VecDeque::new(),
             region: None,
             settlements: None,
@@ -103,6 +84,8 @@ impl Phase5Client {
             own_account_id: None,
             refresh_timer: 0.0,
             auth_refresh_timer: f32::MAX,
+            command_retry_timer: 0.0,
+            command_retry_count: 0,
             next_request_id: 1,
         }
     }
@@ -123,6 +106,7 @@ impl Phase5Client {
         }
         self.refresh_timer = (self.refresh_timer - dt.max(0.0)).max(0.0);
         self.auth_refresh_timer = (self.auth_refresh_timer - dt.max(0.0)).max(0.0);
+        self.command_retry_timer = (self.command_retry_timer - dt.max(0.0)).max(0.0);
         poll(
             &mut self.pending_region,
             dt,
@@ -173,13 +157,42 @@ impl Phase5Client {
             .and_then(|pending| pending.poll_timed(dt, REQUEST_TIMEOUT_SECONDS))
         {
             self.pending_command = None;
+            let in_flight_command = self.in_flight_command.take();
             let market_action = self.pending_market_action.take();
             match result {
-                Ok(response) => self.apply_command(response.data, market_action, api, notices),
-                Err(error) => notices.push(NetworkNotice::Warning(format!(
-                    "The regional command could not be confirmed: {}",
-                    short_error(&error)
-                ))),
+                Ok(response) => {
+                    self.command_retry_timer = 0.0;
+                    self.command_retry_count = 0;
+                    self.apply_command(response.data, market_action, api, notices);
+                }
+                Err(error) if is_transient_command_error(&error) => {
+                    if self.command_retry_count < MAX_COMMAND_RETRIES {
+                        if let Some(command) = in_flight_command {
+                            self.commands.push_front(command);
+                            self.command_retry_count += 1;
+                            self.command_retry_timer = COMMAND_RETRY_DELAY_SECONDS;
+                            notices.push(NetworkNotice::Warning(format!(
+                                "The regional command could not be confirmed; retrying the same request ({}/{}). {}",
+                                self.command_retry_count,
+                                MAX_COMMAND_RETRIES,
+                                short_error(&error)
+                            )));
+                        }
+                    } else {
+                        self.command_retry_count = 0;
+                        notices.push(NetworkNotice::Warning(format!(
+                            "The regional command could not be confirmed: {}",
+                            short_error(&error)
+                        )));
+                    }
+                }
+                Err(error) => {
+                    self.command_retry_count = 0;
+                    notices.push(NetworkNotice::Warning(format!(
+                        "The regional command could not be confirmed: {}",
+                        short_error(&error)
+                    )));
+                }
             }
         }
         self.dispatch(api);
@@ -228,24 +241,25 @@ impl Phase5Client {
             }
             self.refresh_timer = 1.5;
         }
-        if self.pending_command.is_none() {
+        if self.pending_command.is_none() && self.command_retry_timer <= 0.0 {
             if let Some(command) = self.commands.pop_front() {
                 self.pending_market_action = match &command {
                     Phase5Command::Market(request) => Some(request.action),
                     _ => None,
                 };
-                self.pending_command = Some(match command {
-                    Phase5Command::Travel(request) => api.post_json("/v1/travel", &request),
-                    Phase5Command::Route(request) => api.post_json("/v1/routes", &request),
-                    Phase5Command::Market(request) => api.post_json("/v1/market/orders", &request),
-                    Phase5Command::Event(request) => api.post_json("/v1/events/region", &request),
-                    Phase5Command::Link(request) => api.post_json("/v1/auth/link", &request),
-                    Phase5Command::Revoke(request) => api.post_json("/v1/auth/revoke", &request),
+                self.pending_command = Some(match &command {
+                    Phase5Command::Travel(request) => api.post_json("/v1/travel", request),
+                    Phase5Command::Route(request) => api.post_json("/v1/routes", request),
+                    Phase5Command::Market(request) => api.post_json("/v1/market/orders", request),
+                    Phase5Command::Event(request) => api.post_json("/v1/events/region", request),
+                    Phase5Command::Link(request) => api.post_json("/v1/auth/link", request),
+                    Phase5Command::Revoke(request) => api.post_json("/v1/auth/revoke", request),
                     Phase5Command::Report(request) => {
-                        api.post_json("/v1/moderation/report", &request)
+                        api.post_json("/v1/moderation/report", request)
                     }
-                    Phase5Command::Delete(request) => api.post_json("/v1/account/delete", &request),
+                    Phase5Command::Delete(request) => api.post_json("/v1/account/delete", request),
                 });
+                self.in_flight_command = Some(command);
             }
         }
     }
@@ -471,6 +485,7 @@ impl Phase5Client {
         self.pending_refresh = None;
         self.pending_command = None;
         self.pending_market_action = None;
+        self.in_flight_command = None;
         self.commands.clear();
         self.clear_cached_projections();
         self.account = None;
@@ -481,6 +496,8 @@ impl Phase5Client {
         self.deletion_armed = false;
         self.refresh_timer = 0.0;
         self.auth_refresh_timer = f32::MAX;
+        self.command_retry_timer = 0.0;
+        self.command_retry_count = 0;
     }
 
     fn clear_cached_projections(&mut self) {
@@ -708,6 +725,11 @@ fn phase5_notice(
     } else if let Some(reason) = reason {
         notices.push(NetworkNotice::Warning(reason));
     }
+}
+
+fn is_transient_command_error(error: &str) -> bool {
+    error.contains(" timed out after ")
+        || (error.contains("HTTP request '") && error.contains("' failed:"))
 }
 
 fn market_success_message(action: Option<MarketOrderAction>, fallback_used: bool) -> &'static str {

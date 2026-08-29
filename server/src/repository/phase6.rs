@@ -60,6 +60,8 @@ pub(super) struct Phase6State {
     #[serde(default)]
     pub(super) auth_link_results: HashMap<String, AuthLinkResponse>,
     #[serde(default)]
+    pub(super) auth_link_tokens: HashMap<String, String>,
+    #[serde(default)]
     pub(super) auth_refresh_results: HashMap<String, AuthRefreshResponse>,
     #[serde(default)]
     pub(super) auth_refresh_accounts: HashMap<String, String>,
@@ -96,6 +98,7 @@ pub(super) fn fresh(_config: &ServerConfig) -> Phase6State {
         accounts: HashMap::new(),
         sessions: HashMap::new(),
         auth_link_results: HashMap::new(),
+        auth_link_tokens: HashMap::new(),
         auth_refresh_results: HashMap::new(),
         auth_refresh_accounts: HashMap::new(),
         auth_revoke_results: HashMap::new(),
@@ -121,7 +124,15 @@ impl WorldRepository {
     ) -> Result<ApiResponse<AuthLinkResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
         expire_sessions(&mut state, &self.config);
-        let guest_key = authenticate(&mut state, token, &self.config)?;
+        let (guest_key, replay_only) = match authenticate(&mut state, token, &self.config) {
+            Ok(guest_key) => (guest_key, false),
+            Err(error) => {
+                let Some(guest_key) = state.phase6.auth_link_tokens.get(token).cloned() else {
+                    return Err(error);
+                };
+                (guest_key, true)
+            }
+        };
         validate_request_id(&request.request_id)?;
         if request.provider != IDENTITY_PROVIDER {
             return Err(RepositoryError::new(
@@ -159,6 +170,9 @@ impl WorldRepository {
                 meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
                 data: previous,
             });
+        }
+        if replay_only {
+            return Err(RepositoryError::unauthorized());
         }
         if state
             .phase6
@@ -247,6 +261,10 @@ impl WorldRepository {
             },
         );
         state.sessions.remove(token);
+        state
+            .phase6
+            .auth_link_tokens
+            .insert(token.to_owned(), guest_key.clone());
         let session = issue_session(&mut state, &self.config, &guest_key, &account_id);
         audit(
             &mut state,
@@ -573,6 +591,7 @@ impl WorldRepository {
 pub(super) fn phase6_tick(state: &mut RepositoryState, config: &ServerConfig) -> Option<bool> {
     deletion::process(state);
     trim_replay_cache(&mut state.phase6.auth_link_results);
+    trim_auth_link_tokens(&mut state.phase6);
     trim_replay_cache(&mut state.phase6.auth_refresh_results);
     state
         .phase6
@@ -597,6 +616,21 @@ pub(super) fn phase6_tick(state: &mut RepositoryState, config: &ServerConfig) ->
         Some(backup::write(state, config))
     } else {
         None
+    }
+}
+
+pub(super) fn trim_auth_link_tokens(phase6: &mut Phase6State) {
+    phase6.auth_link_tokens.retain(|_, identity_key| {
+        phase6
+            .auth_link_results
+            .keys()
+            .any(|key| key.starts_with(&format!("{identity_key}:")))
+    });
+    while phase6.auth_link_tokens.len() > MAX_REPLAY_CACHE {
+        let Some(token) = phase6.auth_link_tokens.keys().next().cloned() else {
+            break;
+        };
+        phase6.auth_link_tokens.remove(&token);
     }
 }
 

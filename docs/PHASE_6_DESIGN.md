@@ -80,6 +80,12 @@ accounts until the next authoritative processing tick.
 Production access records are retained only while their access token is active
 or their refresh token remains valid; revoked and fully expired sessions are
 removed during session maintenance without interrupting a valid refresh.
+After a successful guest link rotates the guest access token, a bounded replay
+tombstone keeps that old token able to recover the exact cached link response
+but cannot authorize a new link request. The client retries the same durable
+request a limited number of times after a transport timeout or failure, so a
+response lost after server commit does not strand the character between guest
+and production identity.
 Refresh replay results retain their account ownership separately from the live
 session table so deletion also removes rotated responses after their access
 session has expired.

@@ -130,6 +130,33 @@ fn revoke_response_discards_authenticated_state() {
 }
 
 #[test]
+fn transient_command_failure_requeues_the_same_request() {
+    let mut client = Phase5Client::new();
+    let request = tarrowyn_protocol::AuthLinkRequest {
+        request_id: "link-retry".to_owned(),
+        provider: "webhatchery-identity-oidc".to_owned(),
+        subject: "retry-subject".to_owned(),
+        display_name: None,
+    };
+    client.pending_command = Some(Pending::failed(
+        "HTTP request 'POST /v1/auth/link' timed out after 6.0 seconds",
+    ));
+    client.in_flight_command = Some(Phase5Command::Link(request));
+
+    let mut api = HttpClient::new("https://example.test");
+    let mut notices = Vec::new();
+    client.update(0.0, &mut api, true, &mut notices);
+
+    assert!(matches!(
+        client.commands.front(),
+        Some(Phase5Command::Link(request)) if request.request_id == "link-retry"
+    ));
+    assert_eq!(client.command_retry_count, 1);
+    assert_eq!(client.command_retry_timer, 1.0);
+    assert_eq!(notices.len(), 1);
+}
+
+#[test]
 fn account_deletion_requires_two_taps_for_a_linked_account() {
     let mut client = Phase5Client::new();
     client.account = Some(account_response(false));

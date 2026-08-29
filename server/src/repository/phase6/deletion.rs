@@ -97,6 +97,10 @@ fn erase_account(state: &mut RepositoryState, request: &PendingAccountDeletion) 
     });
     state
         .phase6
+        .auth_link_tokens
+        .retain(|_, identity_key| identity_key != &request.identity_key);
+    state
+        .phase6
         .auth_revoke_results
         .retain(|key, _| !key.starts_with(&format!("{}:", request.identity_key)));
     state.phase6.auth_refresh_results.retain(|key, response| {

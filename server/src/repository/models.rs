@@ -197,6 +197,7 @@ impl RepositoryState {
         let mut phase6 = stored.phase6;
         super::phase6::trim_moderation_reports(&mut phase6, super::phase4::unix_time_seconds());
         trim_replay_cache(&mut phase6.auth_link_results);
+        super::phase6::trim_auth_link_tokens(&mut phase6);
         trim_replay_cache(&mut phase6.auth_refresh_results);
         phase6
             .auth_refresh_accounts

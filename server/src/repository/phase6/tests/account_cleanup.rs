@@ -178,6 +178,7 @@ fn account_deletion_removes_phase4_and_phase5_replay_payloads() {
         .request_results
         .keys()
         .any(|key| key.starts_with(&format!("phase5:{identity_key}:"))));
+    assert!(state.phase6.auth_link_tokens.is_empty());
     assert!(!state
         .phase3
         .expedition_credentials
