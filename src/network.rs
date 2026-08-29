@@ -10,9 +10,9 @@ use tarrowyn_protocol::{
     ApiResponse, ChatMessage, ChatRequest, ChronicleEntry, ChronicleSummary, EventsResponse,
     Expedition, FarmAnimal, FarmingAction, FarmingRequest, FrontierEvent, GuestSessionRequest,
     GuestSessionResponse, LandClaim, MovementIntent, OpportunitySignal, OpsHealthResponse,
-    PlayerPresence, PlayerProjection, StateSnapshot, TavernFeedResponse, TradeOffer, TradeRequest,
-    TradeResponse, TradesResponse, WildernessZone, WorldClock, WorldEvent, WorldSnapshot,
-    MAX_CHAT_MESSAGE_LENGTH,
+    PlayerPresence, PlayerProjection, StateSnapshot, TavernFeedResponse, TimeOfDay, TradeOffer,
+    TradeRequest, TradeResponse, TradesResponse, WildernessZone, WorldClock, WorldEvent,
+    WorldSnapshot, MAX_CHAT_MESSAGE_LENGTH,
 };
 
 const REQUEST_TIMEOUT_SECONDS: f32 = 6.0;
@@ -91,9 +91,12 @@ impl WorldProjection {
         (((6.0 + fraction * 24.0) % 24.0) * 60.0) as u32
     }
 
+    pub fn time_of_day(&self) -> TimeOfDay {
+        TimeOfDay::from_clock_minutes(self.clock_minutes())
+    }
+
     pub fn is_night(&self) -> bool {
-        let hour = self.clock_minutes() / 60;
-        !(7..=18).contains(&hour)
+        self.time_of_day().is_night()
     }
 
     fn apply_snapshot(&mut self, snapshot: WorldSnapshot, own_account: &str, server_tick: u64) {

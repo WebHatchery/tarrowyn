@@ -4,7 +4,7 @@ use crate::state::WorldState;
 use macroquad_toolkit::grid::TilePos;
 use macroquad_toolkit::ui::VirtualUi;
 use tarrowyn_protocol::{
-    ChatMessage, ChronicleEntry, ChronicleSummary, LocalCombatState, OpportunitySignal,
+    ChatMessage, ChronicleEntry, ChronicleSummary, LocalCombatState, OpportunitySignal, TimeOfDay,
     WildernessZone,
 };
 
@@ -31,6 +31,7 @@ pub struct UiContext<'a> {
     pub player_position: TilePos,
     pub day: u32,
     pub clock_minutes: u32,
+    pub time_of_day: TimeOfDay,
     pub night: bool,
     pub stats: &'a str,
     pub own_account_id: Option<&'a str>,

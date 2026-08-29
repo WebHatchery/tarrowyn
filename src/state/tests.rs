@@ -60,6 +60,19 @@ fn day_rollover_advances_the_clock_and_crops() {
 }
 
 #[test]
+fn offline_fixture_uses_the_same_day_period_boundaries() {
+    let config = test_config();
+    let mut session = GameSession::new(&config);
+    session.day_seconds = 45.0;
+
+    assert_eq!(
+        session.time_of_day(&config),
+        tarrowyn_protocol::TimeOfDay::Afternoon
+    );
+    assert!(!session.is_night(&config));
+}
+
+#[test]
 fn current_saves_migrate_to_the_configured_version() {
     let config = test_config();
     let mut save = GameSession::new(&config).to_save("0.0.1");

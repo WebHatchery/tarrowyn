@@ -86,6 +86,11 @@ valid; the server checks bounds, collision, session identity, and rate limits.
 - Preserve the local first-evening fixture as an offline development mode, but
   label it clearly and never mix its state with an online session.
 
+The client presents the authoritative clock as a time and a shared
+morning/afternoon/evening/night period. The period is derived from the server
+clock for online play and from the same boundary helper in the offline fixture;
+future time-specific services must retain an alternate access path.
+
 ## Acceptance test
 
 Run one local server and place at least three clients in the settlement. The

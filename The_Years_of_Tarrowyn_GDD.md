@@ -106,6 +106,8 @@ Different times should provide different flavour and opportunities. Shops, NPC r
 
 Time should rarely hard-lock essential systems. If a blacksmith is unavailable overnight, an apprentice, order system, travelling service, or next-day collection can preserve access.
 
+The current prototype gives the server-owned clock a shared four-part period label — morning, afternoon, evening, or night — and shows that label beside the clock while the client changes its atmosphere at night. Time-specific shops, wildlife, rumours, travel risk, and social opportunities remain a later layer; they must preserve the same fallback paths rather than turning the accelerated clock into a login-time gate.
+
 ### Long-Term Calendar
 
 Seasons and years are intended to matter eventually, particularly for farming, settlement history, and long-term personal goals. Their exact number of in-game days remains deferred until crop cadence and access can be tested. Land leases use real time and are not shortened by the accelerated calendar.

@@ -77,14 +77,14 @@ fn draw_header(ctx: &UiContext<'_>) {
 
     let time = format_clock(ctx.clock_minutes);
     draw_badge(
-        Rect::new(rect.right() - 326.0, rect.y + 18.0, 105.0, 28.0),
+        Rect::new(rect.right() - 344.0, rect.y + 18.0, 105.0, 28.0),
         &format!("Day {}", ctx.day),
         Color::new(0.16, 0.24, 0.25, 1.0),
         CREAM,
     );
     draw_badge(
-        Rect::new(rect.right() - 211.0, rect.y + 18.0, 94.0, 28.0),
-        &time,
+        Rect::new(rect.right() - 229.0, rect.y + 18.0, 116.0, 28.0),
+        &format!("{} {}", time, ctx.time_of_day.label()),
         if ctx.night {
             Color::new(0.13, 0.16, 0.28, 1.0)
         } else {

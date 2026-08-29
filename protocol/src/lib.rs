@@ -150,6 +150,50 @@ pub struct WorldClock {
     pub day_length_seconds: f32,
 }
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum TimeOfDay {
+    Morning,
+    Afternoon,
+    Evening,
+    Night,
+}
+
+impl TimeOfDay {
+    pub fn from_clock_minutes(minutes: u32) -> Self {
+        match minutes % (24 * 60) {
+            360..=719 => Self::Morning,
+            720..=1019 => Self::Afternoon,
+            1020..=1259 => Self::Evening,
+            _ => Self::Night,
+        }
+    }
+
+    pub const fn label(self) -> &'static str {
+        match self {
+            Self::Morning => "Morning",
+            Self::Afternoon => "Afternoon",
+            Self::Evening => "Evening",
+            Self::Night => "Night",
+        }
+    }
+
+    pub const fn is_night(self) -> bool {
+        matches!(self, Self::Night)
+    }
+}
+
+impl WorldClock {
+    pub fn clock_minutes(&self) -> u32 {
+        let fraction = (self.seconds / self.day_length_seconds.max(1.0)).clamp(0.0, 1.0);
+        (((6.0 + fraction * 24.0) % 24.0) * 60.0) as u32
+    }
+
+    pub fn time_of_day(&self) -> TimeOfDay {
+        TimeOfDay::from_clock_minutes(self.clock_minutes())
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct PlayerPresence {
     pub account_id: String,

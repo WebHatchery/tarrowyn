@@ -35,6 +35,19 @@ fn projection_adopts_server_tiles_without_local_movement_validation() {
 }
 
 #[test]
+fn projection_exposes_the_server_clock_period_without_local_timekeeping() {
+    let mut projection = WorldProjection::new(&config());
+    projection.day_seconds = 45.0;
+
+    assert_eq!(projection.clock_minutes(), 12 * 60);
+    assert_eq!(
+        projection.time_of_day(),
+        tarrowyn_protocol::TimeOfDay::Afternoon
+    );
+    assert!(!projection.is_night());
+}
+
+#[test]
 fn stale_presence_is_visible_after_server_ticks_age() {
     let player = RemotePlayer {
         account_id: "a".to_owned(),

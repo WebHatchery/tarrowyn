@@ -7,6 +7,7 @@ use macroquad_toolkit::grid::{FlatGrid, TilePos};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashSet;
+use tarrowyn_protocol::TimeOfDay;
 
 pub const TAVERN_TILE: TilePos = TilePos { x: 8, y: 5 };
 
@@ -252,8 +253,11 @@ impl GameSession {
     }
 
     pub fn is_night(&self, config: &GameConfig) -> bool {
-        let hour = self.clock_minutes(config) / 60;
-        !(7..=18).contains(&hour)
+        self.time_of_day(config).is_night()
+    }
+
+    pub fn time_of_day(&self, config: &GameConfig) -> TimeOfDay {
+        TimeOfDay::from_clock_minutes(self.clock_minutes(config))
     }
 
     pub fn move_player(&mut self, dx: i32, dy: i32) -> bool {

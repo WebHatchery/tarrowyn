@@ -126,3 +126,22 @@ fn local_combat_state_defaults_the_action_window_for_older_snapshots() {
     let state: LocalCombatState = serde_json::from_value(json).unwrap();
     assert_eq!(state.action_available_at_tick, 0);
 }
+
+#[test]
+fn shared_clock_names_the_four_day_periods_at_stable_boundaries() {
+    let mut clock = WorldClock {
+        day: 1,
+        seconds: 0.0,
+        day_length_seconds: 2400.0,
+    };
+    assert_eq!(clock.time_of_day(), TimeOfDay::Morning);
+
+    clock.seconds = 600.0;
+    assert_eq!(clock.time_of_day(), TimeOfDay::Afternoon);
+    clock.seconds = 1100.0;
+    assert_eq!(clock.time_of_day(), TimeOfDay::Evening);
+    clock.seconds = 1600.0;
+    assert_eq!(clock.time_of_day(), TimeOfDay::Night);
+    assert!(TimeOfDay::Night.is_night());
+    assert!(!TimeOfDay::Morning.is_night());
+}
