@@ -196,3 +196,24 @@ fn future_phase3_chronicle_entry_degrades_readiness() {
     assert!(!health.ready);
     assert!(!health.integrity_ok);
 }
+
+#[test]
+fn malformed_phase3_household_member_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state
+            .phase3
+            .households
+            .first_mut()
+            .expect("household")
+            .members
+            .first_mut()
+            .expect("household member")
+            .name = "member\tname".to_owned();
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}

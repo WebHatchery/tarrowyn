@@ -6,6 +6,7 @@ use tarrowyn_protocol::{ClaimStatus, ContractStatus, ExpeditionStatus, TradeStat
 const DELETED_ACCOUNT: &str = "former-resident";
 const MAX_EXPEDITION_SUPPLY: u32 = 99;
 const MAX_PHASE3_NAME_CHARS: usize = 80;
+const MAX_PHASE3_HOUSEHOLD_MEMBERS: usize = 20;
 
 pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
     let account_ids: HashSet<&str> = state
@@ -132,6 +133,12 @@ fn phase3_ok(state: &RepositoryState, config: &ServerConfig, account_ids: &HashS
             .map(|household| household.household_id.as_str()),
     ) && state.phase3.households.iter().all(|household| {
         !household.household_name.trim().is_empty()
+            && !household.members.is_empty()
+            && household.members.len() <= MAX_PHASE3_HOUSEHOLD_MEMBERS
+            && household.members.iter().all(|member| {
+                bounded_text(&member.name, MAX_PHASE3_NAME_CHARS)
+                    && bounded_text(&member.occupation, MAX_PHASE3_NAME_CHARS)
+            })
             && !household.occupation.trim().is_empty()
             && !household.home_settlement.trim().is_empty()
             && (0..=100).contains(&household.opportunity_score)
