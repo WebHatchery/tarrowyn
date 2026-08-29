@@ -246,6 +246,29 @@ fn settlement_profiles_follow_the_validated_manifest() {
 }
 
 #[test]
+fn settlement_locations_must_be_unique_in_the_region() {
+    let mut settlements: super::settlements::SettlementsManifest =
+        macroquad_toolkit::data_loader::parse_json_labeled(
+            "settlements.json",
+            macroquad_toolkit::include_json_str!("../../../assets/data/settlements.json"),
+        )
+        .expect("checked-in settlements content should parse");
+    settlements
+        .settlements
+        .get_mut(1)
+        .expect("the settlement manifest should have a second launch record")
+        .location = "hearth".to_owned();
+
+    let error = super::settlements::validate_settlements(
+        &settlements,
+        super::region_catalog(),
+        &super::item_ids(),
+    )
+    .expect_err("two settlement projections cannot share one location");
+    assert!(error.contains("share a regional location"));
+}
+
+#[test]
 fn market_prices_follow_the_validated_item_manifest() {
     assert_eq!(super::item_base_price("seeds"), 2);
     assert_eq!(super::item_base_price("moonberries"), 6);

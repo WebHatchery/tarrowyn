@@ -171,6 +171,10 @@ Assert-RequiredRecordIds "Recipes" $recipeRecords @("field-tool-repair")
 $settlementRecords = Get-Records $manifests["settlements.json"] "settlements" "settlements"
 Assert-Records "settlements" $settlementRecords @("location", "name", "governance", "condition") @("infrastructure", "milestones", "vacancies", "demand", "abundant", "scarce", "initial_stock")
 Assert-RequiredRecordIds "Settlements" $settlementRecords @("hearth-settlement", "whisperwood-settlement", "saltmere-settlement")
+$duplicateSettlementLocations = @($settlementRecords | ForEach-Object { [string]$_.location } | Group-Object | Where-Object Count -gt 1)
+if ($duplicateSettlementLocations.Count -gt 0) {
+    throw "Settlements cannot share a regional location: $($duplicateSettlementLocations.Name -join ', ')."
+}
 Assert-Records "skills" (Get-Records $manifests["skills.json"] "skills" "skills") @("name", "family", "description", "entry_hint") @()
 $skillsVersion = $manifests["skills.json"].version
 if ($skillsVersion -lt 1) { throw "Skills manifest needs a positive version." }

@@ -46,6 +46,8 @@ intervention options, and affected locations.
 The settlement profile regression confirms condition, milestones, vacancies,
 demand, prices, and abundant/scarce goods in the authoritative projections
 follow the validated settlement manifest.
+The settlement-topology regression confirms each settlement owns a unique
+regional location, preventing ambiguous projection and activity rollups.
 The fresh regional-stock regression confirms each launch settlement seeds its
 market ledger from the settlement manifest's validated initial-stock records,
 so launch quantities are not duplicated in repository code.

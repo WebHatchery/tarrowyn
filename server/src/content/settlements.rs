@@ -5,16 +5,16 @@ use std::sync::OnceLock;
 use tarrowyn_protocol::{InfrastructureKind, SettlementCondition};
 
 #[derive(Debug, Deserialize)]
-struct SettlementsManifest {
-    settlements: Vec<SettlementManifest>,
+pub(super) struct SettlementsManifest {
+    pub(super) settlements: Vec<SettlementManifest>,
 }
 
 static SETTLEMENT_CATALOG: OnceLock<Vec<SettlementManifest>> = OnceLock::new();
 
 #[derive(Debug, Deserialize)]
-struct SettlementManifest {
+pub(super) struct SettlementManifest {
     id: String,
-    location: String,
+    pub(super) location: String,
     name: String,
     population: u32,
     food: u8,
@@ -273,7 +273,7 @@ pub(super) fn validate_infrastructure(
     Ok(())
 }
 
-fn validate_settlements(
+pub(super) fn validate_settlements(
     settlements: &SettlementsManifest,
     region: &super::RegionManifest,
     item_ids: &HashSet<String>,
@@ -305,6 +305,14 @@ fn validate_settlements(
         .iter()
         .map(|location| location.id.as_str())
         .collect();
+    let mut settlement_locations = HashSet::new();
+    if settlements
+        .settlements
+        .iter()
+        .any(|settlement| !settlement_locations.insert(settlement.location.as_str()))
+    {
+        return Err("settlements cannot share a regional location".to_owned());
+    }
     if settlements.settlements.is_empty()
         || settlements.settlements.iter().any(|settlement| {
             settlement.location.trim().is_empty()
