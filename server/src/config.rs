@@ -234,11 +234,19 @@ fn env_u64(name: &str, default: u64) -> u64 {
 }
 
 fn env_u32(name: &str, default: u32) -> u32 {
-    env_u64(name, default as u64) as u32
+    bounded_u32(env_u64(name, u64::from(default)), default)
 }
 
 fn env_u16(name: &str, default: u16) -> u16 {
-    env_u64(name, default as u64) as u16
+    bounded_u16(env_u64(name, u64::from(default)), default)
+}
+
+fn bounded_u32(value: u64, default: u32) -> u32 {
+    u32::try_from(value).unwrap_or(default)
+}
+
+fn bounded_u16(value: u64, default: u16) -> u16 {
+    u16::try_from(value).unwrap_or(default)
 }
 
 fn env_f32(name: &str, default: f32) -> f32 {
