@@ -7,6 +7,7 @@ impl Phase5Client {
         if self.pending_refresh.is_some()
             || self.auth_refresh_timer > 0.0
             || self.refresh_retry_timer > 0.0
+            || self.pending_command.is_some()
         {
             return;
         }

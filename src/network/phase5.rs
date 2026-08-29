@@ -210,7 +210,7 @@ impl Phase5Client {
 
     fn dispatch(&mut self, api: &mut HttpClient) {
         self.dispatch_refresh(api);
-        if self.refresh_timer <= 0.0 {
+        if self.pending_refresh.is_none() && self.refresh_timer <= 0.0 {
             if self.pending_region.is_none() {
                 self.pending_region = Some(api.get("/v1/region"));
             }
@@ -239,7 +239,10 @@ impl Phase5Client {
             }
             self.refresh_timer = 1.5;
         }
-        if self.pending_command.is_none() && self.command_retry_timer <= 0.0 {
+        if self.pending_command.is_none()
+            && self.pending_refresh.is_none()
+            && self.command_retry_timer <= 0.0
+        {
             if let Some(command) = self.commands.pop_front() {
                 self.pending_market_action = match &command {
                     Phase5Command::Market(request) => Some(request.action),

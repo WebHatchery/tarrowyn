@@ -115,6 +115,28 @@ fn transient_refresh_failure_retries_the_same_request() {
 }
 
 #[test]
+fn refresh_waits_for_commands_and_blocks_new_dispatch_until_rotation_finishes() {
+    let mut client = Phase5Client::new();
+    client.refresh_token = Some("refresh-secret".to_owned());
+    client.auth_refresh_timer = 0.0;
+    client.queue_report("queued-report".to_owned(), None, None);
+    client.pending_command = Some(Pending::failed("command still in flight"));
+
+    let mut api = HttpClient::new("https://example.test");
+    client.dispatch_refresh(&mut api);
+    assert!(client.pending_refresh.is_none());
+
+    client.pending_command = None;
+    client.dispatch(&mut api);
+    assert!(client.pending_refresh.is_some());
+    assert!(client.pending_command.is_none());
+    assert!(matches!(
+        client.commands.front(),
+        Some(Phase5Command::Report(_))
+    ));
+}
+
+#[test]
 fn revoke_response_discards_authenticated_state() {
     let mut client = Phase5Client::new();
     client.account = Some(account_response(false));

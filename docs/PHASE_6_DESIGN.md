@@ -88,7 +88,8 @@ response lost after server commit does not strand the character between guest
 and production identity. Automatic production-session refreshes use the same
 bounded exact-request retry boundary after transient transport failures, while
 an explicit expiry or revocation response still clears the session and returns
-the player to visible sign-in recovery.
+the player to visible sign-in recovery. Mutation dispatch waits for an in-flight
+refresh to finish so a token rotation cannot invalidate a newly sent command.
 Refresh replay results retain their account ownership separately from the live
 session table so deletion also removes rotated responses after their access
 session has expired.
