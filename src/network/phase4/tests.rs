@@ -110,6 +110,38 @@ fn registry_button_chooses_the_current_account_claim() {
 }
 
 #[test]
+fn order_button_waits_for_the_account_service_request() {
+    let mut client = Phase4Client::new();
+    client.own_account_id = Some("account-1".to_owned());
+    client.professions = Some(ProfessionsResponse {
+        profiles: Vec::new(),
+        orders: vec![tarrowyn_protocol::ServiceOrder {
+            order_id: "service-order-1".to_owned(),
+            requester_account_id: "account-1".to_owned(),
+            requester_name: "The traveller".to_owned(),
+            provider_account_id: None,
+            provider_name: None,
+            service: "Repair a field tool".to_owned(),
+            required_profession: ProfessionKind::Carpenter,
+            materials: tarrowyn_protocol::MaterialStock::default(),
+            tools_required: 1,
+            reward_gold: 4,
+            benefit: "A sound field tool".to_owned(),
+            status: tarrowyn_protocol::ServiceOrderStatus::Open,
+            quality: 0,
+            created_tick: 1,
+            completed_tick: None,
+        }],
+        materials: tarrowyn_protocol::MaterialStock::default(),
+        credentials: Vec::new(),
+        cursor: 1,
+    });
+
+    client.queue_cycle("order", "order-1".to_owned());
+    assert!(client.commands.is_empty());
+}
+
+#[test]
 fn practice_button_queues_the_next_unstarted_root() {
     let mut client = Phase4Client::new();
     client.skills = Some(SkillsResponse {

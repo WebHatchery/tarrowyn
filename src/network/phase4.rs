@@ -345,6 +345,21 @@ impl Phase4Client {
             return;
         }
         let own = self.own_account_id.as_deref();
+        if self.professions.as_ref().is_some_and(|professions| {
+            professions.orders.iter().any(|order| {
+                own.is_some_and(|account_id| {
+                    order.requester_account_id == account_id
+                        && matches!(
+                            order.status,
+                            tarrowyn_protocol::ServiceOrderStatus::Open
+                                | tarrowyn_protocol::ServiceOrderStatus::Accepted
+                        )
+                        && order.provider_account_id.as_deref() != Some(account_id)
+                })
+            })
+        }) {
+            return;
+        }
         let action = if self.professions.as_ref().is_none_or(|professions| {
             !professions
                 .profiles
