@@ -609,6 +609,12 @@ The shared content ID boundary now rejects control characters and IDs over 160
 characters across every validated manifest, with one focused content-validator
 regression.
 
+Phase 4 readiness now enforces the existing caps for claims, service orders,
+infrastructure, governance decisions, and tax receipts. It also bounds the
+per-identity profession, capability, and credential ledgers before a restored
+snapshot can report healthy, with focused Phase 4 capacity regressions covering
+those retained collections.
+
 The cross-layer persistence-readiness milestone passed the full release gate on
 2026-08-30 after the core and Phase 3-6 integrity additions: 14 protocol tests,
 282 server tests, and 93 client tests, followed by asset/code-standard checks,

@@ -653,3 +653,90 @@ fn future_phase4_tax_receipt_degrades_readiness() {
     assert!(!health.ready);
     assert!(!health.integrity_ok);
 }
+
+#[test]
+fn over_capacity_phase4_persistent_registries_degrade_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    seeded_phase4_claim(&repository);
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        let claim = state.phase4.claims.first().cloned().expect("claim");
+        state.phase4.claims.resize(129, claim);
+    }
+    assert!(!repository.ops_health().data.integrity_ok);
+
+    let repository = WorldRepository::new(ServerConfig::default());
+    seeded_phase4_order(&repository);
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        let order = state.phase4.orders.first().cloned().expect("order");
+        state.phase4.orders.resize(65, order);
+    }
+    assert!(!repository.ops_health().data.integrity_ok);
+
+    let repository = WorldRepository::new(ServerConfig::default());
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        let infrastructure = state
+            .phase4
+            .infrastructure
+            .first()
+            .cloned()
+            .expect("infrastructure");
+        state.phase4.infrastructure.resize(33, infrastructure);
+    }
+    assert!(!repository.ops_health().data.integrity_ok);
+
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("phase4-registry-history".to_owned()),
+            reset: false,
+        })
+        .expect("guest session")
+        .data;
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        let tick = state.tick;
+        state.phase4.governance.decisions = (0..65)
+            .map(|index| GovernanceDecision {
+                decision_id: format!("phase4-decision-{index}"),
+                actor_account_id: session.account_id.clone(),
+                actor_name: session.display_name.clone(),
+                action: PublicAction::RepairRoad,
+                proposal_id: "phase4-proposal-record".to_owned(),
+                cost: 1,
+                service_affected: "the north road".to_owned(),
+                created_tick: tick,
+            })
+            .collect();
+    }
+    assert!(!repository.ops_health().data.integrity_ok);
+
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("phase4-registry-tax".to_owned()),
+            reset: false,
+        })
+        .expect("guest session")
+        .data;
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        let day = state.clock.day;
+        let tick = state.tick;
+        state.phase4.governance.tax_ledger = (0..65)
+            .map(|index| TaxCollection {
+                collection_id: format!("phase4-tax-{index}"),
+                payer_account_id: session.account_id.clone(),
+                payer_name: session.display_name.clone(),
+                amount: 1,
+                rate_percent: 1,
+                territory: "hearth-settlement".to_owned(),
+                day,
+                created_tick: tick,
+            })
+            .collect();
+    }
+    assert!(!repository.ops_health().data.integrity_ok);
+}

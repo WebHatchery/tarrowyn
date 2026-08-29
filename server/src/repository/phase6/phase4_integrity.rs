@@ -11,6 +11,9 @@ const MAX_KNOWLEDGE_TEXT_CHARS: usize = 240;
 const MAX_COMBAT_TEXT_CHARS: usize = 160;
 const MAX_LESSON_TEXT_CHARS: usize = 160;
 const MAX_GOVERNANCE_TEXT_CHARS: usize = 240;
+const MAX_PROFESSIONS_PER_IDENTITY: usize = 6;
+const MAX_CAPABILITIES_PER_PROFESSION: usize = 16;
+const MAX_CREDENTIALS_PER_IDENTITY: usize = 16;
 
 pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
     let account_ids: HashSet<&str> = state
@@ -43,6 +46,9 @@ pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
     let governance = &state.phase4.governance;
     let governance_ok = governance.cursor <= state.cursor
         && !governance.offices.is_empty()
+        && governance.proposals.len() <= super::super::phase4::MAX_PROPOSALS
+        && governance.decisions.len() <= super::super::phase4::MAX_GOVERNANCE_DECISIONS
+        && governance.tax_ledger.len() <= super::super::phase4::MAX_TAX_COLLECTIONS
         && settlement_ids.contains(governance.settlement_id.as_str())
         && unique_non_empty(
             governance
@@ -135,6 +141,7 @@ pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
         && governance.administration_quality <= 100;
 
     let infrastructure_ok = !state.phase4.infrastructure.is_empty()
+        && state.phase4.infrastructure.len() <= super::super::phase4::MAX_INFRASTRUCTURE_RECORDS
         && unique_non_empty(
             state
                 .phase4
@@ -157,50 +164,53 @@ pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
                 && record.last_maintained_tick <= state.tick
         });
 
-    let claims_ok = unique_non_empty(
-        state
-            .phase4
-            .claims
-            .iter()
-            .map(|claim| claim.claim_id.as_str()),
-    ) && unique_non_empty(
-        state
-            .phase4
-            .claims
-            .iter()
-            .map(|claim| claim.plot_id.as_str()),
-    ) && state.phase4.claims.iter().all(|claim| {
-        let active_status = matches!(
-            claim.status,
-            tarrowyn_protocol::ClaimLifecycleStatus::Active
-                | tarrowyn_protocol::ClaimLifecycleStatus::Renewed
-                | tarrowyn_protocol::ClaimLifecycleStatus::Transferred
-                | tarrowyn_protocol::ClaimLifecycleStatus::Inherited
-        );
-        bounded_text(&claim.claim_id, MAX_KNOWLEDGE_ID_CHARS)
-            && bounded_text(&claim.plot_id, MAX_KNOWLEDGE_ID_CHARS)
-            && position_in_world(claim.position, config)
-            && optional_account_reference_ok(claim.owner_account_id.as_deref(), &account_ids)
-            && optional_account_reference_ok(claim.approved_by.as_deref(), &account_ids)
-            && claim.owner_account_id.is_some() == claim.owner_name.is_some()
-            && claim
-                .owner_name
-                .as_deref()
-                .is_none_or(|name| bounded_text(name, MAX_HOUSEHOLD_TEXT_CHARS))
-            && claim.lease_days > 0
-            && claim.started_tick <= state.tick
-            && claim.expires_tick >= claim.started_tick
-            && claim.last_active_tick <= state.tick
-            && (claim.started_at_unix_seconds == 0 && claim.expires_at_unix_seconds == 0
-                || claim.expires_at_unix_seconds > claim.started_at_unix_seconds)
-            && claim.building_access == active_status
-            && (claim.owner_account_id.is_some()
-                || claim.status == tarrowyn_protocol::ClaimLifecycleStatus::Reclaimed)
-            && (claim.status != tarrowyn_protocol::ClaimLifecycleStatus::Requested
-                || claim.approved_by.is_none())
-            && bounded_text(&claim.protected_goods_policy, MAX_KNOWLEDGE_TEXT_CHARS)
-            && bounded_text(&claim.inspection_note, MAX_KNOWLEDGE_TEXT_CHARS)
-    });
+    let claims_ok = state.phase4.claims.len() <= super::super::phase4::MAX_CLAIMS
+        && unique_non_empty(
+            state
+                .phase4
+                .claims
+                .iter()
+                .map(|claim| claim.claim_id.as_str()),
+        )
+        && unique_non_empty(
+            state
+                .phase4
+                .claims
+                .iter()
+                .map(|claim| claim.plot_id.as_str()),
+        )
+        && state.phase4.claims.iter().all(|claim| {
+            let active_status = matches!(
+                claim.status,
+                tarrowyn_protocol::ClaimLifecycleStatus::Active
+                    | tarrowyn_protocol::ClaimLifecycleStatus::Renewed
+                    | tarrowyn_protocol::ClaimLifecycleStatus::Transferred
+                    | tarrowyn_protocol::ClaimLifecycleStatus::Inherited
+            );
+            bounded_text(&claim.claim_id, MAX_KNOWLEDGE_ID_CHARS)
+                && bounded_text(&claim.plot_id, MAX_KNOWLEDGE_ID_CHARS)
+                && position_in_world(claim.position, config)
+                && optional_account_reference_ok(claim.owner_account_id.as_deref(), &account_ids)
+                && optional_account_reference_ok(claim.approved_by.as_deref(), &account_ids)
+                && claim.owner_account_id.is_some() == claim.owner_name.is_some()
+                && claim
+                    .owner_name
+                    .as_deref()
+                    .is_none_or(|name| bounded_text(name, MAX_HOUSEHOLD_TEXT_CHARS))
+                && claim.lease_days > 0
+                && claim.started_tick <= state.tick
+                && claim.expires_tick >= claim.started_tick
+                && claim.last_active_tick <= state.tick
+                && (claim.started_at_unix_seconds == 0 && claim.expires_at_unix_seconds == 0
+                    || claim.expires_at_unix_seconds > claim.started_at_unix_seconds)
+                && claim.building_access == active_status
+                && (claim.owner_account_id.is_some()
+                    || claim.status == tarrowyn_protocol::ClaimLifecycleStatus::Reclaimed)
+                && (claim.status != tarrowyn_protocol::ClaimLifecycleStatus::Requested
+                    || claim.approved_by.is_none())
+                && bounded_text(&claim.protected_goods_policy, MAX_KNOWLEDGE_TEXT_CHARS)
+                && bounded_text(&claim.inspection_note, MAX_KNOWLEDGE_TEXT_CHARS)
+        });
 
     let households_ok = !state.phase4.households.is_empty()
         && unique_non_empty(
@@ -230,37 +240,39 @@ pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
                 && household.last_decision_tick <= state.tick
         });
 
-    let orders_ok = unique_non_empty(
-        state
-            .phase4
-            .orders
-            .iter()
-            .map(|order| order.order_id.as_str()),
-    ) && state.phase4.orders.iter().all(|order| {
-        let completed_tick_ok = order.completed_tick.is_none_or(|tick| {
-            order.status == tarrowyn_protocol::ServiceOrderStatus::Completed
-                && tick >= order.created_tick
-                && tick <= state.tick
+    let orders_ok = state.phase4.orders.len() <= super::super::phase4::MAX_SERVICE_ORDERS
+        && unique_non_empty(
+            state
+                .phase4
+                .orders
+                .iter()
+                .map(|order| order.order_id.as_str()),
+        )
+        && state.phase4.orders.iter().all(|order| {
+            let completed_tick_ok = order.completed_tick.is_none_or(|tick| {
+                order.status == tarrowyn_protocol::ServiceOrderStatus::Completed
+                    && tick >= order.created_tick
+                    && tick <= state.tick
+            });
+            bounded_text(&order.order_id, MAX_KNOWLEDGE_ID_CHARS)
+                && account_reference_ok(&order.requester_account_id, &account_ids)
+                && bounded_text(&order.requester_name, MAX_HOUSEHOLD_TEXT_CHARS)
+                && optional_account_reference_ok(order.provider_account_id.as_deref(), &account_ids)
+                && order.provider_account_id.is_some() == order.provider_name.is_some()
+                && order
+                    .provider_name
+                    .as_deref()
+                    .is_none_or(|name| bounded_text(name, MAX_HOUSEHOLD_TEXT_CHARS))
+                && bounded_text(&order.service, MAX_KNOWLEDGE_TEXT_CHARS)
+                && bounded_text(&order.benefit, MAX_KNOWLEDGE_TEXT_CHARS)
+                && order.quality <= 100
+                && order.created_tick <= state.tick
+                && (order.status == tarrowyn_protocol::ServiceOrderStatus::Completed)
+                    == order.completed_tick.is_some()
+                && completed_tick_ok
+                && (order.status != tarrowyn_protocol::ServiceOrderStatus::Accepted
+                    || order.provider_account_id.is_some())
         });
-        bounded_text(&order.order_id, MAX_KNOWLEDGE_ID_CHARS)
-            && account_reference_ok(&order.requester_account_id, &account_ids)
-            && bounded_text(&order.requester_name, MAX_HOUSEHOLD_TEXT_CHARS)
-            && optional_account_reference_ok(order.provider_account_id.as_deref(), &account_ids)
-            && order.provider_account_id.is_some() == order.provider_name.is_some()
-            && order
-                .provider_name
-                .as_deref()
-                .is_none_or(|name| bounded_text(name, MAX_HOUSEHOLD_TEXT_CHARS))
-            && bounded_text(&order.service, MAX_KNOWLEDGE_TEXT_CHARS)
-            && bounded_text(&order.benefit, MAX_KNOWLEDGE_TEXT_CHARS)
-            && order.quality <= 100
-            && order.created_tick <= state.tick
-            && (order.status == tarrowyn_protocol::ServiceOrderStatus::Completed)
-                == order.completed_tick.is_some()
-            && completed_tick_ok
-            && (order.status != tarrowyn_protocol::ServiceOrderStatus::Accepted
-                || order.provider_account_id.is_some())
-    });
 
     let lessons_ok = state.phase4.lessons.len() <= super::super::phase4::MAX_SCHOOL_LESSONS
         && unique_non_empty(
@@ -303,8 +315,15 @@ pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
                     .all(|account_id| account_ids.contains(account_id.as_str()))
                 && bounded_text(&item.stored_in, MAX_KNOWLEDGE_TEXT_CHARS)
         })
+        && state
+            .phase4
+            .knowledge
+            .iter()
+            .all(|item| item.discovered_by.len() <= identity_keys.len())
+        && state.phase4.known_by.len() <= identity_keys.len()
         && state.phase4.known_by.iter().all(|(identity_key, known)| {
             identity_keys.contains(identity_key.as_str())
+                && known.len() <= knowledge_ids.len()
                 && unique_non_empty(known.iter().map(String::as_str))
                 && known
                     .iter()
@@ -320,7 +339,15 @@ pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
         .chain(state.phase4.known_by.keys())
         .chain(state.phase4.combat.keys())
         .all(|identity_key| identity_keys.contains(identity_key.as_str()));
+    let keyed_collection_sizes_ok = state.phase4.profiles.len() <= identity_keys.len()
+        && state.phase4.materials.len() <= identity_keys.len()
+        && state.phase4.credentials.len() <= identity_keys.len()
+        && state.phase4.known_by.len() <= identity_keys.len()
+        && state.phase4.combat.len() <= identity_keys.len();
     let profiles_ok = state.phase4.profiles.values().all(|profiles| {
+        if profiles.len() > MAX_PROFESSIONS_PER_IDENTITY {
+            return false;
+        }
         let mut professions = Vec::new();
         profiles.iter().all(|profile| {
             let profession_unique = if professions.contains(&profile.profession) {
@@ -336,6 +363,7 @@ pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
                     .credential
                     .as_deref()
                     .is_none_or(|credential| bounded_text(credential, MAX_KNOWLEDGE_TEXT_CHARS))
+                && profile.capabilities.len() <= MAX_CAPABILITIES_PER_PROFESSION
                 && profile.capabilities.iter().all(|capability| {
                     capability.profession == profile.profession
                         && capability.level > 0
@@ -353,7 +381,8 @@ pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
         })
     });
     let credentials_ok = state.phase4.credentials.values().all(|credentials| {
-        unique_non_empty(credentials.iter().map(String::as_str))
+        credentials.len() <= MAX_CREDENTIALS_PER_IDENTITY
+            && unique_non_empty(credentials.iter().map(String::as_str))
             && credentials
                 .iter()
                 .all(|credential| bounded_text(credential, MAX_KNOWLEDGE_TEXT_CHARS))
@@ -421,6 +450,7 @@ pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
         && lessons_ok
         && knowledge_ok
         && identity_keyed_state_ok
+        && keyed_collection_sizes_ok
         && profiles_ok
         && credentials_ok
         && animals_ok
