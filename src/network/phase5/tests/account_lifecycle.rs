@@ -86,6 +86,35 @@ fn refresh_failure_discards_authenticated_projections() {
 }
 
 #[test]
+fn transient_refresh_failure_retries_the_same_request() {
+    let mut client = Phase5Client::new();
+    let request = tarrowyn_protocol::AuthRefreshRequest {
+        request_id: "refresh-retry".to_owned(),
+        refresh_token: "refresh-secret".to_owned(),
+    };
+    client.pending_refresh = Some(Pending::failed(
+        "HTTP request 'POST /v1/auth/refresh' timed out after 6.0 seconds",
+    ));
+    client.in_flight_refresh = Some(request.clone());
+    client.refresh_token = Some(request.refresh_token.clone());
+
+    let mut api = HttpClient::new("https://example.test");
+    let mut notices = Vec::new();
+    client.poll_refresh(0.0, &mut api, &mut notices);
+
+    assert_eq!(client.in_flight_refresh, Some(request.clone()));
+    assert_eq!(client.refresh_retry_count, 1);
+    assert_eq!(client.refresh_retry_timer, 1.0);
+    assert!(!client.logged_out);
+    assert_eq!(notices.len(), 1);
+
+    client.refresh_retry_timer = 0.0;
+    client.dispatch(&mut api);
+    assert!(client.pending_refresh.is_some());
+    assert_eq!(client.in_flight_refresh, Some(request));
+}
+
+#[test]
 fn revoke_response_discards_authenticated_state() {
     let mut client = Phase5Client::new();
     client.account = Some(account_response(false));

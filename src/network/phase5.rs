@@ -12,7 +12,10 @@ use tarrowyn_protocol::{
 const MAX_CACHED_REGIONAL_EVENTS: usize = 2048;
 const MAX_COMMAND_RETRIES: u8 = 3;
 const COMMAND_RETRY_DELAY_SECONDS: f32 = 1.0;
+const MAX_REFRESH_RETRIES: u8 = 3;
+const REFRESH_RETRY_DELAY_SECONDS: f32 = 1.0;
 
+mod auth;
 mod commands;
 mod events;
 mod market;
@@ -30,6 +33,7 @@ pub(super) struct Phase5Client {
     pending_law: Option<Pending<ApiResponse<LawBoundaryResponse>>>,
     pending_account: Option<Pending<ApiResponse<AccountResponse>>>,
     pending_refresh: Option<Pending<ApiResponse<AuthRefreshResponse>>>,
+    in_flight_refresh: Option<tarrowyn_protocol::AuthRefreshRequest>,
     pending_command: Option<Pending<ApiResponse<Phase5CommandResponse>>>,
     pending_market_action: Option<MarketOrderAction>,
     in_flight_command: Option<Phase5Command>,
@@ -49,6 +53,8 @@ pub(super) struct Phase5Client {
     own_account_id: Option<String>,
     refresh_timer: f32,
     auth_refresh_timer: f32,
+    refresh_retry_timer: f32,
+    refresh_retry_count: u8,
     command_retry_timer: f32,
     command_retry_count: u8,
     next_request_id: u64,
@@ -65,6 +71,7 @@ impl Phase5Client {
             pending_law: None,
             pending_account: None,
             pending_refresh: None,
+            in_flight_refresh: None,
             pending_command: None,
             pending_market_action: None,
             in_flight_command: None,
@@ -84,6 +91,8 @@ impl Phase5Client {
             own_account_id: None,
             refresh_timer: 0.0,
             auth_refresh_timer: f32::MAX,
+            refresh_retry_timer: 0.0,
+            refresh_retry_count: 0,
             command_retry_timer: 0.0,
             command_retry_count: 0,
             next_request_id: 1,
@@ -106,6 +115,7 @@ impl Phase5Client {
         }
         self.refresh_timer = (self.refresh_timer - dt.max(0.0)).max(0.0);
         self.auth_refresh_timer = (self.auth_refresh_timer - dt.max(0.0)).max(0.0);
+        self.refresh_retry_timer = (self.refresh_retry_timer - dt.max(0.0)).max(0.0);
         self.command_retry_timer = (self.command_retry_timer - dt.max(0.0)).max(0.0);
         poll(
             &mut self.pending_region,
@@ -165,7 +175,7 @@ impl Phase5Client {
                     self.command_retry_count = 0;
                     self.apply_command(response.data, market_action, api, notices);
                 }
-                Err(error) if is_transient_command_error(&error) => {
+                Err(error) if is_transient_transport_error(&error) => {
                     if self.command_retry_count < MAX_COMMAND_RETRIES {
                         if let Some(command) = in_flight_command {
                             self.commands.push_front(command);
@@ -199,19 +209,7 @@ impl Phase5Client {
     }
 
     fn dispatch(&mut self, api: &mut HttpClient) {
-        if self.pending_refresh.is_none() && self.auth_refresh_timer <= 0.0 {
-            if let Some(refresh_token) = self.refresh_token.clone() {
-                let request_id = self.next_id();
-                self.pending_refresh = Some(api.post_json(
-                    "/v1/auth/refresh",
-                    &tarrowyn_protocol::AuthRefreshRequest {
-                        request_id,
-                        refresh_token,
-                    },
-                ));
-                self.auth_refresh_timer = f32::MAX;
-            }
-        }
+        self.dispatch_refresh(api);
         if self.refresh_timer <= 0.0 {
             if self.pending_region.is_none() {
                 self.pending_region = Some(api.get("/v1/region"));
@@ -402,6 +400,9 @@ impl Phase5Client {
                 api.set_bearer_token(Some(&response.session.account_token));
                 self.refresh_token = Some(response.session.refresh_token.clone());
                 self.auth_refresh_timer = refresh_delay(response.session.expires_in_seconds);
+                self.in_flight_refresh = None;
+                self.refresh_retry_timer = 0.0;
+                self.refresh_retry_count = 0;
                 self.linked_account = Some(response.clone());
                 self.account = None;
                 notices.push(NetworkNotice::Success(
@@ -421,12 +422,15 @@ impl Phase5Client {
                 self.pending_law = None;
                 self.pending_account = None;
                 self.pending_refresh = None;
+                self.in_flight_refresh = None;
                 self.commands.clear();
                 self.clear_cached_projections();
                 self.account = None;
                 self.refresh_token = None;
                 self.refreshed_session = None;
                 self.auth_refresh_timer = f32::MAX;
+                self.refresh_retry_timer = 0.0;
+                self.refresh_retry_count = 0;
                 notices.push(NetworkNotice::Info(format!(
                     "{} session(s) revoked; tap Reconnect to return safely.",
                     response.revoked_sessions
@@ -450,12 +454,15 @@ impl Phase5Client {
                     self.pending_law = None;
                     self.pending_account = None;
                     self.pending_refresh = None;
+                    self.in_flight_refresh = None;
                     self.commands.clear();
                     self.clear_cached_projections();
                     self.account = None;
                     self.refresh_token = None;
                     self.refreshed_session = None;
                     self.auth_refresh_timer = f32::MAX;
+                    self.refresh_retry_timer = 0.0;
+                    self.refresh_retry_count = 0;
                     api.set_bearer_token(None);
                     notices.push(NetworkNotice::Success(
                         "Account deletion is scheduled; tap Reconnect to return as a new guest."
@@ -483,6 +490,7 @@ impl Phase5Client {
         self.pending_law = None;
         self.pending_account = None;
         self.pending_refresh = None;
+        self.in_flight_refresh = None;
         self.pending_command = None;
         self.pending_market_action = None;
         self.in_flight_command = None;
@@ -496,6 +504,8 @@ impl Phase5Client {
         self.deletion_armed = false;
         self.refresh_timer = 0.0;
         self.auth_refresh_timer = f32::MAX;
+        self.refresh_retry_timer = 0.0;
+        self.refresh_retry_count = 0;
         self.command_retry_timer = 0.0;
         self.command_retry_count = 0;
     }
@@ -579,52 +589,6 @@ impl Phase5Client {
 
 fn refresh_delay(expires_in_seconds: u32) -> f32 {
     (expires_in_seconds as f32 * 0.75).max(1.0)
-}
-
-impl Phase5Client {
-    fn poll_refresh(&mut self, dt: f32, api: &mut HttpClient, notices: &mut Vec<NetworkNotice>) {
-        let result = self
-            .pending_refresh
-            .as_mut()
-            .and_then(|pending| pending.poll_timed(dt, REQUEST_TIMEOUT_SECONDS));
-        let Some(result) = result else { return };
-        self.pending_refresh = None;
-        match result {
-            Ok(response) => {
-                let session = response.data.session;
-                api.set_bearer_token(Some(&session.account_token));
-                self.refresh_token = Some(session.refresh_token.clone());
-                self.auth_refresh_timer = refresh_delay(session.expires_in_seconds);
-                self.refreshed_session = Some(session);
-                notices.push(NetworkNotice::Success(
-                    "The production session was refreshed safely.".to_owned(),
-                ));
-            }
-            Err(error) => {
-                self.pending_region = None;
-                self.pending_settlements = None;
-                self.pending_households = None;
-                self.pending_market = None;
-                self.pending_events = None;
-                self.pending_law = None;
-                self.pending_account = None;
-                self.pending_command = None;
-                self.commands.clear();
-                self.account = None;
-                self.refresh_token = None;
-                self.auth_refresh_timer = f32::MAX;
-                self.refresh_timer = f32::MAX;
-                self.clear_cached_projections();
-                api.set_bearer_token(None);
-                self.deletion_armed = false;
-                self.logged_out = true;
-                notices.push(NetworkNotice::Warning(format!(
-                    "The production session could not be refreshed: {}; provider sign-in is required.",
-                    short_error(&error)
-                )));
-            }
-        }
-    }
 }
 
 fn poll<T, F>(
@@ -727,7 +691,7 @@ fn phase5_notice(
     }
 }
 
-fn is_transient_command_error(error: &str) -> bool {
+fn is_transient_transport_error(error: &str) -> bool {
     error.contains(" timed out after ")
         || (error.contains("HTTP request '") && error.contains("' failed:"))
 }
