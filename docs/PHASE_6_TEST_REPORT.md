@@ -482,3 +482,7 @@ Phase 5 replay-cache integrity now validates cache size, bounded keys and
 request IDs, live identity ownership, and response/key request agreement. Two
 focused regressions cover an orphaned identity key and a mismatched cached
 request ID.
+
+Phase 5 sequence metadata now validates positive travel, order, and event ID
+counters plus a fallback-day marker that cannot point beyond the world clock.
+One focused regression covers a zeroed order sequence.

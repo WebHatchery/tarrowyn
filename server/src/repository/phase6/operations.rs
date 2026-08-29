@@ -504,6 +504,11 @@ fn integrity_ok(state: &RepositoryState, config: &ServerConfig) -> bool {
             };
             location_ids.contains(location_id) && item_ids.contains(commodity)
         });
+    let phase5_metadata_ok = state.phase5.next_travel_id > 0
+        && state.phase5.next_order_id > 0
+        && state.phase5.next_event_id > 0
+        && state.phase5.fallback_day > 0
+        && state.phase5.fallback_day <= state.clock.day;
     let identity_ids_ok = unique_non_empty(
         state
             .identities
@@ -530,6 +535,7 @@ fn integrity_ok(state: &RepositoryState, config: &ServerConfig) -> bool {
         && events_ok
         && households_ok
         && stock_ok
+        && phase5_metadata_ok
         && state.phase5.routes.iter().all(|route| {
             route.length > 0
                 && route.risk_percent <= 100
