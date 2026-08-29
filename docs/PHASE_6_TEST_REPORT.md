@@ -583,6 +583,12 @@ focused skill-ledger regressions.
 Regional travel persistence now keeps status, progress, and ETA in agreement,
 with one focused travel-timeline regression.
 
+Core world-event persistence now validates payload bounds, nested cursor
+agreement, historical clock ordering, account references, and the structural
+shape of farming, trade, notice, chronicle, and frontier records. Three focused
+event-payload regressions plus the existing event-stream tests cover this
+changed subsystem.
+
 The cross-layer persistence-readiness milestone passed the full release gate on
 2026-08-30 after the core and Phase 3-6 integrity additions: 14 protocol tests,
 282 server tests, and 93 client tests, followed by asset/code-standard checks,

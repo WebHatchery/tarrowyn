@@ -525,6 +525,7 @@ fn integrity_ok(state: &RepositoryState, config: &ServerConfig) -> bool {
         && super::phase4_replay_integrity::ok(state)
         && super::phase3_replay_integrity::ok(state)
         && super::core_replay_integrity::ok(state)
+        && super::core_event_integrity::ok(state, config)
         && super::persistent_integrity::ok(state, config)
         && super::production_integrity::ok(state)
         && super::regional_integrity::ok(state, config)
