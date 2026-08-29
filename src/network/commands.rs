@@ -1,16 +1,31 @@
 use super::*;
 
 pub(super) const MAX_COMMAND_RETRIES: u8 = 3;
+pub(super) const COMMAND_RETRY_DELAY_SECONDS: f32 = 1.0;
 
 impl OnlineClient {
     pub(super) fn poll_movement(&mut self, dt: f32, notices: &mut Vec<NetworkNotice>) {
         let Some(mut pending) = self.pending_movement.take() else {
             return;
         };
-        let Some(result) = pending.pending.poll_timed(dt, REQUEST_TIMEOUT_SECONDS) else {
+        pending.retry_timer = (pending.retry_timer - dt.max(0.0)).max(0.0);
+        if pending.retry_timer > 0.0 {
+            self.pending_movement = Some(pending);
+            return;
+        }
+        if pending.pending.is_none() {
+            let request = pending.request.clone();
+            pending.pending = Some(self.api.post_json("/v1/movement", &request));
+        }
+        let Some(result) = pending
+            .pending
+            .as_mut()
+            .and_then(|request| request.poll_timed(dt, REQUEST_TIMEOUT_SECONDS))
+        else {
             self.pending_movement = Some(pending);
             return;
         };
+        pending.pending = None;
         match result {
             Ok(response) => {
                 let position = response.data.position;
@@ -33,12 +48,9 @@ impl OnlineClient {
                     && pending.retries < MAX_COMMAND_RETRIES =>
             {
                 let retries = pending.retries + 1;
-                let request = pending.request;
-                self.pending_movement = Some(PendingMovement {
-                    pending: self.api.post_json("/v1/movement", &request),
-                    request,
-                    retries,
-                });
+                pending.retries = retries;
+                pending.retry_timer = COMMAND_RETRY_DELAY_SECONDS;
+                self.pending_movement = Some(pending);
                 notices.push(NetworkNotice::Warning(format!(
                     "The movement could not be confirmed; retrying the same step ({retries}/{MAX_COMMAND_RETRIES})."
                 )));
@@ -51,10 +63,24 @@ impl OnlineClient {
         let Some(mut pending) = self.pending_farming.take() else {
             return;
         };
-        let Some(result) = pending.pending.poll_timed(dt, REQUEST_TIMEOUT_SECONDS) else {
+        pending.retry_timer = (pending.retry_timer - dt.max(0.0)).max(0.0);
+        if pending.retry_timer > 0.0 {
+            self.pending_farming = Some(pending);
+            return;
+        }
+        if pending.pending.is_none() {
+            let request = pending.request.clone();
+            pending.pending = Some(self.api.post_json("/v1/farming/actions", &request));
+        }
+        let Some(result) = pending
+            .pending
+            .as_mut()
+            .and_then(|request| request.poll_timed(dt, REQUEST_TIMEOUT_SECONDS))
+        else {
             self.pending_farming = Some(pending);
             return;
         };
+        pending.pending = None;
         match result {
             Ok(response) => {
                 self.action_awaiting_confirmation = false;
@@ -76,12 +102,9 @@ impl OnlineClient {
                     && pending.retries < MAX_COMMAND_RETRIES =>
             {
                 let retries = pending.retries + 1;
-                let request = pending.request;
-                self.pending_farming = Some(PendingFarming {
-                    pending: self.api.post_json("/v1/farming/actions", &request),
-                    request,
-                    retries,
-                });
+                pending.retries = retries;
+                pending.retry_timer = COMMAND_RETRY_DELAY_SECONDS;
+                self.pending_farming = Some(pending);
                 notices.push(NetworkNotice::Warning(format!(
                     "The farm action could not be confirmed; retrying the same request ({retries}/{MAX_COMMAND_RETRIES})."
                 )));
@@ -97,10 +120,24 @@ impl OnlineClient {
         let Some(mut pending) = self.pending_chat.take() else {
             return;
         };
-        let Some(result) = pending.pending.poll_timed(dt, REQUEST_TIMEOUT_SECONDS) else {
+        pending.retry_timer = (pending.retry_timer - dt.max(0.0)).max(0.0);
+        if pending.retry_timer > 0.0 {
+            self.pending_chat = Some(pending);
+            return;
+        }
+        if pending.pending.is_none() {
+            let request = pending.request.clone();
+            pending.pending = Some(self.api.post_json("/v1/chat", &request));
+        }
+        let Some(result) = pending
+            .pending
+            .as_mut()
+            .and_then(|request| request.poll_timed(dt, REQUEST_TIMEOUT_SECONDS))
+        else {
             self.pending_chat = Some(pending);
             return;
         };
+        pending.pending = None;
         match result {
             Ok(response) => {
                 if response.data.accepted {
@@ -124,12 +161,9 @@ impl OnlineClient {
                     && pending.retries < MAX_COMMAND_RETRIES =>
             {
                 let retries = pending.retries + 1;
-                let request = pending.request;
-                self.pending_chat = Some(PendingChat {
-                    pending: self.api.post_json("/v1/chat", &request),
-                    request,
-                    retries,
-                });
+                pending.retries = retries;
+                pending.retry_timer = COMMAND_RETRY_DELAY_SECONDS;
+                self.pending_chat = Some(pending);
                 notices.push(NetworkNotice::Warning(format!(
                     "The chat message could not be confirmed; retrying the same message ({retries}/{MAX_COMMAND_RETRIES})."
                 )));
@@ -160,18 +194,20 @@ impl OnlineClient {
         if self.pending_movement.is_none() {
             if let Some(request) = self.movement_queue.pop_front() {
                 self.pending_movement = Some(PendingMovement {
-                    pending: self.api.post_json("/v1/movement", &request),
+                    pending: Some(self.api.post_json("/v1/movement", &request)),
                     request,
                     retries: 0,
+                    retry_timer: 0.0,
                 });
             }
         }
         if self.pending_chat.is_none() {
             if let Some(request) = self.chat_queue.pop_front() {
                 self.pending_chat = Some(PendingChat {
-                    pending: self.api.post_json("/v1/chat", &request),
+                    pending: Some(self.api.post_json("/v1/chat", &request)),
                     request,
                     retries: 0,
+                    retry_timer: 0.0,
                 });
             }
         }
@@ -180,9 +216,10 @@ impl OnlineClient {
                 self.pending_request_type = Some(format!("farming::{:?}", request.action));
                 self.pending_request_id = Some(request.request_id.clone());
                 self.pending_farming = Some(PendingFarming {
-                    pending: self.api.post_json("/v1/farming/actions", &request),
+                    pending: Some(self.api.post_json("/v1/farming/actions", &request)),
                     request,
                     retries: 0,
+                    retry_timer: 0.0,
                 });
             }
         }

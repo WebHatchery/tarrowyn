@@ -451,39 +451,48 @@ fn transient_low_level_commands_replay_the_same_request_ids() {
     let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
     client.state = ConnectionState::Online;
     client.pending_movement = Some(super::PendingMovement {
-        pending: Pending::failed("HTTP request 'POST /v1/movement' failed: connection reset"),
+        pending: Some(Pending::failed(
+            "HTTP request 'POST /v1/movement' failed: connection reset",
+        )),
         request: MovementIntent {
             request_id: "move-1".to_owned(),
             dx: 1,
             dy: 0,
         },
         retries: 0,
+        retry_timer: 0.0,
     });
     client.pending_chat = Some(super::PendingChat {
-        pending: Pending::failed("HTTP request 'POST /v1/chat' failed: connection reset"),
+        pending: Some(Pending::failed(
+            "HTTP request 'POST /v1/chat' failed: connection reset",
+        )),
         request: ChatRequest {
             request_id: "chat-1".to_owned(),
             channel: "settlement".to_owned(),
             text: "Still here?".to_owned(),
         },
         retries: 0,
+        retry_timer: 0.0,
     });
     client.pending_farming = Some(super::PendingFarming {
-        pending: Pending::failed(
+        pending: Some(Pending::failed(
             "HTTP request 'POST /v1/farming/actions' failed: connection reset",
-        ),
+        )),
         request: FarmingRequest {
             request_id: "farm-1".to_owned(),
             action: FarmingAction::Tend,
             position: Position { x: 1, y: 1 },
         },
         retries: 0,
+        retry_timer: 0.0,
     });
     client.action_awaiting_confirmation = true;
     client.pending_request_id = Some("farm-1".to_owned());
     client.pending_request_type = Some("farming::Tend".to_owned());
     client.pending_trade = Some(super::PendingTrade {
-        pending: Pending::failed("HTTP request 'POST /v1/trades' failed: connection reset"),
+        pending: Some(Pending::failed(
+            "HTTP request 'POST /v1/trades' failed: connection reset",
+        )),
         request: TradeRequest {
             request_id: "trade-1".to_owned(),
             action: TradeAction::Review,
@@ -493,6 +502,7 @@ fn transient_low_level_commands_replay_the_same_request_ids() {
             request: None,
         },
         retries: 0,
+        retry_timer: 0.0,
     });
     client.pending_trade_action = Some(TradeAction::Review);
 
@@ -504,15 +514,27 @@ fn transient_low_level_commands_replay_the_same_request_ids() {
 
     assert_eq!(client.pending_movement.as_ref().unwrap().retries, 1);
     assert_eq!(
+        client.pending_movement.as_ref().unwrap().retry_timer,
+        super::commands::COMMAND_RETRY_DELAY_SECONDS
+    );
+    assert_eq!(
         client.pending_movement.as_ref().unwrap().request.request_id,
         "move-1"
     );
     assert_eq!(client.pending_chat.as_ref().unwrap().retries, 1);
     assert_eq!(
+        client.pending_chat.as_ref().unwrap().retry_timer,
+        super::commands::COMMAND_RETRY_DELAY_SECONDS
+    );
+    assert_eq!(
         client.pending_chat.as_ref().unwrap().request.request_id,
         "chat-1"
     );
     assert_eq!(client.pending_farming.as_ref().unwrap().retries, 1);
+    assert_eq!(
+        client.pending_farming.as_ref().unwrap().retry_timer,
+        super::commands::COMMAND_RETRY_DELAY_SECONDS
+    );
     assert_eq!(
         client.pending_farming.as_ref().unwrap().request.request_id,
         "farm-1"
@@ -520,6 +542,10 @@ fn transient_low_level_commands_replay_the_same_request_ids() {
     assert!(client.action_awaiting_confirmation);
     assert_eq!(client.pending_request_id.as_deref(), Some("farm-1"));
     assert_eq!(client.pending_trade.as_ref().unwrap().retries, 1);
+    assert_eq!(
+        client.pending_trade.as_ref().unwrap().retry_timer,
+        super::commands::COMMAND_RETRY_DELAY_SECONDS
+    );
     assert_eq!(
         client.pending_trade.as_ref().unwrap().request.request_id,
         "trade-1"

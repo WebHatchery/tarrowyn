@@ -61,10 +61,24 @@ impl OnlineClient {
         let Some(mut pending) = self.pending_trade.take() else {
             return;
         };
-        let Some(result) = pending.pending.poll_timed(dt, REQUEST_TIMEOUT_SECONDS) else {
+        pending.retry_timer = (pending.retry_timer - dt.max(0.0)).max(0.0);
+        if pending.retry_timer > 0.0 {
+            self.pending_trade = Some(pending);
+            return;
+        }
+        if pending.pending.is_none() {
+            let request = pending.request.clone();
+            pending.pending = Some(self.api.post_json("/v1/trades", &request));
+        }
+        let Some(result) = pending
+            .pending
+            .as_mut()
+            .and_then(|request| request.poll_timed(dt, REQUEST_TIMEOUT_SECONDS))
+        else {
             self.pending_trade = Some(pending);
             return;
         };
+        pending.pending = None;
         let trade_action = self.pending_trade_action;
         match result {
             Ok(response) => {
@@ -90,12 +104,9 @@ impl OnlineClient {
                     && pending.retries < super::commands::MAX_COMMAND_RETRIES =>
             {
                 let retries = pending.retries + 1;
-                let request = pending.request;
-                self.pending_trade = Some(PendingTrade {
-                    pending: self.api.post_json("/v1/trades", &request),
-                    request,
-                    retries,
-                });
+                pending.retries = retries;
+                pending.retry_timer = super::commands::COMMAND_RETRY_DELAY_SECONDS;
+                self.pending_trade = Some(pending);
                 notices.push(NetworkNotice::Warning(format!(
                     "The trade command could not be confirmed; retrying the same request ({retries}/{}).",
                     super::commands::MAX_COMMAND_RETRIES
@@ -118,9 +129,10 @@ impl OnlineClient {
                 self.pending_request_type = Some(format!("trade::{:?}", request.action));
                 self.pending_request_id = Some(request.request_id.clone());
                 self.pending_trade = Some(PendingTrade {
-                    pending: self.api.post_json("/v1/trades", &request),
+                    pending: Some(self.api.post_json("/v1/trades", &request)),
                     request,
                     retries: 0,
+                    retry_timer: 0.0,
                 });
             }
         }
