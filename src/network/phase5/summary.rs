@@ -76,11 +76,7 @@ pub(super) fn render(client: &Phase5Client) -> String {
                 .iter()
                 .filter(|order| order.status == MarketOrderStatus::Open)
                 .count();
-            format!(
-                "{} open order{}",
-                open_orders,
-                if open_orders == 1 { "" } else { "s" }
-            )
+            format!("Orders {open_orders}")
         })
         .unwrap_or_else(|| "Market loading".to_owned());
     let law = client
@@ -90,7 +86,7 @@ pub(super) fn render(client: &Phase5Client) -> String {
             if law.pvp_enabled {
                 "PvP opt-in"
             } else {
-                "Protected economy"
+                "Protected"
             }
         })
         .unwrap_or("Law loading");
@@ -113,10 +109,7 @@ pub(super) fn render(client: &Phase5Client) -> String {
                     )
                 })
                 .count();
-            format!(
-                "Roads {available}/{} available • {at_risk} at risk",
-                region.routes.len()
-            )
+            format!("Roads {available}/{} • risk {at_risk}", region.routes.len())
         })
         .unwrap_or_else(|| "Roads loading".to_owned());
     let event = client
@@ -131,6 +124,12 @@ pub(super) fn render(client: &Phase5Client) -> String {
             RegionalEventStage::Aftermath => "Event aftermath".to_owned(),
         })
         .unwrap_or_else(|| "Events quiet".to_owned());
+    let household = client
+        .households
+        .as_ref()
+        .and_then(|households| households.households.first())
+        .map(|household| format!("Service {}", household.status))
+        .unwrap_or_else(|| "Service quiet".to_owned());
     let account = client
         .account
         .as_ref()
@@ -142,5 +141,7 @@ pub(super) fn render(client: &Phase5Client) -> String {
             }
         })
         .unwrap_or("Account loading");
-    format!("{region}\n{settlements}\n{roads} • {market} • {law} • {event}\n{account}")
+    format!(
+        "{region}\n{settlements}\n{roads} • {market} • {law} • {event} • {household}\n{account}"
+    )
 }

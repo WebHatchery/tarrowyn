@@ -7,8 +7,9 @@ use tarrowyn_protocol::{
     AuthLinkResponse, AuthRefreshResponse, AuthRevokeResponse, AuthSession, GuestSessionResponse,
     LawBoundaryResponse, MarketOrderAction, MarketOrderRequest, MarketSnapshot,
     ModerationReportRequest, ModerationReportResponse, RegionSnapshot, RegionalEventAction,
-    RegionalEventRequest, RegionalEventResponse, RegionalEventsResponse, RouteAction, RouteRequest,
-    RouteResponse, SettlementsResponse, TravelAction, TravelRequest, TravelResponse, TravelStatus,
+    RegionalEventRequest, RegionalEventResponse, RegionalEventsResponse,
+    RegionalHouseholdsResponse, RouteAction, RouteRequest, RouteResponse, SettlementsResponse,
+    TravelAction, TravelRequest, TravelResponse, TravelStatus,
 };
 
 mod summary;
@@ -40,6 +41,7 @@ enum Phase5CommandResponse {
 pub(super) struct Phase5Client {
     pending_region: Option<Pending<ApiResponse<RegionSnapshot>>>,
     pending_settlements: Option<Pending<ApiResponse<SettlementsResponse>>>,
+    pending_households: Option<Pending<ApiResponse<RegionalHouseholdsResponse>>>,
     pending_market: Option<Pending<ApiResponse<MarketSnapshot>>>,
     pending_events: Option<Pending<ApiResponse<RegionalEventsResponse>>>,
     pending_law: Option<Pending<ApiResponse<LawBoundaryResponse>>>,
@@ -49,6 +51,7 @@ pub(super) struct Phase5Client {
     commands: VecDeque<Phase5Command>,
     region: Option<RegionSnapshot>,
     settlements: Option<SettlementsResponse>,
+    households: Option<RegionalHouseholdsResponse>,
     market: Option<MarketSnapshot>,
     events: Option<RegionalEventsResponse>,
     law: Option<LawBoundaryResponse>,
@@ -69,6 +72,7 @@ impl Phase5Client {
         Self {
             pending_region: None,
             pending_settlements: None,
+            pending_households: None,
             pending_market: None,
             pending_events: None,
             pending_law: None,
@@ -78,6 +82,7 @@ impl Phase5Client {
             commands: VecDeque::new(),
             region: None,
             settlements: None,
+            households: None,
             market: None,
             events: None,
             law: None,
@@ -123,6 +128,13 @@ impl Phase5Client {
             |response| self.settlements = Some(response.data),
             notices,
             "settlements",
+        );
+        poll(
+            &mut self.pending_households,
+            dt,
+            |response| self.households = Some(response.data),
+            notices,
+            "regional households",
         );
         poll(
             &mut self.pending_market,
@@ -184,6 +196,9 @@ impl Phase5Client {
             }
             if self.pending_settlements.is_none() {
                 self.pending_settlements = Some(api.get("/v1/settlements"));
+            }
+            if self.pending_households.is_none() {
+                self.pending_households = Some(api.get("/v1/households/region"));
             }
             if self.pending_market.is_none() {
                 self.pending_market = Some(api.get("/v1/market/orders"));
@@ -460,6 +475,7 @@ impl Phase5Client {
                 self.logged_out = true;
                 self.pending_region = None;
                 self.pending_settlements = None;
+                self.pending_households = None;
                 self.pending_market = None;
                 self.pending_events = None;
                 self.pending_law = None;
@@ -487,6 +503,7 @@ impl Phase5Client {
                     self.logged_out = true;
                     self.pending_region = None;
                     self.pending_settlements = None;
+                    self.pending_households = None;
                     self.pending_market = None;
                     self.pending_events = None;
                     self.pending_law = None;
@@ -518,6 +535,7 @@ impl Phase5Client {
     pub(super) fn clear(&mut self) {
         self.pending_region = None;
         self.pending_settlements = None;
+        self.pending_households = None;
         self.pending_market = None;
         self.pending_events = None;
         self.pending_law = None;
@@ -527,6 +545,7 @@ impl Phase5Client {
         self.commands.clear();
         self.events = None;
         self.account = None;
+        self.households = None;
         self.linked_account = None;
         self.refreshed_session = None;
         self.refresh_token = None;

@@ -86,6 +86,9 @@ route statuses for its online overlay; the offline fixture remains explicitly
 local rather than pretending to be a shared map.
 The focused client control regression also confirms the visible Repair action
 queues the existing authoritative route-repair request.
+The regional summary regression also confirms the client projects the current
+regional household service status instead of requiring a separate hidden
+endpoint inspection.
 The calendar presentation regression keeps the server-projected development
 season available to the online header beside the calendar day without locking
 the deferred season/year pacing decision.

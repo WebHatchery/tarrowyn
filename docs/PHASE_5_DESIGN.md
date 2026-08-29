@@ -74,6 +74,9 @@ the touch summary. The latest regional event stage is shown beside that compact
 telemetry so signals and escalations remain visible before intervention. The map
 draws the region's server-owned location positions and route status colours;
 offline play keeps its local-only landmark fixture.
+The client polls the regional household endpoint and shows the current travelling
+service status in the same compact line, while the household's reason and history
+remain server-owned projection data.
 
 Each settlement projection also rolls up its nearest recognised claims, free
 plots, and public works. The bounded content fixture therefore gives Hearth,

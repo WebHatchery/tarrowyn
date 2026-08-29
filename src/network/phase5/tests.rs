@@ -271,6 +271,22 @@ fn regional_summary_shows_local_condition_and_recovery_signal() {
         interest_radius: 12,
         cursor: 7,
     });
+    client.households = Some(tarrowyn_protocol::RegionalHouseholdsResponse {
+        households: vec![tarrowyn_protocol::RegionalHousehold {
+            household_id: "household-maren-region".to_owned(),
+            household_name: "The Maren household".to_owned(),
+            origin_location_id: "hearth".to_owned(),
+            destination_location_id: Some("saltmere".to_owned()),
+            status: "travelling".to_owned(),
+            reason: "Saltmere needs a carrier service.".to_owned(),
+            service: "carrier".to_owned(),
+            departure_tick: Some(5),
+            arrival_tick: None,
+            history: vec!["The household chose the open route.".to_owned()],
+        }],
+        vacancies: vec!["ferry hand".to_owned()],
+        cursor: 7,
+    });
     client.settlements = Some(tarrowyn_protocol::SettlementsResponse {
         settlements: vec![
             tarrowyn_protocol::SettlementProjection {
@@ -382,10 +398,11 @@ fn regional_summary_shows_local_condition_and_recovery_signal() {
     assert!(comparison.contains("Saltmere Landing Strained • 1 opening"));
     assert!(comparison.contains("Whisperwood Watch Quiet • 2 openings"));
     let economy = client.summary().lines().nth(2).unwrap().to_owned();
-    assert!(economy.contains("Roads 2/2 available • 1 at risk"));
-    assert!(economy.contains("1 open order"));
-    assert!(economy.contains("Protected economy"));
+    assert!(economy.contains("Roads 2/2 • risk 1"));
+    assert!(economy.contains("Orders 1"));
+    assert!(economy.contains("Protected"));
     assert!(economy.contains("Event escalation"));
+    assert!(economy.contains("Service travelling"));
 }
 
 fn regional_event(

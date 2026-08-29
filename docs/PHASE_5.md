@@ -131,6 +131,8 @@ local landmarks.
 The visible Repair control queues the existing authenticated route action for
 the current fixture road, so recovery work has a touch path rather than an
 unreachable client-only command.
+The client also polls the regional household projection and shows a compact
+travelling-service status beside the road, market, law, and event telemetry.
 The online header also shows the authoritative regional season beside the
 calendar day; the development cadence remains subject to the Phase 6 pacing
 decision.
