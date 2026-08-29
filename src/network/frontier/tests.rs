@@ -63,6 +63,16 @@ fn contract_cycle_waits_through_the_tavern_cooldown() {
 }
 
 #[test]
+fn frontier_error_summary_keeps_an_api_rejection_code() {
+    assert_eq!(
+        super::short_error(
+            "HTTP API error in 'POST /v1/contracts/brambleback-watch' [rate_limited]: Try again later."
+        ),
+        "HTTP API error in 'POST /v1/contracts/brambleback-watch' [rate_limited]: Try again later."
+    );
+}
+
+#[test]
 fn frontier_action_reports_a_full_command_queue() {
     let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
     client.state = crate::network::ConnectionState::Online;

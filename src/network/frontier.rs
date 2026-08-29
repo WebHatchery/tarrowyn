@@ -118,9 +118,10 @@ impl FrontierClient {
             self.pending_command = None;
             match result {
                 Ok(response) => self.apply_command(response.data, projection, notices),
-                Err(_) => notices.push(NetworkNotice::Warning(
-                    "The frontier command timed out; retry with the visible action.".to_owned(),
-                )),
+                Err(error) => notices.push(NetworkNotice::Warning(format!(
+                    "The frontier command could not be confirmed; tap the visible action to retry. {}",
+                    short_error(&error)
+                ))),
             }
         }
         cursor_boundary
@@ -265,6 +266,16 @@ impl FrontierClient {
             }
         }
     }
+}
+
+fn short_error(error: &str) -> String {
+    error
+        .lines()
+        .next()
+        .unwrap_or(error)
+        .chars()
+        .take(100)
+        .collect()
 }
 
 fn apply_combat(
