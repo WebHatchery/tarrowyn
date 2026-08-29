@@ -502,12 +502,15 @@ pub(super) fn tick(state: &mut super::super::models::RepositoryState, config: &S
         }
         let mut failures = Vec::new();
         for record in &mut state.phase4.infrastructure {
+            let old_status = record.status;
             if funded {
                 record.last_maintained_tick = state.tick;
             } else {
                 record.condition = record.condition.saturating_sub(5);
                 record.status = super::infrastructure_status(record.condition);
-                if record.status == tarrowyn_protocol::InfrastructureStatus::Failed {
+                if record.status == tarrowyn_protocol::InfrastructureStatus::Failed
+                    && old_status != record.status
+                {
                     failures.push(record.name.clone());
                 }
             }
