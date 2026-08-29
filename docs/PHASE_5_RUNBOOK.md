@@ -25,10 +25,12 @@ Inspect `/v1/region`, `/v1/settlements`, `/v1/routes`,
 the journey, reconnect or issue `Recover`, and confirm that the original
 travel ID continues to the destination exactly once.
 The online sidebar's `Repair` control exercises the route action for the first
-non-operational road leaving the current location: initially the north pack
-road at the Hearth, or the watch trail after arriving at Whisperwood. Confirm
-the route response and refreshed road status before repeating the action with
-the same request boundary.
+non-operational road connected to the current location: initially the north
+pack road at the Hearth, or the watch trail after arriving at Whisperwood.
+Player travel treats every recorded road or ferry as bidirectional, so after
+arriving at Saltmere the `Travel` control can return over the Saltmere ferry.
+Confirm the route response and refreshed road status before repeating the action
+with the same request boundary.
 
 Tap `Inspect` to open the authoritative regional detail panel. It lists each
 visible route by name with status, risk, and condition, followed by the first

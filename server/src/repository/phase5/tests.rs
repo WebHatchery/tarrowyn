@@ -140,6 +140,44 @@ fn region_travel_recovery_and_market_settle_authoritatively() {
         settled.order.unwrap().status,
         tarrowyn_protocol::MarketOrderStatus::Fulfilled
     );
+
+    let repaired_at_destination = repository
+        .route_action(
+            &traveller.account_token,
+            RouteRequest {
+                request_id: "repair-watch-trail".to_owned(),
+                route_id: "watch-trail".to_owned(),
+                action: RouteAction::Repair,
+            },
+        )
+        .unwrap()
+        .data;
+    assert!(repaired_at_destination.accepted);
+
+    let returned = repository
+        .travel(
+            &traveller.account_token,
+            TravelRequest {
+                request_id: "return-ferry".to_owned(),
+                action: TravelAction::Start,
+                route_id: Some("saltmere-ferry".to_owned()),
+                travel_id: None,
+            },
+        )
+        .unwrap()
+        .data;
+    assert!(returned.accepted);
+    for _ in 0..8 {
+        repository.tick();
+    }
+    assert_eq!(
+        repository
+            .region(&traveller.account_token)
+            .unwrap()
+            .data
+            .player_location_id,
+        "hearth"
+    );
 }
 
 #[test]

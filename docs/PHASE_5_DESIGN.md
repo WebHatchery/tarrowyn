@@ -32,7 +32,9 @@ The three routes are a threatened north pack road, an operational Saltmere
 ferry, and a delayed frontier watch trail. Repair, escort, and improvement are
 server-owned logistics actions. An interruption preserves character, cargo,
 and rewards. `Recover` and `Resume` move the existing journey forward; they do
-not create a second journey.
+not create a second journey. Player travel may use each recorded road or ferry
+from either endpoint, while market orders keep their directional origin and
+destination for logistics and fulfilment.
 
 ## Economy and calendar
 

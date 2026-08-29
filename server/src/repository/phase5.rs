@@ -146,11 +146,13 @@ impl WorldRepository {
             ));
         };
         let current = player_location(&state, &key);
-        if state.phase5.routes[route_index].origin_location_id != current {
+        if state.phase5.routes[route_index].origin_location_id != current
+            && state.phase5.routes[route_index].destination_location_id != current
+        {
             return Err(RepositoryError::new(
                 409,
                 "route_out_of_interest",
-                "Travel to the route origin before changing its logistics.",
+                "Travel to either route endpoint before changing its logistics.",
             ));
         }
         let mut route = state.phase5.routes[route_index].clone();
@@ -284,12 +286,13 @@ impl WorldRepository {
                         .iter()
                         .find(|route| {
                             route.route_id == route_id
-                                && route.origin_location_id == current_location
+                                && (route.origin_location_id == current_location
+                                    || route.destination_location_id == current_location)
                         })
                         .cloned()
                     else {
                         reason = Some(
-                            "That route does not depart from the player's current location."
+                            "That route does not connect to the player's current location."
                                 .to_owned(),
                         );
                         let response =
@@ -305,11 +308,23 @@ impl WorldRepository {
                         );
                         None
                     } else {
+                        let (origin_location_id, destination_location_id) =
+                            if route.origin_location_id == current_location {
+                                (
+                                    route.origin_location_id.clone(),
+                                    route.destination_location_id,
+                                )
+                            } else {
+                                (
+                                    route.destination_location_id.clone(),
+                                    route.origin_location_id,
+                                )
+                            };
                         let travel = TravelState {
                             travel_id: format!("travel-{}", state.phase5.next_travel_id),
                             route_id: route.route_id,
-                            origin_location_id: route.origin_location_id,
-                            destination_location_id: route.destination_location_id,
+                            origin_location_id,
+                            destination_location_id,
                             departure_tick: state.tick,
                             eta_tick: state.tick.saturating_add(route.travel_ticks.max(1)),
                             progress: 0,

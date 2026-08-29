@@ -345,6 +345,8 @@ Settlement condition projections also follow changing route safety, public-work 
 
 The touch client keeps a compact comparison of each settlement's condition and open vacancies beside the local recovery signal, so regional opportunity remains visible without opening a separate desktop-only panel. The same shared-road surface exposes road availability and risk, open market orders, the protected-law boundary, the latest regional event stage, and a travelling-service status as compact regional telemetry. A visible Inspect control opens the authoritative route names, condition, risk, stock, and price notes without displacing those recovery controls. When online, the map itself uses the authoritative regional location positions and route status colours.
 
+Recorded roads and ferries are usable from either endpoint for player travel, so arriving at a settlement never strands a character. Market orders retain their recorded origin and destination for meaningful logistics and fulfilment.
+
 ### Decline and Abandonment
 
 Settlements may also shrink. If players leave and no one takes responsibility, businesses can close, NPC families can migrate, infrastructure can deteriorate, and a former town may eventually become an abandoned site.

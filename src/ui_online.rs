@@ -221,7 +221,8 @@ pub(super) fn draw_sidebar(
                 "Repair",
                 ctx.regional_region.is_some_and(|region| {
                     region.routes.iter().any(|route| {
-                        route.origin_location_id == region.player_location_id
+                        (route.origin_location_id == region.player_location_id
+                            || route.destination_location_id == region.player_location_id)
                             && route.status != RouteStatus::Operational
                     })
                 }),

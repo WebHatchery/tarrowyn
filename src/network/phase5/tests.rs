@@ -134,6 +134,20 @@ fn route_repair_button_queues_an_authoritative_repair() {
             if request.route_id == "watch-trail"
                 && request.action == RouteAction::Repair
     ));
+
+    client.commands.clear();
+    client
+        .region
+        .as_mut()
+        .expect("regional projection")
+        .player_location_id = "saltmere".to_owned();
+    client.queue_cycle("travel");
+    assert!(matches!(
+        client.commands.front(),
+        Some(Phase5Command::Travel(request))
+            if request.route_id.as_deref() == Some("watch-trail")
+                && request.action == TravelAction::Start
+    ));
 }
 
 #[test]
