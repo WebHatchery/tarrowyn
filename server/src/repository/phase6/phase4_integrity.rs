@@ -331,6 +331,7 @@ pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
             };
             profession_unique
                 && profile.level > 0
+                && profile.reputation <= 100
                 && profile
                     .credential
                     .as_deref()
@@ -350,6 +351,12 @@ pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
                         .map(|capability| capability.capability_id.as_str()),
                 )
         })
+    });
+    let credentials_ok = state.phase4.credentials.values().all(|credentials| {
+        unique_non_empty(credentials.iter().map(String::as_str))
+            && credentials
+                .iter()
+                .all(|credential| bounded_text(credential, MAX_KNOWLEDGE_TEXT_CHARS))
     });
     let animals_ok = !state.phase4.animals.is_empty()
         && unique_non_empty(
@@ -415,6 +422,7 @@ pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
         && knowledge_ok
         && identity_keyed_state_ok
         && profiles_ok
+        && credentials_ok
         && animals_ok
         && combat_ok
         && available_plots_ok

@@ -561,6 +561,8 @@ lease bounds, with three focused claim regressions.
 Phase 4 service-order persistence now bounds order text, keeps provider IDs and
 names paired, and requires completed orders to carry completion ticks, with
 three focused order regressions.
+Phase 4 profession persistence now bounds reputation and the separate
+credential ledger, with two focused profession-state regressions.
 
 The cross-layer persistence-readiness milestone passed the full release gate on
 2026-08-30 after the core and Phase 3-6 integrity additions: 14 protocol tests,
