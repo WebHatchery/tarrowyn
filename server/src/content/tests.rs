@@ -4,6 +4,11 @@ fn authoritative_manifests_satisfy_the_content_contract() {
 }
 
 #[test]
+fn starting_skill_comes_from_the_shared_game_config_manifest() {
+    assert_eq!(super::starting_skill(), 1);
+}
+
+#[test]
 fn content_ids_must_be_unique_and_non_empty() {
     assert!(super::validate_id_list("test", vec!["one", "two"]).is_ok());
     assert!(super::validate_id_list("test", vec!["one", "one"]).is_err());

@@ -176,7 +176,7 @@ impl WorldRepository {
                     position: crate::content::region_location_profile("hearth").position,
                     gold: self.config.starting_gold,
                     field_tool_condition: FIELD_TOOL_MAX_CONDITION,
-                    skill: 1,
+                    skill: crate::content::starting_skill(),
                     reputation: 0,
                     inventory: Inventory {
                         seeds: self.config.starting_seeds,

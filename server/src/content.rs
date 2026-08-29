@@ -56,6 +56,10 @@ struct GameConfigManifest {
     starting_skill: u32,
 }
 
+const GAME_CONFIG_JSON: &str =
+    macroquad_toolkit::include_json_str!("../../assets/data/game_config.json");
+static GAME_CONFIG: OnceLock<GameConfigManifest> = OnceLock::new();
+
 #[derive(Debug, Deserialize)]
 struct ActionManifest {
     id: String,
@@ -201,11 +205,8 @@ pub fn validate() -> Result<(), String> {
         macroquad_toolkit::include_json_str!("../../assets/data/content_schema.json"),
     )
     .map_err(|error| format!("content schema JSON is invalid: {error}"))?;
-    let game_config: GameConfigManifest = parse_json_labeled(
-        "game_config.json",
-        macroquad_toolkit::include_json_str!("../../assets/data/game_config.json"),
-    )
-    .map_err(|error| format!("game config JSON is invalid: {error}"))?;
+    let game_config: GameConfigManifest = parse_json_labeled("game_config.json", GAME_CONFIG_JSON)
+        .map_err(|error| format!("game config JSON is invalid: {error}"))?;
     let actions: Vec<ActionManifest> = parse_json_labeled(
         "actions.json",
         macroquad_toolkit::include_json_str!("../../assets/data/actions.json"),
@@ -246,6 +247,20 @@ pub fn validate() -> Result<(), String> {
     npcs::validate()?;
     crate::repository::validate_skill_catalog()?;
     Ok(())
+}
+
+pub(crate) fn starting_skill() -> u32 {
+    GAME_CONFIG
+        .get_or_init(|| {
+            let config: GameConfigManifest =
+                parse_json_labeled("game_config.json", GAME_CONFIG_JSON)
+                    .expect("game config content JSON must be valid");
+            if config.starting_skill == 0 {
+                panic!("game config content must define a positive starting skill");
+            }
+            config
+        })
+        .starting_skill
 }
 
 pub(crate) fn crop_kind_for_seed(seed_index: u32) -> CropKind {

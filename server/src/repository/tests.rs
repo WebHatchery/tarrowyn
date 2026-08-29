@@ -38,6 +38,15 @@ fn guest(repo: &WorldRepository, key: &str) -> GuestSessionResponse {
 }
 
 #[test]
+fn guest_identity_uses_the_shared_starting_skill() {
+    let repository = repo();
+    let session = guest(&repository, "shared-starting-skill");
+    let player = repository.inventory(&session.account_token).unwrap().data;
+
+    assert_eq!(player.skill, crate::content::starting_skill());
+}
+
+#[test]
 fn guest_sessions_are_distinct_but_resume_by_client_key() {
     let repo = repo();
     let first = guest(&repo, "one");
