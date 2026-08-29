@@ -396,6 +396,7 @@ impl Phase5Client {
                 ));
             }
             Phase5CommandResponse::Revoke(response) => {
+                api.set_bearer_token(None);
                 self.deletion_armed = false;
                 self.logged_out = true;
                 self.pending_region = None;

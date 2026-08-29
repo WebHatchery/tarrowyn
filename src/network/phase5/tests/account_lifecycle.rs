@@ -86,6 +86,50 @@ fn refresh_failure_discards_authenticated_projections() {
 }
 
 #[test]
+fn revoke_response_discards_authenticated_state() {
+    let mut client = Phase5Client::new();
+    client.account = Some(account_response(false));
+    client.refresh_token = Some("refresh-secret".to_owned());
+    client.region = Some(tarrowyn_protocol::RegionSnapshot {
+        region_id: "hearthlands".to_owned(),
+        season: "thaw".to_owned(),
+        calendar_day: 1,
+        locations: Vec::new(),
+        routes: Vec::new(),
+        visible_settlements: Vec::new(),
+        player_location_id: "hearth".to_owned(),
+        travel: None,
+        interest_radius: 12,
+        cursor: 1,
+    });
+    client.commands.push_back(Phase5Command::Report(
+        tarrowyn_protocol::ModerationReportRequest {
+            request_id: "queued".to_owned(),
+            target_account_id: None,
+            message_id: None,
+            category: "player_report".to_owned(),
+            note: "queued".to_owned(),
+        },
+    ));
+
+    let response = serde_json::from_value::<Phase5CommandResponse>(serde_json::json!({
+        "request_id": "revoke-1",
+        "revoked_sessions": 1
+    }))
+    .expect("revoke response should decode");
+    let mut api = HttpClient::new("https://example.test");
+    let mut notices = Vec::new();
+    client.apply_command(response, None, &mut api, &mut notices);
+
+    assert!(client.account.is_none());
+    assert!(client.refresh_token.is_none());
+    assert!(client.region.is_none());
+    assert!(client.commands.is_empty());
+    assert!(client.logged_out);
+    assert_eq!(notices.len(), 1);
+}
+
+#[test]
 fn account_deletion_requires_two_taps_for_a_linked_account() {
     let mut client = Phase5Client::new();
     client.account = Some(account_response(false));
