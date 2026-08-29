@@ -67,8 +67,9 @@ the structured HTTP 409 `cursor_ahead` response before starting the mixed load.
 After the mixed load, it temporarily advances a 1 ms worker past the 2,048
 record retention window and requires structured HTTP 409 `cursor_stale` responses
 from both endpoints before restoring the normal 250 ms cadence and restart check.
-It also checks price pressure, scarce goods, NPC fallback, abandoned claims,
-declining settlements, newcomer access, and alert fields in operator metrics,
+It also checks price pressure, scarce goods, NPC fallback, open market fallback,
+abandoned claims, declining settlements, newcomer access, and alert fields in
+operator metrics,
 then proves ordinary players cannot read that endpoint.
 It measures the mixed-load wall time and server working set, checks scheduled
 backup and operator metrics, waits for server-owned travel arrival, restarts the

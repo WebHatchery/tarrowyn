@@ -335,7 +335,8 @@ try {
     Assert-True ($metrics.data.rejected_commands -gt 0) "rejected command metrics did not advance"
     foreach ($metricField in @(
         "average_price_index_percent", "scarce_goods_count", "npc_fallback_households",
-        "abandoned_claims", "declining_settlements", "newcomer_access", "alert_flags"
+        "open_market_fallback_orders", "abandoned_claims", "declining_settlements",
+        "newcomer_access", "alert_flags"
     )) {
         Assert-True ($null -ne $metrics.data.$metricField) "the operational metrics omitted $metricField"
     }
