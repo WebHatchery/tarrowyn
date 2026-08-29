@@ -126,6 +126,12 @@ struct EventManifest {
     intervention_options: Vec<String>,
 }
 
+const SUPPORTED_EVENT_INTERVENTIONS: &[&str] = &[
+    "repair ferry markers",
+    "escort the grain caravan",
+    "open the frontier storehouse",
+];
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct EventTemplate {
     pub(crate) id: String,
@@ -580,6 +586,10 @@ fn validate_events(events: &EventsManifest, region: &RegionManifest) -> Result<(
                     .intervention_options
                     .iter()
                     .any(|option| option.trim().is_empty())
+                || event
+                    .intervention_options
+                    .iter()
+                    .any(|option| !SUPPORTED_EVENT_INTERVENTIONS.contains(&option.as_str()))
                 || event.stages.iter().any(|stage| {
                     !matches!(
                         stage.as_str(),
@@ -596,7 +606,7 @@ fn validate_events(events: &EventsManifest, region: &RegionManifest) -> Result<(
         })
     {
         return Err(
-            "events need IDs, kinds, known stages, affected systems, and known locations"
+            "events need IDs, kinds, known stages, supported interventions, affected systems, and known locations"
                 .to_owned(),
         );
     }

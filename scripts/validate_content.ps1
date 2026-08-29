@@ -109,6 +109,14 @@ Assert-Records "crops" (Get-Records $manifests["crops.json"] $null "crops") @("n
 Assert-Records "contracts" (Get-Records $manifests["contracts.json"] "contracts" "contracts") @("title", "description", "target") @()
 $eventRecords = Get-Records $manifests["events.json"] "events" "events"
 Assert-Records "events" $eventRecords @("title", "kind", "cause") @("stages", "affected_systems", "affected_locations", "effects", "intervention_options")
+$supportedEventInterventions = @("repair ferry markers", "escort the grain caravan", "open the frontier storehouse")
+foreach ($event in $eventRecords) {
+    foreach ($intervention in @($event.intervention_options)) {
+        if ($supportedEventInterventions -notcontains [string]$intervention) {
+            throw "Events must use a supported intervention choice: $intervention"
+        }
+    }
+}
 $itemRecords = Get-Records $manifests["items.json"] "items" "items"
 Assert-Records "items" $itemRecords @("kind", "sink") @()
 if (@($itemRecords | Where-Object { [int]$_.base_price -lt 1 }).Count -gt 0) {

@@ -34,6 +34,25 @@ fn action_kinds_must_match_the_supported_protocol_actions() {
 }
 
 #[test]
+fn event_interventions_must_have_an_implemented_effect() {
+    let mut events: super::EventsManifest = macroquad_toolkit::data_loader::parse_json_labeled(
+        "events.json",
+        macroquad_toolkit::include_json_str!("../../../assets/data/events.json"),
+    )
+    .expect("checked-in events content should parse");
+    events
+        .events
+        .first_mut()
+        .expect("the events manifest should have a launch record")
+        .intervention_options
+        .push("invent a silent response".to_owned());
+
+    let error = super::validate_events(&events, super::region_catalog())
+        .expect_err("an event choice without a server effect must fail validation");
+    assert!(error.contains("supported interventions"));
+}
+
+#[test]
 fn launch_content_ids_are_required_by_the_runtime_contract() {
     let available = std::collections::HashSet::from(["hearth", "saltmere"]);
     assert!(super::validate_required_ids("location", &available, &["hearth"]).is_ok());
