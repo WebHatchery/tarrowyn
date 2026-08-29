@@ -64,6 +64,20 @@ fn skill_manifest_rejects_zero_advanced_discovery_thresholds() {
 }
 
 #[test]
+fn skill_manifest_rejects_prerequisite_cycles() {
+    let mut manifest: SkillManifest = serde_json::from_str(SKILLS_JSON).unwrap();
+    let first = manifest.skills.len() - 2;
+    let second = manifest.skills.len() - 1;
+    let first_id = manifest.skills[first].id.clone();
+    let second_id = manifest.skills[second].id.clone();
+    manifest.skills[first].prerequisites.push(second_id);
+    manifest.skills[second].prerequisites.push(first_id);
+
+    let error = validate_manifest(&manifest).unwrap_err();
+    assert!(error.contains("prerequisite cycle"));
+}
+
+#[test]
 fn weapon_discovery_counts_saturate_when_each_family_reaches_the_ceiling() {
     let definition = catalog()
         .skills

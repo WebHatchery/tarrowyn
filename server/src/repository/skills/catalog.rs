@@ -106,5 +106,47 @@ pub(super) fn validate_manifest(manifest: &SkillManifest) -> Result<(), String> 
             return Err(format!("skill {} names an unknown prerequisite", skill.id));
         }
     }
+    let mut visited = HashSet::new();
+    for skill in &manifest.skills {
+        if has_prerequisite_cycle(
+            &skill.id,
+            &manifest.skills,
+            &mut HashSet::new(),
+            &mut visited,
+        ) {
+            return Err(format!(
+                "skill {} participates in a prerequisite cycle",
+                skill.id
+            ));
+        }
+    }
     Ok(())
+}
+
+fn has_prerequisite_cycle(
+    skill_id: &str,
+    skills: &[SkillDefinition],
+    visiting: &mut HashSet<String>,
+    visited: &mut HashSet<String>,
+) -> bool {
+    if visited.contains(skill_id) {
+        return false;
+    }
+    if !visiting.insert(skill_id.to_owned()) {
+        return true;
+    }
+    let cycle = skills
+        .iter()
+        .find(|skill| skill.id == skill_id)
+        .is_some_and(|skill| {
+            skill
+                .prerequisites
+                .iter()
+                .any(|prerequisite| has_prerequisite_cycle(prerequisite, skills, visiting, visited))
+        });
+    visiting.remove(skill_id);
+    if !cycle {
+        visited.insert(skill_id.to_owned());
+    }
+    cycle
 }

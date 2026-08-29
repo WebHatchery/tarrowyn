@@ -30,6 +30,8 @@ seed supply at their respective authority boundaries.
 The action-content regression confirms authored action kinds stay within the
 four protocol actions the client can execute, rejecting an unmapped kind before
 startup.
+The skill-catalogue regression confirms prerequisite graphs cannot contain a
+cycle that would make an advanced discovery permanently unreachable.
 The server crop-rotation regression confirms planting follows the validated
 crop manifest rather than a separate hard-coded order.
 The server event-template regression confirms regional event seeding follows
