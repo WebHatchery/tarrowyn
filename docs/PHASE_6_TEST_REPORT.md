@@ -546,6 +546,9 @@ limits, and care timing, with two focused farming regressions.
 Phase 4 school-lesson persistence now validates bounded lesson payloads,
 distinct live participants, start/expiry ordering, and the configured lesson
 room cap, with three focused lesson-state regressions.
+Phase 4 governance history now validates bounded decision and tax-receipt
+payloads, positive tax rates, and decision/receipt dates that cannot lead the
+authoritative world clock, with two focused governance regressions.
 
 The cross-layer persistence-readiness milestone passed the full release gate on
 2026-08-30 after the core and Phase 3-6 integrity additions: 14 protocol tests,

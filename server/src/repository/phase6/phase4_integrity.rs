@@ -77,10 +77,13 @@ pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
                 .map(|decision| decision.decision_id.as_str()),
         )
         && governance.decisions.iter().all(|decision| {
-            account_reference_ok(&decision.actor_account_id, &account_ids)
-                && !decision.proposal_id.trim().is_empty()
-                && !decision.service_affected.trim().is_empty()
+            bounded_text(&decision.decision_id, MAX_KNOWLEDGE_ID_CHARS)
+                && account_reference_ok(&decision.actor_account_id, &account_ids)
+                && bounded_text(&decision.actor_name, MAX_HOUSEHOLD_TEXT_CHARS)
+                && bounded_text(&decision.proposal_id, MAX_KNOWLEDGE_ID_CHARS)
+                && bounded_text(&decision.service_affected, MAX_KNOWLEDGE_TEXT_CHARS)
                 && decision.cost > 0
+                && decision.created_tick <= state.tick
         })
         && governance
             .taxation
@@ -93,9 +96,16 @@ pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
                 .map(|receipt| receipt.collection_id.as_str()),
         )
         && governance.tax_ledger.iter().all(|receipt| {
-            account_reference_ok(&receipt.payer_account_id, &account_ids)
+            bounded_text(&receipt.collection_id, MAX_KNOWLEDGE_ID_CHARS)
+                && account_reference_ok(&receipt.payer_account_id, &account_ids)
+                && bounded_text(&receipt.payer_name, MAX_HOUSEHOLD_TEXT_CHARS)
                 && receipt.amount > 0
+                && receipt.rate_percent > 0
                 && receipt.rate_percent <= MAX_TAX_RATE_PERCENT
+                && bounded_text(&receipt.territory, MAX_HOUSEHOLD_TEXT_CHARS)
+                && receipt.day > 0
+                && receipt.day <= state.clock.day
+                && receipt.created_tick <= state.tick
         })
         && governance.administration_quality <= 100;
 

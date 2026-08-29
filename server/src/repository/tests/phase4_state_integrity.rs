@@ -3,7 +3,8 @@ use tarrowyn_protocol::LocalCombatStatus;
 use tarrowyn_protocol::{ClaimLifecycleAction, ClaimLifecycleRequest};
 use tarrowyn_protocol::{GovernanceAction, GovernanceRequest, GuestSessionRequest, PublicAction};
 use tarrowyn_protocol::{
-    MaterialStock, ProfessionKind, ServiceOrder, ServiceOrderStatus, SkillLesson,
+    GovernanceDecision, MaterialStock, ProfessionKind, ServiceOrder, ServiceOrderStatus,
+    SkillLesson, TaxCollection,
 };
 
 fn seeded_phase4_claim(repository: &WorldRepository) {
@@ -585,6 +586,67 @@ fn over_capacity_phase4_lessons_degrade_readiness() {
             lesson.lesson_id = format!("phase4-lesson-{index}");
             state.phase4.lessons.push(lesson);
         }
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
+fn future_phase4_governance_decision_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("phase4-decision-state".to_owned()),
+            reset: false,
+        })
+        .expect("guest session")
+        .data;
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        let future_tick = state.tick.saturating_add(1);
+        state.phase4.governance.decisions.push(GovernanceDecision {
+            decision_id: "phase4-decision-record".to_owned(),
+            actor_account_id: session.account_id,
+            actor_name: session.display_name,
+            action: PublicAction::RepairRoad,
+            proposal_id: "phase4-proposal-record".to_owned(),
+            cost: 1,
+            service_affected: "the north road".to_owned(),
+            created_tick: future_tick,
+        });
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
+fn future_phase4_tax_receipt_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("phase4-tax-state".to_owned()),
+            reset: false,
+        })
+        .expect("guest session")
+        .data;
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        let future_day = state.clock.day.saturating_add(1);
+        let tick = state.tick;
+        state.phase4.governance.tax_ledger.push(TaxCollection {
+            collection_id: "phase4-tax-record".to_owned(),
+            payer_account_id: session.account_id,
+            payer_name: session.display_name,
+            amount: 1,
+            rate_percent: 1,
+            territory: "hearth-settlement".to_owned(),
+            day: future_day,
+            created_tick: tick,
+        });
     }
 
     let health = repository.ops_health().data;
