@@ -33,6 +33,8 @@ unmapped kind, missing launch ID, or mismatched executable kind before startup.
 The event-content regression confirms every authored intervention choice maps
 to a server effect, rejecting a visible choice that would otherwise resolve as
 a silent generic response.
+The Phase 5 event-catalogue regression confirms the stable `river-thaw` launch
+event remains present for the regional event fixture.
 The skill-catalogue regression confirms prerequisite graphs cannot contain a
 cycle that would make an advanced discovery permanently unreachable.
 The server crop-rotation regression confirms planting follows the validated

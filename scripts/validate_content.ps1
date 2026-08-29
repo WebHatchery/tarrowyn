@@ -124,6 +124,10 @@ Assert-Records "crops" (Get-Records $manifests["crops.json"] $null "crops") @("n
 Assert-Records "contracts" (Get-Records $manifests["contracts.json"] "contracts" "contracts") @("title", "description", "target") @()
 $eventRecords = Get-Records $manifests["events.json"] "events" "events"
 Assert-Records "events" $eventRecords @("title", "kind", "cause") @("stages", "affected_systems", "affected_locations", "effects", "intervention_options")
+$eventIds = @($eventRecords | ForEach-Object { [string]$_.id })
+if ($eventIds -notcontains "river-thaw") {
+    throw "Events are missing the river-thaw launch event."
+}
 $supportedEventInterventions = @("repair ferry markers", "escort the grain caravan", "open the frontier storehouse")
 foreach ($event in $eventRecords) {
     foreach ($intervention in @($event.intervention_options)) {

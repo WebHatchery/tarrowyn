@@ -586,6 +586,12 @@ fn validate_events(events: &EventsManifest, region: &RegionManifest) -> Result<(
             .map(|event| event.id.as_str())
             .collect(),
     )?;
+    let event_ids: HashSet<&str> = events
+        .events
+        .iter()
+        .map(|event| event.id.as_str())
+        .collect();
+    validate_required_ids("event", &event_ids, &["river-thaw"])?;
     if events.events.is_empty()
         || events.events.iter().any(|event| {
             event.title.trim().is_empty()
