@@ -1,6 +1,6 @@
 //! Production-readiness authority: identity linking, audit, recovery, and observability.
 
-use super::models::{trim_replay_cache, RepositoryState, MAX_REPLAY_CACHE};
+use super::models::{RepositoryState, MAX_REPLAY_CACHE};
 use super::*;
 use crate::config::ServerConfig;
 use serde::{Deserialize, Serialize};
@@ -14,6 +14,7 @@ use tarrowyn_protocol::{
 mod account;
 mod backup;
 mod deletion;
+mod maintenance;
 mod moderation;
 mod operations;
 mod repair;
@@ -606,34 +607,7 @@ impl WorldRepository {
 }
 
 pub(super) fn phase6_tick(state: &mut RepositoryState, config: &ServerConfig) -> Option<bool> {
-    deletion::process(state);
-    trim_replay_cache(&mut state.phase6.auth_link_results);
-    trim_auth_link_tokens(&mut state.phase6);
-    trim_replay_cache(&mut state.phase6.auth_refresh_results);
-    state
-        .phase6
-        .auth_refresh_accounts
-        .retain(|key, _| state.phase6.auth_refresh_results.contains_key(key));
-    trim_replay_cache(&mut state.phase6.auth_revoke_results);
-    trim_replay_cache(&mut state.phase6.moderation_results);
-    prune_moderation_cooldowns(state);
-    trim_replay_cache(&mut state.phase3.request_results);
-    trim_replay_cache(&mut state.phase4.request_results);
-    trim_replay_cache(&mut state.phase5.request_results);
-    trim_replay_cache(&mut state.phase6.request_results);
-    trim_moderation_reports(&mut state.phase6, super::phase4::unix_time_seconds());
-    for identity in state.identities.values_mut() {
-        trim_replay_cache(&mut identity.farming_results);
-        trim_replay_cache(&mut identity.trade_results);
-        trim_replay_cache(&mut identity.movement_results);
-        trim_replay_cache(&mut identity.chat_results);
-    }
-    trim_audits(&mut state.phase6.audits);
-    if config.backup_interval_ticks > 0 && state.tick.is_multiple_of(config.backup_interval_ticks) {
-        Some(backup::write(state, config))
-    } else {
-        None
-    }
+    maintenance::run(state, config)
 }
 
 fn is_support_operator(config: &ServerConfig, account_id: &str) -> bool {
