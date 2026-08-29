@@ -10,6 +10,7 @@ use tarrowyn_protocol::{
 
 mod event_retention;
 mod household_history;
+mod input_bounds;
 mod market_history;
 mod market_retention;
 mod moderation;

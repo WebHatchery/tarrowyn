@@ -126,10 +126,7 @@ pub(super) fn intervene_event(
             Some("That regional event is not recorded.".to_owned()),
         );
     };
-    let Some(intervention) = intervention
-        .map(str::trim)
-        .filter(|value| !value.is_empty())
-    else {
+    let Some(intervention) = intervention.filter(|value| !value.is_empty()) else {
         return (
             false,
             None,

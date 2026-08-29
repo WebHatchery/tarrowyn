@@ -130,6 +130,12 @@ impl WorldRepository {
         expire_sessions(&mut state, &self.config);
         let key = authenticate(&mut state, token, &self.config)?;
         validate_request_id(&request.request_id)?;
+        let route_id = super::validate_bounded_text(
+            &request.route_id,
+            160,
+            "invalid_route_id",
+            "A regional route selector must be bounded and contain no control characters.",
+        )?;
         let cache_key = cache_key(&key, &request.request_id);
         if let Some(Phase5Response::Route(response)) = state.phase5.request_results.get(&cache_key)
         {
@@ -142,7 +148,7 @@ impl WorldRepository {
             .phase5
             .routes
             .iter()
-            .position(|route| route.route_id == request.route_id);
+            .position(|route| route.route_id == route_id);
         let Some(route_index) = route_index else {
             return Err(RepositoryError::new(
                 404,
@@ -236,6 +242,16 @@ impl WorldRepository {
         expire_sessions(&mut state, &self.config);
         let key = authenticate(&mut state, token, &self.config)?;
         validate_request_id(&request.request_id)?;
+        let route_id = super::validate_optional_identifier(
+            request.route_id.as_deref(),
+            "invalid_route_id",
+            "A regional route selector must be bounded and contain no control characters.",
+        )?;
+        let _travel_id = super::validate_optional_identifier(
+            request.travel_id.as_deref(),
+            "invalid_travel_id",
+            "A travel selector must be bounded and contain no control characters.",
+        )?;
         let cache_key = cache_key(&key, &request.request_id);
         if let Some(Phase5Response::Travel(response)) = state.phase5.request_results.get(&cache_key)
         {
@@ -281,7 +297,7 @@ impl WorldRepository {
                     );
                     current_travel
                 } else {
-                    let Some(route_id) = request.route_id.as_deref() else {
+                    let Some(route_id) = route_id.as_deref() else {
                         reason = Some("Choose a visible route before starting travel.".to_owned());
                         let response =
                             travel_response(&mut state, &key, request, None, false, reason);
@@ -447,12 +463,22 @@ impl WorldRepository {
     pub fn market_order(
         &self,
         token: &str,
-        request: MarketOrderRequest,
+        mut request: MarketOrderRequest,
     ) -> Result<ApiResponse<MarketOrderResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
         expire_sessions(&mut state, &self.config);
         let key = authenticate(&mut state, token, &self.config)?;
         validate_request_id(&request.request_id)?;
+        request.order_id = super::validate_optional_identifier(
+            request.order_id.as_deref(),
+            "invalid_order_id",
+            "A market-order selector must be bounded and contain no control characters.",
+        )?;
+        request.destination_location_id = super::validate_optional_identifier(
+            request.destination_location_id.as_deref(),
+            "invalid_location_id",
+            "A destination location selector must be bounded and contain no control characters.",
+        )?;
         let cache_key = cache_key(&key, &request.request_id);
         if let Some(Phase5Response::Market(response)) = state.phase5.request_results.get(&cache_key)
         {
@@ -547,6 +573,16 @@ impl WorldRepository {
         expire_sessions(&mut state, &self.config);
         let key = authenticate(&mut state, token, &self.config)?;
         validate_request_id(&request.request_id)?;
+        let event_id = super::validate_optional_identifier(
+            request.event_id.as_deref(),
+            "invalid_event_id",
+            "A regional event selector must be bounded and contain no control characters.",
+        )?;
+        let intervention = super::validate_optional_identifier(
+            request.intervention.as_deref(),
+            "invalid_intervention",
+            "A regional intervention must be bounded and contain no control characters.",
+        )?;
         let cache_key = cache_key(&key, &request.request_id);
         if let Some(Phase5Response::Event(response)) = state.phase5.request_results.get(&cache_key)
         {
@@ -557,12 +593,10 @@ impl WorldRepository {
         }
         let (accepted, event, reason) = match request.action {
             RegionalEventAction::Seed => seed_event(&mut state),
-            RegionalEventAction::Intervene => intervene_event(
-                &mut state,
-                request.event_id.as_deref(),
-                request.intervention.as_deref(),
-            ),
-            RegionalEventAction::Resolve => resolve_event(&mut state, request.event_id.as_deref()),
+            RegionalEventAction::Intervene => {
+                intervene_event(&mut state, event_id.as_deref(), intervention.as_deref())
+            }
+            RegionalEventAction::Resolve => resolve_event(&mut state, event_id.as_deref()),
         };
         let response = RegionalEventResponse {
             request_id: request.request_id.clone(),
