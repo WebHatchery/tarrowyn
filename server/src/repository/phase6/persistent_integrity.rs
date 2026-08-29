@@ -94,6 +94,7 @@ fn core_ok(state: &RepositoryState, config: &ServerConfig, account_ids: &HashSet
 }
 
 fn phase3_ok(state: &RepositoryState, config: &ServerConfig, account_ids: &HashSet<&str>) -> bool {
+    let sequence_ok = state.phase3.next_event_id > 0;
     let threat = crate::content::threat_template("whisperwood-edge");
     let zone = &state.phase3.zone;
     let zone_ok = zone.zone_id == threat.id
@@ -192,7 +193,8 @@ fn phase3_ok(state: &RepositoryState, config: &ServerConfig, account_ids: &HashS
         .outpost
         .is_none_or(|position| position_in_world(position, config));
 
-    zone_ok
+    sequence_ok
+        && zone_ok
         && contracts_ok
         && households_ok
         && claim_ok

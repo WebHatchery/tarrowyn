@@ -509,6 +509,10 @@ Core identity timing integrity now rejects future last-seen ticks and tax days
 relative to the authoritative world clock. One focused regression covers a
 future identity activity tick.
 
+Phase 3 state integrity now requires a live chronicle sequence counter and
+retains the contract-progress identity cross-reference. Two focused
+regressions cover a zeroed chronicle sequence and orphaned contract progress.
+
 The cross-layer persistence-readiness milestone passed the full release gate on
 2026-08-30 after the core and Phase 3-6 integrity additions: 14 protocol tests,
 282 server tests, and 93 client tests, followed by asset/code-standard checks,
