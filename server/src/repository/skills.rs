@@ -134,6 +134,10 @@ impl WorldRepository {
         expire_sessions(&mut state, &self.config);
         super::phase4::prune_school_lessons(&mut state);
         let key = authenticate(&mut state, token, &self.config)?;
+        let discovered = discover_eligible(&mut state, &key);
+        if discovered {
+            self.persist(&state);
+        }
         Ok(ApiResponse {
             meta: meta(state.tick, None, Some(state.cursor)),
             data: skills_view(&state, &key),
@@ -616,7 +620,7 @@ pub(super) fn record_weapon_defeat(state: &mut RepositoryState, key: &str, weapo
     }
 }
 
-fn discover_eligible(state: &mut RepositoryState, key: &str) {
+fn discover_eligible(state: &mut RepositoryState, key: &str) -> bool {
     let identity = state.identities.get(key).expect("identity exists");
     let newly_discovered: Vec<String> = catalog()
         .skills
@@ -637,7 +641,7 @@ fn discover_eligible(state: &mut RepositoryState, key: &str) {
         .map(|definition| definition.id.clone())
         .collect();
     if newly_discovered.is_empty() {
-        return;
+        return false;
     }
     for skill_id in newly_discovered {
         state
@@ -653,6 +657,7 @@ fn discover_eligible(state: &mut RepositoryState, key: &str) {
             &format!("A hidden skill has been discovered: {skill_id}."),
         );
     }
+    true
 }
 
 fn qualifying_requirements_met(ledger: &SkillLedger, definition: &SkillDefinition) -> bool {

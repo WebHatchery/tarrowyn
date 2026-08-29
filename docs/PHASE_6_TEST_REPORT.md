@@ -54,6 +54,9 @@ manifest.
 The fixed-NPC household regression confirms the Bellweather service household
 follows validated NPC-household content without exposing a general family
 simulation contract.
+The skill-catalogue regressions confirm direct root guidance, non-empty advanced
+discovery requirements, and re-evaluation of stored prerequisite history when a
+new advanced merger becomes eligible.
 The chronicle regression confirms the newest 64 entries remain in the normal
 settlement view while older entries move to a durable archive, contribute a
 bounded summary, and remain discoverable through authenticated full-history

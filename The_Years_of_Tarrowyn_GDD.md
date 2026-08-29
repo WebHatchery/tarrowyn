@@ -184,6 +184,9 @@ Hints use three broad stages: no special hint before the character has relevant 
 The server evaluates unlocks authoritatively and records the qualifying history needed by each character. Progress counters may be hidden, approximate, or revealed through suitable knowledge skills; the design should avoid turning every mystery into a visible checklist.
 
 Discovery belongs to the persistent world. Some valid-looking combinations may not exist yet. New content can add a merger later, at which point the server should evaluate existing character history where practical. A veteran who already satisfied durable requirements should not need to repeat years of play merely because the recipe was added later.
+When a character's skill catalogue is read after content changes, the server
+rechecks stored prerequisite practice and qualifying history before presenting
+the view, and persists any newly eligible discovery.
 
 Unknown combinations must fail gracefully. Experimenting should still exercise and improve the component skills where appropriate, rather than consuming rare resources solely to return an opaque failure message.
 

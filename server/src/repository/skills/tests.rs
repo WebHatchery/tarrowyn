@@ -156,6 +156,46 @@ fn practice_is_persistent_and_complete_discoveries_are_authoritative() {
 }
 
 #[test]
+fn skills_read_rechecks_stored_history_for_new_discoveries() {
+    let repository = WorldRepository::new(ServerConfig {
+        backup_path: None,
+        ..ServerConfig::default()
+    });
+    let session = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("skills-history-recheck".to_owned()),
+            reset: false,
+        })
+        .expect("guest session");
+    {
+        let mut state = repository.state.lock().expect("state lock");
+        let identity = state
+            .identities
+            .get_mut(&session.data.client_key)
+            .expect("identity exists");
+        for skill in ["sword-fighting", "spear-fighting", "axe-fighting"] {
+            identity.skills.practice.insert(skill.to_owned(), 16);
+        }
+        for (family, count) in [("sword", 60), ("spear", 20), ("axe", 20)] {
+            identity
+                .skills
+                .qualifying_events
+                .insert(format!("weapon_defeats:{family}"), count);
+        }
+    }
+
+    let response = repository.skills(&session.data.account_token).unwrap();
+    let weapon = response
+        .data
+        .skills
+        .iter()
+        .find(|skill| skill.skill_id == "weapon-fighting")
+        .expect("advanced skill remains in the catalogue");
+    assert_eq!(weapon.status, SkillStatus::Discovered);
+    assert!(response.data.cursor > 0);
+}
+
+#[test]
 fn a_nearby_master_can_teach_a_root_once() {
     let repository = WorldRepository::new(ServerConfig {
         backup_path: None,

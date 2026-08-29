@@ -132,6 +132,9 @@ region, household, infrastructure, NPC-household, recipe, calendar, and game-con
 records and rejects duplicate IDs, incomplete
 records, unknown route or settlement locations, invalid event stages, and a
 day-length mismatch. The validator protects future content additions; wiring
+the skill catalogue into the authenticated skills read also rechecks stored
+prerequisite practice and qualifying history, persisting a newly eligible
+discovery after a content release without requiring repeated play.
 the crop manifest into server planting now follows that validated order, and
 regional event seeding now consumes the validated event narrative by manifest
 order, and settlement projections consume their manifest condition, opportunity,
