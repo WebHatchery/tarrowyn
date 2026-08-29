@@ -1,7 +1,7 @@
 use super::*;
 use crate::config::ServerConfig;
 use crate::repository::WorldRepository;
-use tarrowyn_protocol::GuestSessionRequest;
+use tarrowyn_protocol::{ExpeditionAction, ExpeditionRequest, GuestSessionRequest};
 
 fn guest(repository: &WorldRepository) -> tarrowyn_protocol::GuestSessionResponse {
     repository
@@ -48,4 +48,33 @@ fn chronicle_keeps_archived_entries_searchable_and_summarised() {
         .iter()
         .any(|entry| entry.title == "Achievement 00"));
     assert_eq!(search.summary.expect("search summary").entry_count, 1);
+}
+
+#[test]
+fn expedition_rejects_unbounded_or_controlled_outpost_names() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = guest(&repository);
+    for (request_id, outpost_name) in [
+        ("long-outpost-name", "x".repeat(81)),
+        ("controlled-outpost-name", "Lantern\nRest".to_owned()),
+    ] {
+        let error = repository
+            .expedition(
+                &session.account_token,
+                ExpeditionRequest {
+                    request_id: request_id.to_owned(),
+                    action: ExpeditionAction::Announce,
+                    expedition_id: None,
+                    role: None,
+                    food: 0,
+                    tools: 0,
+                    materials: 0,
+                    safety: 0,
+                    outpost_name: Some(outpost_name),
+                },
+            )
+            .expect_err("malformed outpost name should be rejected");
+        assert_eq!(error.status, 400);
+        assert_eq!(error.error.code, "invalid_outpost_name");
+    }
 }

@@ -8,6 +8,26 @@ use tarrowyn_protocol::{
     ExpeditionStatus, FrontierEvent, LandClaim, Position,
 };
 
+const MAX_OUTPOST_NAME_CHARS: usize = 80;
+
+fn validate_outpost_name(name: Option<&str>) -> Result<Option<String>, RepositoryError> {
+    let Some(name) = name else {
+        return Ok(None);
+    };
+    let name = name.trim();
+    if name.is_empty() {
+        return Ok(None);
+    }
+    if name.chars().count() > MAX_OUTPOST_NAME_CHARS || name.chars().any(char::is_control) {
+        return Err(RepositoryError::new(
+            400,
+            "invalid_outpost_name",
+            "The outpost name must be at most 80 characters and contain no control characters.",
+        ));
+    }
+    Ok(Some(name.to_owned()))
+}
+
 pub(super) fn backfill_expedition_credentials(phase: &mut super::phase3::Phase3State) {
     let Some(expedition) = phase.expedition.as_ref() else {
         return;
@@ -160,6 +180,11 @@ impl WorldRepository {
         expire_sessions(&mut state, &self.config);
         let key = authenticate(&mut state, token, &self.config)?;
         validate_request_id(&request.request_id)?;
+        let requested_outpost_name = if request.action == ExpeditionAction::Announce {
+            validate_outpost_name(request.outpost_name.as_deref())?
+        } else {
+            None
+        };
         let cache_key = cache_key(&key, &request.request_id);
         if let Some(Phase3Response::Expedition(response)) =
             state.phase3.request_results.get(&cache_key)
@@ -193,8 +218,7 @@ impl WorldRepository {
                     let role = request.role.unwrap_or(ExpeditionRole::Scout);
                     let expedition = Expedition {
                         expedition_id: "pioneer-1".to_owned(),
-                        outpost_name: request
-                            .outpost_name
+                        outpost_name: requested_outpost_name
                             .unwrap_or_else(|| "Lantern Rest".to_owned()),
                         leader_account_id: account_id.clone(),
                         members: vec![ExpeditionMember {
