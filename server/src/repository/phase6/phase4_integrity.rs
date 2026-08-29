@@ -10,6 +10,7 @@ const MAX_KNOWLEDGE_ID_CHARS: usize = 160;
 const MAX_KNOWLEDGE_TEXT_CHARS: usize = 240;
 const MAX_COMBAT_TEXT_CHARS: usize = 160;
 const MAX_LESSON_TEXT_CHARS: usize = 160;
+const MAX_GOVERNANCE_TEXT_CHARS: usize = 240;
 
 pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
     let account_ids: HashSet<&str> = state
@@ -50,7 +51,19 @@ pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
                 .map(|office| office.office_id.as_str()),
         )
         && governance.offices.iter().all(|office| {
-            optional_account_reference_ok(office.holder_account_id.as_deref(), &account_ids)
+            bounded_text(&office.office_id, MAX_GOVERNANCE_TEXT_CHARS)
+                && bounded_text(&office.title, MAX_HOUSEHOLD_TEXT_CHARS)
+                && bounded_text(&office.authority, MAX_GOVERNANCE_TEXT_CHARS)
+                && optional_account_reference_ok(office.holder_account_id.as_deref(), &account_ids)
+                && office
+                    .holder_name
+                    .as_deref()
+                    .is_none_or(|name| bounded_text(name, MAX_HOUSEHOLD_TEXT_CHARS))
+                && office.holder_account_id.is_some() == office.holder_name.is_some()
+                && office
+                    .vacancy_reason
+                    .as_deref()
+                    .is_none_or(|reason| bounded_text(reason, MAX_GOVERNANCE_TEXT_CHARS))
                 && office.last_active_tick <= state.tick
                 && office.vacant == office.holder_account_id.is_none()
         })
@@ -61,11 +74,15 @@ pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
                 .map(|proposal| proposal.proposal_id.as_str()),
         )
         && governance.proposals.iter().all(|proposal| {
-            account_reference_ok(&proposal.proposer_account_id, &account_ids)
+            bounded_text(&proposal.proposal_id, MAX_KNOWLEDGE_ID_CHARS)
+                && account_reference_ok(&proposal.proposer_account_id, &account_ids)
                 && optional_account_reference_ok(proposal.approved_by.as_deref(), &account_ids)
-                && !proposal.target.trim().is_empty()
+                && bounded_text(&proposal.proposer_name, MAX_HOUSEHOLD_TEXT_CHARS)
+                && bounded_text(&proposal.target, MAX_HOUSEHOLD_TEXT_CHARS)
                 && proposal.cost > 0
                 && proposal.created_tick <= state.tick
+                && (proposal.status == tarrowyn_protocol::ProposalStatus::Completed)
+                    == proposal.completed_tick.is_some()
                 && proposal
                     .completed_tick
                     .is_none_or(|tick| tick >= proposal.created_tick && tick <= state.tick)
@@ -85,10 +102,18 @@ pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
                 && decision.cost > 0
                 && decision.created_tick <= state.tick
         })
-        && governance
-            .taxation
-            .as_ref()
-            .is_none_or(|policy| policy.rate_percent <= MAX_TAX_RATE_PERCENT)
+        && governance.taxation.as_ref().is_none_or(|policy| {
+            bounded_text(&policy.payer, MAX_GOVERNANCE_TEXT_CHARS)
+                && bounded_text(&policy.recipient, MAX_GOVERNANCE_TEXT_CHARS)
+                && policy.rate_percent <= MAX_TAX_RATE_PERCENT
+                && unique_non_empty(policy.exemptions.iter().map(String::as_str))
+                && policy
+                    .exemptions
+                    .iter()
+                    .all(|exemption| bounded_text(exemption, MAX_GOVERNANCE_TEXT_CHARS))
+                && bounded_text(&policy.accounting_note, MAX_GOVERNANCE_TEXT_CHARS)
+                && bounded_text(&policy.recovery_path, MAX_GOVERNANCE_TEXT_CHARS)
+        })
         && unique_non_empty(
             governance
                 .tax_ledger
