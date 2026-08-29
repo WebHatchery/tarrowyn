@@ -12,6 +12,33 @@ fn refresh_is_scheduled_before_a_production_session_expires() {
 #[test]
 fn route_repair_button_queues_an_authoritative_repair() {
     let mut client = Phase5Client::new();
+    client.region = Some(tarrowyn_protocol::RegionSnapshot {
+        region_id: "hearthlands".to_owned(),
+        season: "thaw".to_owned(),
+        calendar_day: 1,
+        locations: Vec::new(),
+        routes: vec![RouteRecord {
+            route_id: "north-pack-road".to_owned(),
+            name: "North Pack Road".to_owned(),
+            origin_location_id: "hearth".to_owned(),
+            destination_location_id: "whisperwood-outpost".to_owned(),
+            transport: "pack road".to_owned(),
+            length: 6,
+            risk_percent: 44,
+            condition: 42,
+            capacity: 3,
+            travel_ticks: 6,
+            repair_cost: 4,
+            status: RouteStatus::Threatened,
+            last_action_tick: 0,
+            note: "The road needs a repair crew.".to_owned(),
+        }],
+        visible_settlements: Vec::new(),
+        player_location_id: "hearth".to_owned(),
+        travel: None,
+        interest_radius: 12,
+        cursor: 0,
+    });
 
     client.queue_cycle("route-repair");
 

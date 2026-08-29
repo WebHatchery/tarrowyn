@@ -1,4 +1,5 @@
 use super::*;
+use tarrowyn_protocol::RouteStatus;
 
 pub(super) fn draw_sidebar(
     ctx: &UiContext<'_>,
@@ -220,8 +221,8 @@ pub(super) fn draw_sidebar(
                 "Repair",
                 ctx.regional_region.is_some_and(|region| {
                     region.routes.iter().any(|route| {
-                        route.route_id == "north-pack-road"
-                            && route.origin_location_id == region.player_location_id
+                        route.origin_location_id == region.player_location_id
+                            && route.status != RouteStatus::Operational
                     })
                 }),
                 ButtonTone::Positive,

@@ -275,11 +275,25 @@ impl Phase5Client {
                     self.deletion_armed = true;
                 }
             }
-            "route-repair" => self.commands.push_back(Phase5Command::Route(RouteRequest {
-                request_id,
-                route_id: "north-pack-road".to_owned(),
-                action: RouteAction::Repair,
-            })),
+            "route-repair" => {
+                let Some(route_id) = self.region.as_ref().and_then(|region| {
+                    region
+                        .routes
+                        .iter()
+                        .find(|route| {
+                            route.origin_location_id == region.player_location_id
+                                && route.status != tarrowyn_protocol::RouteStatus::Operational
+                        })
+                        .map(|route| route.route_id.clone())
+                }) else {
+                    return;
+                };
+                self.commands.push_back(Phase5Command::Route(RouteRequest {
+                    request_id,
+                    route_id,
+                    action: RouteAction::Repair,
+                }));
+            }
             _ => {}
         }
     }
