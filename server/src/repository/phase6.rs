@@ -20,6 +20,7 @@ mod operations;
 mod persistent_integrity;
 mod phase4_integrity;
 mod production_integrity;
+mod regional_integrity;
 mod repair;
 mod retention;
 

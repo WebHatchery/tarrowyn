@@ -445,3 +445,8 @@ claim and free-plot positions.
 Regional market integrity now also requires every persisted order owner to be a
 current account or the deletion-safe former-resident marker. One focused
 regression covers an order whose owner reference has disappeared.
+
+Regional event integrity now validates lifecycle text, affected-location
+uniqueness and references, intervention choices, stage/outcome combinations,
+tick ordering, and retained cursors. Two focused regressions cover an invalid
+intervention choice and a missing event cursor.

@@ -2,8 +2,8 @@ use super::super::{ServerConfig, WorldRepository};
 use tarrowyn_protocol::{
     AccountDeletionRequest, AuthLinkRequest, ClaimLifecycleAction, ClaimLifecycleRequest,
     CommodityKind, CropKind, CropState, GovernanceRequest, MarketOrder, MarketOrderStatus,
-    RegionalEvent, RegionalEventStage, RegionalHousehold, TradeBundle, TradeOffer, TradeStatus,
-    TravelState, TravelStatus,
+    RegionalEvent, RegionalEventAction, RegionalEventRequest, RegionalEventStage,
+    RegionalHousehold, TradeBundle, TradeOffer, TradeStatus, TravelState, TravelStatus,
 };
 
 #[test]
@@ -121,6 +121,56 @@ fn invalid_market_order_account_reference_degrades_readiness() {
             route_id: "saltmere-ferry".to_owned(),
             fallback_used: false,
         });
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
+fn invalid_regional_event_choice_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = super::guest(&repository, "integrity-regional-event-choice");
+    repository
+        .event_action(
+            &session.account_token,
+            RegionalEventRequest {
+                request_id: "integrity-regional-event-seed".to_owned(),
+                action: RegionalEventAction::Seed,
+                event_id: None,
+                intervention: None,
+            },
+        )
+        .expect("regional event seed");
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state.phase5.events[0].chosen_intervention = Some("missing-intervention".to_owned());
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
+fn invalid_regional_event_cursor_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = super::guest(&repository, "integrity-regional-event-cursor");
+    repository
+        .event_action(
+            &session.account_token,
+            RegionalEventRequest {
+                request_id: "integrity-regional-event-cursor-seed".to_owned(),
+                action: RegionalEventAction::Seed,
+                event_id: None,
+                intervention: None,
+            },
+        )
+        .expect("regional event seed");
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state.phase5.events[0].cursor = 0;
     }
 
     let health = repository.ops_health().data;
