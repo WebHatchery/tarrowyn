@@ -663,6 +663,14 @@ fn merge_regional_events(
     incoming: RegionalEventsResponse,
 ) {
     let Some(current) = current else {
+        let mut incoming = incoming;
+        let excess = incoming
+            .events
+            .len()
+            .saturating_sub(MAX_CACHED_REGIONAL_EVENTS);
+        if excess > 0 {
+            incoming.events.drain(..excess);
+        }
         *current = Some(incoming);
         return;
     };

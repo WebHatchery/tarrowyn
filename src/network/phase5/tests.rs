@@ -440,6 +440,34 @@ fn regional_event_cache_stays_bounded_after_incremental_updates() {
 }
 
 #[test]
+fn regional_event_initial_cache_stays_bounded() {
+    let mut current = None;
+    merge_regional_events(
+        &mut current,
+        RegionalEventsResponse {
+            events: (0..=MAX_CACHED_REGIONAL_EVENTS)
+                .map(|index| {
+                    regional_event(
+                        &format!("initial-event-{index}"),
+                        tarrowyn_protocol::RegionalEventStage::Aftermath,
+                        index as u64,
+                    )
+                })
+                .collect(),
+            cursor: MAX_CACHED_REGIONAL_EVENTS as u64,
+        },
+    );
+
+    let current = current.expect("initial regional events should be cached");
+    assert_eq!(current.events.len(), MAX_CACHED_REGIONAL_EVENTS);
+    assert_eq!(current.events.first().unwrap().event_id, "initial-event-1");
+    assert_eq!(
+        current.events.last().unwrap().event_id,
+        "initial-event-2048"
+    );
+}
+
+#[test]
 fn regional_cursor_reset_discards_stale_events_and_restarts_refresh() {
     let mut client = Phase5Client::new();
     client.region = Some(tarrowyn_protocol::RegionSnapshot {
