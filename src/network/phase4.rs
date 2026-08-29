@@ -3,12 +3,12 @@ use super::{is_transient_transport_error, NetworkNotice, REQUEST_TIMEOUT_SECONDS
 use macroquad_toolkit::net::{HttpClient, Pending};
 use std::collections::VecDeque;
 use tarrowyn_protocol::{
-    ApiResponse, AuthSession, ClaimLifecycleAction, ClaimLifecycleRequest, ClaimsResponse,
-    GovernanceAction, GovernanceRequest, GovernanceResponse, GovernanceState, GuestSessionResponse,
-    HouseholdsResponse, KnowledgeAction, KnowledgeRequest, KnowledgeResponse, LocalCombatAction,
-    LocalCombatRequest, LocalCombatResponse, LocalCombatState, ProfessionAction, ProfessionKind,
-    ProfessionRequest, ProfessionResponse, ProfessionsResponse, SkillAction, SkillRequest,
-    SkillResponse, SkillStatus, SkillsResponse, WeaponKind,
+    ApiResponse, ClaimLifecycleAction, ClaimLifecycleRequest, ClaimsResponse, GovernanceAction,
+    GovernanceRequest, GovernanceResponse, GovernanceState, HouseholdsResponse, KnowledgeAction,
+    KnowledgeRequest, KnowledgeResponse, LocalCombatAction, LocalCombatRequest,
+    LocalCombatResponse, LocalCombatState, ProfessionAction, ProfessionKind, ProfessionRequest,
+    ProfessionResponse, ProfessionsResponse, SkillAction, SkillRequest, SkillResponse, SkillStatus,
+    SkillsResponse, WeaponKind,
 };
 
 const MAX_COMMAND_RETRIES: u8 = 3;
@@ -19,6 +19,7 @@ mod lifecycle;
 mod online;
 mod polling;
 mod recovery;
+mod regional;
 mod registry;
 mod summary;
 
@@ -727,75 +728,6 @@ impl Phase4Client {
 
     pub(super) fn summary(&self) -> String {
         summary::render(self)
-    }
-
-    pub(super) fn queue_region_cycle(&mut self, id: &str) -> bool {
-        self.regional.queue_cycle(id)
-    }
-
-    pub(super) fn auth_refresh_pending(&self) -> bool {
-        self.regional.auth_refresh_pending()
-    }
-
-    pub(super) fn queue_region_report(
-        &mut self,
-        request_id: String,
-        target_account_id: Option<String>,
-        message_id: Option<u64>,
-    ) -> bool {
-        self.regional
-            .queue_report(request_id, target_account_id, message_id)
-    }
-
-    pub(super) fn region_summary(&self) -> String {
-        self.regional.summary()
-    }
-
-    pub(super) fn regional_travel_control(&self) -> (&'static str, bool, bool) {
-        self.regional.travel_control()
-    }
-
-    pub(super) fn has_open_market_order(&self) -> bool {
-        self.regional.has_open_market_order()
-    }
-
-    pub(super) fn regional_inspection(&self) -> String {
-        self.regional.inspection()
-    }
-
-    pub(super) fn regional_season(&self) -> Option<&str> {
-        self.regional.season()
-    }
-
-    pub(super) fn regional_region(&self) -> Option<&tarrowyn_protocol::RegionSnapshot> {
-        self.regional.region_snapshot()
-    }
-
-    pub(super) fn take_linked_account(
-        &mut self,
-        client_key: Option<&str>,
-    ) -> Option<GuestSessionResponse> {
-        self.regional.take_linked_account(client_key)
-    }
-
-    pub(super) fn take_logged_out(&mut self) -> bool {
-        self.regional.take_logged_out()
-    }
-
-    pub(super) fn deletion_armed(&self) -> bool {
-        self.regional.deletion_armed()
-    }
-
-    pub(super) fn take_refreshed_session(&mut self) -> Option<AuthSession> {
-        self.regional.take_refreshed_session()
-    }
-
-    pub(super) fn storm_magic_unlocked(&self) -> bool {
-        self.skills.as_ref().is_some_and(|skills| {
-            skills.skills.iter().any(|skill| {
-                skill.skill_id == "storm-magic" && skill.status == SkillStatus::Discovered
-            })
-        })
     }
 }
 
