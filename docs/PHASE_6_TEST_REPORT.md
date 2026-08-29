@@ -142,11 +142,12 @@ startup instead of being allowed to overwrite an in-memory snapshot.
 ## Security gate
 
 Representative checks cover unsupported identity providers, bounded provider
-subjects, empty repair notes, request-ID and 64 KiB request-body validation, idempotent regional
-mutations, expired/revoked access, refresh rotation, chat limits, and the
-protected no-PvP law response. Chat metadata, direct trades, claims, governance,
-moderation reports, and support repairs are audit-linked without copying chat
-text into the audit stream. Moderation reports are queued and audit-linked. The
+subjects and linked display names, bounded guest client keys, proposal targets,
+expedition outpost names, empty repair notes, request-ID and 64 KiB request-body
+validation, idempotent regional mutations, expired/revoked access, refresh
+rotation, chat limits, and the protected no-PvP law response. Chat metadata,
+direct trades, claims, governance, moderation reports, and support repairs are
+audit-linked without copying chat text into the audit stream. Moderation reports are queued and audit-linked. The
 support account view is operator-only, returns the requested character-facing
 records and cursor, and excludes session tokens and provider subjects. Support
 repair fixtures now prove an active claim's access flag can be restored without
@@ -167,6 +168,13 @@ crop and seed counters, confirming the support ceiling applies to every item
 field and remains replay-safe.
 The provider secret and TLS termination remain deployment concerns and are not
 stored in the repository.
+
+After the Storm Magic milestone release gate, maintenance changes have used
+focused checks for only the changed subsystem: lifecycle chronicle transitions,
+regional history locality, and persisted input boundaries each run their
+targeted repository test plus formatting and diff checks. The full release gate
+is reserved for the next major milestone or a change that crosses subsystem
+boundaries.
 
 ## Load and failure gate
 
