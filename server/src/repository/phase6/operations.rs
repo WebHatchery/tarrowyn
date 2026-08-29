@@ -401,6 +401,54 @@ fn integrity_ok(state: &RepositoryState) -> bool {
         .settlements
         .iter()
         .all(|settlement| location_ids.contains(settlement.location_id.as_str()));
+    let market_orders_ok = unique_non_empty(
+        state
+            .phase5
+            .market_orders
+            .iter()
+            .map(|order| order.order_id.as_str()),
+    ) && state.phase5.market_orders.iter().all(|order| {
+        let Some(route) = state
+            .phase5
+            .routes
+            .iter()
+            .find(|route| route.route_id == order.route_id)
+        else {
+            return false;
+        };
+        location_ids.contains(order.origin_location_id.as_str())
+            && location_ids.contains(order.destination_location_id.as_str())
+            && route.origin_location_id == order.origin_location_id
+            && route.destination_location_id == order.destination_location_id
+            && order.quantity > 0
+            && order.unit_price > 0
+            && order.total_price == order.unit_price.saturating_mul(order.quantity)
+    });
+    let travel_ids_ok = unique_non_empty(
+        state
+            .phase5
+            .travel
+            .values()
+            .map(|travel| travel.travel_id.as_str()),
+    ) && state.phase5.travel.iter().all(|(identity_key, travel)| {
+        let Some(route) = state
+            .phase5
+            .routes
+            .iter()
+            .find(|route| route.route_id == travel.route_id)
+        else {
+            return false;
+        };
+        state.identities.contains_key(identity_key)
+            && location_ids.contains(travel.origin_location_id.as_str())
+            && location_ids.contains(travel.destination_location_id.as_str())
+            && ((route.origin_location_id == travel.origin_location_id
+                && route.destination_location_id == travel.destination_location_id)
+                || (route.origin_location_id == travel.destination_location_id
+                    && route.destination_location_id == travel.origin_location_id))
+            && travel.progress <= 100
+            && travel.risk_percent <= 100
+    });
     let unique_characters = state
         .identities
         .values()
@@ -413,6 +461,8 @@ fn integrity_ok(state: &RepositoryState) -> bool {
         && !state.phase5.routes.is_empty()
         && !state.phase5.settlements.is_empty()
         && regional_topology_ok
+        && market_orders_ok
+        && travel_ids_ok
         && state.phase5.routes.iter().all(|route| {
             route.length > 0
                 && route.risk_percent <= 100

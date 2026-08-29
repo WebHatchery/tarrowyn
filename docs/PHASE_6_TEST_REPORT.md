@@ -356,3 +356,9 @@ accelerated calendar, market expiry, public tax collection and upkeep, regional
 event resolution and chronicle retention, and newcomer seeds, locations, and
 vacancies. It proves fixture continuity and recovery boundaries without treating
 the deferred season/year pacing as a final product decision.
+
+The readiness integrity check also rejects restored market orders that point to
+unknown routes or locations, and restored journeys whose route reference or
+endpoints no longer resolve. Focused repository regressions cover both failure
+boundaries; this maintenance slice used the targeted server test and did not
+rerun the full release gate.
