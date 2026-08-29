@@ -1,6 +1,7 @@
 use super::super::super::{ServerConfig, WorldRepository};
 use tarrowyn_protocol::{
-    AccountDeletionRequest, GuestSessionRequest, SupportRepairAction, SupportRepairRequest,
+    AccountDeletionRequest, AuthRefreshRequest, GuestSessionRequest, SupportRepairAction,
+    SupportRepairRequest,
 };
 
 #[test]
@@ -132,5 +133,21 @@ fn account_deletion_rejects_unbounded_or_controlled_account_ids() {
             .expect_err("invalid account ID should be rejected");
         assert_eq!(error.status, 400);
         assert_eq!(error.error.code, "invalid_account_id");
+    }
+}
+
+#[test]
+fn auth_refresh_rejects_unbounded_or_controlled_tokens() {
+    let repository = WorldRepository::new(ServerConfig::default());
+
+    for refresh_token in ["x".repeat(513), "refresh\nwith-control".to_owned()] {
+        let error = repository
+            .auth_refresh(AuthRefreshRequest {
+                request_id: format!("refresh-input-{}", refresh_token.len()),
+                refresh_token,
+            })
+            .expect_err("invalid refresh token should be rejected");
+        assert_eq!(error.status, 400);
+        assert_eq!(error.error.code, "invalid_refresh_token");
     }
 }

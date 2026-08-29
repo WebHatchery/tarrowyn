@@ -44,7 +44,9 @@ expedition, claim, knowledge, profession, governance, trade, and lesson
 selectors, regional route, travel, market, and event selectors, event
 intervention text, plus moderation target IDs and notes,
 support account and repair selector IDs, and operator notes, use the same
-bounded control-free audit boundary. Chat also has length and per-tick limits;
+bounded control-free audit boundary. Refresh tokens use a separate bounded
+secret boundary and are never copied into responses or audit records. Chat
+also has length and per-tick limits;
 chat metadata, trades, claims, governance, moderation, and support repairs are
 recorded in the audit stream without copying private chat text into audit
 notes. The no-PvP law boundary is still active.

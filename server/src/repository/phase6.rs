@@ -26,6 +26,7 @@ use deletion::PendingAccountDeletion;
 const IDENTITY_PROVIDER: &str = "webhatchery-identity-oidc";
 const PRIVACY_POLICY_VERSION: &str = "2026-08-19";
 const MAX_DISPLAY_NAME_CHARS: usize = 80;
+const MAX_REFRESH_TOKEN_CHARS: usize = 512;
 pub(super) const MAX_MODERATION_REPORTS: usize = 512;
 pub(super) const MODERATION_REPORT_RETENTION_SECONDS: u64 = 90 * 24 * 60 * 60;
 pub(super) const MAX_PENDING_DELETIONS: usize = 128;
@@ -283,10 +284,16 @@ impl WorldRepository {
     ) -> Result<ApiResponse<AuthRefreshResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
         validate_request_id(&request.request_id)?;
+        let refresh_token = validate_bounded_text(
+            &request.refresh_token,
+            MAX_REFRESH_TOKEN_CHARS,
+            "invalid_refresh_token",
+            "The refresh token must be bounded and contain no control characters.",
+        )?;
         let cache_key = format!(
             "{}:{:016x}",
             request.request_id,
-            stable_fingerprint(&request.refresh_token)
+            stable_fingerprint(&refresh_token)
         );
         if let Some(previous) = state.phase6.auth_refresh_results.get(&cache_key).cloned() {
             return Ok(ApiResponse {
@@ -298,7 +305,7 @@ impl WorldRepository {
             .phase6
             .sessions
             .iter()
-            .find(|(_, session)| session.refresh_token == request.refresh_token && !session.revoked)
+            .find(|(_, session)| session.refresh_token == refresh_token && !session.revoked)
             .map(|(token, session)| (token.clone(), session.clone()))
         else {
             return Err(RepositoryError::new(
