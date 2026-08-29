@@ -450,13 +450,12 @@ impl WorldRepository {
     ) -> Result<ApiResponse<AccountDeletionResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
         validate_request_id(&request.request_id)?;
-        if request.account_id.trim().is_empty() || request.account_id.len() > 160 {
-            return Err(RepositoryError::new(
-                400,
-                "invalid_account_id",
-                "The account ID to delete is required and bounded.",
-            ));
-        }
+        let requested_account_id = validate_bounded_text(
+            &request.account_id,
+            160,
+            "invalid_account_id",
+            "The account ID to delete must be bounded and contain no control characters.",
+        )?;
         let key = authenticate(&mut state, token, &self.config)?;
         let account = state
             .identities
@@ -464,7 +463,7 @@ impl WorldRepository {
             .expect("identity exists")
             .account_id
             .clone();
-        if account != request.account_id {
+        if account != requested_account_id {
             return Err(RepositoryError::new(
                 403,
                 "account_boundary_violation",

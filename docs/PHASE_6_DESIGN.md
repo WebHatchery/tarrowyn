@@ -35,8 +35,9 @@ the private-state boundary.
 
 All mutation endpoints validate bounded request IDs and 64 KiB JSON request
 bodies, use server authorization, and retain idempotent results where retries
-can happen. Durable identity and player-provided labels such as linked display
-names, expedition outpost names, and public proposal targets are trimmed,
+can happen. Durable identity and player-provided labels such as account-deletion
+account IDs, linked display names, expedition outpost names, and public proposal
+targets are trimmed,
 bounded, and rejected when they contain control characters; chat text and
 channel names follow the same stored-text boundary. Moderation target IDs and
 notes, plus support account and repair selector IDs and operator notes, use the

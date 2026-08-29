@@ -1,5 +1,7 @@
 use super::super::super::{ServerConfig, WorldRepository};
-use tarrowyn_protocol::{GuestSessionRequest, SupportRepairAction, SupportRepairRequest};
+use tarrowyn_protocol::{
+    AccountDeletionRequest, GuestSessionRequest, SupportRepairAction, SupportRepairRequest,
+};
 
 #[test]
 fn support_account_rejects_unbounded_or_controlled_target_ids() {
@@ -105,4 +107,30 @@ fn support_repair_replay_does_not_skip_selector_validation() {
         .expect_err("malformed replay selector should be rejected");
     assert_eq!(error.status, 400);
     assert_eq!(error.error.code, "invalid_repair_account");
+}
+
+#[test]
+fn account_deletion_rejects_unbounded_or_controlled_account_ids() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let guest = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("account-delete-input".to_owned()),
+            reset: false,
+        })
+        .expect("guest session")
+        .data;
+
+    for account_id in ["x".repeat(161), "account\nwith-control".to_owned()] {
+        let error = repository
+            .account_delete(
+                &guest.account_token,
+                AccountDeletionRequest {
+                    request_id: format!("delete-input-{}", account_id.len()),
+                    account_id,
+                },
+            )
+            .expect_err("invalid account ID should be rejected");
+        assert_eq!(error.status, 400);
+        assert_eq!(error.error.code, "invalid_account_id");
+    }
 }
