@@ -69,6 +69,11 @@ Each settlement projection also rolls up its nearest recognised claims, free
 plots, and public works. The bounded content fixture therefore gives Hearth,
 Whisperwood, and Saltmere distinct facility signals while the Phase 4 registry
 and infrastructure records remain the authoritative mutation surfaces.
+Route status moves safety toward a readable local target, public-work condition
+moves infrastructure toward its authoritative average, local support moves
+industry and remote governance, and Hearth governance follows the Phase 4
+administration-quality record. These changes are deliberately bounded to one
+step per decision interval.
 
 ## Event lifecycle
 

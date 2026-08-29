@@ -26,7 +26,7 @@ fn settlement_activity_is_local_and_declines_after_the_last_player_leaves() {
             < settlement(&baseline, "saltmere").player_activity
     );
 
-    for _ in 0..11 {
+    for _ in 0..9 {
         repository.tick();
     }
     let after_departure = settlement_snapshot(&repository);
@@ -38,7 +38,15 @@ fn settlement_activity_is_local_and_declines_after_the_last_player_leaves() {
         settlement(&after_departure, "saltmere").condition,
         SettlementCondition::Strained
     );
-    assert!(settlement(&after_departure, "saltmere").player_activity < 15);
+    let saltmere = settlement(&after_departure, "saltmere");
+    assert!(saltmere.player_activity < 15);
+    assert!(saltmere.safety < settlement(&baseline, "saltmere").safety);
+    assert!(saltmere.industry < settlement(&baseline, "saltmere").industry);
+    assert!(saltmere.governance < settlement(&baseline, "saltmere").governance);
+    assert_ne!(
+        saltmere.infrastructure,
+        settlement(&baseline, "saltmere").infrastructure
+    );
     assert!(repository.account(&session.account_token).is_err());
 }
 

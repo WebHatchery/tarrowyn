@@ -68,6 +68,9 @@ only after the discoverer records them in the guild archive.
 The settlement-activity regression confirms activity is scoped to the touched
 settlement, decays after the last session expires, and exposes a low-activity
 strained condition without deleting the settlement projection.
+The settlement-condition regression confirms route safety, public-work
+condition, local industry, and governance signals evolve toward their bounded
+regional targets as support changes.
 The regional-summary regression confirms the touch projection places the
 current settlement condition, recovery-open signal, and compact facility counts
 beside travel status.

@@ -335,6 +335,8 @@ The regional projection keeps player activity local to each settlement: active c
 
 Regional settlement views also distinguish recognised claims, free plots, and public works by location, while the shared registry and infrastructure records remain authoritative for changing them.
 
+Settlement condition projections also follow changing route safety, public-work condition, local industry, governance, and activity signals instead of remaining fixed content labels.
+
 ### Decline and Abandonment
 
 Settlements may also shrink. If players leave and no one takes responsibility, businesses can close, NPC families can migrate, infrastructure can deteriorate, and a former town may eventually become an abandoned site.

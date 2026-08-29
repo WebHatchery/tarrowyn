@@ -15,6 +15,10 @@ effects on route safety, prices, and settlement confidence. The Maren household
 changed from considering to travelling or arrived as the bounded household
 interval advanced. `/v1/law` returned the protected no-PvP boundary.
 
+The settlement projection also moved Saltmere's safety, industry, governance,
+and infrastructure signals as its unattended regional support faded, while the
+route and public-work targets remained visible for recovery.
+
 The settlement regression also leaves the Hearth supported by an active
 character while Saltmere loses unattended activity locally. After the session
 expires, the Hearth activity signal declines and Saltmere exposes a strained

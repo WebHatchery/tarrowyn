@@ -14,10 +14,12 @@ use tarrowyn_protocol::{
 mod logic;
 mod market;
 mod recovery;
+mod settlements;
 mod state;
 use logic::*;
 pub(super) use market::{close_deleted_account_orders, reconcile_market_order};
 pub(super) use recovery::clear_stuck_travel;
+use settlements::{refresh_settlement_facilities, update_households, update_settlements};
 pub(super) use state::{fresh, Phase5Response, Phase5State};
 
 const REGION_ID: &str = "hearthlands";
