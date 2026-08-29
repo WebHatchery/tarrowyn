@@ -161,6 +161,7 @@ impl RepositoryState {
         }
         let mut phase3 = stored.phase3;
         super::phase3::archive_excess(&mut phase3);
+        super::phase3_frontier::backfill_expedition_credentials(&mut phase3);
         trim_replay_cache(&mut phase3.request_results);
         let mut phase4 = stored.phase4;
         super::phase4::trim_proposals(&mut phase4.governance);

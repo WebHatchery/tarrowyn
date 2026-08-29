@@ -8,6 +8,25 @@ use tarrowyn_protocol::{
     ExpeditionStatus, FrontierEvent, LandClaim, Position,
 };
 
+pub(super) fn backfill_expedition_credentials(phase: &mut super::phase3::Phase3State) {
+    let Some(expedition) = phase.expedition.as_ref() else {
+        return;
+    };
+    if expedition.status != ExpeditionStatus::Succeeded {
+        return;
+    }
+    let participants = expedition
+        .members
+        .iter()
+        .map(|member| member.account_id.clone())
+        .collect::<Vec<_>>();
+    for account_id in participants {
+        if !phase.expedition_credentials.contains(&account_id) {
+            phase.expedition_credentials.push(account_id);
+        }
+    }
+}
+
 impl WorldRepository {
     pub fn claim(
         &self,
@@ -170,6 +189,7 @@ impl WorldRepository {
                     response.reason =
                         Some("A pioneer expedition is already on the registry.".to_owned());
                 } else {
+                    backfill_expedition_credentials(&mut state.phase3);
                     let role = request.role.unwrap_or(ExpeditionRole::Scout);
                     let expedition = Expedition {
                         expedition_id: "pioneer-1".to_owned(),
