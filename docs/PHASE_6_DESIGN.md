@@ -3,8 +3,9 @@
 ## Identity and privacy
 
 Production identity is delegated to the WebHatchery Identity Gateway through
-the `webhatchery-identity-oidc` provider contract. The server stores the
-provider subject mapping, never a provider credential. A guest fixture may be
+the `webhatchery-identity-oidc` provider contract. The server stores a trimmed,
+bounded provider subject mapping with no control characters, never a provider
+credential. A guest fixture may be
 linked to that subject once; the character ID remains the durable character
 boundary. Production access tokens are opaque, short-lived, rotated on refresh,
 and revocable. Refresh tokens are stored only as server-side session records.
@@ -34,10 +35,11 @@ the private-state boundary.
 
 All mutation endpoints validate bounded request IDs and 64 KiB JSON request
 bodies, use server authorization, and retain idempotent results where retries
-can happen. Durable player-provided labels such as linked display names,
-expedition outpost names, and public proposal targets are trimmed, bounded,
-and rejected when they contain control characters; chat text and channel names
-follow the same stored-text boundary. Chat also has length and per-tick limits;
+can happen. Durable identity and player-provided labels such as linked display
+names, expedition outpost names, and public proposal targets are trimmed,
+bounded, and rejected when they contain control characters; chat text and
+channel names follow the same stored-text boundary. Chat also has length and
+per-tick limits;
 chat metadata, trades, claims, governance, moderation, and support repairs are
 recorded in the audit stream without copying private chat text into audit
 notes. The no-PvP law boundary is still active.
