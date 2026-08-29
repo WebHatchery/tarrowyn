@@ -19,6 +19,7 @@ mod long_session;
 mod moderation_cooldown;
 mod moderation_retention;
 mod service_orders;
+mod support_chronicle;
 mod support_inventory;
 mod support_travel;
 

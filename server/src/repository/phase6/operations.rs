@@ -8,6 +8,7 @@ use tarrowyn_protocol::{
 };
 
 const MAX_CHRONICLE_SEARCH_RESULTS: usize = 128;
+const MAX_SUPPORT_CHRONICLE_ENTRIES: usize = 128;
 
 impl WorldRepository {
     pub fn support_account(
@@ -83,6 +84,12 @@ impl WorldRepository {
             .cloned()
             .collect::<Vec<_>>();
         trades.sort_by_key(|trade| std::cmp::Reverse(trade.created_tick));
+        let chronicle_skip = state
+            .phase3
+            .chronicle_archive
+            .len()
+            .saturating_add(state.phase3.chronicle.len())
+            .saturating_sub(MAX_SUPPORT_CHRONICLE_ENTRIES);
         Ok(ApiResponse {
             meta: meta(state.tick, None, Some(state.cursor)),
             data: SupportAccountResponse {
@@ -96,6 +103,8 @@ impl WorldRepository {
                     .collect(),
                 trades,
                 chronicle: super::super::phase3::chronicle_entries(&state.phase3)
+                    .skip(chronicle_skip)
+                    .take(MAX_SUPPORT_CHRONICLE_ENTRIES)
                     .cloned()
                     .collect(),
                 event_cursor: state.cursor,
