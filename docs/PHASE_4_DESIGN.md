@@ -118,6 +118,10 @@ history makes room for new work while open and accepted orders remain
 addressable; when every retained slot still carries live work, a new order is
 rejected before its materials or tool are escrowed.
 
+The public decision and tax ledgers retain their newest 64 records, and the
+infrastructure view retains its newest 32 records, so a bounded projection
+continues to show the latest accepted settlement work and receipts.
+
 The first discoverable knowledge is the Moonberry trellis method. It can be
 discovered, written into the guild archive, taught to another account, and
 applied. Until the discoverer teaches it or records it, other players receive

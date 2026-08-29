@@ -21,6 +21,9 @@ mod professions;
 const DEFAULT_TREASURY: u32 = 48;
 pub(super) const MAX_PROPOSALS: usize = 64;
 pub(super) const MAX_SERVICE_ORDERS: usize = 64;
+pub(super) const MAX_GOVERNANCE_DECISIONS: usize = 64;
+pub(super) const MAX_TAX_COLLECTIONS: usize = 64;
+pub(super) const MAX_INFRASTRUCTURE_RECORDS: usize = 32;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub(super) enum Phase4Response {
@@ -200,6 +203,13 @@ pub(super) fn service_order_room(phase4: &mut Phase4State) -> bool {
     };
     phase4.orders.remove(index);
     true
+}
+
+pub(super) fn retain_recent<T>(records: &mut Vec<T>, max: usize) {
+    if records.len() > max {
+        let excess = records.len() - max;
+        records.drain(..excess);
+    }
 }
 
 pub(super) const FARM_ANIMAL_POSITION: tarrowyn_protocol::Position =

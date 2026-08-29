@@ -246,7 +246,10 @@ impl super::super::WorldRepository {
                             created_tick: tick,
                         });
                     state.phase4.next_decision_id += 1;
-                    state.phase4.governance.decisions.truncate(64);
+                    super::retain_recent(
+                        &mut state.phase4.governance.decisions,
+                        super::MAX_GOVERNANCE_DECISIONS,
+                    );
                     touch_office(&mut state, &actor_id);
                     response.accepted = true;
                     record(
@@ -413,7 +416,10 @@ fn apply_action(
                 88,
                 "The new workshop is available to service orders and repairs.",
             ));
-            state.phase4.infrastructure.truncate(32);
+            super::retain_recent(
+                &mut state.phase4.infrastructure,
+                super::MAX_INFRASTRUCTURE_RECORDS,
+            );
         }
         PublicAction::UpdateContractBoard => {
             state.phase4.governance.administration_quality = state
@@ -579,7 +585,10 @@ fn collect_taxes(state: &mut super::super::models::RepositoryState) {
             created_tick: tick,
         });
     }
-    state.phase4.governance.tax_ledger.truncate(64);
+    super::retain_recent(
+        &mut state.phase4.governance.tax_ledger,
+        super::MAX_TAX_COLLECTIONS,
+    );
     state.phase4.governance.public_treasury = state
         .phase4
         .governance
