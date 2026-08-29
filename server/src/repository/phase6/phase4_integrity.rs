@@ -25,8 +25,17 @@ pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
         .map(|item| item.knowledge_id.as_str())
         .collect();
 
+    let sequence_ok = state.phase4.next_lesson_id > 0
+        && state.phase4.next_tax_id > 0
+        && state.phase4.next_proposal_id > 0
+        && state.phase4.next_decision_id > 0
+        && state.phase4.next_order_id > 0
+        && state.phase4.next_claim_id > 0
+        && state.phase4.next_knowledge_id > 0;
+
     let governance = &state.phase4.governance;
-    let governance_ok = !governance.offices.is_empty()
+    let governance_ok = governance.cursor <= state.cursor
+        && !governance.offices.is_empty()
         && settlement_ids.contains(governance.settlement_id.as_str())
         && unique_non_empty(
             governance
@@ -224,7 +233,8 @@ pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
         .iter()
         .all(|position| position_in_world(*position, config));
 
-    governance_ok
+    sequence_ok
+        && governance_ok
         && infrastructure_ok
         && claims_ok
         && households_ok

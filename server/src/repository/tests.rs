@@ -22,6 +22,7 @@ mod phase3;
 mod phase3_replay_integrity;
 mod phase3_state_integrity;
 mod phase4_replay_integrity;
+mod phase4_state_integrity;
 mod phase5_metadata_integrity;
 mod phase5_replay_integrity;
 mod regional_record_integrity;

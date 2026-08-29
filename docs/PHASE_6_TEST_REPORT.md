@@ -520,6 +520,9 @@ Chronicle persistence now rejects entries dated beyond the authoritative tick,
 with one chronicle-focused regression.
 Fixed household persistence now requires a bounded, nonempty member list with
 safe member text, with one household-focused regression.
+Phase 4 persistence now requires positive record-sequence counters and a
+governance cursor no newer than the shared event cursor, with two focused
+metadata regressions.
 
 The cross-layer persistence-readiness milestone passed the full release gate on
 2026-08-30 after the core and Phase 3-6 integrity additions: 14 protocol tests,
