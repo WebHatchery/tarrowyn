@@ -215,7 +215,17 @@ pub(super) fn draw_sidebar(
         &[
             ("travel", "Travel", true, ButtonTone::Primary),
             ("recover-travel", "Recover", true, ButtonTone::Primary),
-            ("route-repair", "Repair", true, ButtonTone::Positive),
+            (
+                "route-repair",
+                "Repair",
+                ctx.regional_region.is_some_and(|region| {
+                    region.routes.iter().any(|route| {
+                        route.route_id == "north-pack-road"
+                            && route.origin_location_id == region.player_location_id
+                    })
+                }),
+                ButtonTone::Positive,
+            ),
             ("market-region", "Market", true, ButtonTone::Primary),
             ("region-event", "Event", true, ButtonTone::Primary),
         ],
