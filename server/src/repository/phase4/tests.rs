@@ -363,6 +363,26 @@ fn professions_knowledge_and_households_make_the_settlement_interdependent() {
         .data
         .accepted
     );
+    let invalid_timing = repo
+        .profession_order(
+            &provider.account_token,
+            ProfessionRequest {
+                request_id: "invalid-timing".to_owned(),
+                action: ProfessionAction::CompleteOrder,
+                order_id: Some(order.order_id.clone()),
+                profession: None,
+                capability_id: None,
+                service: None,
+                timing_score: Some(101),
+            },
+        )
+        .unwrap()
+        .data;
+    assert!(!invalid_timing.accepted);
+    assert!(invalid_timing
+        .reason
+        .as_deref()
+        .is_some_and(|reason| reason.contains("0 to 100")));
     let completed = repo
         .profession_order(
             &provider.account_token,

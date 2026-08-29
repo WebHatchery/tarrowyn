@@ -187,7 +187,10 @@ impl super::super::WorldRepository {
                     return finish(self, &mut state, cache, request.request_id, response);
                 };
                 let order = state.phase4.orders[index].clone();
-                if order.status != ServiceOrderStatus::Accepted
+                if request.timing_score.is_some_and(|score| score > 100) {
+                    response.reason =
+                        Some("Timing quality must be a visible score from 0 to 100.".to_owned());
+                } else if order.status != ServiceOrderStatus::Accepted
                     || order.provider_account_id.as_deref() != Some(actor_id.as_str())
                 {
                     response.reason =

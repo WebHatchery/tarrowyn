@@ -50,7 +50,8 @@ the validated infrastructure manifest for identity, kind, position, maintenance,
 quality, and recovery notes.
 The recipe regression and order fixture confirm the field-tool repair service
 reads its materials, tool cost, reward, and benefit from the validated recipe
-manifest.
+manifest. The order fixture also confirms the server rejects a timing score
+outside the visible 0–100 interaction range before completing the order.
 The fixed-NPC household regression confirms the Bellweather service household
 follows validated NPC-household content without exposing a general family
 simulation contract.

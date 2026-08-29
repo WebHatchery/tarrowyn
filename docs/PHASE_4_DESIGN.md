@@ -97,7 +97,8 @@ The complete order loop is:
 3. that provider completes the visible timing interaction, receives gold and
    skill progress, and records the bounded service quality and benefit for the
    requesting role. A missing timing value remains compatible with older
-   clients and receives the neutral midpoint.
+   clients and receives the neutral midpoint; an explicit score outside the
+   visible 0–100 range is rejected by the server.
 
 The server derives the profession, service label, material escrow, reward, and
 benefit from the validated recipe manifest. Optional client fields remain
