@@ -97,7 +97,8 @@ In the online client, use only visible controls:
    conditions.
 7. Walk near Whisperwood, tap `Local fight`, and use the visible buttons to
    prepare, try the first-exchange `Technique`, then strike or guard. Use
-   `Bandage`, `Reposition`, or `Spell` as the encounter permits. After a
+   `Retreat` to leave an active encounter without a knockout. Use `Bandage`,
+   `Reposition`, or `Spell` as the encounter permits. After a
    knockout, read the visible carried-loss risk, healer gold cost, and stored
    property safety, then choose `Self`, `Rescuer`, or `Healer` from the visible
    recovery row. After each accepted action, read the visible `Action ready`

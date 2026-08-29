@@ -58,6 +58,7 @@ pub(super) fn draw_sidebar(
                 .own_account_id
                 .is_some_and(|account_id| trade.recipient_account_id == account_id)
     });
+    let (combat_side_id, combat_side_label) = local_combat_side_control(ctx.combat);
 
     draw_button_row(
         content,
@@ -172,7 +173,12 @@ pub(super) fn draw_sidebar(
             22.0,
             mouse,
             &[
-                ("contract", "Contract", true, ButtonTone::Secondary),
+                (
+                    combat_side_id,
+                    combat_side_label,
+                    true,
+                    ButtonTone::Secondary,
+                ),
                 ("strike", "Strike", true, ButtonTone::Secondary),
                 ("technique", "Technique", true, ButtonTone::Secondary),
                 ("claim", "Claim", true, ButtonTone::Secondary),
@@ -420,6 +426,16 @@ pub(super) fn draw_sidebar(
         top + 454.0,
         TextStyle::new(8.25, dark::TEXT_DIM).params(),
     );
+}
+
+fn local_combat_side_control(
+    combat: Option<&tarrowyn_protocol::LocalCombatState>,
+) -> (&'static str, &'static str) {
+    if combat.is_some_and(|combat| combat.status == tarrowyn_protocol::LocalCombatStatus::Engaged) {
+        ("retreat", "Retreat")
+    } else {
+        ("contract", "Contract")
+    }
 }
 
 pub(super) fn draw_regional_inspection(

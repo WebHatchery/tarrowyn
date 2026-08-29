@@ -11,3 +11,28 @@ fn recovery_risk_label_stays_compact_without_losing_the_seed_rule() {
         "carried item"
     );
 }
+
+#[test]
+fn local_combat_side_control_exposes_retreat_only_during_an_encounter() {
+    assert_eq!(local_combat_side_control(None), ("contract", "Contract"));
+    let combat = tarrowyn_protocol::LocalCombatState {
+        encounter_id: "encounter".to_owned(),
+        enemy_name: "Brambleback scout".to_owned(),
+        enemy_health: 2,
+        player_health: 2,
+        turn: 1,
+        status: tarrowyn_protocol::LocalCombatStatus::Engaged,
+        weapon: tarrowyn_protocol::WeaponKind::IronSword,
+        injury_limit: 3,
+        stored_property_safe: true,
+        carried_risk: "A seed may be risked.".to_owned(),
+        recovery_cost: 4,
+        action_available_at_tick: 0,
+        reposition_ready: false,
+        spell_ready: false,
+    };
+    assert_eq!(
+        local_combat_side_control(Some(&combat)),
+        ("retreat", "Retreat")
+    );
+}

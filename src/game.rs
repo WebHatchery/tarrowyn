@@ -658,7 +658,7 @@ impl Game {
                     client.queue_knowledge_cycle(target);
                 }
                 "town-hall" | "tax-rate" | "registry" | "order" | "households" | "local-fight"
-                | "technique" | "guard" | "item" | "reposition" | "spell" => {
+                | "retreat" | "technique" | "guard" | "item" | "reposition" | "spell" => {
                     client.queue_phase4(id)
                 }
                 "crafting-timing" => client.queue_crafting_timing(),

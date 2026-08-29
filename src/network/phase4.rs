@@ -250,6 +250,7 @@ impl Phase4Client {
                 self.queue_knowledge(request_id, None);
             }
             "local-fight" => self.queue_combat(request_id),
+            "retreat" => self.queue_combat_action(request_id, LocalCombatAction::Retreat),
             "technique" => self.queue_combat_action(request_id, LocalCombatAction::Technique),
             "guard" => self.queue_combat_action(request_id, LocalCombatAction::Guard),
             "item" => self.queue_combat_action(request_id, LocalCombatAction::UseItem),
