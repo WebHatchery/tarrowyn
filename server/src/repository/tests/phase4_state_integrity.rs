@@ -1,6 +1,7 @@
 use super::super::{ServerConfig, WorldRepository};
 use tarrowyn_protocol::{ClaimLifecycleAction, ClaimLifecycleRequest};
 use tarrowyn_protocol::{GovernanceAction, GovernanceRequest, GuestSessionRequest, PublicAction};
+use tarrowyn_protocol::{MaterialStock, ProfessionKind, ServiceOrder, ServiceOrderStatus};
 
 fn seeded_phase4_claim(repository: &WorldRepository) {
     let session = repository
@@ -21,6 +22,41 @@ fn seeded_phase4_claim(repository: &WorldRepository) {
             },
         )
         .expect("claim request");
+}
+
+fn seeded_phase4_order(repository: &WorldRepository) {
+    let session = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("phase4-order-state".to_owned()),
+            reset: false,
+        })
+        .expect("guest session")
+        .data;
+    let mut state = repository.state.lock().expect("repository lock");
+    let created_tick = state.tick;
+    state.phase4.orders.push(ServiceOrder {
+        order_id: "phase4-order-state-record".to_owned(),
+        requester_account_id: session.account_id,
+        requester_name: "Resident".to_owned(),
+        provider_account_id: None,
+        provider_name: None,
+        service: "field-tool repair".to_owned(),
+        required_profession: ProfessionKind::Carpenter,
+        materials: MaterialStock {
+            wood: 1,
+            iron: 1,
+            cloth: 0,
+            bandages: 0,
+            tools: 0,
+        },
+        tools_required: 0,
+        reward_gold: 1,
+        benefit: "A repaired field tool".to_owned(),
+        status: ServiceOrderStatus::Open,
+        quality: 0,
+        created_tick,
+        completed_tick: None,
+    });
 }
 
 #[test]
@@ -220,6 +256,46 @@ fn future_phase4_household_decision_degrades_readiness() {
             .first_mut()
             .expect("household")
             .last_decision_tick = future_tick;
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
+fn future_phase4_service_order_timestamp_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    seeded_phase4_order(&repository);
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        let future_tick = state.tick.saturating_add(1);
+        state
+            .phase4
+            .orders
+            .last_mut()
+            .expect("service order")
+            .created_tick = future_tick;
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
+fn open_phase4_service_order_cannot_have_completion_tick() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    seeded_phase4_order(&repository);
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        let tick = state.tick;
+        state
+            .phase4
+            .orders
+            .last_mut()
+            .expect("service order")
+            .completed_tick = Some(tick);
     }
 
     let health = repository.ops_health().data;

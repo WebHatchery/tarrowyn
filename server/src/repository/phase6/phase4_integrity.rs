@@ -181,10 +181,19 @@ pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
             .iter()
             .map(|order| order.order_id.as_str()),
     ) && state.phase4.orders.iter().all(|order| {
+        let completed_tick_ok = order.completed_tick.is_none_or(|tick| {
+            order.status == tarrowyn_protocol::ServiceOrderStatus::Completed
+                && tick >= order.created_tick
+                && tick <= state.tick
+        });
         account_reference_ok(&order.requester_account_id, &account_ids)
             && optional_account_reference_ok(order.provider_account_id.as_deref(), &account_ids)
             && !order.service.trim().is_empty()
             && order.quality <= 100
+            && order.created_tick <= state.tick
+            && completed_tick_ok
+            && (order.status != tarrowyn_protocol::ServiceOrderStatus::Accepted
+                || order.provider_account_id.is_some())
     });
 
     let lessons_ok = unique_non_empty(
