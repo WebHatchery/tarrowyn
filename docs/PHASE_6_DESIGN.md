@@ -34,10 +34,13 @@ the private-state boundary.
 
 All mutation endpoints validate bounded request IDs and 64 KiB JSON request
 bodies, use server authorization, and retain idempotent results where retries
-can happen. Chat has length and
-per-tick limits; chat metadata, trades, claims, governance, moderation, and
-support repairs are recorded in the audit stream without copying private chat
-text into audit notes. The no-PvP law boundary is still active.
+can happen. Durable player-provided labels such as linked display names,
+expedition outpost names, and public proposal targets are trimmed, bounded,
+and rejected when they contain control characters; chat text and channel names
+follow the same stored-text boundary. Chat also has length and per-tick limits;
+chat metadata, trades, claims, governance, moderation, and support repairs are
+recorded in the audit stream without copying private chat text into audit
+notes. The no-PvP law boundary is still active.
 
 ## Persistence, backups, and repair
 

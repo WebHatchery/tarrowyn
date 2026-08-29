@@ -563,6 +563,14 @@ deployment-owned gates rather than client assumptions. The current server
 enforces one MySQL world authority at a time until that later topology is
 designed and tested.
 
+Mutation endpoints validate bounded request IDs and request bodies, use server
+authorization, and retain idempotent results where retries can happen.
+Durable player-provided labels such as linked display names, expedition
+outpost names, and public proposal targets are trimmed, bounded, and rejected
+when they contain control characters; chat text and channel names follow the
+same stored-text boundary. Chat also has length and per-tick limits. The
+no-PvP law boundary is active at launch.
+
 ## 18. Smallest Multiplayer Slice
 
 ### Purpose
