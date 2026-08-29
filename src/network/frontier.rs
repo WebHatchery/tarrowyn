@@ -155,7 +155,7 @@ impl FrontierClient {
         self.commands.clear();
     }
 
-    pub(super) fn queue_contract(&mut self, request_id: String, action: ContractAction) {
+    pub(super) fn queue_contract(&mut self, request_id: String, action: ContractAction) -> bool {
         super::queue::try_push(
             &mut self.commands,
             FrontierCommand::Contract(ContractRequest {
@@ -163,7 +163,7 @@ impl FrontierClient {
                 action,
                 contract_id: "brambleback-watch".to_owned(),
             }),
-        );
+        )
     }
 
     pub(super) fn queue_combat(
@@ -171,7 +171,7 @@ impl FrontierClient {
         request_id: String,
         action: CombatAction,
         weapon: WeaponKind,
-    ) {
+    ) -> bool {
         super::queue::try_push(
             &mut self.commands,
             FrontierCommand::Combat(CombatRequest {
@@ -179,25 +179,25 @@ impl FrontierClient {
                 action,
                 weapon,
             }),
-        );
+        )
     }
 
-    pub(super) fn queue_recovery(&mut self, request_id: String, choice: RecoveryChoice) {
+    pub(super) fn queue_recovery(&mut self, request_id: String, choice: RecoveryChoice) -> bool {
         super::queue::try_push(
             &mut self.commands,
             FrontierCommand::Recovery(RecoveryRequest { request_id, choice }),
-        );
+        )
     }
 
-    pub(super) fn queue_claim(&mut self, request_id: String, action: ClaimAction) {
+    pub(super) fn queue_claim(&mut self, request_id: String, action: ClaimAction) -> bool {
         super::queue::try_push(
             &mut self.commands,
             FrontierCommand::Claim(ClaimRequest { request_id, action }),
-        );
+        )
     }
 
-    pub(super) fn queue_expedition(&mut self, request: ExpeditionRequest) {
-        super::queue::try_push(&mut self.commands, FrontierCommand::Expedition(request));
+    pub(super) fn queue_expedition(&mut self, request: ExpeditionRequest) -> bool {
+        super::queue::try_push(&mut self.commands, FrontierCommand::Expedition(request))
     }
 
     fn apply_command(
@@ -316,7 +316,12 @@ fn command_notice(
 impl OnlineClient {
     pub fn queue_contract_cycle(&mut self) {
         let action = match self.frontier.contracts.first() {
-            Some(contract) if contract.status == ContractStatus::Cooldown => return,
+            Some(contract) if contract.status == ContractStatus::Cooldown => {
+                self.status_message =
+                    "The frontier contract is cooling down; return after its visible availability tick."
+                        .to_owned();
+                return;
+            }
             Some(contract)
                 if contract.status == ContractStatus::Accepted && contract.progress < 3 =>
             {
@@ -396,35 +401,51 @@ impl OnlineClient {
     pub fn queue_contract(&mut self, action: ContractAction) {
         if self.state == super::ConnectionState::Online {
             let request_id = self.next_request_id("contract");
-            self.frontier.queue_contract(request_id, action);
+            if !self.frontier.queue_contract(request_id, action) {
+                self.status_message =
+                    "That frontier action is not ready; wait for its ledger or queue to clear."
+                        .to_owned();
+            }
         }
     }
 
     pub fn queue_combat(&mut self, action: CombatAction, weapon: WeaponKind) {
         if self.state == super::ConnectionState::Online {
             let request_id = self.next_request_id("combat");
-            self.frontier.queue_combat(request_id, action, weapon);
+            if !self.frontier.queue_combat(request_id, action, weapon) {
+                self.status_message =
+                    "That frontier action is not ready; wait for its ledger or queue to clear."
+                        .to_owned();
+            }
         }
     }
 
     pub fn queue_recovery(&mut self, choice: RecoveryChoice) {
         if self.state == super::ConnectionState::Online {
             let request_id = self.next_request_id("recovery");
-            self.frontier.queue_recovery(request_id, choice);
+            if !self.frontier.queue_recovery(request_id, choice) {
+                self.status_message =
+                    "That frontier action is not ready; wait for its ledger or queue to clear."
+                        .to_owned();
+            }
         }
     }
 
     pub fn queue_claim(&mut self, action: ClaimAction) {
         if self.state == super::ConnectionState::Online {
             let request_id = self.next_request_id("claim");
-            self.frontier.queue_claim(request_id, action);
+            if !self.frontier.queue_claim(request_id, action) {
+                self.status_message =
+                    "That frontier action is not ready; wait for its ledger or queue to clear."
+                        .to_owned();
+            }
         }
     }
 
     pub fn queue_expedition(&mut self, action: ExpeditionAction, role: Option<ExpeditionRole>) {
         if self.state == super::ConnectionState::Online {
             let request_id = self.next_request_id("expedition");
-            self.frontier.queue_expedition(ExpeditionRequest {
+            if !self.frontier.queue_expedition(ExpeditionRequest {
                 request_id,
                 action,
                 expedition_id: Some("pioneer-1".to_owned()),
@@ -450,7 +471,11 @@ impl OnlineClient {
                     0
                 },
                 outpost_name: Some("Lantern Rest".to_owned()),
-            });
+            }) {
+                self.status_message =
+                    "That frontier action is not ready; wait for its ledger or queue to clear."
+                        .to_owned();
+            }
         }
     }
 }

@@ -59,6 +59,33 @@ fn contract_cycle_waits_through_the_tavern_cooldown() {
 
     client.queue_contract_cycle();
     assert!(client.frontier.commands.is_empty());
+    assert!(client.status_message.contains("cooling down"));
+}
+
+#[test]
+fn frontier_action_reports_a_full_command_queue() {
+    let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
+    client.state = crate::network::ConnectionState::Online;
+    for index in 0..super::super::queue::MAX_PENDING_COMMANDS {
+        client
+            .frontier
+            .commands
+            .push_back(FrontierCommand::Contract(ContractRequest {
+                request_id: format!("queued-{index}"),
+                action: ContractAction::Accept,
+                contract_id: "brambleback-watch".to_owned(),
+            }));
+    }
+
+    client.queue_claim_cycle();
+
+    assert!(client
+        .status_message
+        .contains("frontier action is not ready"));
+    assert_eq!(
+        client.frontier.commands.len(),
+        super::super::queue::MAX_PENDING_COMMANDS
+    );
 }
 
 #[test]
