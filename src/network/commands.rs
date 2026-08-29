@@ -154,6 +154,9 @@ impl OnlineClient {
                     .get(&format!("/v1/events?since={}", self.projection.cursor)),
             );
         }
+        if self.phase4.auth_refresh_pending() {
+            return;
+        }
         if self.pending_movement.is_none() {
             if let Some(request) = self.movement_queue.pop_front() {
                 self.pending_movement = Some(PendingMovement {

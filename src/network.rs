@@ -347,12 +347,16 @@ impl OnlineClient {
                 .as_ref()
                 .map(|account| account.account_id.as_str()),
         );
-        let frontier_mutation_pending = self.frontier.has_pending_command();
+        let other_mutation_pending = self.frontier.has_pending_command()
+            || self.pending_movement.is_some()
+            || self.pending_chat.is_some()
+            || self.pending_farming.is_some()
+            || self.pending_trade.is_some();
         self.phase4.update(
             dt,
             &mut self.api,
             self.state == ConnectionState::Online,
-            frontier_mutation_pending,
+            other_mutation_pending,
             &mut notices,
         );
         if let Some(account) = self.phase4.take_linked_account(self.client_key.as_deref()) {
