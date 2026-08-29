@@ -132,9 +132,8 @@ impl ServerConfig {
                 "TARROWYN_MODERATION_COOLDOWN_TICKS",
                 defaults.moderation_cooldown_ticks,
             ),
-            starting_gold: env_u64("TARROWYN_STARTING_GOLD", defaults.starting_gold as u64) as u32,
-            starting_seeds: env_u64("TARROWYN_STARTING_SEEDS", defaults.starting_seeds as u64)
-                as u32,
+            starting_gold: env_u32("TARROWYN_STARTING_GOLD", defaults.starting_gold),
+            starting_seeds: env_u32("TARROWYN_STARTING_SEEDS", defaults.starting_seeds),
             crop_stage_seconds: env_f32("TARROWYN_CROP_STAGE_SECONDS", defaults.crop_stage_seconds),
             trade_expiry_ticks: env_u64("TARROWYN_TRADE_EXPIRY_TICKS", defaults.trade_expiry_ticks),
             claim_reclaim_ticks: env_u64(
