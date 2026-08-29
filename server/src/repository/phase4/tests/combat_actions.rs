@@ -32,6 +32,41 @@ fn local_combat_accepts_one_opening_weapon_technique() {
         },
     )
     .unwrap();
+    repo.movement(
+        &session.account_token,
+        tarrowyn_protocol::MovementIntent {
+            request_id: "technique-away".to_owned(),
+            dx: -1,
+            dy: 0,
+        },
+    )
+    .unwrap();
+    let out_of_range = repo
+        .local_combat(
+            &session.account_token,
+            LocalCombatRequest {
+                request_id: "technique-out-of-range".to_owned(),
+                action: LocalCombatAction::Strike,
+                weapon: WeaponKind::IronSword,
+            },
+        )
+        .unwrap()
+        .data;
+    assert!(!out_of_range.accepted);
+    assert_eq!(out_of_range.combat.turn, 0);
+    assert!(out_of_range
+        .reason
+        .as_deref()
+        .is_some_and(|reason| reason.contains("Whisperwood")));
+    repo.movement(
+        &session.account_token,
+        tarrowyn_protocol::MovementIntent {
+            request_id: "technique-back".to_owned(),
+            dx: 1,
+            dy: 0,
+        },
+    )
+    .unwrap();
     let technique = repo
         .local_combat(
             &session.account_token,

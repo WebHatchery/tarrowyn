@@ -73,6 +73,14 @@ impl super::super::WorldRepository {
             .expect("identity exists")
             .position;
         let zone_position = state.phase3.zone.position;
+        if combat.status == LocalCombatStatus::Engaged
+            && position.manhattan_distance(zone_position) > 2
+        {
+            response.reason = Some(
+                "Return to Whisperwood Edge before continuing the local encounter.".to_owned(),
+            );
+            return finish_local_combat(self, &mut state, cache, response);
+        }
         match request.action {
             LocalCombatAction::Prepare => {
                 if position.manhattan_distance(zone_position) > 2 {
