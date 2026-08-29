@@ -288,16 +288,20 @@ fn regional_cycle_reports_when_no_projection_action_is_ready() {
 #[test]
 fn market_success_notice_describes_the_requested_action() {
     assert_eq!(
-        super::market_success_message(Some(MarketOrderAction::Create)),
+        super::market_success_message(Some(MarketOrderAction::Create), false),
         "The shipment is on the regional ledger."
     );
     assert_eq!(
-        super::market_success_message(Some(MarketOrderAction::Fulfil)),
+        super::market_success_message(Some(MarketOrderAction::Fulfil), false),
         "The shipment reached its destination and settled."
     );
     assert_eq!(
-        super::market_success_message(Some(MarketOrderAction::Cancel)),
+        super::market_success_message(Some(MarketOrderAction::Cancel), false),
         "The shipment was cancelled and its escrow returned."
+    );
+    assert_eq!(
+        super::market_success_message(Some(MarketOrderAction::Cancel), true),
+        "The fallback shipment was cancelled; no player goods were escrowed."
     );
 }
 

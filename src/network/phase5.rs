@@ -369,7 +369,13 @@ impl Phase5Client {
             Phase5CommandResponse::Market(response) => phase5_notice(
                 response.accepted,
                 response.reason,
-                market_success_message(market_action),
+                market_success_message(
+                    market_action,
+                    response
+                        .order
+                        .as_ref()
+                        .is_some_and(|order| order.fallback_used),
+                ),
                 notices,
             ),
             Phase5CommandResponse::Event(response) => phase5_notice(
@@ -693,10 +699,19 @@ fn phase5_notice(
     }
 }
 
-fn market_success_message(action: Option<MarketOrderAction>) -> &'static str {
+fn market_success_message(action: Option<MarketOrderAction>, fallback_used: bool) -> &'static str {
     match action {
+        Some(MarketOrderAction::Create) if fallback_used => {
+            "The limited travelling service accepted the shipment at a surcharge."
+        }
         Some(MarketOrderAction::Create) => "The shipment is on the regional ledger.",
+        Some(MarketOrderAction::Fulfil) if fallback_used => {
+            "The travelling shipment reached its destination and settled."
+        }
         Some(MarketOrderAction::Fulfil) => "The shipment reached its destination and settled.",
+        Some(MarketOrderAction::Cancel) if fallback_used => {
+            "The fallback shipment was cancelled; no player goods were escrowed."
+        }
         Some(MarketOrderAction::Cancel) => "The shipment was cancelled and its escrow returned.",
         None => "The regional market accepted the command.",
     }
