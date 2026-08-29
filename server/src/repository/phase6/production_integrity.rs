@@ -173,11 +173,15 @@ fn replay_caches_ok(state: &RepositoryState, identity_accounts: &HashSet<&str>) 
     let refresh_results_ok = phase6.auth_refresh_results.iter().all(|(key, response)| {
         bounded(key, MAX_CACHE_KEY_CHARS)
             && bounded(&response.request_id, 64)
+            && refresh_cache_key_matches(key, &response.request_id)
             && auth_session_ok(&response.session)
             && phase6
                 .auth_refresh_accounts
                 .get(key)
-                .is_some_and(|account_id| state.phase6.accounts.contains_key(account_id))
+                .is_some_and(|account_id| {
+                    state.phase6.accounts.contains_key(account_id)
+                        && cached_session_matches_account(state, &response.session, account_id)
+                })
     });
     let refresh_accounts_ok = phase6
         .auth_refresh_accounts
@@ -279,6 +283,29 @@ fn auth_session_ok(session: &AuthSession) -> bool {
 
 fn link_cache_key_matches(key: &str, request_id: &str, identity_key: &str) -> bool {
     key.strip_prefix(&format!("{identity_key}:")) == Some(request_id)
+}
+
+fn refresh_cache_key_matches(key: &str, request_id: &str) -> bool {
+    let Some(fingerprint) = key.strip_prefix(&format!("{request_id}:")) else {
+        return false;
+    };
+    fingerprint.len() == 16 && u64::from_str_radix(fingerprint, 16).is_ok()
+}
+
+fn cached_session_matches_account(
+    state: &RepositoryState,
+    session: &AuthSession,
+    account_id: &str,
+) -> bool {
+    state
+        .phase6
+        .sessions
+        .get(&session.account_token)
+        .is_none_or(|stored| {
+            stored.account_id == account_id
+                && stored.refresh_token == session.refresh_token
+                && stored.expires_at_tick == session.expires_at_tick
+        })
 }
 
 fn account_or_deleted(account_id: &str, identity_accounts: &HashSet<&str>) -> bool {
