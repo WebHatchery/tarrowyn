@@ -491,3 +491,8 @@ Phase 4 replay-cache integrity now validates cache size, bounded keys and
 request IDs, current account ownership across the skill prefixes, and
 response/key request agreement. Two focused regressions cover an orphaned
 account key and a mismatched cached request ID.
+
+Phase 3 replay-cache integrity now validates cache size, bounded identity/request
+keys, current identity ownership, and response/key request agreement across
+contracts, combat, recovery, claims, and expeditions. Two focused regressions
+cover an orphaned identity key and a mismatched cached request ID.

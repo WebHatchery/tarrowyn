@@ -18,6 +18,7 @@ mod maintenance;
 mod moderation;
 mod operations;
 mod persistent_integrity;
+mod phase3_replay_integrity;
 mod phase4_integrity;
 mod phase4_replay_integrity;
 mod phase5_replay_integrity;
