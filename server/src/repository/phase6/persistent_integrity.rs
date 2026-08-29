@@ -55,20 +55,23 @@ fn core_ok(state: &RepositoryState, config: &ServerConfig, account_ids: &HashSet
                 })
         });
     let events_ok = ordered_event_cursors(state);
-    let chat_ok = unique_nonzero(state.chat_history.iter().map(|message| message.message_id))
+    let chat_ok = state.chat_history.len() <= super::super::MAX_CHAT_HISTORY
+        && unique_nonzero(state.chat_history.iter().map(|message| message.message_id))
         && state.chat_history.iter().all(|message| {
             account_reference_ok(&message.account_id, account_ids)
-                && !message.channel.trim().is_empty()
-                && message.channel.chars().count() <= 24
+                && bounded_text(&message.display_name, MAX_DISPLAY_NAME_CHARS)
+                && bounded_text(&message.channel, 24)
                 && !message.text.trim().is_empty()
                 && message.text.chars().count() <= tarrowyn_protocol::MAX_CHAT_MESSAGE_LENGTH
                 && !message.text.chars().any(char::is_control)
                 && cursor_in_world(message.cursor, state.cursor)
         });
-    let notices_ok = unique_nonzero(state.notices.iter().map(|notice| notice.notice_id))
+    let notices_ok = state.notices.len() <= super::super::MAX_NOTICES
+        && unique_nonzero(state.notices.iter().map(|notice| notice.notice_id))
         && state.notices.iter().all(|notice| {
-            !notice.kind.trim().is_empty()
-                && !notice.text.trim().is_empty()
+            bounded_text(&notice.kind, 80)
+                && bounded_text(&notice.text, 512)
+                && notice.created_tick <= state.tick
                 && cursor_in_world(notice.cursor, state.cursor)
         });
     let trades_ok = unique_non_empty(state.trades.values().map(|trade| trade.trade_id.as_str()))
