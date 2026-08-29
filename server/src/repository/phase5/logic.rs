@@ -106,6 +106,7 @@ pub(super) fn seed_event(
     };
     state.phase5.next_event_id = state.phase5.next_event_id.saturating_add(1);
     state.phase5.events.push(event.clone());
+    trim_event_history(&mut state.phase5);
     record_regional(
         state,
         &["hearth", "whisperwood-outpost", "saltmere"],

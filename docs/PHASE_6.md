@@ -119,6 +119,12 @@ it leaves the normal view. Account deletion anonymises matching names in recent,
 archived, and event-stream chronicle records; the archive is intentionally not
 used as a client-side unbounded display buffer.
 
+The shared and regional event streams each retain at most 2,048 records. Regional
+event state records carry their own retention floor, and both the server projection
+and client cache reject or trim beyond that boundary so a missed regional cursor
+reconnects through the authoritative reload path instead of receiving an incomplete
+history.
+
 - Add economy and population monitoring for inflation, item scarcity, NPC
   replacement, abandoned claims, settlement decline, and newcomer access.
 - Make an explicit decision on optional legacy or generational play. If it is

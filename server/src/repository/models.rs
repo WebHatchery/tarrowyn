@@ -165,6 +165,7 @@ impl RepositoryState {
         let mut phase4 = stored.phase4;
         trim_replay_cache(&mut phase4.request_results);
         let mut phase5 = stored.phase5;
+        super::phase5::trim_event_history(&mut phase5);
         trim_replay_cache(&mut phase5.request_results);
         let mut phase6 = stored.phase6;
         trim_replay_cache(&mut phase6.auth_link_results);

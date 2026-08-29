@@ -24,6 +24,8 @@ pub(crate) struct Phase5State {
     pub(crate) next_order_id: u64,
     pub(crate) next_event_id: u64,
     pub(crate) cursor: u64,
+    #[serde(default)]
+    pub(crate) event_history_floor: u64,
     pub(crate) locations: Vec<LocationRecord>,
     pub(crate) routes: Vec<RouteRecord>,
     pub(crate) settlements: Vec<SettlementProjection>,
@@ -74,6 +76,7 @@ pub(crate) fn fresh(_config: &ServerConfig) -> Phase5State {
         next_order_id: 1,
         next_event_id: 1,
         cursor: 0,
+        event_history_floor: 0,
         locations,
         routes,
         settlements,
@@ -95,6 +98,19 @@ pub(crate) fn fresh(_config: &ServerConfig) -> Phase5State {
         }],
         request_results: HashMap::new(),
     }
+}
+
+pub(crate) const MAX_REGIONAL_EVENTS: usize = super::super::MAX_EVENTS;
+
+pub(crate) fn trim_event_history(phase: &mut Phase5State) {
+    let excess = phase.events.len().saturating_sub(MAX_REGIONAL_EVENTS);
+    if excess == 0 {
+        return;
+    }
+    if let Some(removed) = phase.events.get(excess - 1) {
+        phase.event_history_floor = phase.event_history_floor.max(removed.cursor);
+    }
+    phase.events.drain(..excess);
 }
 
 fn location(id: &str) -> LocationRecord {

@@ -12,6 +12,8 @@ use tarrowyn_protocol::{
     TravelAction, TravelRequest, TravelResponse, TravelStatus,
 };
 
+const MAX_CACHED_REGIONAL_EVENTS: usize = 2048;
+
 mod summary;
 mod travel;
 
@@ -736,6 +738,13 @@ fn merge_regional_events(
         }
     }
     current.events.sort_by_key(|event| event.cursor);
+    let excess = current
+        .events
+        .len()
+        .saturating_sub(MAX_CACHED_REGIONAL_EVENTS);
+    if excess > 0 {
+        current.events.drain(..excess);
+    }
 }
 
 fn phase5_notice(

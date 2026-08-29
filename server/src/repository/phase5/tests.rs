@@ -8,6 +8,7 @@ use tarrowyn_protocol::{
     TravelAction, TravelRequest,
 };
 
+mod event_retention;
 mod settlements;
 
 fn guest(repository: &WorldRepository, key: &str) -> tarrowyn_protocol::GuestSessionResponse {

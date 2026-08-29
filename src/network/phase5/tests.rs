@@ -367,6 +367,34 @@ fn regional_event_cursor_merges_updates_without_dropping_known_events() {
 }
 
 #[test]
+fn regional_event_cache_stays_bounded_after_incremental_updates() {
+    let mut current = Some(RegionalEventsResponse {
+        events: Vec::new(),
+        cursor: 0,
+    });
+    merge_regional_events(
+        &mut current,
+        RegionalEventsResponse {
+            events: (0..=MAX_CACHED_REGIONAL_EVENTS)
+                .map(|index| {
+                    regional_event(
+                        &format!("event-{index}"),
+                        tarrowyn_protocol::RegionalEventStage::Aftermath,
+                        index as u64,
+                    )
+                })
+                .collect(),
+            cursor: MAX_CACHED_REGIONAL_EVENTS as u64,
+        },
+    );
+
+    let current = current.expect("regional events should remain cached");
+    assert_eq!(current.events.len(), MAX_CACHED_REGIONAL_EVENTS);
+    assert_eq!(current.events.first().unwrap().event_id, "event-1");
+    assert_eq!(current.events.last().unwrap().event_id, "event-2048");
+}
+
+#[test]
 fn regional_cursor_reset_discards_stale_events_and_restarts_refresh() {
     let mut client = Phase5Client::new();
     client.region = Some(tarrowyn_protocol::RegionSnapshot {

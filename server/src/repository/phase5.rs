@@ -20,7 +20,7 @@ use logic::*;
 pub(super) use market::{close_deleted_account_orders, reconcile_market_order};
 pub(super) use recovery::clear_stuck_travel;
 use settlements::{refresh_settlement_facilities, update_households, update_settlements};
-pub(super) use state::{fresh, Phase5Response, Phase5State};
+pub(super) use state::{fresh, trim_event_history, Phase5Response, Phase5State};
 
 const REGION_ID: &str = "hearthlands";
 const INTEREST_RADIUS: u32 = 12;
@@ -497,6 +497,13 @@ impl WorldRepository {
         expire_sessions(&mut state, &self.config);
         authenticate(&mut state, token, &self.config)?;
         super::validate_event_cursor(&state, since, "regional")?;
+        if state.phase5.event_history_floor > since {
+            return Err(RepositoryError::new(
+                409,
+                "cursor_stale",
+                "The regional event history is no longer retained; reload authoritative state.",
+            ));
+        }
         Ok(ApiResponse {
             meta: meta(state.tick, None, Some(state.cursor)),
             data: RegionalEventsResponse {
