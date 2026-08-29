@@ -96,3 +96,33 @@ fn claim_history_evicts_reclaimed_rows_before_requesting_new_land() {
         Some(&Position { x: 16, y: 10 })
     );
 }
+
+#[test]
+fn claim_id_stays_at_the_numeric_ceiling() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = guest(&repository, "claim-id-ceiling");
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state.phase4.next_claim_id = u64::MAX;
+        state.phase4.available_plots.push(Position { x: 17, y: 10 });
+    }
+
+    let response = repository
+        .claim_lifecycle(
+            &session.account_token,
+            ClaimLifecycleRequest {
+                request_id: "claim-id-ceiling-request".to_owned(),
+                action: ClaimLifecycleAction::Request,
+                claim_id: None,
+                target_account_id: None,
+            },
+        )
+        .expect("claim request")
+        .data;
+
+    let claim = response.claim.expect("accepted claim");
+    assert_eq!(claim.claim_id, format!("lease-{}", u64::MAX));
+    assert_eq!(claim.plot_id, format!("plot-{}", u64::MAX));
+    let state = repository.state.lock().expect("repository lock");
+    assert_eq!(state.phase4.next_claim_id, u64::MAX);
+}

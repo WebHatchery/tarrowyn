@@ -99,7 +99,7 @@ impl super::super::WorldRepository {
                             "Awaiting a town-hall approval before building access begins."
                                 .to_owned(),
                     };
-                    state.phase4.next_claim_id += 1;
+                    state.phase4.next_claim_id = state.phase4.next_claim_id.saturating_add(1);
                     response.claim = Some(claim.clone());
                     state.phase4.claims.push(claim);
                     response.accepted = true;

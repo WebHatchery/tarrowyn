@@ -260,6 +260,8 @@ Guest identity and development-session identifiers now also saturate at their
 numeric ceiling, with a focused session-allocation boundary regression.
 Direct trade identifiers follow the same saturation policy, with a focused
 trade-ledger boundary regression.
+Land-lease identifiers now follow the same saturation policy, with a focused
+claim-ledger boundary regression.
 Regional household movement history also keeps its latest 64 entries on runtime
 updates and snapshot load. The full release gate is reserved for the next major
 milestone or a change that crosses subsystem boundaries.
