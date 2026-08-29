@@ -186,3 +186,19 @@ fn invalid_household_location_reference_degrades_readiness() {
     assert!(!health.ready);
     assert!(!health.integrity_ok);
 }
+
+#[test]
+fn invalid_market_stock_reference_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state
+            .phase5
+            .stock
+            .insert("missing-location:stone".to_owned(), 1);
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}

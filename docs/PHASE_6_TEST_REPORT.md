@@ -366,3 +366,6 @@ rerun the full release gate.
 The same check now rejects regional event records with empty or unknown
 affected-location IDs and household records with unknown movement endpoints.
 Focused regressions cover those two restore boundaries as well.
+
+Regional stock keys are also checked against known location and item IDs, with
+a focused regression for a stock entry that names a missing location.

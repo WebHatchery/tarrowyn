@@ -475,6 +475,14 @@ fn integrity_ok(state: &RepositoryState) -> bool {
                 .as_deref()
                 .is_none_or(|location_id| location_ids.contains(location_id))
     });
+    let item_ids = crate::content::item_ids();
+    let stock_ok = !state.phase5.stock.is_empty()
+        && state.phase5.stock.keys().all(|key| {
+            let Some((location_id, commodity)) = key.split_once(':') else {
+                return false;
+            };
+            location_ids.contains(location_id) && item_ids.contains(commodity)
+        });
     let unique_characters = state
         .identities
         .values()
@@ -491,6 +499,7 @@ fn integrity_ok(state: &RepositoryState) -> bool {
         && travel_ids_ok
         && events_ok
         && households_ok
+        && stock_ok
         && state.phase5.routes.iter().all(|route| {
             route.length > 0
                 && route.risk_percent <= 100
