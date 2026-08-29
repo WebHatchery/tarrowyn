@@ -12,6 +12,7 @@ mod chat_validation;
 mod events;
 mod input_bounds;
 mod movement_validation;
+mod numeric_boundaries;
 mod persistence;
 mod request_validation;
 mod reset;

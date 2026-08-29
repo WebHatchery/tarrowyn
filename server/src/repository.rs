@@ -459,12 +459,12 @@ impl WorldRepository {
     pub fn tick(&self) {
         let started = Instant::now();
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        state.tick += 1;
+        state.tick = state.tick.saturating_add(1);
         let previous_day = state.clock.day;
         state.clock.seconds += self.config.world_seconds_per_tick.max(0.0);
         while state.clock.seconds >= state.clock.day_length_seconds.max(1.0) {
             state.clock.seconds -= state.clock.day_length_seconds.max(1.0);
-            state.clock.day += 1;
+            state.clock.day = state.clock.day.saturating_add(1);
         }
         if state.clock.day != previous_day {
             phase4::day_rollover(&mut state);
