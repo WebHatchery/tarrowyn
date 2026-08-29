@@ -41,3 +41,16 @@ fn event_streams_reject_cursors_before_the_retained_window() {
     );
     assert_eq!(boundary.cursor, current);
 }
+
+#[test]
+fn event_cursor_stays_at_the_numeric_ceiling() {
+    let repository = repo();
+    let mut state = repository.state.lock().expect("world repository lock");
+    state.cursor = u64::MAX;
+    let clock = state.clock.clone();
+
+    super::super::push_event(&mut state, WorldEvent::Clock(clock));
+
+    assert_eq!(state.cursor, u64::MAX);
+    assert_eq!(state.events.back().expect("ceiling event").cursor, u64::MAX);
+}

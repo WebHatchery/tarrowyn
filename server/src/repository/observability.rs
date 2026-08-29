@@ -45,7 +45,7 @@ pub(super) fn meta(tick: u64, request_id: Option<String>, cursor: Option<u64>) -
 }
 
 pub(super) fn push_event(state: &mut RepositoryState, event: WorldEvent) -> u64 {
-    state.cursor += 1;
+    state.cursor = state.cursor.saturating_add(1);
     state.events.push_back(EventRecord {
         cursor: state.cursor,
         event,
