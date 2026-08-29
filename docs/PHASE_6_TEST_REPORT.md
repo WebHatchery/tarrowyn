@@ -571,6 +571,8 @@ Production refresh replay caches now validate request-key shape and retained
 session/account alignment, with one focused cross-account cache regression.
 Moderation replay caches now bind their keys to live identity and request
 records, with one focused moderation-key regression.
+Support repair replay caches now bind their keys to an authenticated operator
+account and request, with one focused support-key regression.
 Regional travel persistence now keeps status, progress, and ETA in agreement,
 with one focused travel-timeline regression.
 

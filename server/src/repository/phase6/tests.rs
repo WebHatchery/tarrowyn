@@ -25,6 +25,7 @@ mod operations_metrics;
 mod service_orders;
 mod session_integrity;
 mod support_chronicle;
+mod support_integrity;
 mod support_inventory;
 mod support_travel;
 

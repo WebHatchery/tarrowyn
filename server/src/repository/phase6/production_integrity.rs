@@ -195,10 +195,11 @@ fn replay_caches_ok(state: &RepositoryState, identity_accounts: &HashSet<&str>) 
     let revoke_results_ok = phase6.auth_revoke_results.iter().all(|(key, response)| {
         bounded(key, MAX_CACHE_KEY_CHARS) && bounded(&response.request_id, 64)
     });
-    let support_results_ok = phase6
-        .request_results
-        .iter()
-        .all(|(key, response)| bounded(key, MAX_CACHE_KEY_CHARS) && support_response_ok(response));
+    let support_results_ok = phase6.request_results.iter().all(|(key, response)| {
+        bounded(key, MAX_CACHE_KEY_CHARS)
+            && support_response_ok(response)
+            && account_cache_key_matches(key, "repair:", &response.request_id, state)
+    });
     let moderation_results_ok = phase6.moderation_results.iter().all(|(key, response)| {
         bounded(key, MAX_CACHE_KEY_CHARS)
             && moderation_response_ok(response)
@@ -320,6 +321,18 @@ fn identity_cache_key_matches(
         .identities
         .keys()
         .any(|identity_key| key == format!("{prefix}{identity_key}:{request_id}"))
+}
+
+fn account_cache_key_matches(
+    key: &str,
+    prefix: &str,
+    request_id: &str,
+    state: &RepositoryState,
+) -> bool {
+    state
+        .identities
+        .values()
+        .any(|identity| key == format!("{prefix}{}:{request_id}", identity.account_id))
 }
 
 fn account_or_deleted(account_id: &str, identity_accounts: &HashSet<&str>) -> bool {
