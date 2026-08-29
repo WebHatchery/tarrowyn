@@ -81,9 +81,9 @@ impl Inventory {
 
     fn add_crop(&mut self, kind: CropKind) {
         match kind {
-            CropKind::Wheat => self.wheat += 1,
-            CropKind::Turnip => self.turnips += 1,
-            CropKind::Moonberry => self.moonberries += 1,
+            CropKind::Wheat => self.wheat = self.wheat.saturating_add(1),
+            CropKind::Turnip => self.turnips = self.turnips.saturating_add(1),
+            CropKind::Moonberry => self.moonberries = self.moonberries.saturating_add(1),
         }
     }
 }
@@ -240,7 +240,7 @@ impl GameSession {
         let mut advanced = false;
         while self.day_seconds >= day_length {
             self.day_seconds -= day_length;
-            self.day += 1;
+            self.day = self.day.saturating_add(1);
             advanced = true;
             self.advance_crops();
         }
@@ -300,7 +300,7 @@ impl GameSession {
             ActionKind::Listen => self.listen_at_tavern(),
         };
         if result.success {
-            self.player.actions_completed += 1;
+            self.player.actions_completed = self.player.actions_completed.saturating_add(1);
             self.record(result.message.clone());
         }
         result
@@ -345,7 +345,7 @@ impl GameSession {
             .crops
             .set(tile, Some(CropState { kind, stage: 0 }));
         self.player.inventory.seeds -= 1;
-        self.player.seeds_planted += 1;
+        self.player.seeds_planted = self.player.seeds_planted.saturating_add(1);
         success(format!("Planted {} in the shared fields.", kind.name()))
     }
 
@@ -359,9 +359,9 @@ impl GameSession {
         if crop.mature() {
             return failure(format!("The {} is ready to harvest.", crop.kind.name()));
         }
-        crop.stage += 1;
+        crop.stage = crop.stage.saturating_add(1);
         self.world.crops.set(tile, Some(crop));
-        self.player.skill += 1;
+        self.player.skill = self.player.skill.saturating_add(1);
         success(format!(
             "Tended the {}. Growth stage {}/3.",
             crop.kind.name(),
@@ -379,8 +379,8 @@ impl GameSession {
         };
         self.world.crops.set(tile, None);
         self.player.inventory.add_crop(crop.kind);
-        self.player.gold += 2;
-        self.player.skill += 1;
+        self.player.gold = self.player.gold.saturating_add(2);
+        self.player.skill = self.player.skill.saturating_add(1);
         success(format!("Harvested {} and earned 2 gold.", crop.kind.name()))
     }
 
@@ -388,7 +388,7 @@ impl GameSession {
         if self.player.position.manhattan_distance(&TAVERN_TILE) > 1 {
             return failure("The Hearth is just along the path; walk closer to listen.");
         }
-        self.player.reputation += 1;
+        self.player.reputation = self.player.reputation.saturating_add(1);
         success("A traveller mentions lanterns moving beyond Whisperwood.".to_owned())
     }
 

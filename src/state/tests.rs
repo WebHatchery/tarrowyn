@@ -109,3 +109,54 @@ fn current_saves_migrate_to_the_configured_version() {
     assert_eq!(migrated.day, 1);
     assert_eq!(migrated.day_seconds, 180.0);
 }
+
+#[test]
+fn offline_progression_counters_stay_at_the_numeric_ceiling() {
+    let config = test_config();
+    let mut session = GameSession::new(&config);
+    session.player.position = TilePos::new(4, 5);
+    session.player.actions_completed = u32::MAX;
+    session.player.seeds_planted = u32::MAX;
+    session.player.skill = u32::MAX;
+    session.player.gold = u32::MAX;
+    session.player.reputation = u32::MAX;
+    session.player.inventory.wheat = u32::MAX;
+    session.player.inventory.seeds = 1;
+    session.day = u32::MAX;
+    session.day_seconds = config.day_length_seconds;
+
+    assert!(session.update_clock(&config, 0.0));
+    assert_eq!(session.day, u32::MAX);
+
+    assert!(
+        session
+            .apply_action(&action("plant", ActionKind::Plant))
+            .success
+    );
+    assert_eq!(session.player.seeds_planted, u32::MAX);
+    assert_eq!(session.player.actions_completed, u32::MAX);
+
+    assert!(
+        session
+            .apply_action(&action("tend", ActionKind::Tend))
+            .success
+    );
+    assert_eq!(session.player.skill, u32::MAX);
+
+    assert!(
+        session
+            .apply_action(&action("harvest", ActionKind::Harvest))
+            .success
+    );
+    assert_eq!(session.player.inventory.wheat, u32::MAX);
+    assert_eq!(session.player.gold, u32::MAX);
+    assert_eq!(session.player.skill, u32::MAX);
+
+    session.player.position = TAVERN_TILE;
+    assert!(
+        session
+            .apply_action(&action("listen", ActionKind::Listen))
+            .success
+    );
+    assert_eq!(session.player.reputation, u32::MAX);
+}
