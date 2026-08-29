@@ -1,6 +1,6 @@
 use super::*;
 use tarrowyn_protocol::{
-    LawBoundaryResponse, MarketOrder, MarketSnapshot, RouteRecord, RouteStatus,
+    LawBoundaryResponse, MarketOrder, MarketOrderAction, MarketSnapshot, RouteRecord, RouteStatus,
 };
 
 #[test]
@@ -210,6 +210,16 @@ fn market_button_waits_for_the_order_destination() {
         prices: Vec::new(),
         cursor: 1,
     });
+
+    assert!(client.has_open_market_order());
+    client.queue_cycle("cancel-market");
+    assert!(matches!(
+        client.commands.front(),
+        Some(Phase5Command::Market(request))
+            if request.action == MarketOrderAction::Cancel
+                && request.order_id.as_deref() == Some("saltmere-seeds")
+    ));
+    client.commands.clear();
 
     client.queue_cycle("market-region");
     assert!(client.commands.is_empty());

@@ -63,5 +63,6 @@ pub struct UiContext<'a> {
     pub combat: Option<&'a LocalCombatState>,
     pub storm_magic_unlocked: bool,
     pub knocked_out: bool,
+    pub has_open_market_order: bool,
     pub ui: &'a VirtualUi,
 }

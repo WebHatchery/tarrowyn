@@ -620,6 +620,10 @@ impl Phase4Client {
         self.regional.summary()
     }
 
+    pub(super) fn has_open_market_order(&self) -> bool {
+        self.regional.has_open_market_order()
+    }
+
     pub(super) fn regional_inspection(&self) -> String {
         self.regional.inspection()
     }

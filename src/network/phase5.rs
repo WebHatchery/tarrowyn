@@ -5,15 +5,16 @@ use serde::Deserialize;
 use tarrowyn_protocol::{
     AccountDeletionRequest, AccountDeletionResponse, AccountResponse, ApiResponse, AuthLinkRequest,
     AuthLinkResponse, AuthRefreshResponse, AuthRevokeResponse, AuthSession, GuestSessionResponse,
-    LawBoundaryResponse, MarketOrderAction, MarketOrderRequest, MarketSnapshot,
-    ModerationReportRequest, ModerationReportResponse, RegionSnapshot, RegionalEventAction,
-    RegionalEventRequest, RegionalEventResponse, RegionalEventsResponse,
-    RegionalHouseholdsResponse, RouteAction, RouteRequest, RouteResponse, SettlementsResponse,
-    TravelAction, TravelRequest, TravelResponse, TravelStatus,
+    LawBoundaryResponse, MarketOrderRequest, MarketSnapshot, ModerationReportRequest,
+    ModerationReportResponse, RegionSnapshot, RegionalEventAction, RegionalEventRequest,
+    RegionalEventResponse, RegionalEventsResponse, RegionalHouseholdsResponse, RouteAction,
+    RouteRequest, RouteResponse, SettlementsResponse, TravelAction, TravelRequest, TravelResponse,
+    TravelStatus,
 };
 
 const MAX_CACHED_REGIONAL_EVENTS: usize = 2048;
 
+mod market;
 mod summary;
 mod travel;
 
@@ -247,6 +248,7 @@ impl Phase5Client {
             "travel" => self.queue_travel(request_id),
             "recover-travel" => self.queue_travel_action(request_id, TravelAction::Recover),
             "market-region" => self.queue_market(request_id),
+            "cancel-market" => self.queue_market_cancel(request_id),
             "region-event" => self.queue_event(request_id),
             "account" => {
                 let _ = super::queue::try_push(
@@ -334,53 +336,6 @@ impl Phase5Client {
                 );
             }
             _ => {}
-        }
-    }
-
-    fn queue_market(&mut self, request_id: String) {
-        let Some(region) = self.region.as_ref() else {
-            return;
-        };
-        let location = region.player_location_id.as_str();
-        if let Some(order) = self.market.as_ref().and_then(|market| {
-            market.orders.iter().find(|order| {
-                order.status == tarrowyn_protocol::MarketOrderStatus::Open
-                    && order.destination_location_id == location
-            })
-        }) {
-            super::queue::try_push(
-                &mut self.commands,
-                Phase5Command::Market(MarketOrderRequest {
-                    request_id,
-                    action: MarketOrderAction::Fulfil,
-                    order_id: Some(order.order_id.clone()),
-                    destination_location_id: None,
-                    commodity: None,
-                    quantity: None,
-                }),
-            );
-        } else if location == "hearth"
-            && !self.market.as_ref().is_some_and(|market| {
-                market.orders.iter().any(|order| {
-                    order.status == tarrowyn_protocol::MarketOrderStatus::Open
-                        && self
-                            .own_account_id
-                            .as_deref()
-                            .is_some_and(|account_id| order.owner_account_id == account_id)
-                })
-            })
-        {
-            super::queue::try_push(
-                &mut self.commands,
-                Phase5Command::Market(MarketOrderRequest {
-                    request_id,
-                    action: MarketOrderAction::Create,
-                    order_id: None,
-                    destination_location_id: Some("saltmere".to_owned()),
-                    commodity: Some(tarrowyn_protocol::CommodityKind::Seeds),
-                    quantity: Some(1),
-                }),
-            );
         }
     }
 
@@ -613,6 +568,18 @@ impl Phase5Client {
         self.region.as_ref()
     }
 
+    pub(super) fn has_open_market_order(&self) -> bool {
+        let Some(account_id) = self.own_account_id.as_deref() else {
+            return false;
+        };
+        self.market.as_ref().is_some_and(|market| {
+            market.orders.iter().any(|order| {
+                order.status == tarrowyn_protocol::MarketOrderStatus::Open
+                    && order.owner_account_id == account_id
+            })
+        })
+    }
+
     fn next_id(&mut self) -> String {
         let id = format!("phase5-ui-{}", self.next_request_id);
         self.next_request_id = self.next_request_id.saturating_add(1);
@@ -771,6 +738,10 @@ impl OnlineClient {
     }
     pub(crate) fn phase5_summary(&self) -> String {
         self.phase4.region_summary()
+    }
+
+    pub(crate) fn has_open_market_order(&self) -> bool {
+        self.phase4.has_open_market_order()
     }
 
     pub(crate) fn phase5_inspection(&self) -> String {

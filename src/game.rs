@@ -234,6 +234,7 @@ impl Game {
                         .player
                         .as_ref()
                         .is_some_and(|player| player.knocked_out),
+                    has_open_market_order: client.has_open_market_order(),
                     ui: &virtual_ui,
                 })
             }
@@ -286,6 +287,7 @@ impl Game {
                     combat: None,
                     storm_magic_unlocked: false,
                     knocked_out: false,
+                    has_open_market_order: false,
                     ui: &virtual_ui,
                 })
             }
@@ -586,7 +588,9 @@ impl Game {
                     }
                 }
                 "travel" | "recover-travel" | "route-repair" | "market-region" | "region-event"
-                | "account" | "logout" | "report" | "delete-account" => client.queue_phase5(id),
+                | "cancel-market" | "account" | "logout" | "report" | "delete-account" => {
+                    client.queue_phase5(id)
+                }
                 _ => self.notifications.warning(format!("Unknown action: {id}")),
             }
             return;

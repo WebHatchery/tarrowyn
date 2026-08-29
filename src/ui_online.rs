@@ -264,6 +264,12 @@ pub(super) fn draw_sidebar(
             ("market-region", "Market", true, ButtonTone::Primary),
             ("region-event", "Event", true, ButtonTone::Primary),
             ("region-details", "Inspect", true, ButtonTone::Secondary),
+            (
+                "cancel-market",
+                "Cancel",
+                ctx.has_open_market_order,
+                ButtonTone::Secondary,
+            ),
         ],
         ctx,
         actions,
