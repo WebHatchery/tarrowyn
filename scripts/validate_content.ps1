@@ -192,6 +192,9 @@ $locationsRecords = @($region.locations)
 $routesRecords = @($region.routes)
 Assert-Records "region locations" $locationsRecords @("name", "kind", "role", "access_note") @("resources", "services")
 Assert-Records "region routes" $routesRecords @("name", "transport", "origin", "destination", "status", "note") @()
+if (@($routesRecords | Where-Object { [string]$_.origin -eq [string]$_.destination }).Count -gt 0) {
+    throw "Region routes must connect two distinct locations."
+}
 $locations = @($region.locations | ForEach-Object { $_.id })
 $routes = @($region.routes | ForEach-Object { $_.id })
 $settlementIds = @($settlementRecords | ForEach-Object { [string]$_.id })

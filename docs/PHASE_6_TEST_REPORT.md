@@ -60,6 +60,8 @@ from the validated region manifest rather than a separate endpoint constant.
 The route-profile regression confirms authoritative route transport, endpoint
 topology, timing, risk, capacity, and status follow the validated region
 manifest.
+The route-topology regression confirms authored routes connect distinct
+locations before travel projections are built.
 The location-profile regression confirms authoritative names, kinds, positions,
 roles, resources, services, and condition follow the validated region manifest.
 The regional-bootstrap regression confirms fresh location, route, settlement,

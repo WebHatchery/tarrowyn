@@ -87,6 +87,7 @@ pub(super) fn validate_region(
                 || route.transport.trim().is_empty()
                 || route.origin.trim().is_empty()
                 || route.destination.trim().is_empty()
+                || route.origin == route.destination
                 || route.length == 0
                 || route.risk_percent > 100
                 || route.condition > 100
@@ -100,7 +101,10 @@ pub(super) fn validate_region(
                 || route.note.trim().is_empty()
         })
     {
-        return Err("region locations and routes contain incomplete or invalid records".to_owned());
+        return Err(
+            "region locations and routes contain incomplete, distinct, or invalid records"
+                .to_owned(),
+        );
     }
     if region.calendar.season_days == 0
         || region.calendar.seasons.len() != 4
