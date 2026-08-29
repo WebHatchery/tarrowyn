@@ -287,7 +287,11 @@ pub struct Inventory {
 
 impl Inventory {
     pub fn total_items(self) -> u32 {
-        self.wheat + self.turnips + self.moonberries + self.seeds + self.bandages
+        self.wheat
+            .saturating_add(self.turnips)
+            .saturating_add(self.moonberries)
+            .saturating_add(self.seeds)
+            .saturating_add(self.bandages)
     }
 }
 

@@ -57,6 +57,19 @@ fn position_distance_saturates_malformed_coordinates() {
 }
 
 #[test]
+fn inventory_total_saturates_malformed_quantities() {
+    let inventory = Inventory {
+        wheat: u32::MAX,
+        turnips: u32::MAX,
+        moonberries: u32::MAX,
+        seeds: u32::MAX,
+        bandages: u32::MAX,
+    };
+
+    assert_eq!(inventory.total_items(), u32::MAX);
+}
+
+#[test]
 fn chat_contract_preserves_bounded_message_fields() {
     let request = ChatRequest {
         request_id: "chat-1".to_owned(),
