@@ -205,6 +205,36 @@ fn invalid_regional_household_timeline_degrades_readiness() {
 }
 
 #[test]
+fn invalid_travel_timeline_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = super::guest(&repository, "integrity-travel-timeline");
+    repository
+        .travel(
+            &session.account_token,
+            tarrowyn_protocol::TravelRequest {
+                request_id: "integrity-travel-timeline-start".to_owned(),
+                action: tarrowyn_protocol::TravelAction::Start,
+                route_id: Some("north-pack-road".to_owned()),
+                travel_id: None,
+            },
+        )
+        .expect("travel start");
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state
+            .phase5
+            .travel
+            .get_mut(&session.client_key)
+            .expect("travel state")
+            .eta_tick = 0;
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
 fn invalid_travel_reference_degrades_readiness() {
     let repository = WorldRepository::new(ServerConfig::default());
     let session = super::guest(&repository, "integrity-travel");

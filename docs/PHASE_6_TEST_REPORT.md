@@ -455,3 +455,8 @@ Regional household integrity now validates the fixed household registry,
 location references, bounded history, supported lifecycle statuses, and
 departure/arrival timelines. Two focused regressions cover an unsupported
 status and an impossible considering-state timeline.
+
+Regional travel integrity now validates journey identifiers, endpoint
+references, non-zero timelines, bounded interruption notes, supported stored
+statuses, and interruption recovery metadata. One focused regression covers a
+zero-length persisted journey.

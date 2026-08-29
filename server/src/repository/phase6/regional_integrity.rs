@@ -6,6 +6,7 @@ const MAX_EVENT_TEXT_CHARS: usize = 512;
 const MAX_EVENT_ID_CHARS: usize = 160;
 const MAX_HOUSEHOLD_TEXT_CHARS: usize = 240;
 const MAX_HOUSEHOLD_HISTORY: usize = 64;
+const MAX_TRAVEL_TEXT_CHARS: usize = 160;
 
 pub(super) fn ok(state: &RepositoryState) -> bool {
     let location_ids: HashSet<&str> = state
@@ -30,6 +31,10 @@ pub(super) fn ok(state: &RepositoryState) -> bool {
             .households
             .iter()
             .all(|household| household_ok(household, &location_ids, state.tick))
+        && state.phase5.travel.iter().all(|(identity_key, travel)| {
+            state.identities.contains_key(identity_key)
+                && travel_ok(travel, &location_ids, state.tick)
+        })
 }
 
 fn unique_event_ids(state: &RepositoryState) -> bool {
@@ -148,6 +153,30 @@ fn household_ok(
         && timeline_ok
 }
 
+fn travel_ok(
+    travel: &tarrowyn_protocol::TravelState,
+    location_ids: &HashSet<&str>,
+    current_tick: u64,
+) -> bool {
+    bounded_travel(&travel.travel_id)
+        && bounded_travel(&travel.route_id)
+        && bounded_travel(&travel.origin_location_id)
+        && bounded_travel(&travel.destination_location_id)
+        && travel.origin_location_id != travel.destination_location_id
+        && location_ids.contains(travel.origin_location_id.as_str())
+        && location_ids.contains(travel.destination_location_id.as_str())
+        && travel.departure_tick < travel.eta_tick
+        && travel.eta_tick > 0
+        && travel.departure_tick <= current_tick
+        && travel.progress <= 100
+        && travel.risk_percent <= 100
+        && !matches!(travel.status, tarrowyn_protocol::TravelStatus::Idle)
+        && travel.interruption.as_deref().is_none_or(bounded_travel)
+        && travel.recovery_note.as_deref().is_none_or(bounded_travel)
+        && (!matches!(travel.status, tarrowyn_protocol::TravelStatus::Interrupted)
+            || (travel.interruption.is_some() && travel.recovery_note.is_some()))
+}
+
 fn bounded(value: &str) -> bool {
     bounded_with_limit(value, MAX_EVENT_TEXT_CHARS)
 }
@@ -160,4 +189,8 @@ fn bounded_with_limit(value: &str, max_chars: usize) -> bool {
 
 fn bounded_household(value: &str) -> bool {
     bounded_with_limit(value, MAX_HOUSEHOLD_TEXT_CHARS)
+}
+
+fn bounded_travel(value: &str) -> bool {
+    bounded_with_limit(value, MAX_TRAVEL_TEXT_CHARS)
 }
