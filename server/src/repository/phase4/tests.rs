@@ -1,6 +1,7 @@
 use super::super::{ServerConfig, WorldRepository};
 mod combat_actions;
 mod farming;
+mod knowledge;
 mod professions;
 
 use tarrowyn_protocol::{

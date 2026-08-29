@@ -126,7 +126,7 @@ pub(super) fn fresh(_config: &ServerConfig) -> Phase4State {
             teachable: true,
             writable: true,
             discovered_by: Vec::new(),
-            stored_in: "The Hearth guild archive".to_owned(),
+            stored_in: "A discoverer's private field notes".to_owned(),
         }],
         known_by: HashMap::new(),
         combat: HashMap::new(),

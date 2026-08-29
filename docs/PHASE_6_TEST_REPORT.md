@@ -62,6 +62,9 @@ the new window boundary to tick zero.
 The lease presentation regression confirms the client summary exposes a
 human-readable real-time countdown and uses hours near expiry rather than
 leaking an opaque Unix timestamp.
+The knowledge-visibility regression confirms undiscovered methods are redacted
+for unrelated players, become readable for a taught learner, and become public
+only after the discoverer records them in the guild archive.
 The skill-catalogue regressions confirm direct root guidance, non-empty advanced
 discovery requirements, and re-evaluation of stored prerequisite history when a
 new advanced merger becomes eligible.

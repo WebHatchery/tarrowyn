@@ -110,7 +110,9 @@ custom service label cannot change the authoritative order.
 
 The first discoverable knowledge is the Moonberry trellis method. It can be
 discovered, written into the guild archive, taught to another account, and
-applied. A teaching action must name another recognised player and records
+applied. Until the discoverer teaches it or records it, other players receive
+only a redacted clue rather than the method's description or effect. A teaching
+action must name another recognised player and records
 practice in the Teaching root only after the transfer succeeds. The server owns
 all discovery and transfer checks; the client only shows the resulting
 projection.

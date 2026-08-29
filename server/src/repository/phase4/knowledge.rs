@@ -178,10 +178,39 @@ fn finish(
 }
 
 fn view(state: &super::super::models::RepositoryState, key: &str) -> KnowledgeState {
+    let known_items = state.phase4.known_by.get(key);
     KnowledgeState {
-        items: state.phase4.knowledge.clone(),
-        known_by_player: state.phase4.known_by.get(key).cloned().unwrap_or_default(),
+        items: state
+            .phase4
+            .knowledge
+            .iter()
+            .map(|item| {
+                let known_by_player = known_items
+                    .is_some_and(|known| known.iter().any(|id| id == &item.knowledge_id));
+                if known_by_player || item.stored_in.contains("guild archive") {
+                    item.clone()
+                } else {
+                    redacted_item(item)
+                }
+            })
+            .collect(),
+        known_by_player: known_items.cloned().unwrap_or_default(),
         cursor: state.cursor,
+    }
+}
+
+fn redacted_item(item: &tarrowyn_protocol::KnowledgeItem) -> tarrowyn_protocol::KnowledgeItem {
+    tarrowyn_protocol::KnowledgeItem {
+        knowledge_id: item.knowledge_id.clone(),
+        title: "Unrevealed field clue".to_owned(),
+        kind: item.kind,
+        description: "A discovery is waiting, but its method remains with the discoverer."
+            .to_owned(),
+        effect: "Discover this clue through play or receive it from another player.".to_owned(),
+        teachable: false,
+        writable: false,
+        discovered_by: Vec::new(),
+        stored_in: "Private field notes".to_owned(),
     }
 }
 
