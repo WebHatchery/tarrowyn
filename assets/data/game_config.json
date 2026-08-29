@@ -7,5 +7,6 @@
   "world_height": 11,
   "day_length_seconds": 4800.0,
   "starting_gold": 12,
+  "starting_seeds": 6,
   "starting_skill": 1
 }

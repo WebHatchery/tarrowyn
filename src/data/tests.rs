@@ -10,4 +10,5 @@ fn phase_zero_data_loads() {
     assert_eq!(data.crops.len(), 3);
     assert_eq!(data.config.world_width, 18);
     assert_eq!(data.config.world_height, 11);
+    assert_eq!(data.config.starting_seeds, 6);
 }

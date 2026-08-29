@@ -23,6 +23,7 @@ pub struct GameConfig {
     pub world_height: usize,
     pub day_length_seconds: f32,
     pub starting_gold: u32,
+    pub starting_seeds: u32,
     pub starting_skill: u32,
 }
 

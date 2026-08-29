@@ -66,7 +66,7 @@ impl Default for ServerConfig {
             chat_max_length: 160,
             moderation_cooldown_ticks: 20,
             starting_gold: content.starting_gold,
-            starting_seeds: 6,
+            starting_seeds: content.starting_seeds,
             crop_stage_seconds: 30.0,
             trade_expiry_ticks: 240,
             claim_reclaim_ticks: 480,

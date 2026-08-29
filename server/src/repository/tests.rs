@@ -44,6 +44,10 @@ fn guest_identity_uses_the_shared_starting_skill() {
     let player = repository.inventory(&session.account_token).unwrap().data;
 
     assert_eq!(player.skill, crate::content::starting_skill());
+    assert_eq!(
+        player.inventory.seeds,
+        ServerConfig::default().starting_seeds
+    );
 }
 
 #[test]

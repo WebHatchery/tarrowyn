@@ -195,7 +195,7 @@ impl GameSession {
                 skill: config.starting_skill,
                 reputation: 0,
                 inventory: Inventory {
-                    seeds: 6,
+                    seeds: config.starting_seeds,
                     ..Inventory::default()
                 },
                 seeds_planted: 0,

@@ -13,6 +13,7 @@ fn config() -> GameConfig {
         world_height: 2,
         day_length_seconds: 180.0,
         starting_gold: 12,
+        starting_seeds: 6,
         starting_skill: 1,
     }
 }

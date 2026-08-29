@@ -53,6 +53,7 @@ struct GameConfigManifest {
     world_height: u32,
     day_length_seconds: f32,
     starting_gold: u32,
+    starting_seeds: u32,
     starting_skill: u32,
 }
 
@@ -62,6 +63,7 @@ pub(crate) struct GameConfigDefaults {
     pub(crate) world_height: u32,
     pub(crate) day_length_seconds: f32,
     pub(crate) starting_gold: u32,
+    pub(crate) starting_seeds: u32,
     pub(crate) starting_skill: u32,
 }
 
@@ -276,6 +278,7 @@ pub(crate) fn game_config_defaults() -> GameConfigDefaults {
         world_height: config.world_height,
         day_length_seconds: config.day_length_seconds,
         starting_gold: config.starting_gold,
+        starting_seeds: config.starting_seeds,
         starting_skill: config.starting_skill,
     }
 }
@@ -451,6 +454,7 @@ fn validate_game_config(
         || !config.day_length_seconds.is_finite()
         || config.day_length_seconds <= 0.0
         || config.starting_gold == 0
+        || config.starting_seeds == 0
         || config.starting_skill == 0
     {
         return Err("game config contains an empty or non-positive required value".to_owned());

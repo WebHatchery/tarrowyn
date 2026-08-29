@@ -11,6 +11,7 @@ fn test_config() -> GameConfig {
         world_height: 11,
         day_length_seconds: 180.0,
         starting_gold: 12,
+        starting_seeds: 6,
         starting_skill: 1,
     }
 }
@@ -33,6 +34,16 @@ fn water_blocks_movement_but_the_path_is_open() {
 
     session.player.position = TilePos::new(15, 6);
     assert!(!session.move_player(1, 0));
+}
+
+#[test]
+fn offline_fixture_uses_the_configured_starting_seed_count() {
+    let mut config = test_config();
+    config.starting_seeds = 9;
+
+    let session = GameSession::new(&config);
+
+    assert_eq!(session.player.inventory.seeds, 9);
 }
 
 #[test]

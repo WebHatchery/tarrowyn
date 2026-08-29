@@ -18,6 +18,7 @@ fn default_server_world_values_match_the_shared_game_config_manifest() {
     assert_eq!(config.world_height, content.world_height);
     assert_eq!(config.day_length_seconds, content.day_length_seconds);
     assert_eq!(config.starting_gold, content.starting_gold);
+    assert_eq!(config.starting_seeds, content.starting_seeds);
 }
 
 #[test]
