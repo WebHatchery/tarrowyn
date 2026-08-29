@@ -76,7 +76,9 @@ pub struct Inventory {
 
 impl Inventory {
     pub fn total_crops(&self) -> u32 {
-        self.wheat + self.turnips + self.moonberries
+        self.wheat
+            .saturating_add(self.turnips)
+            .saturating_add(self.moonberries)
     }
 
     fn add_crop(&mut self, kind: CropKind) {

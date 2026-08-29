@@ -121,6 +121,7 @@ fn offline_progression_counters_stay_at_the_numeric_ceiling() {
     session.player.gold = u32::MAX;
     session.player.reputation = u32::MAX;
     session.player.inventory.wheat = u32::MAX;
+    session.player.inventory.turnips = u32::MAX;
     session.player.inventory.seeds = 1;
     session.day = u32::MAX;
     session.day_seconds = config.day_length_seconds;
@@ -149,6 +150,7 @@ fn offline_progression_counters_stay_at_the_numeric_ceiling() {
             .success
     );
     assert_eq!(session.player.inventory.wheat, u32::MAX);
+    assert_eq!(session.player.inventory.total_crops(), u32::MAX);
     assert_eq!(session.player.gold, u32::MAX);
     assert_eq!(session.player.skill, u32::MAX);
 

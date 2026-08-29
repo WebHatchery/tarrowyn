@@ -272,6 +272,8 @@ The offline recovery fixture also saturates its local progression counters,
 with a focused state boundary regression.
 The shared inventory projection also saturates malformed total quantities, with
 a focused protocol boundary regression.
+The offline inventory total follows the same saturation policy when saved crop
+counts are already at their ceiling.
 Regional household movement history also keeps its latest 64 entries on runtime
 updates and snapshot load. The full release gate is reserved for the next major
 milestone or a change that crosses subsystem boundaries.
