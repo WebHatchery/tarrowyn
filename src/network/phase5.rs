@@ -700,11 +700,6 @@ fn phase5_notice(
     }
 }
 
-fn is_transient_transport_error(error: &str) -> bool {
-    error.contains(" timed out after ")
-        || (error.contains("HTTP request '") && error.contains("' failed:"))
-}
-
 fn market_success_message(action: Option<MarketOrderAction>, fallback_used: bool) -> &'static str {
     match action {
         Some(MarketOrderAction::Create) if fallback_used => {

@@ -15,6 +15,12 @@ use tarrowyn_protocol::{
 };
 
 const REQUEST_TIMEOUT_SECONDS: f32 = 6.0;
+
+pub(super) fn is_transient_transport_error(error: &str) -> bool {
+    error.contains(" timed out after ")
+        || (error.contains("HTTP request '") && error.contains("' failed:"))
+}
+
 mod chronicle;
 mod cursor;
 mod frontier;

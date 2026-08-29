@@ -10,7 +10,10 @@ impl Phase4Client {
         self.pending_households = None;
         self.pending_combat = None;
         self.pending_command = None;
+        self.in_flight_command = None;
         self.commands.clear();
+        self.command_retry_timer = 0.0;
+        self.command_retry_count = 0;
         self.governance = None;
         self.claims = None;
         self.professions = None;

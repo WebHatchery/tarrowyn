@@ -47,7 +47,7 @@ impl Phase5Client {
         match result {
             Ok(response) => self.apply_refresh(response.data.session, api, notices),
             Err(error)
-                if is_transient_transport_error(&error)
+                if super::super::is_transient_transport_error(&error)
                     && self.refresh_retry_count < MAX_REFRESH_RETRIES
                     && in_flight_refresh.is_some() =>
             {

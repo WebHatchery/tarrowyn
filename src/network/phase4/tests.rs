@@ -58,6 +58,36 @@ fn phase_four_reset_discards_cached_ledgers() {
 }
 
 #[test]
+fn transient_phase_four_action_requeues_the_same_request() {
+    let mut client = Phase4Client::new();
+    let request = ProfessionRequest {
+        request_id: "phase4-retry".to_owned(),
+        action: ProfessionAction::LearnCapability,
+        order_id: None,
+        profession: Some(ProfessionKind::Carpenter),
+        capability_id: None,
+        service: None,
+        timing_score: None,
+    };
+    client.pending_command = Some(Pending::failed(
+        "HTTP request 'POST /v1/professions/orders' timed out after 6.0 seconds",
+    ));
+    client.in_flight_command = Some(Phase4Command::Profession(request.clone()));
+
+    let mut api = HttpClient::new("https://example.test");
+    let mut notices = Vec::new();
+    client.update(0.0, &mut api, true, false, &mut notices);
+
+    assert!(matches!(
+        client.commands.front(),
+        Some(Phase4Command::Profession(request)) if request.request_id == "phase4-retry"
+    ));
+    assert_eq!(client.command_retry_count, 1);
+    assert_eq!(client.command_retry_timer, 1.0);
+    assert_eq!(notices.len(), 1);
+}
+
+#[test]
 fn crafting_tap_becomes_a_bounded_completion_request() {
     let mut client = Phase4Client::new();
     client.begin_crafting("service-order-2");

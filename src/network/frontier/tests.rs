@@ -74,6 +74,32 @@ fn frontier_refresh_error_keeps_an_api_rejection_code() {
 }
 
 #[test]
+fn transient_frontier_action_requeues_the_same_request() {
+    let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
+    let request = ClaimRequest {
+        request_id: "frontier-retry".to_owned(),
+        action: ClaimAction::Request,
+    };
+    client.frontier.pending_command = Some(macroquad_toolkit::net::Pending::failed(
+        "HTTP request 'POST /v1/claims' timed out after 6.0 seconds",
+    ));
+    client.frontier.in_flight_command = Some(FrontierCommand::Claim(request));
+
+    let mut notices = Vec::new();
+    client
+        .frontier
+        .update(&mut client.projection, 0.0, true, &mut notices);
+
+    assert!(matches!(
+        client.frontier.commands.front(),
+        Some(FrontierCommand::Claim(request)) if request.request_id == "frontier-retry"
+    ));
+    assert_eq!(client.frontier.command_retry_count, 1);
+    assert_eq!(client.frontier.command_retry_timer, 1.0);
+    assert_eq!(notices.len(), 1);
+}
+
+#[test]
 fn frontier_action_reports_a_full_command_queue() {
     let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
     client.state = crate::network::ConnectionState::Online;

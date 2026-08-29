@@ -1,5 +1,5 @@
 use super::phase5::Phase5Client;
-use super::{NetworkNotice, REQUEST_TIMEOUT_SECONDS};
+use super::{is_transient_transport_error, NetworkNotice, REQUEST_TIMEOUT_SECONDS};
 use macroquad_toolkit::net::{HttpClient, Pending};
 use std::collections::VecDeque;
 use tarrowyn_protocol::{
@@ -10,6 +10,9 @@ use tarrowyn_protocol::{
     ProfessionRequest, ProfessionResponse, ProfessionsResponse, SkillAction, SkillRequest,
     SkillResponse, SkillStatus, SkillsResponse, WeaponKind,
 };
+
+const MAX_COMMAND_RETRIES: u8 = 3;
+const COMMAND_RETRY_DELAY_SECONDS: f32 = 1.0;
 
 mod combat;
 mod lifecycle;
@@ -22,6 +25,7 @@ mod summary;
 use combat::advance_crafting;
 use polling::{phase4_notice, poll_projection, short_error};
 
+#[derive(Clone)]
 enum Phase4Command {
     Governance(GovernanceRequest),
     Claim(ClaimLifecycleRequest),
@@ -51,6 +55,7 @@ pub(super) struct Phase4Client {
     pending_households: Option<Pending<ApiResponse<HouseholdsResponse>>>,
     pending_combat: Option<Pending<ApiResponse<LocalCombatState>>>,
     pending_command: Option<Pending<ApiResponse<Phase4CommandResponse>>>,
+    in_flight_command: Option<Phase4Command>,
     commands: VecDeque<Phase4Command>,
     governance: Option<GovernanceState>,
     claims: Option<ClaimsResponse>,
@@ -61,6 +66,8 @@ pub(super) struct Phase4Client {
     combat: Option<LocalCombatState>,
     crafting: Option<CraftingChallenge>,
     own_account_id: Option<String>,
+    command_retry_timer: f32,
+    command_retry_count: u8,
     regional: Phase5Client,
 }
 
@@ -90,6 +97,7 @@ impl Phase4Client {
             pending_households: None,
             pending_combat: None,
             pending_command: None,
+            in_flight_command: None,
             commands: VecDeque::new(),
             governance: None,
             claims: None,
@@ -100,6 +108,8 @@ impl Phase4Client {
             combat: None,
             crafting: None,
             own_account_id: None,
+            command_retry_timer: 0.0,
+            command_retry_count: 0,
             regional: Phase5Client::new(),
         }
     }
@@ -120,6 +130,7 @@ impl Phase4Client {
         if !online {
             return;
         }
+        self.command_retry_timer = (self.command_retry_timer - dt.max(0.0)).max(0.0);
         advance_crafting(&mut self.crafting, dt);
         poll_projection(
             &mut self.pending_governance,
@@ -190,12 +201,36 @@ impl Phase4Client {
             .and_then(|pending| pending.poll_timed(dt, REQUEST_TIMEOUT_SECONDS))
         {
             self.pending_command = None;
+            let in_flight_command = self.in_flight_command.take();
             match result {
-                Ok(response) => self.apply_command(response.data, notices),
-                Err(error) => notices.push(NetworkNotice::Warning(format!(
-                    "The Phase 4 action could not be confirmed; tap the visible control to retry. {}",
-                    short_error(&error)
-                ))),
+                Ok(response) => {
+                    self.command_retry_timer = 0.0;
+                    self.command_retry_count = 0;
+                    self.apply_command(response.data, notices);
+                }
+                Err(error)
+                    if is_transient_transport_error(&error)
+                        && self.command_retry_count < MAX_COMMAND_RETRIES
+                        && in_flight_command.is_some() =>
+                {
+                    self.commands
+                        .push_front(in_flight_command.expect("command exists"));
+                    self.command_retry_count += 1;
+                    self.command_retry_timer = COMMAND_RETRY_DELAY_SECONDS;
+                    notices.push(NetworkNotice::Warning(format!(
+                        "The Phase 4 action could not be confirmed; retrying the same request ({}/{}). {}",
+                        self.command_retry_count,
+                        MAX_COMMAND_RETRIES,
+                        short_error(&error)
+                    )));
+                }
+                Err(error) => {
+                    self.command_retry_count = 0;
+                    notices.push(NetworkNotice::Warning(format!(
+                        "The Phase 4 action could not be confirmed: {}",
+                        short_error(&error)
+                    )));
+                }
             }
         }
         self.dispatch(api, another_mutation_pending);
@@ -233,9 +268,10 @@ impl Phase4Client {
         if self.pending_command.is_none()
             && !another_mutation_pending
             && !self.regional.auth_refresh_pending()
+            && self.command_retry_timer <= 0.0
         {
             if let Some(command) = self.commands.pop_front() {
-                self.pending_command = Some(match command {
+                self.pending_command = Some(match &command {
                     Phase4Command::Governance(request) => {
                         api.post_json("/v1/settlement/governance", &request)
                     }
@@ -249,6 +285,7 @@ impl Phase4Client {
                     Phase4Command::Combat(request) => api.post_json("/v1/combat/local", &request),
                     Phase4Command::Skill(request) => api.post_json("/v1/skills", &request),
                 });
+                self.in_flight_command = Some(command);
             }
         }
     }

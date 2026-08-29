@@ -1,4 +1,7 @@
-use super::{NetworkNotice, OnlineClient, WorldProjection, REQUEST_TIMEOUT_SECONDS};
+use super::{
+    is_transient_transport_error, NetworkNotice, OnlineClient, WorldProjection,
+    REQUEST_TIMEOUT_SECONDS,
+};
 use macroquad_toolkit::net::{HttpClient, Pending};
 use std::collections::VecDeque;
 use tarrowyn_protocol::{
@@ -9,6 +12,10 @@ use tarrowyn_protocol::{
     WeaponKind,
 };
 
+const MAX_COMMAND_RETRIES: u8 = 3;
+const COMMAND_RETRY_DELAY_SECONDS: f32 = 1.0;
+
+#[derive(Clone)]
 enum FrontierCommand {
     Contract(ContractRequest),
     Combat(CombatRequest),
@@ -24,7 +31,10 @@ pub(super) struct FrontierClient {
         Option<Pending<ApiResponse<tarrowyn_protocol::ChronicleResponse>>>,
     pub(super) pending_opportunities: Option<Pending<ApiResponse<OpportunitiesResponse>>>,
     pub(super) pending_command: Option<Pending<ApiResponse<FrontierCommandResponse>>>,
+    in_flight_command: Option<FrontierCommand>,
     commands: VecDeque<FrontierCommand>,
+    command_retry_timer: f32,
+    command_retry_count: u8,
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -45,7 +55,10 @@ impl FrontierClient {
             pending_chronicle: None,
             pending_opportunities: None,
             pending_command: None,
+            in_flight_command: None,
             commands: VecDeque::new(),
+            command_retry_timer: 0.0,
+            command_retry_count: 0,
         }
     }
 
@@ -59,6 +72,7 @@ impl FrontierClient {
         if !online {
             return false;
         }
+        self.command_retry_timer = (self.command_retry_timer - dt.max(0.0)).max(0.0);
         let mut cursor_boundary = false;
         if let Some(result) = self
             .pending_contracts
@@ -118,12 +132,36 @@ impl FrontierClient {
             .and_then(|pending| pending.poll_timed(dt, REQUEST_TIMEOUT_SECONDS))
         {
             self.pending_command = None;
+            let in_flight_command = self.in_flight_command.take();
             match result {
-                Ok(response) => self.apply_command(response.data, projection, notices),
-                Err(error) => notices.push(NetworkNotice::Warning(format!(
-                    "The frontier command could not be confirmed; tap the visible action to retry. {}",
-                    short_error(&error)
-                ))),
+                Ok(response) => {
+                    self.command_retry_timer = 0.0;
+                    self.command_retry_count = 0;
+                    self.apply_command(response.data, projection, notices);
+                }
+                Err(error)
+                    if is_transient_transport_error(&error)
+                        && self.command_retry_count < MAX_COMMAND_RETRIES
+                        && in_flight_command.is_some() =>
+                {
+                    self.commands
+                        .push_front(in_flight_command.expect("command exists"));
+                    self.command_retry_count += 1;
+                    self.command_retry_timer = COMMAND_RETRY_DELAY_SECONDS;
+                    notices.push(NetworkNotice::Warning(format!(
+                        "The frontier command could not be confirmed; retrying the same request ({}/{}). {}",
+                        self.command_retry_count,
+                        MAX_COMMAND_RETRIES,
+                        short_error(&error)
+                    )));
+                }
+                Err(error) => {
+                    self.command_retry_count = 0;
+                    notices.push(NetworkNotice::Warning(format!(
+                        "The frontier command could not be confirmed: {}",
+                        short_error(&error)
+                    )));
+                }
             }
         }
         cursor_boundary
@@ -149,9 +187,12 @@ impl FrontierClient {
         if self.pending_opportunities.is_none() {
             self.pending_opportunities = Some(api.get("/v1/settlement/opportunities"));
         }
-        if self.pending_command.is_none() && !auth_refresh_pending {
+        if self.pending_command.is_none()
+            && !auth_refresh_pending
+            && self.command_retry_timer <= 0.0
+        {
             if let Some(command) = self.commands.pop_front() {
-                self.pending_command = Some(match command {
+                self.pending_command = Some(match &command {
                     FrontierCommand::Contract(request) => {
                         api.post_json("/v1/contracts/brambleback-watch", &request)
                     }
@@ -164,6 +205,7 @@ impl FrontierClient {
                         api.post_json("/v1/expeditions", &request)
                     }
                 });
+                self.in_flight_command = Some(command);
             }
         }
     }
@@ -174,7 +216,10 @@ impl FrontierClient {
         self.pending_chronicle = None;
         self.pending_opportunities = None;
         self.pending_command = None;
+        self.in_flight_command = None;
         self.commands.clear();
+        self.command_retry_timer = 0.0;
+        self.command_retry_count = 0;
     }
 
     pub(super) fn has_pending_command(&self) -> bool {
