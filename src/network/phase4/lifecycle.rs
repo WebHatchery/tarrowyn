@@ -16,6 +16,7 @@ impl Phase4Client {
         self.professions = None;
         self.knowledge = None;
         self.skills = None;
+        self.households = None;
         self.combat = None;
         self.crafting = None;
         self.own_account_id = None;

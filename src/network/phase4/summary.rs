@@ -61,6 +61,25 @@ pub(super) fn render(client: &Phase4Client) -> String {
             format!("Skills {mastered} mastered, {resonating} resonating")
         })
         .unwrap_or_else(|| "Skills loading".to_owned());
+    let household = client
+        .households
+        .as_ref()
+        .and_then(|households| households.households.first())
+        .map(|household| {
+            let status = match household.status {
+                tarrowyn_protocol::HouseholdLifeStatus::Arrived => "arrived",
+                tarrowyn_protocol::HouseholdLifeStatus::ReducedService => "reduced service",
+                tarrowyn_protocol::HouseholdLifeStatus::ConsideringDeparture => {
+                    "considering departure"
+                }
+                tarrowyn_protocol::HouseholdLifeStatus::Departed => "departed",
+            };
+            format!(
+                "Local life {status} • service {}%",
+                household.service_quality
+            )
+        })
+        .unwrap_or_else(|| "Local life loading".to_owned());
     let treasury = client
         .governance
         .as_ref()
@@ -77,7 +96,7 @@ pub(super) fn render(client: &Phase4Client) -> String {
             )
         })
         .unwrap_or_else(|| "Tax and treasury loading".to_owned());
-    format!("{offices} • {registry}\n{treasury}\n{orders} • {knowledge} • {skills}")
+    format!("{offices} • {registry} • {household}\n{treasury}\n{orders} • {knowledge} • {skills}")
 }
 
 fn lease_registry_summary(client: &Phase4Client, claims: &ClaimsResponse) -> String {

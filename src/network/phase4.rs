@@ -52,6 +52,7 @@ pub(super) struct Phase4Client {
     professions: Option<ProfessionsResponse>,
     knowledge: Option<KnowledgeResponse>,
     skills: Option<SkillsResponse>,
+    households: Option<HouseholdsResponse>,
     combat: Option<LocalCombatState>,
     crafting: Option<CraftingChallenge>,
     own_account_id: Option<String>,
@@ -90,6 +91,7 @@ impl Phase4Client {
             professions: None,
             knowledge: None,
             skills: None,
+            households: None,
             combat: None,
             crafting: None,
             own_account_id: None,
@@ -161,7 +163,9 @@ impl Phase4Client {
         poll_projection(
             &mut self.pending_households,
             dt,
-            |_| {},
+            |response| {
+                self.households = Some(response.data);
+            },
             notices,
             "household ledger",
         );

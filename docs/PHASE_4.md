@@ -122,7 +122,9 @@ The client needs visible town-hall, registry, claim, order, knowledge, and
 recovery controls. A player must be able to inspect a lease, understand a
 public decision, recover from defeat, and complete the core profession loop by
 touch alone. No governance or property action may depend on a hidden keyboard
-command or an optimistic local mutation.
+command or an optimistic local mutation. The shared-road sidebar also shows a
+compact local household status and service-quality projection so reduced
+service and departure clues are not hidden behind a discarded poll response.
 
 ## Acceptance test
 
