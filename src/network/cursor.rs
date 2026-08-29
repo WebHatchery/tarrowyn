@@ -28,7 +28,7 @@ pub(super) fn recover_from_cursor_boundary(
     ));
 }
 
-fn reset_projection_history(projection: &mut WorldProjection) {
+pub(super) fn reset_projection_history(projection: &mut WorldProjection) {
     projection.players.clear();
     projection.chat.clear();
     projection.day = 1;

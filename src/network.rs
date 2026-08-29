@@ -352,6 +352,7 @@ impl OnlineClient {
             }
         }
         if self.phase4.take_logged_out() {
+            self.clear_session_state();
             self.account = None;
             self.api.set_bearer_token(None);
             self.state = ConnectionState::Degraded;
@@ -446,6 +447,14 @@ impl OnlineClient {
         if self.retry_cooldown > 0.0 {
             return false;
         }
+        self.clear_session_state();
+        self.retry_count = 0;
+        self.begin_guest(false);
+        true
+    }
+
+    fn clear_session_state(&mut self) {
+        self.pending_guest = None;
         self.pending_world = None;
         self.pending_state = None;
         self.pending_ops_health = None;
@@ -461,10 +470,11 @@ impl OnlineClient {
         self.chat_queue.clear();
         self.farming_queue.clear();
         self.trade_queue.clear();
-        self.retry_count = 0;
+        self.pending_request_type = None;
+        self.pending_request_id = None;
         self.action_awaiting_confirmation = false;
-        self.begin_guest(false);
-        true
+        self.trades.clear();
+        cursor::reset_projection_history(&mut self.projection);
     }
 
     fn begin_guest(&mut self, reset: bool) {

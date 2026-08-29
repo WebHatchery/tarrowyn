@@ -155,6 +155,7 @@ impl FrontierClient {
     }
 
     pub(super) fn clear(&mut self) {
+        self.contracts.clear();
         self.pending_contracts = None;
         self.pending_chronicle = None;
         self.pending_opportunities = None;

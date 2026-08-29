@@ -86,6 +86,57 @@ fn connection_failure_exposes_recovery_and_reconnect_cooldown() {
 }
 
 #[test]
+fn session_reset_discards_world_and_frontier_projection_state() {
+    let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
+    client.projection.player_position = TilePos::new(2, 1);
+    client.projection.day = 9;
+    client.projection.server_tick = 24;
+    client.projection.cursor = 18;
+    client
+        .frontier
+        .contracts
+        .push(tarrowyn_protocol::AdventurerContract {
+            contract_id: "contract".to_owned(),
+            title: "A contract".to_owned(),
+            description: "A test contract".to_owned(),
+            target: tarrowyn_protocol::MonsterKind::Brambleback,
+            progress: 0,
+            required_progress: 1,
+            reward_gold: 1,
+            status: tarrowyn_protocol::ContractStatus::Available,
+            completion_count: 0,
+            available_at_tick: 0,
+        });
+    client.trades.push(tarrowyn_protocol::TradeOffer {
+        trade_id: "trade".to_owned(),
+        creator_account_id: "from".to_owned(),
+        creator_name: "From".to_owned(),
+        recipient_account_id: "to".to_owned(),
+        recipient_name: "To".to_owned(),
+        offer: tarrowyn_protocol::TradeBundle {
+            seeds: 1,
+            ..Default::default()
+        },
+        request: tarrowyn_protocol::TradeBundle {
+            wheat: 1,
+            ..Default::default()
+        },
+        status: tarrowyn_protocol::TradeStatus::Pending,
+        created_tick: 1,
+        expires_tick: 2,
+    });
+
+    client.clear_session_state();
+
+    assert_eq!(client.projection.player_position, TilePos::new(2, 1));
+    assert_eq!(client.projection.day, 1);
+    assert_eq!(client.projection.server_tick, 0);
+    assert_eq!(client.projection.cursor, 0);
+    assert!(client.frontier.contracts.is_empty());
+    assert!(client.trades.is_empty());
+}
+
+#[test]
 fn online_commands_are_not_queued_while_disconnected() {
     let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
     client.queue_movement(1, 0);

@@ -198,7 +198,9 @@ fn draw_map(ctx: &UiContext<'_>, rect: Rect) {
     }
 
     ui_regional::draw_map_overlay(ctx, &view, rect);
-    draw_character(&view, ctx.player_position, CREAM, true);
+    if ctx.offline || ctx.own_account_id.is_some() {
+        draw_character(&view, ctx.player_position, CREAM, true);
+    }
     for (index, player) in ctx.remote_players.iter().enumerate() {
         if ctx.own_account_id == Some(player.account_id.as_str()) {
             continue;
