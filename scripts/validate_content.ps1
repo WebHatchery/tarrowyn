@@ -123,7 +123,7 @@ if ($skillsVersion -lt 1) { throw "Skills manifest needs a positive version." }
 $region = Get-Content -Raw -LiteralPath (Join-Path $dataRoot "region.json") | ConvertFrom-Json
 $calendar = $region.calendar
 if ([string]$region.region_id -ne "hearthlands") { throw "Region manifest must use the hearthlands launch ID." }
-if ($null -eq $calendar -or $calendar.day_seconds -lt 1 -or $calendar.season_days -lt 1 -or $calendar.year_days -lt 1 -or @($calendar.seasons).Count -ne 4) {
+if ($null -eq $calendar -or $calendar.day_seconds -lt 1 -or $calendar.season_days -lt 1 -or $calendar.year_days -lt 1 -or @($calendar.seasons).Count -ne 4 -or $calendar.year_days -ne ($calendar.season_days * 4)) {
     throw "Region calendar must define positive day, season, and year values plus four seasons."
 }
 if ($dayLength -ne [double]$calendar.day_seconds) {
@@ -147,6 +147,29 @@ foreach ($requiredRoute in $requiredRoutes) {
 }
 foreach ($requiredSettlement in $requiredSettlements) {
     if ($settlementIds -notcontains $requiredSettlement) { throw "Settlements are missing launch record $requiredSettlement." }
+}
+$expectedSettlementLocations = @{
+    "hearth-settlement" = "hearth"
+    "whisperwood-settlement" = "whisperwood-outpost"
+    "saltmere-settlement" = "saltmere"
+}
+foreach ($settlementId in $expectedSettlementLocations.Keys) {
+    $settlement = $settlementRecords | Where-Object { $_.id -eq $settlementId } | Select-Object -First 1
+    if ([string]$settlement.location -ne $expectedSettlementLocations[$settlementId]) {
+        throw "Settlement $settlementId must belong to $($expectedSettlementLocations[$settlementId])."
+    }
+}
+$expectedRouteEndpoints = @{
+    "north-pack-road" = @("hearth", "whisperwood-outpost")
+    "saltmere-ferry" = @("hearth", "saltmere")
+    "watch-trail" = @("whisperwood-outpost", "saltmere")
+}
+foreach ($routeId in $expectedRouteEndpoints.Keys) {
+    $route = $routesRecords | Where-Object { $_.id -eq $routeId } | Select-Object -First 1
+    $endpoints = $expectedRouteEndpoints[$routeId]
+    if ([string]$route.origin -ne $endpoints[0] -or [string]$route.destination -ne $endpoints[1]) {
+        throw "Route $routeId must connect $($endpoints[0]) to $($endpoints[1])."
+    }
 }
 $itemIds = @($manifests["items.json"].items | ForEach-Object { [string]$_.id })
 foreach ($settlement in $settlementRecords) {
