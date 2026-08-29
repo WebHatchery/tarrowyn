@@ -504,3 +504,7 @@ covers a zeroed notice sequence.
 Core character replay integrity now validates the bounds and key/response
 agreement of farming, trade, movement, and chat replay maps. One focused
 regression covers a mismatched chat response request ID.
+
+Core identity timing integrity now rejects future last-seen ticks and tax days
+relative to the authoritative world clock. One focused regression covers a
+future identity activity tick.

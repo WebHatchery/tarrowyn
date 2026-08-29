@@ -33,6 +33,8 @@ fn core_ok(state: &RepositoryState, config: &ServerConfig, account_ids: &HashSet
             && identity.field_tool_condition <= super::super::FIELD_TOOL_MAX_CONDITION
             && identity.injuries <= 3
             && (!identity.knocked_out || identity.injuries > 0)
+            && identity.last_seen_tick <= state.tick
+            && identity.last_tax_day <= state.clock.day
     });
     let plots_ok = unique_positions(state.plots.iter().map(|plot| plot.position))
         && state.plots.iter().all(|plot| {
