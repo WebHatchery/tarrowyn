@@ -23,6 +23,10 @@ pub(super) fn authenticate(
         return Err(RepositoryError::unauthorized());
     }
     let key = session.identity_key.clone();
+    if !state.identities.contains_key(&key) {
+        state.sessions.remove(token);
+        return Err(RepositoryError::unauthorized());
+    }
     state
         .identities
         .get_mut(&key)
@@ -87,3 +91,6 @@ pub(super) fn presence(identity: &Identity, last_seen_tick: u64, online: bool) -
         online,
     }
 }
+
+#[cfg(test)]
+mod tests;
