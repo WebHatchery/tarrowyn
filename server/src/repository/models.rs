@@ -190,7 +190,7 @@ impl RepositoryState {
         trim_replay_cache(&mut phase6.moderation_last_report_ticks);
         trim_replay_cache(&mut phase6.request_results);
         trim_replay_cache(&mut phase6.deletion_requests);
-        phase6.audits.truncate(MAX_REPLAY_CACHE);
+        super::phase6::trim_audits(&mut phase6.audits);
         if phase4.animals.is_empty() {
             phase4.animals = super::phase4::fresh_animals();
         }

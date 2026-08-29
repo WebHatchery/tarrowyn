@@ -18,6 +18,8 @@ mod moderation;
 mod operations;
 mod repair;
 
+pub(super) const MAX_AUDITS: usize = MAX_REPLAY_CACHE;
+
 use account::migrate_guest_account_references;
 use deletion::PendingAccountDeletion;
 
@@ -512,7 +514,7 @@ pub(super) fn phase6_tick(state: &mut RepositoryState, config: &ServerConfig) ->
         trim_replay_cache(&mut identity.movement_results);
         trim_replay_cache(&mut identity.chat_results);
     }
-    state.phase6.audits.truncate(MAX_REPLAY_CACHE);
+    trim_audits(&mut state.phase6.audits);
     if config.backup_interval_ticks > 0 && state.tick.is_multiple_of(config.backup_interval_ticks) {
         Some(backup::write(state, config))
     } else {
@@ -629,6 +631,12 @@ fn audit(
         note: note.chars().take(240).collect(),
     });
     audit_id
+}
+
+pub(super) fn trim_audits(audits: &mut VecDeque<AuditRecord>) {
+    while audits.len() > MAX_AUDITS {
+        audits.pop_front();
+    }
 }
 
 #[cfg(test)]
