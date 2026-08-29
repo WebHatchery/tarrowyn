@@ -352,6 +352,15 @@ impl OnlineClient {
             {
                 (ExpeditionAction::Resolve, None)
             }
+            Some(expedition)
+                if matches!(
+                    expedition.status,
+                    tarrowyn_protocol::ExpeditionStatus::Succeeded
+                        | tarrowyn_protocol::ExpeditionStatus::Retreated
+                ) =>
+            {
+                (ExpeditionAction::Announce, Some(ExpeditionRole::Scout))
+            }
             Some(expedition) => {
                 let own = self
                     .account
@@ -447,3 +456,6 @@ impl OnlineClient {
         }
     }
 }
+
+#[cfg(test)]
+mod tests;
