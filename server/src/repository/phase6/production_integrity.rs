@@ -193,7 +193,9 @@ fn replay_caches_ok(state: &RepositoryState, identity_accounts: &HashSet<&str>) 
                 && state.phase6.accounts.contains_key(account_id)
         });
     let revoke_results_ok = phase6.auth_revoke_results.iter().all(|(key, response)| {
-        bounded(key, MAX_CACHE_KEY_CHARS) && bounded(&response.request_id, 64)
+        bounded(key, MAX_CACHE_KEY_CHARS)
+            && bounded(&response.request_id, 64)
+            && identity_cache_key_matches(key, "", &response.request_id, state)
     });
     let support_results_ok = phase6.request_results.iter().all(|(key, response)| {
         bounded(key, MAX_CACHE_KEY_CHARS)

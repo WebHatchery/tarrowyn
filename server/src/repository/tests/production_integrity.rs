@@ -1,5 +1,7 @@
 use super::super::{ServerConfig, WorldRepository};
-use tarrowyn_protocol::{AuthLinkRequest, AuthRefreshRequest, GuestSessionRequest};
+use tarrowyn_protocol::{
+    AuthLinkRequest, AuthRefreshRequest, AuthRevokeRequest, GuestSessionRequest,
+};
 
 fn link(repository: &WorldRepository, client_key: &str, request_id: &str) -> (String, String) {
     let guest = repository
@@ -131,6 +133,51 @@ fn swapped_production_refresh_replay_results_degrade_readiness() {
             .insert(second_key, first_response);
         assert!(state.phase6.accounts.contains_key(&first_account));
         assert!(state.phase6.accounts.contains_key(&second_account));
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
+fn malformed_production_revoke_replay_key_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let guest = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("revoke-replay-key-integrity".to_owned()),
+            reset: false,
+        })
+        .expect("guest session")
+        .data;
+    repository
+        .auth_revoke(
+            &guest.account_token,
+            AuthRevokeRequest {
+                request_id: "revoke-replay-key".to_owned(),
+                revoke_all: false,
+            },
+        )
+        .expect("revoke session");
+
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        let key = state
+            .phase6
+            .auth_revoke_results
+            .keys()
+            .next()
+            .cloned()
+            .expect("revoke cache");
+        let response = state
+            .phase6
+            .auth_revoke_results
+            .remove(&key)
+            .expect("revoke cache response");
+        state
+            .phase6
+            .auth_revoke_results
+            .insert("missing-identity:revoke-replay-key".to_owned(), response);
     }
 
     let health = repository.ops_health().data;

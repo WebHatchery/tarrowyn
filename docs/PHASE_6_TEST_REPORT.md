@@ -573,6 +573,8 @@ Moderation replay caches now bind their keys to live identity and request
 records, with one focused moderation-key regression.
 Support repair replay caches now bind their keys to an authenticated operator
 account and request, with one focused support-key regression.
+Production revoke replay caches now bind their keys to the issuing identity
+and request, with one focused revoke-key regression.
 Regional travel persistence now keeps status, progress, and ETA in agreement,
 with one focused travel-timeline regression.
 
