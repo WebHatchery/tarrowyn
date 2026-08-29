@@ -174,7 +174,7 @@ function Invoke-NativeDatabaseRestore([string]$temporaryRoot, [string]$nonce) {
         $identityOutput = Invoke-MySql $mysql ($connectionArguments + "--database=$restoreDatabase" + "--execute=SELECT COUNT(*) FROM tarrowyn_identity_index")
         $version = [int](($versionOutput -join "").Trim())
         $identityCount = [int](($identityOutput -join "").Trim())
-        Assert-True ($version -ge 19) "the native restore lost the current world storage version"
+        Assert-True ($version -ge 20) "the native restore lost the current world storage version"
         Assert-True ($identityCount -ge 1) "the native restore lost the identity index"
     } finally {
         Invoke-MySql $mysql ($connectionArguments + "--execute=DROP DATABASE IF EXISTS $restoreDatabase") | Out-Null

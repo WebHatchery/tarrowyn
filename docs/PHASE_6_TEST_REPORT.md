@@ -149,7 +149,8 @@ not match the client before endpoint data can be projected.
 The selected MySQL bridge now has a checked-in migration, startup pool/migration
 failure handling, transactional snapshot/index writes, and driver-selection
 tests. The recorded release-candidate run of the configured local preview
-MySQL service passed `scripts/verify_mysql.ps1`: storage version 20 readiness,
+MySQL service passed `scripts/verify_mysql.ps1`: storage version 20 readiness
+and native restore verification,
 authoritative animal state, duplicate chat/movement/auth/moderation replay,
 concurrent duplicate chat replay, temporary backup creation, and
 identity/state persistence across a server restart all succeeded. It then
