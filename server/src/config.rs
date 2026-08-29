@@ -46,6 +46,7 @@ pub struct ServerConfig {
 
 impl Default for ServerConfig {
     fn default() -> Self {
+        let content = crate::content::game_config_defaults();
         Self {
             bind_addr: "127.0.0.1:8787".to_owned(),
             db_driver: "json".to_owned(),
@@ -54,9 +55,9 @@ impl Default for ServerConfig {
             db_database: "tarrowyn".to_owned(),
             db_username: String::new(),
             db_password: String::new(),
-            world_width: 18,
-            world_height: 11,
-            day_length_seconds: 4_800.0,
+            world_width: content.world_width,
+            world_height: content.world_height,
+            day_length_seconds: content.day_length_seconds,
             tick_interval: Duration::from_millis(250),
             world_seconds_per_tick: 0.25,
             session_ttl_seconds: 30,
@@ -64,7 +65,7 @@ impl Default for ServerConfig {
             combat_action_cooldown_ticks: 1,
             chat_max_length: 160,
             moderation_cooldown_ticks: 20,
-            starting_gold: 12,
+            starting_gold: content.starting_gold,
             starting_seeds: 6,
             crop_stage_seconds: 30.0,
             trade_expiry_ticks: 240,

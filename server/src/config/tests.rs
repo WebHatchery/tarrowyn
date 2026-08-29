@@ -10,6 +10,17 @@ fn default_server_clock_matches_the_gdd_eighty_minute_day() {
 }
 
 #[test]
+fn default_server_world_values_match_the_shared_game_config_manifest() {
+    let config = ServerConfig::default();
+    let content = crate::content::game_config_defaults();
+
+    assert_eq!(config.world_width, content.world_width);
+    assert_eq!(config.world_height, content.world_height);
+    assert_eq!(config.day_length_seconds, content.day_length_seconds);
+    assert_eq!(config.starting_gold, content.starting_gold);
+}
+
+#[test]
 fn oversized_unsigned_environment_values_fall_back_instead_of_wrapping() {
     assert_eq!(bounded_u32(u64::MAX, 17), 17);
     assert_eq!(bounded_u16(u64::MAX, 3306), 3306);

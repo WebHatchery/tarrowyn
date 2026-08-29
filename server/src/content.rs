@@ -56,6 +56,15 @@ struct GameConfigManifest {
     starting_skill: u32,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) struct GameConfigDefaults {
+    pub(crate) world_width: u32,
+    pub(crate) world_height: u32,
+    pub(crate) day_length_seconds: f32,
+    pub(crate) starting_gold: u32,
+    pub(crate) starting_skill: u32,
+}
+
 const GAME_CONFIG_JSON: &str =
     macroquad_toolkit::include_json_str!("../../assets/data/game_config.json");
 static GAME_CONFIG: OnceLock<GameConfigManifest> = OnceLock::new();
@@ -250,17 +259,25 @@ pub fn validate() -> Result<(), String> {
 }
 
 pub(crate) fn starting_skill() -> u32 {
-    GAME_CONFIG
-        .get_or_init(|| {
-            let config: GameConfigManifest =
-                parse_json_labeled("game_config.json", GAME_CONFIG_JSON)
-                    .expect("game config content JSON must be valid");
-            if config.starting_skill == 0 {
-                panic!("game config content must define a positive starting skill");
-            }
-            config
-        })
-        .starting_skill
+    game_config_defaults().starting_skill
+}
+
+pub(crate) fn game_config_defaults() -> GameConfigDefaults {
+    let config = GAME_CONFIG.get_or_init(|| {
+        let config: GameConfigManifest = parse_json_labeled("game_config.json", GAME_CONFIG_JSON)
+            .expect("game config content JSON must be valid");
+        if config.starting_skill == 0 {
+            panic!("game config content must define a positive starting skill");
+        }
+        config
+    });
+    GameConfigDefaults {
+        world_width: config.world_width,
+        world_height: config.world_height,
+        day_length_seconds: config.day_length_seconds,
+        starting_gold: config.starting_gold,
+        starting_skill: config.starting_skill,
+    }
 }
 
 pub(crate) fn crop_kind_for_seed(seed_index: u32) -> CropKind {
