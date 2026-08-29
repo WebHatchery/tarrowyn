@@ -454,6 +454,8 @@ impl OnlineClient {
     }
 
     fn clear_session_state(&mut self) {
+        self.account = None;
+        self.api.set_bearer_token(None);
         self.pending_guest = None;
         self.pending_world = None;
         self.pending_state = None;

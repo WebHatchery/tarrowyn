@@ -88,6 +88,14 @@ fn connection_failure_exposes_recovery_and_reconnect_cooldown() {
 #[test]
 fn session_reset_discards_world_and_frontier_projection_state() {
     let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
+    client.account = Some(tarrowyn_protocol::GuestSessionResponse {
+        client_key: "client".to_owned(),
+        account_id: "account".to_owned(),
+        character_id: "character".to_owned(),
+        display_name: "Traveller".to_owned(),
+        account_token: "token".to_owned(),
+        expires_in_seconds: 60,
+    });
     client.projection.player_position = TilePos::new(2, 1);
     client.projection.day = 9;
     client.projection.server_tick = 24;
@@ -128,6 +136,7 @@ fn session_reset_discards_world_and_frontier_projection_state() {
 
     client.clear_session_state();
 
+    assert!(client.account.is_none());
     assert_eq!(client.projection.player_position, TilePos::new(2, 1));
     assert_eq!(client.projection.day, 1);
     assert_eq!(client.projection.server_tick, 0);
