@@ -4,6 +4,7 @@ mod combat_actions;
 mod farming;
 mod governance_history_retention;
 mod governance_retention;
+mod household_history;
 mod knowledge;
 mod lesson_retention;
 mod professions;

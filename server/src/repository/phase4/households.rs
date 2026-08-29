@@ -48,6 +48,7 @@ pub(super) fn tick(state: &mut super::super::models::RepositoryState, config: &S
     let funded = state.phase4.governance.service_funding_until_tick >= state.tick;
     let mut transitions = Vec::new();
     for household in &mut state.phase4.households {
+        let old_status = household.status;
         household.last_decision_tick = state.tick;
         household.demand = household
             .demand
@@ -101,11 +102,13 @@ pub(super) fn tick(state: &mut super::super::models::RepositoryState, config: &S
                 ));
             }
         }
-        match household.status {
-            HouseholdLifeStatus::ReducedService => transitions.push(("household reduced service", "A household reduced service after exposing the conditions that caused the strain.")),
-            HouseholdLifeStatus::ConsideringDeparture => transitions.push(("household departure warning", "A household is considering departure; its demand, housing, food, and safety clues remain visible.")),
-            HouseholdLifeStatus::Departed => transitions.push(("household departure", "The Bellweather household left after sustained poor local conditions.")),
-            HouseholdLifeStatus::Arrived => {}
+        if household.status != old_status {
+            match household.status {
+                HouseholdLifeStatus::ReducedService => transitions.push(("household reduced service", "A household reduced service after exposing the conditions that caused the strain.")),
+                HouseholdLifeStatus::ConsideringDeparture => transitions.push(("household departure warning", "A household is considering departure; its demand, housing, food, and safety clues remain visible.")),
+                HouseholdLifeStatus::Departed => transitions.push(("household departure", "The Bellweather household left after sustained poor conditions.")),
+                HouseholdLifeStatus::Arrived => {}
+            }
         }
     }
     for (kind, text) in transitions {
