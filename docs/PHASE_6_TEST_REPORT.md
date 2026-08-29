@@ -486,3 +486,8 @@ request ID.
 Phase 5 sequence metadata now validates positive travel, order, and event ID
 counters plus a fallback-day marker that cannot point beyond the world clock.
 One focused regression covers a zeroed order sequence.
+
+Phase 4 replay-cache integrity now validates cache size, bounded keys and
+request IDs, current account ownership across the skill prefixes, and
+response/key request agreement. Two focused regressions cover an orphaned
+account key and a mismatched cached request ID.
