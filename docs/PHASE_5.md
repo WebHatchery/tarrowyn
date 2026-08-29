@@ -118,6 +118,10 @@ and clear boundary/loading states. The shared-road sidebar now keeps each
 settlement's condition and open-vacancy count visible beside the local
 recovery signal, while chronicle context remains on the next line. Crossing a
 region must not freeze the render loop or silently discard an accepted command.
+The same sidebar now exposes compact authoritative road availability and risk,
+open market orders, and the protected-law boundary, so the Travel and Market
+controls have visible regional telemetry while richer inspection remains an
+appropriate follow-up surface.
 
 ## Acceptance test
 

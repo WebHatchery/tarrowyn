@@ -77,6 +77,9 @@ beside travel status.
 It also confirms the shared-road sidebar keeps the wider comparison visible by
 showing each settlement's condition and open-vacancy count alongside the local
 line.
+The regional telemetry regression also confirms the sidebar projection exposes
+authoritative road availability/risk, open market orders, and the protected-law
+boundary instead of leaving those loaded records hidden behind the controls.
 The settlement-facilities regression confirms the regional projection maps
 claims, free plots, and public works to their nearest settlement while leaving
 the Phase 4 registry and infrastructure records authoritative.

@@ -305,14 +305,25 @@ pub(super) fn draw_sidebar(
     draw_ui_text_ex(
         settlement_line,
         content.x,
-        top + 431.0,
+        top + 426.0,
         TextStyle::new(8.5, dark::TEXT_DIM).params(),
+    );
+    let regional_economy_line = ctx
+        .phase5_summary
+        .lines()
+        .nth(2)
+        .unwrap_or("Road and market telemetry loading");
+    draw_ui_text_ex(
+        regional_economy_line,
+        content.x,
+        top + 440.0,
+        TextStyle::new(8.25, dark::TEXT_DIM).params(),
     );
     draw_ui_text_ex(
         &chronicle_line,
         content.x,
-        top + 446.0,
-        TextStyle::new(8.5, dark::TEXT_DIM).params(),
+        top + 454.0,
+        TextStyle::new(8.25, dark::TEXT_DIM).params(),
     );
 }
 

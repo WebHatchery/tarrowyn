@@ -1,4 +1,7 @@
 use super::*;
+use tarrowyn_protocol::{
+    LawBoundaryResponse, MarketOrder, MarketSnapshot, RouteRecord, RouteStatus,
+};
 
 #[test]
 fn refresh_is_scheduled_before_a_production_session_expires() {
@@ -155,7 +158,40 @@ fn regional_summary_shows_local_condition_and_recovery_signal() {
         season: "thaw".to_owned(),
         calendar_day: 1,
         locations: Vec::new(),
-        routes: Vec::new(),
+        routes: vec![
+            RouteRecord {
+                route_id: "north-pack-road".to_owned(),
+                name: "North Pack Road".to_owned(),
+                origin_location_id: "saltmere".to_owned(),
+                destination_location_id: "hearth".to_owned(),
+                transport: "pack road".to_owned(),
+                length: 6,
+                risk_percent: 18,
+                condition: 72,
+                capacity: 8,
+                travel_ticks: 4,
+                repair_cost: 3,
+                status: RouteStatus::Operational,
+                last_action_tick: 0,
+                note: "The road is open to carts.".to_owned(),
+            },
+            RouteRecord {
+                route_id: "saltmere-ferry".to_owned(),
+                name: "Saltmere Ferry".to_owned(),
+                origin_location_id: "saltmere".to_owned(),
+                destination_location_id: "whisperwood-outpost".to_owned(),
+                transport: "ferry".to_owned(),
+                length: 8,
+                risk_percent: 44,
+                condition: 42,
+                capacity: 4,
+                travel_ticks: 5,
+                repair_cost: 5,
+                status: RouteStatus::Threatened,
+                last_action_tick: 2,
+                note: "The crossing needs a watch.".to_owned(),
+            },
+        ],
         visible_settlements: Vec::new(),
         player_location_id: "saltmere".to_owned(),
         travel: None,
@@ -222,6 +258,36 @@ fn regional_summary_shows_local_condition_and_recovery_signal() {
         ],
         cursor: 7,
     });
+    client.market = Some(MarketSnapshot {
+        orders: vec![MarketOrder {
+            order_id: "order-1".to_owned(),
+            owner_account_id: "account-1".to_owned(),
+            owner_name: "Linked traveller".to_owned(),
+            origin_location_id: "hearth".to_owned(),
+            destination_location_id: "saltmere".to_owned(),
+            commodity: tarrowyn_protocol::CommodityKind::Seeds,
+            quantity: 2,
+            unit_price: 4,
+            total_price: 8,
+            status: tarrowyn_protocol::MarketOrderStatus::Open,
+            created_tick: 3,
+            settled_tick: None,
+            route_id: "north-pack-road".to_owned(),
+            fallback_used: false,
+        }],
+        stock_notes: vec!["Seeds are available at the Hearth.".to_owned()],
+        prices: vec!["Seeds 104%".to_owned()],
+        cursor: 7,
+    });
+    client.law = Some(LawBoundaryResponse {
+        pvp_enabled: false,
+        theft_enabled: false,
+        claims_protected: true,
+        trade_protected: true,
+        travel_protected: true,
+        recovery_path: "Protected recovery".to_owned(),
+        policy_version: "phase5-no-pvp-1".to_owned(),
+    });
 
     let first_line = client.summary().lines().next().unwrap().to_owned();
     assert!(first_line.contains("saltmere"));
@@ -233,6 +299,10 @@ fn regional_summary_shows_local_condition_and_recovery_signal() {
     let comparison = client.summary().lines().nth(1).unwrap().to_owned();
     assert!(comparison.contains("Saltmere Landing Strained • 1 opening"));
     assert!(comparison.contains("Whisperwood Watch Quiet • 2 openings"));
+    let economy = client.summary().lines().nth(2).unwrap().to_owned();
+    assert!(economy.contains("Roads 2/2 available • 1 at risk"));
+    assert!(economy.contains("1 open order"));
+    assert!(economy.contains("Protected economy"));
 }
 
 fn regional_event(

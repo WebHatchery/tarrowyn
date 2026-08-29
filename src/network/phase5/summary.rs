@@ -1,5 +1,5 @@
 use super::Phase5Client;
-use tarrowyn_protocol::MarketOrderStatus;
+use tarrowyn_protocol::{MarketOrderStatus, RouteStatus};
 
 pub(super) fn render(client: &Phase5Client) -> String {
     let region = client
@@ -71,13 +71,15 @@ pub(super) fn render(client: &Phase5Client) -> String {
         .market
         .as_ref()
         .map(|market| {
+            let open_orders = market
+                .orders
+                .iter()
+                .filter(|order| order.status == MarketOrderStatus::Open)
+                .count();
             format!(
-                "{} open orders",
-                market
-                    .orders
-                    .iter()
-                    .filter(|order| order.status == MarketOrderStatus::Open)
-                    .count()
+                "{} open order{}",
+                open_orders,
+                if open_orders == 1 { "" } else { "s" }
             )
         })
         .unwrap_or_else(|| "Market loading".to_owned());
@@ -92,6 +94,31 @@ pub(super) fn render(client: &Phase5Client) -> String {
             }
         })
         .unwrap_or("Law loading");
+    let roads = client
+        .region
+        .as_ref()
+        .map(|region| {
+            let available = region
+                .routes
+                .iter()
+                .filter(|route| route.status != RouteStatus::Closed)
+                .count();
+            let at_risk = region
+                .routes
+                .iter()
+                .filter(|route| {
+                    matches!(
+                        route.status,
+                        RouteStatus::Delayed | RouteStatus::Threatened | RouteStatus::Repairing
+                    )
+                })
+                .count();
+            format!(
+                "Roads {available}/{} available • {at_risk} at risk",
+                region.routes.len()
+            )
+        })
+        .unwrap_or_else(|| "Roads loading".to_owned());
     let account = client
         .account
         .as_ref()
@@ -103,5 +130,5 @@ pub(super) fn render(client: &Phase5Client) -> String {
             }
         })
         .unwrap_or("Account loading");
-    format!("{region}\n{settlements}\n{market} • {law}\n{account}")
+    format!("{region}\n{settlements}\n{roads} • {market} • {law}\n{account}")
 }
