@@ -132,7 +132,7 @@ fn handle_request(mut request: Request, repository: Arc<WorldRepository>) {
             authenticated(&request, &repository, |token| repository.ops_metrics(token))
         }
         (Method::Get, "/v1/support/account") => {
-            let account_id = query_value(&query, "account_id").unwrap_or("").to_owned();
+            let account_id = query_value(&query, "account_id").unwrap_or_default();
             authenticated(&request, &repository, |token| {
                 repository.support_account(token, &account_id)
             })
@@ -410,9 +410,9 @@ fn handle_request(mut request: Request, repository: Arc<WorldRepository>) {
             let since = query_value(&query, "since")
                 .and_then(|value| value.parse().ok())
                 .unwrap_or(0);
-            let search = query_value(&query, "q").unwrap_or("");
+            let search = query_value(&query, "q").unwrap_or_default();
             authenticated(&request, &repository, |token| {
-                repository.chronicle_search(token, search, since)
+                repository.chronicle_search(token, &search, since)
             })
         }
         _ => error_response(
@@ -498,11 +498,38 @@ fn split_url(url: &str) -> (&str, &str) {
     url.split_once('?').unwrap_or((url, ""))
 }
 
-fn query_value<'a>(query: &'a str, name: &str) -> Option<&'a str> {
+fn query_value(query: &str, name: &str) -> Option<String> {
     query
         .split('&')
         .filter_map(|pair| pair.split_once('='))
-        .find_map(|(key, value)| (key == name).then_some(value))
+        .find_map(|(key, value)| (key == name).then(|| decode_query_value(value)))
+        .flatten()
+}
+
+fn decode_query_value(value: &str) -> Option<String> {
+    let mut bytes = Vec::with_capacity(value.len());
+    let mut chars = value.as_bytes().iter().copied();
+    while let Some(byte) = chars.next() {
+        match byte {
+            b'+' => bytes.push(b' '),
+            b'%' => {
+                let high = chars.next().and_then(hex_digit)?;
+                let low = chars.next().and_then(hex_digit)?;
+                bytes.push(high << 4 | low);
+            }
+            byte => bytes.push(byte),
+        }
+    }
+    String::from_utf8(bytes).ok()
+}
+
+fn hex_digit(byte: u8) -> Option<u8> {
+    match byte {
+        b'0'..=b'9' => Some(byte - b'0'),
+        b'a'..=b'f' => Some(byte - b'a' + 10),
+        b'A'..=b'F' => Some(byte - b'A' + 10),
+        _ => None,
+    }
 }
 
 fn json_response<T: Serialize>(status: StatusCode, value: T) -> JsonResponse {

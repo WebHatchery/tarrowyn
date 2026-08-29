@@ -19,6 +19,24 @@ fn bounded_body_rejects_oversized_input_before_json_decode() {
 }
 
 #[test]
+fn query_values_decode_form_encoding_for_history_search() {
+    assert_eq!(
+        query_value("q=household+arrival&since=12", "q").as_deref(),
+        Some("household arrival")
+    );
+    assert_eq!(
+        query_value("q=road%20repair", "q").as_deref(),
+        Some("road repair")
+    );
+}
+
+#[test]
+fn malformed_query_escapes_are_not_forwarded_to_authority() {
+    assert_eq!(query_value("q=bad%2", "q"), None);
+    assert_eq!(query_value("q=bad%GG", "q"), None);
+}
+
+#[test]
 fn tick_deadline_stays_fixed_until_an_overrun_needs_recovery() {
     let start = Instant::now();
     let interval = Duration::from_millis(250);
