@@ -5,6 +5,8 @@ use tarrowyn_protocol::{ClaimStatus, ContractStatus, ExpeditionStatus, TradeStat
 
 const DELETED_ACCOUNT: &str = "former-resident";
 const MAX_EXPEDITION_SUPPLY: u32 = 99;
+const MAX_ACCOUNT_ID_CHARS: usize = 160;
+const MAX_DISPLAY_NAME_CHARS: usize = 80;
 const MAX_PHASE3_NAME_CHARS: usize = 80;
 const MAX_PHASE3_HOUSEHOLD_MEMBERS: usize = 20;
 
@@ -29,8 +31,11 @@ fn core_ok(state: &RepositoryState, config: &ServerConfig, account_ids: &HashSet
         && state.clock.seconds.is_finite()
         && state.clock.seconds >= 0.0
         && state.clock.seconds < state.clock.day_length_seconds;
-    let identities_ok = state.identities.values().all(|identity| {
-        !identity.display_name.trim().is_empty()
+    let identities_ok = state.identities.iter().all(|(identity_key, identity)| {
+        bounded_text(identity_key, super::super::MAX_CLIENT_KEY_CHARS)
+            && bounded_text(&identity.account_id, MAX_ACCOUNT_ID_CHARS)
+            && bounded_text(&identity.character_id, MAX_ACCOUNT_ID_CHARS)
+            && bounded_text(&identity.display_name, MAX_DISPLAY_NAME_CHARS)
             && position_in_world(identity.position, config)
             && identity.field_tool_condition <= super::super::FIELD_TOOL_MAX_CONDITION
             && identity.injuries <= 3

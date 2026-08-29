@@ -589,6 +589,10 @@ shape of farming, trade, notice, chronicle, and frontier records. Three focused
 event-payload regressions plus the existing event-stream tests cover this
 changed subsystem.
 
+Core identity persistence now bounds client, account, character, and display
+identifiers and rejects control characters before readiness is reported. Two
+focused identity-payload regressions cover this changed subsystem.
+
 The cross-layer persistence-readiness milestone passed the full release gate on
 2026-08-30 after the core and Phase 3-6 integrity additions: 14 protocol tests,
 282 server tests, and 93 client tests, followed by asset/code-standard checks,
