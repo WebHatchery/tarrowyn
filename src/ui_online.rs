@@ -1,6 +1,10 @@
 use super::*;
 use tarrowyn_protocol::{RouteStatus, TradeStatus};
 
+#[cfg(test)]
+#[path = "ui_online/tests.rs"]
+mod tests;
+
 pub(super) fn draw_sidebar(
     ctx: &UiContext<'_>,
     content: Rect,
@@ -518,12 +522,21 @@ fn draw_combat_status(ctx: &UiContext<'_>, content: Rect, top: f32) {
         draw_ui_text_ex(
             &format!(
                 "Risk: {}  •  Healer: {} gold  •  stored property safe",
-                combat.carried_risk, combat.recovery_cost
+                recovery_risk_label(&combat.carried_risk),
+                combat.recovery_cost,
             ),
             content.x + 8.0,
             top + 129.0,
             TextStyle::new(8.0, CREAM).params(),
         );
+    }
+}
+
+fn recovery_risk_label(carried_risk: &str) -> &'static str {
+    if carried_risk.to_ascii_lowercase().contains("seed") {
+        "1 carried seed"
+    } else {
+        "carried item"
     }
 }
 
