@@ -30,7 +30,7 @@ road at the Hearth, or the watch trail after arriving at Whisperwood. Confirm
 the route response and refreshed road status before repeating the action with
 the same request boundary.
 
-Tap `Inspect` to open the authoritative regional detail notice. It lists each
+Tap `Inspect` to open the authoritative regional detail panel. It lists each
 visible route by name with status, risk, and condition, followed by the first
 market stock and price notes. Use it to read the detail behind the compact
 sidebar telemetry; it does not mutate the regional ledger.

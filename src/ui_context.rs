@@ -51,6 +51,7 @@ pub struct UiContext<'a> {
     pub camera_zoom: f32,
     pub wilderness: Option<&'a WildernessZone>,
     pub regional_region: Option<&'a RegionSnapshot>,
+    pub regional_inspection: Option<&'a str>,
     pub chronicle: &'a [ChronicleEntry],
     pub chronicle_summary: Option<&'a ChronicleSummary>,
     pub opportunities: &'a [OpportunitySignal],

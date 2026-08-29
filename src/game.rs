@@ -35,6 +35,7 @@ pub struct Game {
     save_exists: bool,
     save_slots: Vec<String>,
     chat_draft: String,
+    regional_inspection_open: bool,
 }
 
 impl Game {
@@ -93,6 +94,7 @@ impl Game {
             save_exists: false,
             save_slots: Vec::new(),
             chat_draft: String::new(),
+            regional_inspection_open: false,
         };
         game.refresh_save_state();
         game
@@ -135,6 +137,12 @@ impl Game {
         });
 
         let virtual_ui = begin_virtual_ui_frame(ui::LOGICAL_WIDTH, ui::LOGICAL_HEIGHT);
+        let regional_inspection = match &self.mode {
+            ClientMode::Online(client) if self.regional_inspection_open => {
+                Some(client.phase5_inspection())
+            }
+            _ => None,
+        };
         let actions = match &self.mode {
             ClientMode::Online(client) => {
                 let identity = client
@@ -208,6 +216,7 @@ impl Game {
                     camera_zoom: self.camera.zoom,
                     wilderness: client.projection.wilderness.as_ref(),
                     regional_region: client.phase5_region(),
+                    regional_inspection: regional_inspection.as_deref(),
                     chronicle: &client.projection.chronicle,
                     chronicle_summary: client.projection.chronicle_summary.as_ref(),
                     opportunities: &client.projection.opportunities,
@@ -260,6 +269,7 @@ impl Game {
                     camera_zoom: self.camera.zoom,
                     wilderness: None,
                     regional_region: None,
+                    regional_inspection: None,
                     chronicle: &[],
                     chronicle_summary: None,
                     opportunities: &[],
@@ -332,6 +342,7 @@ impl Game {
         match action {
             UiAction::UseOffline => {
                 self.mode = ClientMode::Offline(GameSession::new(&self.data.config));
+                self.regional_inspection_open = false;
                 self.chat_draft.clear();
                 self.sync_camera(TilePos::new(8, 6));
                 self.notifications
@@ -342,12 +353,14 @@ impl Game {
                     &self.server_url,
                     &self.data.config,
                 )));
+                self.regional_inspection_open = false;
                 self.chat_draft.clear();
                 self.sync_camera(TilePos::new(8, 6));
                 self.notifications.info("Connecting to the shared road…");
             }
             UiAction::Reconnect => match &mut self.mode {
                 ClientMode::Online(client) => {
+                    self.regional_inspection_open = false;
                     if !client.reconnect() {
                         self.notifications
                             .warning("Wait for the reconnect cooldown to finish.");
@@ -358,6 +371,7 @@ impl Game {
                         &self.server_url,
                         &self.data.config,
                     )));
+                    self.regional_inspection_open = false;
                     self.sync_camera(TilePos::new(8, 6));
                     self.notifications.info("Connecting to the shared road…");
                 }
@@ -440,6 +454,15 @@ impl Game {
     }
 
     fn interact(&mut self, id: &str) {
+        if id == "region-details" {
+            if matches!(&self.mode, ClientMode::Online(_)) {
+                self.regional_inspection_open = !self.regional_inspection_open;
+            }
+            return;
+        }
+        if matches!(id, "logout" | "delete-account") {
+            self.regional_inspection_open = false;
+        }
         if let ClientMode::Online(client) = &mut self.mode {
             match id {
                 "plant" => client.queue_farming(FarmingAction::Plant),
@@ -515,7 +538,6 @@ impl Game {
                 }
                 "travel" | "recover-travel" | "route-repair" | "market-region" | "region-event"
                 | "account" | "logout" | "report" | "delete-account" => client.queue_phase5(id),
-                "region-details" => self.notifications.info(client.phase5_inspection()),
                 _ => self.notifications.warning(format!("Unknown action: {id}")),
             }
             return;

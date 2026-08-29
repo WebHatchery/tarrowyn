@@ -340,6 +340,45 @@ pub(super) fn draw_sidebar(
     );
 }
 
+pub(super) fn draw_regional_inspection(
+    ctx: &UiContext<'_>,
+    mouse: Vec2,
+    actions: &mut Vec<UiAction>,
+) {
+    let Some(details) = ctx.regional_inspection else {
+        return;
+    };
+    let panel = Rect::new(42.0, 126.0, 780.0, 438.0);
+    draw_surface_with_title(
+        panel,
+        Some("Regional ledger inspection"),
+        &SurfaceStyle::new(Color::new(0.055, 0.075, 0.09, 0.99))
+            .with_border(1.0, Color::new(0.50, 0.72, 0.62, 0.9))
+            .with_header(42.0, Color::new(0.09, 0.14, 0.15, 1.0))
+            .with_header_divider(1.0, Color::new(0.32, 0.48, 0.50, 0.75)),
+        TextStyle::new(17.0, CREAM),
+    );
+    draw_text_block(
+        details,
+        panel.x + 20.0,
+        panel.y + 70.0,
+        panel.w - 40.0,
+        318.0,
+        14.0,
+        3.0,
+        CREAM,
+    );
+    if virtual_button(
+        Rect::new(panel.right() - 126.0, panel.bottom() - 42.0, 106.0, 28.0),
+        "Close",
+        true,
+        ButtonTone::Secondary,
+        mouse,
+    ) {
+        actions.push(UiAction::Interact("region-details".to_owned()));
+    }
+}
+
 fn draw_combat_status(ctx: &UiContext<'_>, content: Rect, top: f32) {
     let Some(combat) = ctx.combat else {
         return;

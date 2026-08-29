@@ -42,12 +42,17 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
         }
     }
     draw_sidebar(&ctx, mouse, &mut actions);
+    ui_online::draw_regional_inspection(&ctx, mouse, &mut actions);
     if let Some(crafting) = ctx.crafting {
         ui_crafting::draw(crafting, mouse, &mut actions);
         actions
             .retain(|action| matches!(action, UiAction::Interact(id) if id == "crafting-timing"));
     }
     draw_footer(&ctx);
+
+    if ctx.regional_inspection.is_some() {
+        actions.retain(|action| matches!(action, UiAction::Interact(id) if id == "region-details"));
+    }
 
     actions
 }
