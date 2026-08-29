@@ -508,3 +508,10 @@ regression covers a mismatched chat response request ID.
 Core identity timing integrity now rejects future last-seen ticks and tax days
 relative to the authoritative world clock. One focused regression covers a
 future identity activity tick.
+
+The cross-layer persistence-readiness milestone passed the full release gate on
+2026-08-30 after the core and Phase 3-6 integrity additions: 14 protocol tests,
+282 server tests, and 93 client tests, followed by asset/code-standard checks,
+clippy, Windows and WebGL release builds, packaging, Preview deployment, and
+catalog synchronization. Future slices return to changed-subsystem tests
+unless they cross another major release boundary.
