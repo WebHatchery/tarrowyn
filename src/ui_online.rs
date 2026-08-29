@@ -456,16 +456,24 @@ pub(super) fn draw_regional_inspection(
             .with_header_divider(1.0, Color::new(0.32, 0.48, 0.50, 0.75)),
         TextStyle::new(17.0, CREAM),
     );
+    let detail_height = if ctx.regional_event_choices.is_empty() {
+        318.0
+    } else {
+        238.0
+    };
     draw_text_block(
         details,
         panel.x + 20.0,
         panel.y + 70.0,
         panel.w - 40.0,
-        318.0,
+        detail_height,
         14.0,
         3.0,
         CREAM,
     );
+    if !ctx.regional_event_choices.is_empty() {
+        draw_event_choices(panel, ctx.regional_event_choices, mouse, actions);
+    }
     draw_button_row(
         Rect::new(panel.x + 20.0, panel.bottom() - 82.0, panel.w - 40.0, 28.0),
         panel.bottom() - 82.0,
@@ -486,6 +494,29 @@ pub(super) fn draw_regional_inspection(
         mouse,
     ) {
         actions.push(UiAction::Interact("region-details".to_owned()));
+    }
+}
+
+fn draw_event_choices(panel: Rect, choices: &[String], mouse: Vec2, actions: &mut Vec<UiAction>) {
+    let gap = 4.0;
+    let visible = choices.iter().take(3).collect::<Vec<_>>();
+    let width = (panel.w - 40.0 - gap * (visible.len().saturating_sub(1) as f32))
+        / visible.len().max(1) as f32;
+    for (index, choice) in visible.iter().enumerate() {
+        if virtual_button(
+            Rect::new(
+                panel.x + 20.0 + index as f32 * (width + gap),
+                panel.bottom() - 118.0,
+                width,
+                28.0,
+            ),
+            choice,
+            true,
+            ButtonTone::Primary,
+            mouse,
+        ) {
+            actions.push(UiAction::RegionalEvent((*choice).clone()));
+        }
     }
 }
 

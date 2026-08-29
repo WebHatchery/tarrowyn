@@ -54,8 +54,9 @@ gold, and price index before and after settlement. Before fulfilment, also
 cancel an owned open order and confirm that its escrow returns to origin stock
 and its status becomes `Cancelled`; the online client exposes this through the
 visible `Cancel` control. Seed a regional event with
-`POST /v1/events/region`, wait for escalation, choose an intervention, and then
-resolve it. Poll with the returned cursor; a cursor ahead of the server must
+`POST /v1/events/region`, wait for escalation, tap `Inspect`, and choose one of
+the visible exact intervention buttons before resolving it. Poll with the
+returned cursor; a cursor ahead of the server must
 return a readable `cursor_ahead` error. A cursor older than the retained event
 window must return `cursor_stale` rather than an incomplete event list.
 The client handles that boundary without disconnecting: it clears the regional

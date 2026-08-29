@@ -14,6 +14,7 @@ use tarrowyn_protocol::{
 
 const MAX_CACHED_REGIONAL_EVENTS: usize = 2048;
 
+mod events;
 mod market;
 mod routes;
 mod summary;
@@ -343,49 +344,6 @@ impl Phase5Client {
 
     pub(super) fn travel_control(&self) -> (&'static str, bool, bool) {
         self.travel_control_details()
-    }
-
-    fn queue_event(&mut self, request_id: String) {
-        let event = self.events.as_ref().and_then(|events| {
-            events.events.iter().rev().find(|event| {
-                !matches!(
-                    event.stage,
-                    tarrowyn_protocol::RegionalEventStage::Aftermath
-                )
-            })
-        });
-        let request = match event {
-            None => RegionalEventRequest {
-                request_id,
-                action: RegionalEventAction::Seed,
-                event_id: None,
-                intervention: None,
-            },
-            Some(event)
-                if matches!(
-                    event.stage,
-                    tarrowyn_protocol::RegionalEventStage::Signal
-                        | tarrowyn_protocol::RegionalEventStage::Escalation
-                ) =>
-            {
-                RegionalEventRequest {
-                    request_id,
-                    action: RegionalEventAction::Intervene,
-                    event_id: Some(event.event_id.clone()),
-                    intervention: event.intervention_options.first().cloned(),
-                }
-            }
-            Some(event) if event.stage == tarrowyn_protocol::RegionalEventStage::Intervention => {
-                RegionalEventRequest {
-                    request_id,
-                    action: RegionalEventAction::Resolve,
-                    event_id: Some(event.event_id.clone()),
-                    intervention: None,
-                }
-            }
-            Some(_) => return,
-        };
-        super::queue::try_push(&mut self.commands, Phase5Command::Event(request));
     }
 
     fn apply_command(

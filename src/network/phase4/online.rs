@@ -1,6 +1,21 @@
-use super::CraftingView;
+use super::{CraftingView, Phase4Client};
 use crate::network::{ConnectionState, OnlineClient};
 use tarrowyn_protocol::{ClaimLifecycleAction, LocalCombatState};
+
+impl Phase4Client {
+    pub(super) fn queue_region_intervention(
+        &mut self,
+        request_id: String,
+        intervention: String,
+    ) -> bool {
+        self.regional
+            .queue_event_intervention(request_id, intervention)
+    }
+
+    pub(super) fn regional_event_choices(&self) -> &[String] {
+        self.regional.event_choices()
+    }
+}
 
 impl OnlineClient {
     pub(crate) fn queue_phase4(&mut self, id: &str) {
@@ -9,6 +24,20 @@ impl OnlineClient {
             if !self.phase4.queue_cycle(id, request_id) {
                 self.status_message =
                     "That settlement action is not ready; wait for its ledger or queue to clear."
+                        .to_owned();
+            }
+        }
+    }
+
+    pub(crate) fn queue_region_intervention(&mut self, intervention: String) {
+        if self.state == ConnectionState::Online {
+            let request_id = self.next_request_id("event");
+            if !self
+                .phase4
+                .queue_region_intervention(request_id, intervention)
+            {
+                self.status_message =
+                    "That event choice is no longer available; refresh the regional ledger."
                         .to_owned();
             }
         }
@@ -160,5 +189,9 @@ impl OnlineClient {
                     .to_owned();
         }
         queued
+    }
+
+    pub(crate) fn phase5_event_choices(&self) -> &[String] {
+        self.phase4.regional_event_choices()
     }
 }

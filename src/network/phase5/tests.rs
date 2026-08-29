@@ -346,6 +346,32 @@ fn event_button_uses_the_server_listed_intervention() {
 }
 
 #[test]
+fn selected_event_choice_queues_the_exact_visible_intervention() {
+    let mut client = Phase5Client::new();
+    let mut event = regional_event(
+        "event-selected",
+        tarrowyn_protocol::RegionalEventStage::Escalation,
+        1,
+    );
+    event.intervention_options = vec![
+        "protect grain stores".to_owned(),
+        "close the ford".to_owned(),
+    ];
+    client.events = Some(RegionalEventsResponse {
+        events: vec![event],
+        cursor: 1,
+    });
+
+    assert!(
+        client.queue_event_intervention("selected-event-1".to_owned(), "close the ford".to_owned())
+    );
+    let Some(Phase5Command::Event(request)) = client.commands.pop_front() else {
+        panic!("a selected event choice should queue an intervention");
+    };
+    assert_eq!(request.intervention.as_deref(), Some("close the ford"));
+}
+
+#[test]
 fn regional_event_cursor_merges_updates_without_dropping_known_events() {
     let mut current = Some(RegionalEventsResponse {
         events: vec![regional_event(

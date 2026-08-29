@@ -221,6 +221,7 @@ impl Game {
                     wilderness: client.projection.wilderness.as_ref(),
                     regional_region: client.phase5_region(),
                     regional_inspection: regional_inspection.as_deref(),
+                    regional_event_choices: client.phase5_event_choices(),
                     chronicle: &client.projection.chronicle,
                     chronicle_summary: client.projection.chronicle_summary.as_ref(),
                     opportunities: &client.projection.opportunities,
@@ -294,6 +295,7 @@ impl Game {
                     wilderness: None,
                     regional_region: None,
                     regional_inspection: None,
+                    regional_event_choices: &[],
                     chronicle: &[],
                     chronicle_summary: None,
                     opportunities: &[],
@@ -425,6 +427,11 @@ impl Game {
             UiAction::Move(dx, dy) => self.queue_movement(dx, dy),
             UiAction::MoveTo(tile) => self.move_toward(tile),
             UiAction::Interact(id) => self.interact(&id),
+            UiAction::RegionalEvent(intervention) => {
+                if let ClientMode::Online(client) = &mut self.mode {
+                    client.queue_region_intervention(intervention);
+                }
+            }
             UiAction::SendChat => {
                 let text = self.chat_draft.trim().to_owned();
                 if let ClientMode::Online(client) = &mut self.mode {
