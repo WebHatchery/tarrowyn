@@ -8,6 +8,7 @@ use tarrowyn_protocol::{
     TradeStatus, WeaponKind, WorldEvent,
 };
 
+mod chat_validation;
 mod events;
 mod persistence;
 mod reset;
