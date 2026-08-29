@@ -59,6 +59,9 @@ The local-combat regression confirms accepted actions publish a persisted
 server-tick action window, reject same-tick bursts, and become available again
 after the authoritative tick advances. Older local-combat snapshots default
 the new window boundary to tick zero.
+The lease presentation regression confirms the client summary exposes a
+human-readable real-time countdown and uses hours near expiry rather than
+leaking an opaque Unix timestamp.
 The skill-catalogue regressions confirm direct root guidance, non-empty advanced
 discovery requirements, and re-evaluation of stored prerequisite history when a
 new advanced merger becomes eligible.

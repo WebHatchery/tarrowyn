@@ -80,8 +80,10 @@ In the online client, use only visible controls:
 
 1. Tap `Town hall` repeatedly to claim the Steward office, propose, approve,
    and complete north-road repair. Read the public cost in the response notice.
-2. Tap `Registry` to request and approve a plot, then renew it. If testing
-   reclamation, abandon it and tap `Registry` again after the grace interval.
+2. Tap `Registry` to request and approve a plot, then renew it. Read the
+   registry summary for the lease status and remaining real-time countdown. If
+   testing reclamation, abandon it and tap `Registry` again after the grace
+   interval.
 3. Tap `Order` to learn Carpentry, create the displayed service order, and
    accept/complete it from a second client.
 4. Tap `Care` beside the shared fields to tend Bellweather and read the

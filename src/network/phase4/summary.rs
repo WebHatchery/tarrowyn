@@ -1,4 +1,8 @@
 use super::*;
+use std::time::{SystemTime, UNIX_EPOCH};
+
+#[cfg(test)]
+mod tests;
 
 pub(super) fn render(client: &Phase4Client) -> String {
     let offices = client
@@ -16,13 +20,7 @@ pub(super) fn render(client: &Phase4Client) -> String {
     let registry = client
         .claims
         .as_ref()
-        .map(|claims| {
-            let days = claims.lease_duration_days.max(1);
-            format!(
-                "{} plots available • {days}-day real leases",
-                claims.available_plots.len()
-            )
-        })
+        .map(|claims| lease_registry_summary(client, claims))
         .unwrap_or_else(|| "Registry loading".to_owned());
     let orders = client
         .professions
@@ -80,4 +78,61 @@ pub(super) fn render(client: &Phase4Client) -> String {
         })
         .unwrap_or_else(|| "Tax and treasury loading".to_owned());
     format!("{offices} • {registry}\n{treasury}\n{orders} • {knowledge} • {skills}")
+}
+
+fn lease_registry_summary(client: &Phase4Client, claims: &ClaimsResponse) -> String {
+    let free = claims.available_plots.len();
+    let own_claim = client.own_account_id.as_deref().and_then(|account_id| {
+        claims
+            .claims
+            .iter()
+            .rev()
+            .find(|claim| claim.owner_account_id.as_deref() == Some(account_id))
+    });
+    let lease = own_claim
+        .map(|claim| {
+            let status = match claim.status {
+                tarrowyn_protocol::ClaimLifecycleStatus::Requested => "requested",
+                tarrowyn_protocol::ClaimLifecycleStatus::Active
+                | tarrowyn_protocol::ClaimLifecycleStatus::Renewed
+                | tarrowyn_protocol::ClaimLifecycleStatus::Transferred
+                | tarrowyn_protocol::ClaimLifecycleStatus::Inherited => "access open",
+                tarrowyn_protocol::ClaimLifecycleStatus::Abandoned => "abandoned; grace open",
+                tarrowyn_protocol::ClaimLifecycleStatus::Expired => "expired; grace open",
+                tarrowyn_protocol::ClaimLifecycleStatus::Reclaimed => "reclaimed",
+            };
+            if claim.expires_at_unix_seconds > 0
+                && matches!(
+                    claim.status,
+                    tarrowyn_protocol::ClaimLifecycleStatus::Active
+                        | tarrowyn_protocol::ClaimLifecycleStatus::Renewed
+                        | tarrowyn_protocol::ClaimLifecycleStatus::Transferred
+                        | tarrowyn_protocol::ClaimLifecycleStatus::Inherited
+                )
+            {
+                format!(
+                    "lease {status}, {}",
+                    lease_remaining(claim.expires_at_unix_seconds, unix_time_seconds())
+                )
+            } else {
+                format!("lease {status}")
+            }
+        })
+        .unwrap_or_else(|| format!("{}-day real leases", claims.lease_duration_days.max(1)));
+    format!("{free} plots free • {lease}")
+}
+
+fn lease_remaining(expires_at: u64, now: u64) -> String {
+    let seconds = expires_at.saturating_sub(now);
+    if seconds >= 24 * 60 * 60 {
+        format!("{}d left", seconds.div_ceil(24 * 60 * 60))
+    } else {
+        format!("{}h left", seconds.div_ceil(60 * 60))
+    }
+}
+
+fn unix_time_seconds() -> u64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_or(0, |duration| duration.as_secs())
 }
