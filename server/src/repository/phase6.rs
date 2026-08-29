@@ -15,6 +15,7 @@ mod account;
 mod backup;
 mod core_event_integrity;
 mod core_replay_integrity;
+mod core_session_integrity;
 mod deletion;
 mod maintenance;
 mod moderation;

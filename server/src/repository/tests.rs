@@ -13,6 +13,7 @@ mod core_event_integrity;
 mod core_history_integrity;
 mod core_metadata_integrity;
 mod core_replay_integrity;
+mod core_session_integrity;
 mod events;
 mod identity_integrity;
 mod input_bounds;
