@@ -29,6 +29,8 @@ pub(super) fn recover_from_cursor_boundary(
 }
 
 pub(super) fn reset_projection_history(projection: &mut WorldProjection) {
+    projection.world.crops.fill(None);
+    projection.world.reachable.clear();
     projection.players.clear();
     projection.chat.clear();
     projection.day = 1;

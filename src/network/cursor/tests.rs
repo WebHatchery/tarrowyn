@@ -1,5 +1,7 @@
 use super::*;
 use crate::data::GameConfig;
+use crate::state::{CropKind, CropState};
+use macroquad_toolkit::grid::TilePos;
 
 fn config() -> GameConfig {
     GameConfig {
@@ -42,6 +44,14 @@ fn restore_recovery_discards_stale_history_and_schedules_state_reload() {
     let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
     client.projection.cursor = 99;
     client.projection.server_tick = 44;
+    client.projection.world.crops.set(
+        TilePos::new(0, 0),
+        Some(CropState {
+            kind: CropKind::Wheat,
+            stage: CropState::MATURE_STAGE,
+        }),
+    );
+    client.projection.world.reachable.insert(TilePos::new(0, 0));
     client.projection.feed.cursor = 99;
     client.projection.chat.push(tarrowyn_protocol::ChatMessage {
         message_id: 1,
@@ -60,6 +70,11 @@ fn restore_recovery_discards_stale_history_and_schedules_state_reload() {
     assert_eq!(client.projection.server_tick, 0);
     assert!(client.projection.chat.is_empty());
     assert_eq!(client.projection.feed.cursor, 0);
+    assert_eq!(
+        client.projection.world.crops.get(TilePos::new(0, 0)),
+        Some(&None)
+    );
+    assert!(client.projection.world.reachable.is_empty());
     assert_eq!(client.state_refresh, 0.0);
     assert!(client.pending_state.is_none());
     assert!(client.pending_events.is_none());
