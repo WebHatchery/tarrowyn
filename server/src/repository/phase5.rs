@@ -473,9 +473,19 @@ impl WorldRepository {
             reason,
         };
         if accepted {
+            let locations = response
+                .order
+                .as_ref()
+                .map(|order| {
+                    [
+                        order.origin_location_id.as_str(),
+                        order.destination_location_id.as_str(),
+                    ]
+                })
+                .unwrap_or([location.as_str(), location.as_str()]);
             record_regional(
                 &mut state,
-                &[location.as_str()],
+                &locations,
                 "regional market",
                 "A cross-settlement order changed stock, price, and route demand.",
             );
