@@ -462,10 +462,34 @@ impl WorldRepository {
         let mut state = self.state.lock().expect("world repository lock poisoned");
         state.tick = state.tick.saturating_add(1);
         let previous_day = state.clock.day;
-        state.clock.seconds += self.config.world_seconds_per_tick.max(0.0);
-        while state.clock.seconds >= state.clock.day_length_seconds.max(1.0) {
-            state.clock.seconds -= state.clock.day_length_seconds.max(1.0);
-            state.clock.day = state.clock.day.saturating_add(1);
+        let day_length =
+            if state.clock.day_length_seconds.is_finite() && state.clock.day_length_seconds > 0.0 {
+                state.clock.day_length_seconds
+            } else {
+                1.0
+            };
+        let current_seconds = if state.clock.seconds.is_finite() && state.clock.seconds >= 0.0 {
+            state.clock.seconds
+        } else {
+            0.0
+        };
+        let tick_seconds = if self.config.world_seconds_per_tick.is_finite()
+            && self.config.world_seconds_per_tick > 0.0
+        {
+            self.config.world_seconds_per_tick
+        } else {
+            0.0
+        };
+        let elapsed_seconds = (current_seconds + tick_seconds).min(f32::MAX);
+        let elapsed_days = (elapsed_seconds / day_length).floor();
+        if elapsed_days > 0.0 {
+            state.clock.seconds = elapsed_seconds % day_length;
+            state.clock.day = state
+                .clock
+                .day
+                .saturating_add(elapsed_days.min(u32::MAX as f32) as u32);
+        } else {
+            state.clock.seconds = elapsed_seconds;
         }
         if state.clock.day != previous_day {
             phase4::day_rollover(&mut state);

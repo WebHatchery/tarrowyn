@@ -1,6 +1,7 @@
 use super::repo;
 use crate::config::ServerConfig;
 use crate::repository::models::RepositoryState;
+use crate::repository::WorldRepository;
 
 #[test]
 fn world_tick_and_day_hold_at_their_numeric_ceiling() {
@@ -28,4 +29,20 @@ fn restored_clock_seconds_stay_inside_the_configured_day() {
     let restored = RepositoryState::from_stored(stored, &ServerConfig::default());
 
     assert_eq!(restored.clock.seconds, 1.25);
+}
+
+#[test]
+fn extreme_clock_increment_completes_without_unbounded_catch_up() {
+    let repository = WorldRepository::new(ServerConfig {
+        day_length_seconds: 1.0,
+        world_seconds_per_tick: f32::MAX,
+        ..ServerConfig::default()
+    });
+
+    repository.tick();
+
+    let state = repository.state.lock().unwrap();
+    assert_eq!(state.tick, 1);
+    assert_eq!(state.clock.day, u32::MAX);
+    assert!(state.clock.seconds < state.clock.day_length_seconds);
 }
