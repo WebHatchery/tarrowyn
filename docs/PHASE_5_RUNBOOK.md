@@ -54,7 +54,12 @@ destination, and fulfil it. Record the order status, inventory projection,
 gold, and price index before and after settlement. Before fulfilment, also
 cancel an owned open order and confirm that its escrow returns to origin stock
 and its status becomes `Cancelled`; the online client exposes this through the
-visible `Cancel` control. Seed a regional event with
+visible `Cancel` control. A small essential order may be marked `fallback_used`
+when player escrow is unavailable; it carries a surcharge, cannot be fulfilled
+until its short arrival delay elapses, and is capped at two fallback orders per
+world day. Cancelling or reconciling it must not refund goods that were never
+escrowed. Timber and stone continue to fail closed when their stock is empty.
+Seed a regional event with
 `POST /v1/events/region`, wait for escalation, tap `Inspect`, and choose one of
 the visible exact intervention buttons before resolving it. Poll with the
 returned cursor; a cursor ahead of the server must

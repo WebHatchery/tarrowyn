@@ -25,6 +25,10 @@ pub(crate) struct Phase5State {
     pub(crate) next_event_id: u64,
     pub(crate) cursor: u64,
     #[serde(default)]
+    pub(crate) fallback_day: u32,
+    #[serde(default)]
+    pub(crate) fallback_orders_today: u8,
+    #[serde(default)]
     pub(crate) event_history_floor: u64,
     pub(crate) locations: Vec<LocationRecord>,
     pub(crate) routes: Vec<RouteRecord>,
@@ -76,6 +80,8 @@ pub(crate) fn fresh(_config: &ServerConfig) -> Phase5State {
         next_order_id: 1,
         next_event_id: 1,
         cursor: 0,
+        fallback_day: 1,
+        fallback_orders_today: 0,
         event_history_floor: 0,
         locations,
         routes,

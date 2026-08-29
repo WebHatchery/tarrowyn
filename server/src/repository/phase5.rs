@@ -5,8 +5,8 @@ use super::*;
 use crate::config::ServerConfig;
 use tarrowyn_protocol::{
     ApiResponse, LawBoundaryResponse, MarketOrder, MarketOrderAction, MarketOrderRequest,
-    MarketOrderResponse, MarketOrderStatus, MarketSnapshot, RegionSnapshot, RegionalEvent,
-    RegionalEventAction, RegionalEventRequest, RegionalEventResponse, RegionalEventsResponse,
+    MarketOrderResponse, MarketSnapshot, RegionSnapshot, RegionalEvent, RegionalEventAction,
+    RegionalEventRequest, RegionalEventResponse, RegionalEventsResponse,
     RegionalHouseholdsResponse, RouteAction, RouteRecord, RouteRequest, RouteResponse, RouteStatus,
     SettlementsResponse, TravelAction, TravelRequest, TravelResponse, TravelState, TravelStatus,
 };
@@ -18,7 +18,8 @@ mod settlements;
 mod state;
 use logic::*;
 pub(super) use market::{
-    close_deleted_account_orders, create_order, reconcile_market_order, trim_market_orders,
+    cancel_order, close_deleted_account_orders, create_order, fulfil_order, reconcile_market_order,
+    trim_market_orders,
 };
 pub(super) use recovery::clear_stuck_travel;
 use settlements::{refresh_settlement_facilities, update_households, update_settlements};
@@ -526,12 +527,16 @@ impl WorldRepository {
                     ]
                 })
                 .unwrap_or([location.as_str(), location.as_str()]);
-            record_regional(
-                &mut state,
-                &locations,
-                "regional market",
-                "A cross-settlement order changed stock, price, and route demand.",
-            );
+            let message = if response
+                .order
+                .as_ref()
+                .is_some_and(|order| order.fallback_used)
+            {
+                "A limited travelling service supplied an essential regional shipment at a surcharge."
+            } else {
+                "A cross-settlement order changed stock, price, and route demand."
+            };
+            record_regional(&mut state, &locations, "regional market", message);
         }
         state
             .phase5
@@ -674,112 +679,6 @@ pub(super) fn phase5_tick(state: &mut RepositoryState, config: &ServerConfig) {
     expire_market_orders(state);
     refresh_settlement_facilities(state);
     trim_household_histories(&mut state.phase5);
-}
-
-fn fulfil_order(
-    state: &mut RepositoryState,
-    key: &str,
-    order_id: Option<&str>,
-) -> (bool, Option<MarketOrder>, Option<String>) {
-    let Some(index) = state
-        .phase5
-        .market_orders
-        .iter()
-        .position(|order| Some(order.order_id.as_str()) == order_id)
-    else {
-        return (
-            false,
-            None,
-            Some("That market order is not recorded.".to_owned()),
-        );
-    };
-    let location = player_location(state, key);
-    let order = state.phase5.market_orders[index].clone();
-    if order.status != MarketOrderStatus::Open {
-        return (
-            false,
-            Some(order),
-            Some("That order has already been settled or closed.".to_owned()),
-        );
-    }
-    if order.destination_location_id != location {
-        return (
-            false,
-            Some(order),
-            Some("Arrive at the order destination before settling the shipment.".to_owned()),
-        );
-    }
-    let owner_key = state
-        .identities
-        .iter()
-        .find(|(_, identity)| identity.account_id == order.owner_account_id)
-        .map(|(key, _)| key.clone());
-    if let Some(owner_key) = owner_key {
-        give_commodity(
-            state,
-            &owner_key,
-            &order.destination_location_id,
-            order.commodity,
-            order.quantity,
-        );
-    }
-    if let Some(identity) = state.identities.get_mut(key) {
-        identity.gold = identity.gold.saturating_add(order.total_price);
-        identity.reputation = identity.reputation.saturating_add(1);
-    }
-    state.phase5.market_orders[index].status = MarketOrderStatus::Fulfilled;
-    state.phase5.market_orders[index].settled_tick = Some(state.tick);
-    (true, Some(state.phase5.market_orders[index].clone()), None)
-}
-
-fn cancel_order(
-    state: &mut RepositoryState,
-    key: &str,
-    order_id: Option<&str>,
-) -> (bool, Option<MarketOrder>, Option<String>) {
-    let Some(index) = state
-        .phase5
-        .market_orders
-        .iter()
-        .position(|order| Some(order.order_id.as_str()) == order_id)
-    else {
-        return (
-            false,
-            None,
-            Some("That market order is not recorded.".to_owned()),
-        );
-    };
-    let account = state
-        .identities
-        .get(key)
-        .expect("identity exists")
-        .account_id
-        .clone();
-    let order = state.phase5.market_orders[index].clone();
-    if order.owner_account_id != account {
-        return (
-            false,
-            Some(order.clone()),
-            Some("Only the order owner can cancel an escrow.".to_owned()),
-        );
-    }
-    if order.status != MarketOrderStatus::Open {
-        return (
-            false,
-            Some(order.clone()),
-            Some("Only an open order can be cancelled.".to_owned()),
-        );
-    }
-    give_commodity(
-        state,
-        key,
-        &order.origin_location_id,
-        order.commodity,
-        order.quantity,
-    );
-    state.phase5.market_orders[index].status = MarketOrderStatus::Cancelled;
-    state.phase5.market_orders[index].settled_tick = Some(state.tick);
-    (true, Some(state.phase5.market_orders[index].clone()), None)
 }
 
 #[cfg(test)]

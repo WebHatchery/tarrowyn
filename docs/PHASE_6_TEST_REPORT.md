@@ -202,7 +202,9 @@ exact touch-selectable intervention choices, and its pending/resolved outcome
 state. The selected-root practice check also confirms that the touch chooser
 queues the named root rather than silently selecting the first catalogue entry,
 while advanced or mastered skills remain out of that direct-practice list.
-These maintenance changes also passed `publish.ps1` with Windows and WebGL
+The focused market regression also confirms that an essential shipment can use
+the bounded travelling fallback, respects its delay and daily capacity, and
+does not refund goods on cancellation. These maintenance changes also passed `publish.ps1` with Windows and WebGL
 Preview deployment; no full release gate was rerun because they stayed within
 the established client/UI boundary.
 
