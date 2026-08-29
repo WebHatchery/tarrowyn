@@ -154,8 +154,8 @@ pub(super) fn intervene_event(
     state.phase5.events[index].stage = RegionalEventStage::Intervention;
     state.phase5.events[index].chosen_intervention = Some(intervention.to_owned());
     state.phase5.events[index].updated_tick = state.tick;
-    let consequence = apply_event_intervention(state, intervention);
     let affected_location_ids = state.phase5.events[index].affected_location_ids.clone();
+    let consequence = apply_event_intervention(state, intervention, &affected_location_ids);
     let affected_locations = event_location_refs(&affected_location_ids);
     record_regional(
         state,
@@ -167,15 +167,21 @@ pub(super) fn intervene_event(
     (true, Some(state.phase5.events[index].clone()), None)
 }
 
-fn apply_event_intervention(state: &mut RepositoryState, intervention: &str) -> &'static str {
+fn apply_event_intervention(
+    state: &mut RepositoryState,
+    intervention: &str,
+    affected_location_ids: &[String],
+) -> &'static str {
     match intervention {
         "repair ferry markers" => {
-            if let Some(route) = state
-                .phase5
-                .routes
-                .iter_mut()
-                .find(|route| route.route_id == "saltmere-ferry")
-            {
+            if let Some(route) = state.phase5.routes.iter_mut().find(|route| {
+                route.route_id == "saltmere-ferry"
+                    && event_affects_route(
+                        affected_location_ids,
+                        &route.origin_location_id,
+                        &route.destination_location_id,
+                    )
+            }) {
                 route.condition = route.condition.saturating_add(12).min(100);
                 route.risk_percent = route.risk_percent.saturating_sub(6);
                 route.status = RouteStatus::Operational;
@@ -183,37 +189,45 @@ fn apply_event_intervention(state: &mut RepositoryState, intervention: &str) -> 
             "the ferry route is marked safe again"
         }
         "escort the grain caravan" => {
-            if let Some(route) = state
-                .phase5
-                .routes
-                .iter_mut()
-                .find(|route| route.route_id == "north-pack-road")
-            {
+            if let Some(route) = state.phase5.routes.iter_mut().find(|route| {
+                route.route_id == "north-pack-road"
+                    && event_affects_route(
+                        affected_location_ids,
+                        &route.origin_location_id,
+                        &route.destination_location_id,
+                    )
+            }) {
                 route.condition = route.condition.saturating_add(8).min(100);
                 route.risk_percent = route.risk_percent.saturating_sub(8);
                 route.status = RouteStatus::Delayed;
             }
             for settlement in &mut state.phase5.settlements {
-                settlement.food = settlement.food.saturating_add(6).min(100);
-                settlement.price_index_percent = settlement.price_index_percent.saturating_sub(3);
+                if event_affects_location(affected_location_ids, &settlement.location_id) {
+                    settlement.food = settlement.food.saturating_add(6).min(100);
+                    settlement.price_index_percent =
+                        settlement.price_index_percent.saturating_sub(3);
+                }
             }
             "the escorted grain reaches each settlement under watch"
         }
         "open the frontier storehouse" => {
-            let stock = state
-                .phase5
-                .stock
-                .entry(stock_key("whisperwood-outpost", "seeds"))
-                .or_default();
-            *stock = stock.saturating_add(4);
-            if let Some(settlement) = state
-                .phase5
-                .settlements
-                .iter_mut()
-                .find(|settlement| settlement.location_id == "whisperwood-outpost")
-            {
-                settlement.food = settlement.food.saturating_add(4).min(100);
-                settlement.price_index_percent = settlement.price_index_percent.saturating_sub(2);
+            if event_affects_location(affected_location_ids, "whisperwood-outpost") {
+                let stock = state
+                    .phase5
+                    .stock
+                    .entry(stock_key("whisperwood-outpost", "seeds"))
+                    .or_default();
+                *stock = stock.saturating_add(4);
+                if let Some(settlement) = state
+                    .phase5
+                    .settlements
+                    .iter_mut()
+                    .find(|settlement| settlement.location_id == "whisperwood-outpost")
+                {
+                    settlement.food = settlement.food.saturating_add(4).min(100);
+                    settlement.price_index_percent =
+                        settlement.price_index_percent.saturating_sub(2);
+                }
             }
             "frontier reserves open and seed supply reaches the watch"
         }
@@ -260,11 +274,13 @@ fn complete_event_resolution(state: &mut RepositoryState, index: usize) {
         .outcome
         .clone()
         .unwrap_or_else(|| "The event resolved.".to_owned());
-    for settlement in &mut state.phase5.settlements {
-        settlement.safety = settlement.safety.saturating_add(4).min(100);
-        settlement.price_index_percent = settlement.price_index_percent.saturating_sub(5);
-    }
     let affected_location_ids = state.phase5.events[index].affected_location_ids.clone();
+    for settlement in &mut state.phase5.settlements {
+        if event_affects_location(&affected_location_ids, &settlement.location_id) {
+            settlement.safety = settlement.safety.saturating_add(4).min(100);
+            settlement.price_index_percent = settlement.price_index_percent.saturating_sub(5);
+        }
+    }
     let affected_locations = event_location_refs(&affected_location_ids);
     record_regional(
         state,
@@ -386,25 +402,30 @@ pub(super) fn advance_events(state: &mut RepositoryState) {
                 }
             }
             RegionalEventStage::Escalation => {
-                if let Some(route) = state
-                    .phase5
-                    .routes
-                    .iter_mut()
-                    .find(|route| route.route_id == "north-pack-road")
-                {
+                if let Some(route) = state.phase5.routes.iter_mut().find(|route| {
+                    route.route_id == "north-pack-road"
+                        && event_affects_route(
+                            &affected_location_ids,
+                            &route.origin_location_id,
+                            &route.destination_location_id,
+                        )
+                }) {
                     route.risk_percent = route.risk_percent.saturating_add(10).min(90);
                     route.status = tarrowyn_protocol::RouteStatus::Threatened;
                 }
                 for settlement in &mut state.phase5.settlements {
-                    settlement.food = settlement.food.saturating_sub(4);
-                    settlement.price_index_percent =
-                        settlement.price_index_percent.saturating_add(8);
+                    if event_affects_location(&affected_location_ids, &settlement.location_id) {
+                        settlement.food = settlement.food.saturating_sub(4);
+                        settlement.price_index_percent =
+                            settlement.price_index_percent.saturating_add(8);
+                    }
                 }
-                for household in &mut state.phase4.households {
-                    household.service_quality = household.service_quality.saturating_sub(4);
-                    household.clue =
-                        "The thaw reduced service until a safe route and supply chain are restored."
+                if event_affects_location(&affected_location_ids, "hearth") {
+                    for household in &mut state.phase4.households {
+                        household.service_quality = household.service_quality.saturating_sub(4);
+                        household.clue = "The thaw reduced service until a safe route and supply chain are restored."
                             .to_owned();
+                    }
                 }
                 record_regional(state, &affected_locations, "regional event escalation", &format!("Event {event_id} crossed the region: travel risk, farm supply, prices, and household choices now carry its cause."));
             }
@@ -429,6 +450,21 @@ pub(super) fn advance_events(state: &mut RepositoryState) {
             event.cursor = state.cursor;
         }
     }
+}
+
+fn event_affects_location(affected_location_ids: &[String], location_id: &str) -> bool {
+    affected_location_ids
+        .iter()
+        .any(|affected| affected == location_id)
+}
+
+fn event_affects_route(
+    affected_location_ids: &[String],
+    origin_location_id: &str,
+    destination_location_id: &str,
+) -> bool {
+    event_affects_location(affected_location_ids, origin_location_id)
+        || event_affects_location(affected_location_ids, destination_location_id)
 }
 
 pub(super) fn expire_market_orders(state: &mut RepositoryState) {

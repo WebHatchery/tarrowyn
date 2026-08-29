@@ -140,10 +140,21 @@ $eventRecords = Get-Records $manifests["events.json"] "events" "events"
 Assert-Records "events" $eventRecords @("title", "kind", "cause") @("stages", "affected_systems", "affected_locations", "effects", "intervention_options")
 Assert-RequiredRecordIds "Events" $eventRecords @("river-thaw")
 $supportedEventInterventions = @("repair ferry markers", "escort the grain caravan", "open the frontier storehouse")
+$eventInterventionLocations = @{
+    "repair ferry markers" = @("hearth", "saltmere")
+    "escort the grain caravan" = @("hearth", "whisperwood-outpost")
+    "open the frontier storehouse" = @("whisperwood-outpost")
+}
 foreach ($event in $eventRecords) {
+    $affectedLocations = @($event.affected_locations | ForEach-Object { [string]$_ })
     foreach ($intervention in @($event.intervention_options)) {
-        if ($supportedEventInterventions -notcontains [string]$intervention) {
+        $interventionName = [string]$intervention
+        if ($supportedEventInterventions -notcontains $interventionName) {
             throw "Events must use a supported intervention choice: $intervention"
+        }
+        if ($eventInterventionLocations.ContainsKey($interventionName) -and
+            @($eventInterventionLocations[$interventionName] | Where-Object { $affectedLocations -contains $_ }).Count -eq 0) {
+            throw "Event $($event.id) must include a location affected by $interventionName."
         }
     }
 }

@@ -126,6 +126,11 @@ the landing route, caravan escort restores food movement while leaving the road
 watched, and the frontier storehouse opens seed reserve at Whisperwood. Every
 cause, intervention, and outcome is recorded through the existing chronicle
 cursor, so a later player can search what the region remembers.
+All settlement, route, and fixed-household event consequences now follow the
+event's affected-location scope, so a future localized event cannot mutate
+unlisted settlements while its history remains correctly scoped.
+Content validation also requires each intervention to include the location its
+implemented effect targets.
 
 ## Law boundary
 

@@ -643,8 +643,32 @@ fn validate_events(events: &EventsManifest, region: &RegionManifest) -> Result<(
                 event.id
             ));
         }
+        if event
+            .intervention_options
+            .iter()
+            .any(|option| !intervention_scope_is_valid(option, &event.affected_locations))
+        {
+            return Err(format!(
+                "event {} must include the affected location for each intervention",
+                event.id
+            ));
+        }
     }
     Ok(())
+}
+
+fn intervention_scope_is_valid(intervention: &str, affected_locations: &[String]) -> bool {
+    let required_locations = match intervention {
+        "repair ferry markers" => ["hearth", "saltmere"].as_slice(),
+        "escort the grain caravan" => ["hearth", "whisperwood-outpost"].as_slice(),
+        "open the frontier storehouse" => ["whisperwood-outpost"].as_slice(),
+        _ => return true,
+    };
+    required_locations.iter().any(|required| {
+        affected_locations
+            .iter()
+            .any(|affected| affected == required)
+    })
 }
 
 fn validate_items(items: &ItemsManifest) -> Result<(), String> {

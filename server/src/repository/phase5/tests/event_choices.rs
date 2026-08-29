@@ -1,6 +1,7 @@
 use super::super::super::WorldRepository;
 use super::guest;
 use crate::ServerConfig;
+use std::collections::HashMap;
 use tarrowyn_protocol::{RegionalEventAction, RegionalEventRequest};
 
 #[test]
@@ -60,4 +61,72 @@ fn alternate_event_choice_changes_supply_and_resolution_text() {
         .event
         .and_then(|event| event.outcome)
         .is_some_and(|outcome| outcome.contains("frontier storehouse")));
+}
+
+#[test]
+fn regional_event_effects_follow_their_affected_locations() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = guest(&repository, "phase5-local-event-scope");
+    let seeded = repository
+        .event_action(
+            &session.account_token,
+            RegionalEventRequest {
+                request_id: "local-scope-seed".to_owned(),
+                action: RegionalEventAction::Seed,
+                event_id: None,
+                intervention: None,
+            },
+        )
+        .expect("event seed")
+        .data;
+    let event_id = seeded.event.expect("seeded event").event_id;
+    {
+        let mut state = repository.state.lock().expect("repository state");
+        state.phase5.events[0].affected_location_ids = vec!["hearth".to_owned()];
+        state.tick = 2;
+        super::super::logic::advance_events(&mut state);
+        let food_by_location: HashMap<_, _> = state
+            .phase5
+            .settlements
+            .iter()
+            .map(|settlement| (settlement.location_id.as_str(), settlement.food))
+            .collect();
+        assert_eq!(food_by_location.get("hearth"), Some(&68));
+        assert_eq!(food_by_location.get("saltmere"), Some(&61));
+        assert_eq!(
+            state
+                .phase4
+                .households
+                .first()
+                .expect("Bellweather household")
+                .service_quality,
+            68
+        );
+
+        let (accepted, _, reason) = super::super::logic::intervene_event(
+            &mut state,
+            Some(&event_id),
+            Some("escort the grain caravan"),
+        );
+        assert!(accepted, "localized intervention failed: {reason:?}");
+        let food_by_location: HashMap<_, _> = state
+            .phase5
+            .settlements
+            .iter()
+            .map(|settlement| (settlement.location_id.as_str(), settlement.food))
+            .collect();
+        assert_eq!(food_by_location.get("hearth"), Some(&74));
+        assert_eq!(food_by_location.get("saltmere"), Some(&61));
+
+        let (accepted, _, reason) = super::super::logic::resolve_event(&mut state, Some(&event_id));
+        assert!(accepted, "localized resolution failed: {reason:?}");
+        let safety_by_location: HashMap<_, _> = state
+            .phase5
+            .settlements
+            .iter()
+            .map(|settlement| (settlement.location_id.as_str(), settlement.safety))
+            .collect();
+        assert_eq!(safety_by_location.get("hearth"), Some(&74));
+        assert_eq!(safety_by_location.get("saltmere"), Some(&76));
+    }
 }

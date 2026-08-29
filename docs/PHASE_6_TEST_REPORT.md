@@ -34,6 +34,11 @@ unmapped kind, missing launch ID, or mismatched executable kind before startup.
 The event-content regression confirms every authored intervention choice maps
 to a server effect, rejecting a visible choice that would otherwise resolve as
 a silent generic response.
+The event-scope content regression confirms each intervention includes the
+location required by its concrete route, supply, or storehouse effect.
+The localized-event regression confirms escalation, intervention supply, and
+resolution safety/price consequences stay inside the event's affected-location
+scope rather than mutating every settlement.
 The Phase 5 event-catalogue regression confirms the stable `river-thaw` launch
 event remains present for the regional event fixture.
 The skill-catalogue regression confirms prerequisite graphs cannot contain a
