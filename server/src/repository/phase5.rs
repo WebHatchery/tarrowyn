@@ -201,8 +201,10 @@ impl WorldRepository {
                 None
             }
         };
-        route.last_action_tick = state.tick;
-        state.phase5.routes[route_index] = route.clone();
+        if accepted {
+            route.last_action_tick = state.tick;
+            state.phase5.routes[route_index] = route.clone();
+        }
         let response = RouteResponse {
             request_id: request.request_id.clone(),
             accepted,
