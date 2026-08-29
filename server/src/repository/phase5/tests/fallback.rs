@@ -133,6 +133,30 @@ fn travelling_fallback_is_bounded_delayed_and_not_refunded() {
 
     {
         let mut state = repository.state.lock().expect("repository lock");
+        state.phase5.stock.insert("hearth:timber".to_owned(), 0);
+    }
+    let hard_fail = repository
+        .market_order(
+            &session.account_token,
+            MarketOrderRequest {
+                request_id: "fallback-timber-blocked".to_owned(),
+                action: MarketOrderAction::Create,
+                order_id: None,
+                destination_location_id: Some("saltmere".to_owned()),
+                commodity: Some(CommodityKind::Timber),
+                quantity: Some(1),
+            },
+        )
+        .expect("ordinary material response")
+        .data;
+    assert!(!hard_fail.accepted);
+    assert!(hard_fail
+        .reason
+        .as_deref()
+        .is_some_and(|reason| reason.contains("not enough timber")));
+
+    {
+        let mut state = repository.state.lock().expect("repository lock");
         state.clock.day = state.clock.day.saturating_add(1);
     }
     let reset = repository
