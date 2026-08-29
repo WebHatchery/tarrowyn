@@ -1,6 +1,7 @@
 use super::super::{ServerConfig, WorldRepository};
 use tarrowyn_protocol::{
-    AuthLinkRequest, AuthRefreshRequest, AuthRevokeRequest, GuestSessionRequest,
+    AccountDeletionRequest, AuthLinkRequest, AuthRefreshRequest, AuthRevokeRequest,
+    GuestSessionRequest,
 };
 
 fn link(repository: &WorldRepository, client_key: &str, request_id: &str) -> (String, String) {
@@ -178,6 +179,153 @@ fn malformed_production_revoke_replay_key_degrades_readiness() {
             .phase6
             .auth_revoke_results
             .insert("missing-identity:revoke-replay-key".to_owned(), response);
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
+fn invalid_production_account_link_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let guest = super::guest(&repository, "integrity-production-account");
+    let linked = repository
+        .auth_link(
+            &guest.account_token,
+            AuthLinkRequest {
+                request_id: "integrity-production-link".to_owned(),
+                provider: "webhatchery-identity-oidc".to_owned(),
+                subject: "integrity-production-subject".to_owned(),
+                display_name: None,
+            },
+        )
+        .expect("production account link");
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state
+            .phase6
+            .accounts
+            .get_mut(&linked.data.account_id)
+            .expect("production account")
+            .identity_key = "missing-identity".to_owned();
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
+fn missing_production_session_mirror_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let guest = super::guest(&repository, "integrity-production-session");
+    let linked = repository
+        .auth_link(
+            &guest.account_token,
+            AuthLinkRequest {
+                request_id: "integrity-production-session-link".to_owned(),
+                provider: "webhatchery-identity-oidc".to_owned(),
+                subject: "integrity-production-session-subject".to_owned(),
+                display_name: None,
+            },
+        )
+        .expect("production account link")
+        .data;
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state.sessions.remove(&linked.session.account_token);
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
+fn invalid_audit_outcome_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let guest = super::guest(&repository, "integrity-production-audit");
+    repository
+        .auth_link(
+            &guest.account_token,
+            AuthLinkRequest {
+                request_id: "integrity-production-audit-link".to_owned(),
+                provider: "webhatchery-identity-oidc".to_owned(),
+                subject: "integrity-production-audit-subject".to_owned(),
+                display_name: None,
+            },
+        )
+        .expect("production account link");
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state.phase6.audits.back_mut().expect("link audit").outcome = "unknown".to_owned();
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
+fn orphan_moderation_timestamp_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state
+            .phase6
+            .report_created_at
+            .insert("orphan-report".to_owned(), 1);
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
+fn malformed_account_deletion_queue_key_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let guest = super::guest(&repository, "integrity-production-deletion");
+    let linked = repository
+        .auth_link(
+            &guest.account_token,
+            AuthLinkRequest {
+                request_id: "integrity-production-deletion-link".to_owned(),
+                provider: "webhatchery-identity-oidc".to_owned(),
+                subject: "integrity-production-deletion-subject".to_owned(),
+                display_name: None,
+            },
+        )
+        .expect("production account link")
+        .data;
+    repository
+        .account_delete(
+            &linked.session.account_token,
+            AccountDeletionRequest {
+                request_id: "integrity-production-deletion-request".to_owned(),
+                account_id: linked.account_id,
+            },
+        )
+        .expect("account deletion request");
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        let original_key = state
+            .phase6
+            .deletion_requests
+            .keys()
+            .next()
+            .cloned()
+            .expect("pending deletion");
+        let pending = state
+            .phase6
+            .deletion_requests
+            .remove(&original_key)
+            .expect("pending deletion");
+        state
+            .phase6
+            .deletion_requests
+            .insert("malformed-deletion-key".to_owned(), pending);
     }
 
     let health = repository.ops_health().data;
