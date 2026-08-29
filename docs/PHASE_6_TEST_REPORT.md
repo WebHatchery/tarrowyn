@@ -151,7 +151,8 @@ rotation, chat limits, and the protected no-PvP law response. Chat metadata,
 direct trades, claims, governance, moderation reports, and support repairs are
 audit-linked without copying chat text into the audit stream. Moderation reports are queued and audit-linked. The
 support account view is operator-only, returns the requested character-facing
-records and cursor, and excludes session tokens and provider subjects. Support
+records and cursor, keeps its latest chronicle window to 128 entries, and
+excludes session tokens and provider subjects. Support
 repair fixtures now prove an active claim's access flag can be restored without
 extending its lease, and duplicate regional household records can be merged
 while retaining history; both operations remain replay-safe and audited.
