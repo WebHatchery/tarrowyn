@@ -341,11 +341,14 @@ fn apply_bundle(identity: &mut Identity, bundle: TradeBundle, direction: i32) {
         identity.inventory.seeds -= bundle.seeds;
         identity.gold -= bundle.gold;
     } else {
-        identity.inventory.wheat += bundle.wheat;
-        identity.inventory.turnips += bundle.turnips;
-        identity.inventory.moonberries += bundle.moonberries;
-        identity.inventory.seeds += bundle.seeds;
-        identity.gold += bundle.gold;
+        identity.inventory.wheat = identity.inventory.wheat.saturating_add(bundle.wheat);
+        identity.inventory.turnips = identity.inventory.turnips.saturating_add(bundle.turnips);
+        identity.inventory.moonberries = identity
+            .inventory
+            .moonberries
+            .saturating_add(bundle.moonberries);
+        identity.inventory.seeds = identity.inventory.seeds.saturating_add(bundle.seeds);
+        identity.gold = identity.gold.saturating_add(bundle.gold);
     }
 }
 
