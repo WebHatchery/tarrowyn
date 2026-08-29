@@ -175,7 +175,7 @@ fn create_trade(
         request: wanted,
         status: TradeStatus::Pending,
         created_tick: state.tick,
-        expires_tick: state.tick + config.trade_expiry_ticks.max(1),
+        expires_tick: state.tick.saturating_add(config.trade_expiry_ticks.max(1)),
     };
     state.next_trade += 1;
     state.trades.insert(trade.trade_id.clone(), trade.clone());

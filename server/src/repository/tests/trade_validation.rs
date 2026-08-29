@@ -101,3 +101,48 @@ fn accepted_trade_saturates_recipient_counters_at_their_numeric_ceiling() {
         u32::MAX
     );
 }
+
+#[test]
+fn trade_expiry_saturates_at_the_world_tick_ceiling() {
+    let repository = repo();
+    let creator = guest(&repository, "trade-expiry-ceiling-creator");
+    let recipient = guest(&repository, "trade-expiry-ceiling-recipient");
+    let mut state = repository.state.lock().unwrap();
+    state.tick = u64::MAX - 1;
+    let tick = state.tick;
+    state
+        .sessions
+        .get_mut(&creator.account_token)
+        .unwrap()
+        .last_seen_tick = tick;
+    state
+        .identities
+        .get_mut("trade-expiry-ceiling-creator")
+        .unwrap()
+        .inventory
+        .wheat = 1;
+    drop(state);
+
+    let trade = repository
+        .trade(
+            &creator.account_token,
+            TradeRequest {
+                request_id: "trade-expiry-ceiling-create".to_owned(),
+                action: TradeAction::Create,
+                trade_id: None,
+                recipient_account_id: Some(recipient.account_id),
+                offer: Some(TradeBundle {
+                    wheat: 1,
+                    ..TradeBundle::default()
+                }),
+                request: Some(TradeBundle::default()),
+            },
+        )
+        .unwrap()
+        .data
+        .trade
+        .expect("trade should be created");
+
+    assert_eq!(trade.created_tick, u64::MAX - 1);
+    assert_eq!(trade.expires_tick, u64::MAX);
+}
