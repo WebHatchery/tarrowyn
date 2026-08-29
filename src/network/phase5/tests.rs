@@ -457,6 +457,11 @@ fn regional_summary_shows_local_condition_and_recovery_signal() {
     assert!(economy.contains("Protected"));
     assert!(economy.contains("Event escalation"));
     assert!(economy.contains("Service travelling"));
+    let inspection = client.inspection();
+    assert!(inspection.contains("North Pack Road Operational"));
+    assert!(inspection.contains("Saltmere Ferry Threatened"));
+    assert!(inspection.contains("Seeds are available at the Hearth."));
+    assert!(inspection.contains("Seeds 104%"));
 }
 
 fn regional_event(

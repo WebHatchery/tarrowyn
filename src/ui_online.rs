@@ -229,6 +229,7 @@ pub(super) fn draw_sidebar(
             ),
             ("market-region", "Market", true, ButtonTone::Primary),
             ("region-event", "Event", true, ButtonTone::Primary),
+            ("region-details", "Inspect", true, ButtonTone::Secondary),
         ],
         ctx,
         actions,

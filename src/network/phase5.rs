@@ -602,6 +602,10 @@ impl Phase5Client {
         summary::render(self)
     }
 
+    pub(super) fn inspection(&self) -> String {
+        summary::inspection(self)
+    }
+
     pub(super) fn season(&self) -> Option<&str> {
         self.region.as_ref().map(|region| region.season.as_str())
     }
@@ -761,6 +765,10 @@ impl OnlineClient {
     }
     pub(crate) fn phase5_summary(&self) -> String {
         self.phase4.region_summary()
+    }
+
+    pub(crate) fn phase5_inspection(&self) -> String {
+        self.phase4.regional_inspection()
     }
 
     pub(crate) fn phase5_season(&self) -> Option<&str> {

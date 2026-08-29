@@ -68,12 +68,13 @@ leaving the shared-road sidebar; the local line also carries compact claim,
 free-plot, and public-work counts.
 
 The shared-road sidebar also exposes compact road availability/risk, open market
-orders, and the protected-law boundary. Detailed route names, stock notes, and
-price notes remain a follow-up inspector surface rather than being squeezed into
-the touch summary. The latest regional event stage is shown beside that compact
-telemetry so signals and escalations remain visible before intervention. The map
-draws the region's server-owned location positions and route status colours;
-offline play keeps its local-only landmark fixture.
+orders, and the protected-law boundary. A visible Inspect control opens the
+authoritative route names, status, condition, and risk beside the first stock
+and price notes without squeezing them into the touch summary. The latest
+regional event stage is shown beside that compact telemetry so signals and
+escalations remain visible before intervention. The map draws the region's
+server-owned location positions and route status colours; offline play keeps its
+local-only landmark fixture.
 The client polls the regional household endpoint and shows the current travelling
 service status in the same compact line, while the household's reason and history
 remain server-owned projection data.

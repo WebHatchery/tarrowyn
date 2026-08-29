@@ -145,3 +145,43 @@ pub(super) fn render(client: &Phase5Client) -> String {
         "{region}\n{settlements}\n{roads} • {market} • {law} • {event} • {household}\n{account}"
     )
 }
+
+pub(super) fn inspection(client: &Phase5Client) -> String {
+    let Some(region) = client.region.as_ref() else {
+        return "Regional details are still loading.".to_owned();
+    };
+    let routes = region
+        .routes
+        .iter()
+        .map(|route| {
+            format!(
+                "{} {:?} • {}% risk • {} condition",
+                route.name, route.status, route.risk_percent, route.condition
+            )
+        })
+        .collect::<Vec<_>>()
+        .join(" | ");
+    let market = client
+        .market
+        .as_ref()
+        .map(|market| {
+            let open_orders = market
+                .orders
+                .iter()
+                .filter(|order| order.status == MarketOrderStatus::Open)
+                .count();
+            let stock = market
+                .stock_notes
+                .first()
+                .map(String::as_str)
+                .unwrap_or("no stock notes");
+            let prices = market
+                .prices
+                .first()
+                .map(String::as_str)
+                .unwrap_or("no price notes");
+            format!("Market {open_orders} open • stock: {stock} • prices: {prices}")
+        })
+        .unwrap_or_else(|| "Market details are still loading.".to_owned());
+    format!("{} details\nRoads: {routes}\n{market}", region.region_id)
+}

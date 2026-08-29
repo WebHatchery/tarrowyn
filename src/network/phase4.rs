@@ -632,6 +632,10 @@ impl Phase4Client {
         self.regional.summary()
     }
 
+    pub(super) fn regional_inspection(&self) -> String {
+        self.regional.inspection()
+    }
+
     pub(super) fn regional_season(&self) -> Option<&str> {
         self.regional.season()
     }
