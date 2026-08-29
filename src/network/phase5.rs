@@ -5,11 +5,11 @@ use serde::Deserialize;
 use tarrowyn_protocol::{
     AccountDeletionRequest, AccountDeletionResponse, AccountResponse, ApiResponse, AuthLinkRequest,
     AuthLinkResponse, AuthRefreshResponse, AuthRevokeResponse, AuthSession, GuestSessionResponse,
-    LawBoundaryResponse, MarketOrderRequest, MarketSnapshot, ModerationReportRequest,
-    ModerationReportResponse, RegionSnapshot, RegionalEventAction, RegionalEventRequest,
-    RegionalEventResponse, RegionalEventsResponse, RegionalHouseholdsResponse, RouteAction,
-    RouteRequest, RouteResponse, SettlementsResponse, TravelAction, TravelRequest, TravelResponse,
-    TravelStatus,
+    LawBoundaryResponse, MarketOrderAction, MarketOrderRequest, MarketSnapshot,
+    ModerationReportRequest, ModerationReportResponse, RegionSnapshot, RegionalEventAction,
+    RegionalEventRequest, RegionalEventResponse, RegionalEventsResponse,
+    RegionalHouseholdsResponse, RouteAction, RouteRequest, RouteResponse, SettlementsResponse,
+    TravelAction, TravelRequest, TravelResponse, TravelStatus,
 };
 
 const MAX_CACHED_REGIONAL_EVENTS: usize = 2048;
@@ -52,6 +52,7 @@ pub(super) struct Phase5Client {
     pending_account: Option<Pending<ApiResponse<AccountResponse>>>,
     pending_refresh: Option<Pending<ApiResponse<AuthRefreshResponse>>>,
     pending_command: Option<Pending<ApiResponse<Phase5CommandResponse>>>,
+    pending_market_action: Option<MarketOrderAction>,
     commands: VecDeque<Phase5Command>,
     region: Option<RegionSnapshot>,
     settlements: Option<SettlementsResponse>,
@@ -83,6 +84,7 @@ impl Phase5Client {
             pending_account: None,
             pending_refresh: None,
             pending_command: None,
+            pending_market_action: None,
             commands: VecDeque::new(),
             region: None,
             settlements: None,
@@ -169,8 +171,9 @@ impl Phase5Client {
             .and_then(|pending| pending.poll_timed(dt, REQUEST_TIMEOUT_SECONDS))
         {
             self.pending_command = None;
+            let market_action = self.pending_market_action.take();
             match result {
-                Ok(response) => self.apply_command(response.data, api, notices),
+                Ok(response) => self.apply_command(response.data, market_action, api, notices),
                 Err(error) => notices.push(NetworkNotice::Warning(format!(
                     "The regional command could not be confirmed: {}",
                     short_error(&error)
@@ -225,6 +228,10 @@ impl Phase5Client {
         }
         if self.pending_command.is_none() {
             if let Some(command) = self.commands.pop_front() {
+                self.pending_market_action = match &command {
+                    Phase5Command::Market(request) => Some(request.action),
+                    _ => None,
+                };
                 self.pending_command = Some(match command {
                     Phase5Command::Travel(request) => api.post_json("/v1/travel", &request),
                     Phase5Command::Route(request) => api.post_json("/v1/routes", &request),
@@ -385,6 +392,7 @@ impl Phase5Client {
     fn apply_command(
         &mut self,
         response: Phase5CommandResponse,
+        market_action: Option<MarketOrderAction>,
         api: &mut HttpClient,
         notices: &mut Vec<NetworkNotice>,
     ) {
@@ -404,7 +412,7 @@ impl Phase5Client {
             Phase5CommandResponse::Market(response) => phase5_notice(
                 response.accepted,
                 response.reason,
-                "The regional market settled through the authoritative ledger.",
+                market_success_message(market_action),
                 notices,
             ),
             Phase5CommandResponse::Event(response) => phase5_notice(
@@ -498,6 +506,7 @@ impl Phase5Client {
         self.pending_account = None;
         self.pending_refresh = None;
         self.pending_command = None;
+        self.pending_market_action = None;
         self.commands.clear();
         self.clear_cached_projections();
         self.account = None;
@@ -724,6 +733,15 @@ fn phase5_notice(
         notices.push(NetworkNotice::Success(success.to_owned()));
     } else if let Some(reason) = reason {
         notices.push(NetworkNotice::Warning(reason));
+    }
+}
+
+fn market_success_message(action: Option<MarketOrderAction>) -> &'static str {
+    match action {
+        Some(MarketOrderAction::Create) => "The shipment is on the regional ledger.",
+        Some(MarketOrderAction::Fulfil) => "The shipment reached its destination and settled.",
+        Some(MarketOrderAction::Cancel) => "The shipment was cancelled and its escrow returned.",
+        None => "The regional market accepted the command.",
     }
 }
 

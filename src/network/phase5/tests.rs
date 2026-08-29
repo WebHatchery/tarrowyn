@@ -239,6 +239,22 @@ fn market_button_waits_for_the_order_destination() {
 }
 
 #[test]
+fn market_success_notice_describes_the_requested_action() {
+    assert_eq!(
+        super::market_success_message(Some(MarketOrderAction::Create)),
+        "The shipment is on the regional ledger."
+    );
+    assert_eq!(
+        super::market_success_message(Some(MarketOrderAction::Fulfil)),
+        "The shipment reached its destination and settled."
+    );
+    assert_eq!(
+        super::market_success_message(Some(MarketOrderAction::Cancel)),
+        "The shipment was cancelled and its escrow returned."
+    );
+}
+
+#[test]
 fn event_button_waits_during_the_resolution_window() {
     let mut client = Phase5Client::new();
     client.events = Some(RegionalEventsResponse {
