@@ -154,8 +154,9 @@ interventions, bounded refresh tokens, unknown knowledge and claim selectors,
 bounded chronicle queries, idempotent
 regional mutations, expired/revoked
 access, refresh rotation, lost-response account-link replay, limited client
-command and refresh retry across regional, profession, and frontier paths with
-command ordering, chat limits, and the protected no-PvP law response. Chat metadata,
+command and refresh retry across movement, chat, farming, trade, regional,
+profession, and frontier paths with command ordering, chat limits, and the
+protected no-PvP law response. Chat metadata,
 direct trades, claims, governance, moderation reports, and support repairs are
 audit-linked without copying chat text into the audit stream. Moderation reports are queued and audit-linked. The
 support account view is operator-only, returns the requested character-facing

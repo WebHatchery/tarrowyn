@@ -58,17 +58,19 @@ impl OnlineClient {
             }
         }
 
-        let command_result = self
-            .pending_trade
-            .as_mut()
-            .and_then(|pending| pending.poll_timed(dt, REQUEST_TIMEOUT_SECONDS));
-        let Some(result) = command_result else { return };
-        self.pending_trade = None;
-        let trade_action = self.pending_trade_action.take();
-        self.pending_request_id = None;
-        self.pending_request_type = None;
+        let Some(mut pending) = self.pending_trade.take() else {
+            return;
+        };
+        let Some(result) = pending.pending.poll_timed(dt, REQUEST_TIMEOUT_SECONDS) else {
+            self.pending_trade = Some(pending);
+            return;
+        };
+        let trade_action = self.pending_trade_action;
         match result {
             Ok(response) => {
+                self.pending_trade_action = None;
+                self.pending_request_id = None;
+                self.pending_request_type = None;
                 if response.data.accepted {
                     notices.push(NetworkNotice::Success(
                         trade_success_message(trade_action).to_owned(),
@@ -82,6 +84,22 @@ impl OnlineClient {
                     ));
                 }
                 self.pending_trades = Some(self.api.get("/v1/trades"));
+            }
+            Err(error)
+                if is_transient_transport_error(&error)
+                    && pending.retries < super::commands::MAX_COMMAND_RETRIES =>
+            {
+                let retries = pending.retries + 1;
+                let request = pending.request;
+                self.pending_trade = Some(PendingTrade {
+                    pending: self.api.post_json("/v1/trades", &request),
+                    request,
+                    retries,
+                });
+                notices.push(NetworkNotice::Warning(format!(
+                    "The trade command could not be confirmed; retrying the same request ({retries}/{}).",
+                    super::commands::MAX_COMMAND_RETRIES
+                )));
             }
             Err(error) => self.connection_failed(error, notices),
         }
@@ -99,7 +117,11 @@ impl OnlineClient {
                 self.pending_trade_action = Some(request.action);
                 self.pending_request_type = Some(format!("trade::{:?}", request.action));
                 self.pending_request_id = Some(request.request_id.clone());
-                self.pending_trade = Some(self.api.post_json("/v1/trades", &request));
+                self.pending_trade = Some(PendingTrade {
+                    pending: self.api.post_json("/v1/trades", &request),
+                    request,
+                    retries: 0,
+                });
             }
         }
     }

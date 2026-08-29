@@ -1,8 +1,10 @@
 use super::*;
 use crate::data::GameConfig;
+use macroquad_toolkit::net::Pending;
 use tarrowyn_protocol::{
-    ChronicleEntry, EventRecord, EventsResponse, Position, TileKind as ProtocolTileKind,
-    WorldClock, WorldEvent, WorldTile,
+    ChatRequest, ChronicleEntry, EventRecord, EventsResponse, FarmingAction, FarmingRequest,
+    MovementIntent, Position, TileKind as ProtocolTileKind, TradeAction, TradeRequest, WorldClock,
+    WorldEvent, WorldTile,
 };
 
 fn config() -> GameConfig {
@@ -442,4 +444,86 @@ fn trade_success_notice_describes_the_requested_action() {
         super::trade_client::trade_success_message(Some(tarrowyn_protocol::TradeAction::Accept)),
         "The trade ledger completed the exchange."
     );
+}
+
+#[test]
+fn transient_low_level_commands_replay_the_same_request_ids() {
+    let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
+    client.state = ConnectionState::Online;
+    client.pending_movement = Some(super::PendingMovement {
+        pending: Pending::failed("HTTP request 'POST /v1/movement' failed: connection reset"),
+        request: MovementIntent {
+            request_id: "move-1".to_owned(),
+            dx: 1,
+            dy: 0,
+        },
+        retries: 0,
+    });
+    client.pending_chat = Some(super::PendingChat {
+        pending: Pending::failed("HTTP request 'POST /v1/chat' failed: connection reset"),
+        request: ChatRequest {
+            request_id: "chat-1".to_owned(),
+            channel: "settlement".to_owned(),
+            text: "Still here?".to_owned(),
+        },
+        retries: 0,
+    });
+    client.pending_farming = Some(super::PendingFarming {
+        pending: Pending::failed(
+            "HTTP request 'POST /v1/farming/actions' failed: connection reset",
+        ),
+        request: FarmingRequest {
+            request_id: "farm-1".to_owned(),
+            action: FarmingAction::Tend,
+            position: Position { x: 1, y: 1 },
+        },
+        retries: 0,
+    });
+    client.action_awaiting_confirmation = true;
+    client.pending_request_id = Some("farm-1".to_owned());
+    client.pending_request_type = Some("farming::Tend".to_owned());
+    client.pending_trade = Some(super::PendingTrade {
+        pending: Pending::failed("HTTP request 'POST /v1/trades' failed: connection reset"),
+        request: TradeRequest {
+            request_id: "trade-1".to_owned(),
+            action: TradeAction::Review,
+            trade_id: Some("trade".to_owned()),
+            recipient_account_id: None,
+            offer: None,
+            request: None,
+        },
+        retries: 0,
+    });
+    client.pending_trade_action = Some(TradeAction::Review);
+
+    let mut notices = Vec::new();
+    client.poll_movement(0.0, &mut notices);
+    client.poll_chat(0.0, &mut notices);
+    client.poll_farming(0.0, &mut notices);
+    client.poll_trade_requests(0.0, &mut notices);
+
+    assert_eq!(client.pending_movement.as_ref().unwrap().retries, 1);
+    assert_eq!(
+        client.pending_movement.as_ref().unwrap().request.request_id,
+        "move-1"
+    );
+    assert_eq!(client.pending_chat.as_ref().unwrap().retries, 1);
+    assert_eq!(
+        client.pending_chat.as_ref().unwrap().request.request_id,
+        "chat-1"
+    );
+    assert_eq!(client.pending_farming.as_ref().unwrap().retries, 1);
+    assert_eq!(
+        client.pending_farming.as_ref().unwrap().request.request_id,
+        "farm-1"
+    );
+    assert!(client.action_awaiting_confirmation);
+    assert_eq!(client.pending_request_id.as_deref(), Some("farm-1"));
+    assert_eq!(client.pending_trade.as_ref().unwrap().retries, 1);
+    assert_eq!(
+        client.pending_trade.as_ref().unwrap().request.request_id,
+        "trade-1"
+    );
+    assert_eq!(client.pending_trade_action, Some(TradeAction::Review));
+    assert_eq!(notices.len(), 4);
 }

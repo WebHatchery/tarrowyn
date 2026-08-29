@@ -10,8 +10,8 @@ use tarrowyn_protocol::{
     Expedition, FarmAnimal, FarmingAction, FarmingRequest, FrontierEvent, GuestSessionRequest,
     GuestSessionResponse, LandClaim, MovementIntent, OpportunitySignal, OpsHealthResponse,
     PlayerPresence, PlayerProjection, StateSnapshot, TavernFeedResponse, TimeOfDay, TradeAction,
-    TradeOffer, TradeRequest, TradeResponse, TradesResponse, WildernessZone, WorldClock,
-    WorldEvent, WorldSnapshot, MAX_CHAT_MESSAGE_LENGTH,
+    TradeOffer, TradeRequest, TradesResponse, WildernessZone, WorldClock, WorldEvent,
+    WorldSnapshot, MAX_CHAT_MESSAGE_LENGTH,
 };
 
 const REQUEST_TIMEOUT_SECONDS: f32 = 6.0;
@@ -22,6 +22,7 @@ pub(super) fn is_transient_transport_error(error: &str) -> bool {
 }
 
 mod chronicle;
+mod commands;
 mod cursor;
 mod frontier;
 mod input;
@@ -38,7 +39,7 @@ pub(super) use chronicle::merge_chronicle_entry;
 use frontier::FrontierClient;
 pub(crate) use phase4::CraftingView;
 use phase4::Phase4Client;
-use requests::{PendingChat, PendingFarming, PendingMovement};
+use requests::{PendingChat, PendingFarming, PendingMovement, PendingTrade};
 pub use types::{ConnectionState, NetworkNotice, RemotePlayer};
 
 pub struct WorldProjection {
@@ -253,7 +254,7 @@ pub struct OnlineClient {
     pending_chat: Option<PendingChat>,
     pending_farming: Option<PendingFarming>,
     pending_trades: Option<Pending<ApiResponse<TradesResponse>>>,
-    pending_trade: Option<Pending<ApiResponse<TradeResponse>>>,
+    pending_trade: Option<PendingTrade>,
     movement_queue: VecDeque<MovementIntent>,
     chat_queue: VecDeque<ChatRequest>,
     farming_queue: VecDeque<FarmingRequest>,
@@ -538,129 +539,6 @@ impl OnlineClient {
                 cursor::recover_from_cursor_boundary(self, notices)
             }
             Err(error) => self.connection_failed(error, notices),
-        }
-    }
-
-    fn poll_movement(&mut self, dt: f32, notices: &mut Vec<NetworkNotice>) {
-        let result = self
-            .pending_movement
-            .as_mut()
-            .and_then(|pending| pending.pending.poll_timed(dt, REQUEST_TIMEOUT_SECONDS));
-        let Some(result) = result else { return };
-        self.pending_movement = None;
-        match result {
-            Ok(response) => {
-                let position = response.data.position;
-                self.projection.player_position = TilePos::new(position.x, position.y);
-                if response.data.accepted {
-                    notices.push(NetworkNotice::Info(
-                        "The server accepted that step.".to_owned(),
-                    ));
-                } else {
-                    notices.push(NetworkNotice::Warning(
-                        response
-                            .data
-                            .reason
-                            .unwrap_or_else(|| "The server rejected that step.".to_owned()),
-                    ));
-                }
-            }
-            Err(error) => self.connection_failed(error, notices),
-        }
-    }
-
-    fn poll_farming(&mut self, dt: f32, notices: &mut Vec<NetworkNotice>) {
-        let result = self
-            .pending_farming
-            .as_mut()
-            .and_then(|pending| pending.pending.poll_timed(dt, REQUEST_TIMEOUT_SECONDS));
-        let Some(result) = result else { return };
-        self.pending_farming = None;
-        self.action_awaiting_confirmation = false;
-        match result {
-            Ok(response) => {
-                self.pending_request_type = None;
-                self.pending_request_id = None;
-                self.state_refresh = 0.0;
-                if response.data.accepted {
-                    notices.push(NetworkNotice::Success(
-                        "The server accepted the farm action.".to_owned(),
-                    ));
-                } else {
-                    notices.push(NetworkNotice::Warning(response.data.reason.unwrap_or_else(
-                        || "The server rejected that farm action.".to_owned(),
-                    )));
-                }
-            }
-            Err(error) => self.connection_failed(error, notices),
-        }
-    }
-
-    fn poll_chat(&mut self, dt: f32, notices: &mut Vec<NetworkNotice>) {
-        let result = self
-            .pending_chat
-            .as_mut()
-            .and_then(|pending| pending.pending.poll_timed(dt, REQUEST_TIMEOUT_SECONDS));
-        let Some(result) = result else { return };
-        self.pending_chat = None;
-        match result {
-            Ok(response) => {
-                if response.data.accepted {
-                    if let Some(message) = response.data.message {
-                        self.projection.push_chat(message);
-                    }
-                    notices.push(NetworkNotice::Success(
-                        "Message sent to the settlement.".to_owned(),
-                    ));
-                } else {
-                    notices.push(NetworkNotice::Warning(
-                        response
-                            .data
-                            .reason
-                            .unwrap_or_else(|| "The server rejected that message.".to_owned()),
-                    ));
-                }
-            }
-            Err(error) => self.connection_failed(error, notices),
-        }
-    }
-
-    fn dispatch_requests(&mut self) {
-        if self.state != ConnectionState::Online {
-            return;
-        }
-        if self.pending_state.is_none() && self.state_refresh <= 0.0 {
-            self.pending_state = Some(self.api.get("/v1/state"));
-        }
-        if self.pending_ops_health.is_none() && self.state_refresh <= 0.0 {
-            self.pending_ops_health = Some(self.api.get("/v1/ops/health"));
-        }
-        if self.pending_events.is_none() {
-            self.pending_events = Some(
-                self.api
-                    .get(&format!("/v1/events?since={}", self.projection.cursor)),
-            );
-        }
-        if self.pending_movement.is_none() {
-            if let Some(request) = self.movement_queue.pop_front() {
-                let pending = self.api.post_json("/v1/movement", &request);
-                self.pending_movement = Some(PendingMovement { pending });
-            }
-        }
-        if self.pending_chat.is_none() {
-            if let Some(request) = self.chat_queue.pop_front() {
-                let pending = self.api.post_json("/v1/chat", &request);
-                self.pending_chat = Some(PendingChat { pending });
-            }
-        }
-        if self.pending_farming.is_none() {
-            if let Some(request) = self.farming_queue.pop_front() {
-                self.pending_request_type = Some(format!("farming::{:?}", request.action));
-                self.pending_request_id = Some(request.request_id.clone());
-                self.pending_farming = Some(PendingFarming {
-                    pending: self.api.post_json("/v1/farming/actions", &request),
-                });
-            }
         }
     }
 
