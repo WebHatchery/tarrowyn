@@ -17,6 +17,14 @@ restore or retained-history boundary invalidates its event cursor, clears stale
 history projections and reloads the authoritative state from cursor zero while
 keeping the road open.
 
+The readiness projection now validates every durable layer represented by the
+regional release candidate: world clock, players, crops, trades, event history,
+frontier state, Phase 4 civic records, Phase 5 regional records, and Phase 6
+production identity, session, audit, moderation, replay, deletion, and backup
+metadata. Malformed cross-references degrade operator readiness instead of
+being served as authoritative state. Focused Phase 6 regressions and the
+cross-subsystem release gate are recorded in PHASE_6_TEST_REPORT.md.
+
 The measured scope is deliberately regional: one worker, 24 concurrent-client
 target, bounded queues, and selectable JSON/MySQL persistence. The local Phase 6
 mixed-load drill passed with 24 clients, three rounds, 624 requests, and 5,390.96
