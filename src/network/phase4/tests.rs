@@ -17,6 +17,46 @@ fn crafting_challenge_moves_across_a_wide_target() {
 }
 
 #[test]
+fn phase_four_reset_discards_cached_ledgers() {
+    let mut client = Phase4Client::new();
+    client.skills = Some(SkillsResponse {
+        skills: vec![SkillView {
+            skill_id: "fishing".to_owned(),
+            name: "Fishing".to_owned(),
+            family: tarrowyn_protocol::SkillFamily::Gathering,
+            depth: 1,
+            mastery: 2,
+            status: SkillStatus::Mastered,
+            description: "Read water.".to_owned(),
+            entry_hint: "Make a first catch.".to_owned(),
+        }],
+        lessons: Vec::new(),
+        cursor: 3,
+    });
+    client.combat = Some(LocalCombatState {
+        encounter_id: "encounter".to_owned(),
+        enemy_name: "Brambleback scout".to_owned(),
+        enemy_health: 2,
+        player_health: 2,
+        turn: 1,
+        status: tarrowyn_protocol::LocalCombatStatus::Engaged,
+        weapon: WeaponKind::IronSword,
+        injury_limit: 3,
+        stored_property_safe: true,
+        carried_risk: "A seed may be risked.".to_owned(),
+        recovery_cost: 4,
+        action_available_at_tick: 0,
+        reposition_ready: false,
+        spell_ready: false,
+    });
+
+    client.clear();
+
+    assert!(client.skills.is_none());
+    assert!(client.combat.is_none());
+}
+
+#[test]
 fn crafting_tap_becomes_a_bounded_completion_request() {
     let mut client = Phase4Client::new();
     client.begin_crafting("service-order-2");

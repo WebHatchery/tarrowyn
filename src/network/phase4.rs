@@ -616,7 +616,14 @@ impl Phase4Client {
         self.pending_combat = None;
         self.pending_command = None;
         self.commands.clear();
+        self.governance = None;
+        self.claims = None;
+        self.professions = None;
+        self.knowledge = None;
+        self.skills = None;
+        self.combat = None;
         self.crafting = None;
+        self.own_account_id = None;
         self.regional.clear();
     }
 
