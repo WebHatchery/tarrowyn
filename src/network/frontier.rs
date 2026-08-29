@@ -334,9 +334,10 @@ impl OnlineClient {
 
     pub fn queue_claim_cycle(&mut self) {
         let action = if self.projection.claim.as_ref().is_some_and(|claim| {
-            self.account
-                .as_ref()
-                .is_some_and(|account| claim.owner_account_id == account.account_id)
+            self.account.as_ref().is_some_and(|account| {
+                claim.owner_account_id == account.account_id
+                    && claim.status == tarrowyn_protocol::ClaimStatus::Active
+            })
         }) {
             ClaimAction::Renew
         } else {

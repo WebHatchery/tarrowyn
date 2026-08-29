@@ -60,3 +60,33 @@ fn contract_cycle_waits_through_the_tavern_cooldown() {
     client.queue_contract_cycle();
     assert!(client.frontier.commands.is_empty());
 }
+
+#[test]
+fn abandoned_homestead_cycle_requests_a_new_lease() {
+    let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
+    client.state = crate::network::ConnectionState::Online;
+    client.account = Some(tarrowyn_protocol::GuestSessionResponse {
+        client_key: "client-1".to_owned(),
+        account_id: "account-1".to_owned(),
+        character_id: "character-1".to_owned(),
+        display_name: "The traveller".to_owned(),
+        account_token: "token".to_owned(),
+        expires_in_seconds: 900,
+    });
+    client.projection.claim = Some(tarrowyn_protocol::LandClaim {
+        claim_id: "homestead-1".to_owned(),
+        owner_account_id: "account-1".to_owned(),
+        owner_name: "The traveller".to_owned(),
+        position: tarrowyn_protocol::Position { x: 10, y: 8 },
+        lease_days: 3,
+        last_active_tick: 1,
+        reclaim_after_ticks: 20,
+        status: tarrowyn_protocol::ClaimStatus::Abandoned,
+    });
+
+    client.queue_claim_cycle();
+    let Some(FrontierCommand::Claim(request)) = client.frontier.commands.pop_front() else {
+        panic!("an abandoned homestead should queue a new lease request");
+    };
+    assert_eq!(request.action, ClaimAction::Request);
+}
