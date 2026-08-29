@@ -240,6 +240,8 @@ pub struct OnlineClient {
     pending_world: Option<Pending<ApiResponse<WorldSnapshot>>>,
     pending_state: Option<Pending<ApiResponse<StateSnapshot>>>,
     pending_ops_health: Option<Pending<ApiResponse<OpsHealthResponse>>>,
+    maintenance_status: Option<String>,
+    readiness_degraded: bool,
     pending_events: Option<Pending<ApiResponse<EventsResponse>>>,
     pending_movement: Option<PendingMovement>,
     pending_chat: Option<PendingChat>,
@@ -281,6 +283,8 @@ impl OnlineClient {
             pending_world: None,
             pending_state: None,
             pending_ops_health: None,
+            maintenance_status: None,
+            readiness_degraded: false,
             pending_events: None,
             pending_movement: None,
             pending_chat: None,
@@ -363,6 +367,7 @@ impl OnlineClient {
             self.state == ConnectionState::Online,
             self.projection.cursor,
         );
+        maintenance::restore_status(self);
         notices
     }
 
@@ -389,6 +394,8 @@ impl OnlineClient {
         self.pending_world = None;
         self.pending_state = None;
         self.pending_ops_health = None;
+        self.maintenance_status = None;
+        self.readiness_degraded = false;
         self.pending_events = None;
         self.pending_movement = None;
         self.pending_chat = None;
@@ -411,6 +418,8 @@ impl OnlineClient {
 
     fn begin_guest(&mut self, reset: bool) {
         self.state = ConnectionState::Connecting;
+        self.maintenance_status = None;
+        self.readiness_degraded = false;
         self.status_message = "Contacting the development road…".to_owned();
         self.pending_ops_health = Some(self.api.get("/v1/ops/health"));
         self.pending_guest = Some(self.api.post_json(

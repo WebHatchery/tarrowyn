@@ -12,3 +12,20 @@ fn maintenance_status_prefers_the_deployment_message_and_has_a_safe_fallback() {
     );
     assert_eq!(maintenance_status_message(true, None), None);
 }
+
+#[test]
+fn degraded_readiness_survives_a_later_connection_status_update() {
+    let data = crate::data::GameData::load().expect("embedded client data");
+    let mut client = OnlineClient::new("http://127.0.0.1:8787", &data.config);
+    client.state = super::super::ConnectionState::Online;
+
+    apply_readiness(&mut client, false, None);
+    client.status_message = "The persistent settlement is open.".to_owned();
+    restore_status(&mut client);
+
+    assert_eq!(
+        client.status_message,
+        "The settlement is in maintenance; tap Reconnect when it is ready."
+    );
+    assert_eq!(client.state, super::super::ConnectionState::Degraded);
+}
