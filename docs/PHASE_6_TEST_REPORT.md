@@ -525,6 +525,8 @@ governance cursor no newer than the shared event cursor, with two focused
 metadata regressions.
 Governance office and proposal timelines now stay within the authoritative
 world tick, with one focused proposal-timestamp regression.
+Phase 4 land-right persistence now enforces lifecycle access, ownership, and
+timestamp ordering, with two focused claim-state regressions.
 
 The cross-layer persistence-readiness milestone passed the full release gate on
 2026-08-30 after the core and Phase 3-6 integrity additions: 14 protocol tests,

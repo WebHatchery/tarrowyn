@@ -120,11 +120,26 @@ pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
             .iter()
             .map(|claim| claim.plot_id.as_str()),
     ) && state.phase4.claims.iter().all(|claim| {
+        let active_status = matches!(
+            claim.status,
+            tarrowyn_protocol::ClaimLifecycleStatus::Active
+                | tarrowyn_protocol::ClaimLifecycleStatus::Renewed
+                | tarrowyn_protocol::ClaimLifecycleStatus::Transferred
+                | tarrowyn_protocol::ClaimLifecycleStatus::Inherited
+        );
         !claim.plot_id.trim().is_empty()
             && position_in_world(claim.position, config)
             && optional_account_reference_ok(claim.owner_account_id.as_deref(), &account_ids)
             && optional_account_reference_ok(claim.approved_by.as_deref(), &account_ids)
             && claim.lease_days > 0
+            && claim.started_tick <= state.tick
+            && claim.expires_tick >= claim.started_tick
+            && claim.last_active_tick <= state.tick
+            && claim.building_access == active_status
+            && (claim.owner_account_id.is_some()
+                || claim.status == tarrowyn_protocol::ClaimLifecycleStatus::Reclaimed)
+            && (claim.status != tarrowyn_protocol::ClaimLifecycleStatus::Requested
+                || claim.approved_by.is_none())
     });
 
     let households_ok = !state.phase4.households.is_empty()
