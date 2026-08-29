@@ -25,7 +25,7 @@ pub(super) use recovery::clear_stuck_travel;
 use settlements::{refresh_settlement_facilities, update_households, update_settlements};
 pub(super) use state::{
     fresh, trim_event_history, trim_household_histories, trim_settlement_chronicles,
-    Phase5Response, Phase5State,
+    Phase5Response, Phase5State, MAX_SETTLEMENT_CHRONICLE,
 };
 
 const INTEREST_RADIUS: u32 = 12;

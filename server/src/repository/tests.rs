@@ -18,6 +18,7 @@ mod persistence;
 mod phase3;
 mod request_validation;
 mod reset;
+mod settlement_integrity;
 mod telemetry;
 mod trade_retention;
 mod trade_validation;

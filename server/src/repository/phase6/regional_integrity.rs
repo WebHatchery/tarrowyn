@@ -6,6 +6,8 @@ const MAX_EVENT_TEXT_CHARS: usize = 512;
 const MAX_EVENT_ID_CHARS: usize = 160;
 const MAX_HOUSEHOLD_TEXT_CHARS: usize = 240;
 const MAX_HOUSEHOLD_HISTORY: usize = 64;
+const MAX_SETTLEMENT_ID_CHARS: usize = 160;
+const MAX_SETTLEMENT_TEXT_CHARS: usize = 240;
 const MAX_TRAVEL_TEXT_CHARS: usize = 160;
 
 pub(super) fn ok(state: &RepositoryState) -> bool {
@@ -31,6 +33,11 @@ pub(super) fn ok(state: &RepositoryState) -> bool {
             .households
             .iter()
             .all(|household| household_ok(household, &location_ids, state.tick))
+        && state
+            .phase5
+            .settlements
+            .iter()
+            .all(|settlement| settlement_ok(settlement, &location_ids, state.cursor, state.tick))
         && state.phase5.travel.iter().all(|(identity_key, travel)| {
             state.identities.contains_key(identity_key)
                 && travel_ok(travel, &location_ids, state.tick)
@@ -177,6 +184,83 @@ fn travel_ok(
             || (travel.interruption.is_some() && travel.recovery_note.is_some()))
 }
 
+fn settlement_ok(
+    settlement: &tarrowyn_protocol::SettlementProjection,
+    location_ids: &HashSet<&str>,
+    current_cursor: u64,
+    current_tick: u64,
+) -> bool {
+    bounded_with_limit(&settlement.settlement_id, MAX_SETTLEMENT_ID_CHARS)
+        && bounded_with_limit(&settlement.name, MAX_SETTLEMENT_TEXT_CHARS)
+        && location_ids.contains(settlement.location_id.as_str())
+        && (1..=99).contains(&settlement.population)
+        && settlement.food <= 100
+        && settlement.safety <= 100
+        && settlement.infrastructure <= 100
+        && settlement.industry <= 100
+        && settlement.governance <= 100
+        && settlement.player_activity <= 100
+        && settlement.price_index_percent > 0
+        && !settlement.milestones.is_empty()
+        && settlement
+            .milestones
+            .iter()
+            .all(|value| bounded_settlement(value))
+        && !settlement.vacancies.is_empty()
+        && settlement
+            .vacancies
+            .iter()
+            .all(|value| bounded_settlement(value))
+        && !settlement.demand.is_empty()
+        && settlement
+            .demand
+            .iter()
+            .all(|value| bounded_settlement(value))
+        && !settlement.abundant_goods.is_empty()
+        && settlement
+            .abundant_goods
+            .iter()
+            .all(|value| bounded_settlement(value))
+        && !settlement.scarce_goods.is_empty()
+        && settlement
+            .scarce_goods
+            .iter()
+            .all(|value| bounded_settlement(value))
+        && settlement
+            .public_works
+            .iter()
+            .all(|value| bounded_settlement(value))
+        && settlement
+            .recovery_opportunity
+            .as_deref()
+            .is_none_or(bounded_settlement)
+        && settlement_chronicle_ok(settlement, current_cursor, current_tick)
+}
+
+fn settlement_chronicle_ok(
+    settlement: &tarrowyn_protocol::SettlementProjection,
+    current_cursor: u64,
+    current_tick: u64,
+) -> bool {
+    if settlement.chronicle.len() > super::super::phase5::MAX_SETTLEMENT_CHRONICLE {
+        return false;
+    }
+    let mut event_ids = HashSet::new();
+    let mut previous_cursor = 0;
+    settlement.chronicle.iter().all(|entry| {
+        let ordered = entry.cursor > previous_cursor;
+        previous_cursor = entry.cursor;
+        ordered
+            && bounded_with_limit(&entry.event_id, MAX_SETTLEMENT_ID_CHARS)
+            && event_ids.insert(entry.event_id.as_str())
+            && bounded(&entry.kind)
+            && bounded(&entry.title)
+            && bounded(&entry.text)
+            && entry.created_tick <= current_tick
+            && entry.cursor <= current_cursor
+    })
+}
+
 fn bounded(value: &str) -> bool {
     bounded_with_limit(value, MAX_EVENT_TEXT_CHARS)
 }
@@ -193,4 +277,8 @@ fn bounded_household(value: &str) -> bool {
 
 fn bounded_travel(value: &str) -> bool {
     bounded_with_limit(value, MAX_TRAVEL_TEXT_CHARS)
+}
+
+fn bounded_settlement(value: &str) -> bool {
+    bounded_with_limit(value, MAX_SETTLEMENT_TEXT_CHARS)
 }

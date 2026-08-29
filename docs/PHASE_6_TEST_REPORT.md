@@ -460,3 +460,9 @@ Regional travel integrity now validates journey identifiers, endpoint
 references, non-zero timelines, bounded interruption notes, supported stored
 statuses, and interruption recovery metadata. One focused regression covers a
 zero-length persisted journey.
+
+Settlement projection integrity now validates bounded identity and narrative
+fields, the runtime population and gauge ranges, and retained local chronicle
+ordering/cursors. Two focused regressions cover a missing settlement milestone
+and an unassigned local chronicle cursor; the scoped server checks remain the
+appropriate validation for this subsystem until the next major milestone.
