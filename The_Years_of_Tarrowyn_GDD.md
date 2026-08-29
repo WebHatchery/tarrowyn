@@ -569,8 +569,10 @@ Linked identity-provider subjects are trimmed, bounded, and rejected when they
 contain control characters. Durable player-provided labels such as linked
 display names, expedition outpost names, and public proposal targets are also
 trimmed, bounded, and rejected when they contain control characters; chat text
-and channel names follow the same stored-text boundary. Chat also has length
-and per-tick limits. The
+and channel names follow the same stored-text boundary. Moderation targets and
+notes, support operator notes, and regional household movement history remain
+bounded at their durable audit/projection boundaries. Chat also has length and
+per-tick limits. The
 no-PvP law boundary is active at launch.
 
 ## 18. Smallest Multiplayer Slice

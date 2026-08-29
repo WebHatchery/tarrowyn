@@ -89,7 +89,9 @@ server-owned location positions and route status colours; offline play keeps its
 local-only landmark fixture.
 The client polls the regional household endpoint and shows the current travelling
 service status in the same compact line, while the household's reason and history
-remain server-owned projection data.
+remain server-owned projection data. The movement history keeps its latest 64
+entries during live updates, snapshot loading, and support merges so a long-lived
+household cannot make the regional projection grow without limit.
 
 Each settlement projection also rolls up its nearest recognised claims, free
 plots, and public works. The bounded content fixture therefore gives Hearth,
