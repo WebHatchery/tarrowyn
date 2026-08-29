@@ -184,6 +184,7 @@ impl RepositoryState {
         super::phase5::trim_settlement_chronicles(&mut phase5);
         trim_replay_cache(&mut phase5.request_results);
         let mut phase6 = stored.phase6;
+        super::phase6::trim_moderation_reports(&mut phase6, super::phase4::unix_time_seconds());
         trim_replay_cache(&mut phase6.auth_link_results);
         trim_replay_cache(&mut phase6.auth_refresh_results);
         trim_replay_cache(&mut phase6.auth_revoke_results);

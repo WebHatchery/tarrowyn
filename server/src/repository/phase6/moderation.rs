@@ -48,6 +48,10 @@ impl WorldRepository {
             reason: None,
         };
         state.phase6.reports.insert(report_id, response.clone());
+        state.phase6.report_created_at.insert(
+            response.report_id.clone(),
+            super::super::phase4::unix_time_seconds(),
+        );
         let actor = state
             .identities
             .get(&key)

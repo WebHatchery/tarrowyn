@@ -25,6 +25,8 @@ use deletion::PendingAccountDeletion;
 
 const IDENTITY_PROVIDER: &str = "webhatchery-identity-oidc";
 const PRIVACY_POLICY_VERSION: &str = "2026-08-19";
+pub(super) const MAX_MODERATION_REPORTS: usize = 512;
+pub(super) const MODERATION_REPORT_RETENTION_SECONDS: u64 = 90 * 24 * 60 * 60;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub(super) struct ProductionAccount {
@@ -61,6 +63,8 @@ pub(super) struct Phase6State {
     pub(super) audits: VecDeque<AuditRecord>,
     pub(super) reports: HashMap<String, ModerationReportResponse>,
     #[serde(default)]
+    pub(super) report_created_at: HashMap<String, u64>,
+    #[serde(default)]
     pub(super) moderation_results: HashMap<String, ModerationReportResponse>,
     #[serde(default)]
     pub(super) moderation_last_report_ticks: HashMap<String, u64>,
@@ -91,6 +95,7 @@ pub(super) fn fresh(_config: &ServerConfig) -> Phase6State {
         auth_revoke_results: HashMap::new(),
         audits: VecDeque::new(),
         reports: HashMap::new(),
+        report_created_at: HashMap::new(),
         moderation_results: HashMap::new(),
         moderation_last_report_ticks: HashMap::new(),
         request_results: HashMap::new(),
@@ -508,6 +513,7 @@ pub(super) fn phase6_tick(state: &mut RepositoryState, config: &ServerConfig) ->
     trim_replay_cache(&mut state.phase5.request_results);
     trim_replay_cache(&mut state.phase6.request_results);
     trim_replay_cache(&mut state.phase6.deletion_requests);
+    trim_moderation_reports(&mut state.phase6, super::phase4::unix_time_seconds());
     for identity in state.identities.values_mut() {
         trim_replay_cache(&mut identity.farming_results);
         trim_replay_cache(&mut identity.trade_results);
@@ -636,6 +642,37 @@ fn audit(
 pub(super) fn trim_audits(audits: &mut VecDeque<AuditRecord>) {
     while audits.len() > MAX_AUDITS {
         audits.pop_front();
+    }
+}
+
+pub(super) fn trim_moderation_reports(phase6: &mut Phase6State, now: u64) {
+    for report_id in phase6.reports.keys() {
+        phase6
+            .report_created_at
+            .entry(report_id.clone())
+            .or_insert(now);
+    }
+    phase6
+        .reports
+        .retain(|report_id, _| phase6.report_created_at.contains_key(report_id));
+    phase6.report_created_at.retain(|report_id, created_at| {
+        phase6.reports.contains_key(report_id)
+            && now.saturating_sub(*created_at) < MODERATION_REPORT_RETENTION_SECONDS
+    });
+    phase6
+        .reports
+        .retain(|report_id, _| phase6.report_created_at.contains_key(report_id));
+    while phase6.reports.len() > MAX_MODERATION_REPORTS {
+        let Some((report_id, _)) = phase6
+            .report_created_at
+            .iter()
+            .min_by_key(|(_, created_at)| *created_at)
+            .map(|(report_id, created_at)| (report_id.clone(), *created_at))
+        else {
+            break;
+        };
+        phase6.reports.remove(&report_id);
+        phase6.report_created_at.remove(&report_id);
     }
 }
 

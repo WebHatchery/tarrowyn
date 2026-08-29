@@ -57,6 +57,9 @@ authoritative world tick, including identity, regional, support, authentication,
 moderation, and earlier-phase command results.
 The production audit stream likewise keeps its newest 512 records, dropping
 only the oldest entries when its bounded operational window is full.
+Moderation reports retain their creation time, expire after the documented 90
+real days, and are additionally capped at the newest 512 records for bounded
+recovery state.
 The shared event stream is also bounded at 2,048 records. Requests whose cursor
 predates the first retained record fail with structured `cursor_stale` rather
 than returning a successful but incomplete stream; the client clears its
