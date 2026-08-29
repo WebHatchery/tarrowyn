@@ -58,7 +58,10 @@ pub(super) fn draw_sidebar(
                 .own_account_id
                 .is_some_and(|account_id| trade.recipient_account_id == account_id)
     });
-    let (combat_side_id, combat_side_label) = local_combat_side_control(ctx.combat);
+    let (combat_side_id, combat_side_label) = combat_side_control(
+        ctx.combat,
+        ctx.wilderness.is_some_and(|zone| zone.threat_active),
+    );
 
     draw_button_row(
         content,
@@ -428,11 +431,14 @@ pub(super) fn draw_sidebar(
     );
 }
 
-fn local_combat_side_control(
+fn combat_side_control(
     combat: Option<&tarrowyn_protocol::LocalCombatState>,
+    frontier_threat_active: bool,
 ) -> (&'static str, &'static str) {
     if combat.is_some_and(|combat| combat.status == tarrowyn_protocol::LocalCombatStatus::Engaged) {
         ("retreat", "Retreat")
+    } else if frontier_threat_active {
+        ("frontier-retreat", "Retreat")
     } else {
         ("contract", "Contract")
     }

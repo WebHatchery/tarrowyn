@@ -63,11 +63,13 @@ process, including durable claim/expedition state and request replay.
 ## Client controls
 
 The online sidebar exposes touch targets for `Contract`, `Strike`, `Recover`,
-`Claim`, `Pioneer`, and `Chronicle`. `Contract`, `Claim`, and `Pioneer` advance
-their next server-owned action from the current projection, so the browser
-does not require a keyboard or hidden command string. The frontier projection
-is frame-polled through the toolkit HTTP transport and never mutates inventory,
-injury, contract, claim, or expedition state before server confirmation.
+`Claim`, `Pioneer`, and `Chronicle`. While the Brambleback threat is active,
+the Contract slot becomes the visible `Retreat` action; `Contract`, `Claim`,
+and `Pioneer` otherwise advance their next server-owned action from the
+current projection, so the browser does not require a keyboard or hidden
+command string. The frontier projection is frame-polled through the toolkit
+HTTP transport and never mutates inventory, injury, contract, claim, or
+expedition state before server confirmation.
 
 ## Production review / deferred work
 

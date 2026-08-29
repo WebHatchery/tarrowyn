@@ -13,8 +13,12 @@ fn recovery_risk_label_stays_compact_without_losing_the_seed_rule() {
 }
 
 #[test]
-fn local_combat_side_control_exposes_retreat_only_during_an_encounter() {
-    assert_eq!(local_combat_side_control(None), ("contract", "Contract"));
+fn combat_side_control_exposes_retreat_or_contract_by_state() {
+    assert_eq!(combat_side_control(None, false), ("contract", "Contract"));
+    assert_eq!(
+        combat_side_control(None, true),
+        ("frontier-retreat", "Retreat")
+    );
     let combat = tarrowyn_protocol::LocalCombatState {
         encounter_id: "encounter".to_owned(),
         enemy_name: "Brambleback scout".to_owned(),
@@ -32,7 +36,7 @@ fn local_combat_side_control_exposes_retreat_only_during_an_encounter() {
         spell_ready: false,
     };
     assert_eq!(
-        local_combat_side_control(Some(&combat)),
+        combat_side_control(Some(&combat), false),
         ("retreat", "Retreat")
     );
 }
