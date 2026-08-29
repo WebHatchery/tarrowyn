@@ -6,6 +6,7 @@ mod governance_history_retention;
 mod governance_retention;
 mod household_history;
 mod infrastructure_history;
+mod input_validation;
 mod knowledge;
 mod lesson_retention;
 mod professions;

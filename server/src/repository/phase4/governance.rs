@@ -6,9 +6,30 @@ use tarrowyn_protocol::{
 };
 
 const MAX_TAX_RATE_PERCENT: u8 = 10;
+const MAX_PROPOSAL_TARGET_CHARS: usize = 80;
 const TAX_TERRITORY: &str = "hearth-settlement";
 const HEARTH_POSITION: tarrowyn_protocol::Position = tarrowyn_protocol::Position { x: 8, y: 5 };
 const TAX_RADIUS: u32 = 4;
+
+fn validate_proposal_target(
+    target: Option<&str>,
+) -> Result<Option<String>, super::super::RepositoryError> {
+    let Some(target) = target else {
+        return Ok(None);
+    };
+    let target = target.trim();
+    if target.is_empty() {
+        return Ok(None);
+    }
+    if target.chars().count() > MAX_PROPOSAL_TARGET_CHARS || target.chars().any(char::is_control) {
+        return Err(super::super::RepositoryError::new(
+            400,
+            "invalid_proposal_target",
+            "The proposal target must be at most 80 characters and contain no control characters.",
+        ));
+    }
+    Ok(Some(target.to_owned()))
+}
 
 impl super::super::WorldRepository {
     pub fn governance(
@@ -20,6 +41,11 @@ impl super::super::WorldRepository {
         super::super::expire_sessions(&mut state, &self.config);
         let key = super::super::authenticate(&mut state, token, &self.config)?;
         validate_request_id(&request.request_id)?;
+        let requested_target = if request.action == GovernanceAction::Propose {
+            validate_proposal_target(request.target.as_deref())?
+        } else {
+            None
+        };
         let cache = cache_key(&account_id(&state, &key), &request.request_id);
         if let Some(super::Phase4Response::Governance(response)) =
             state.phase4.request_results.get(&cache)
@@ -138,7 +164,7 @@ impl super::super::WorldRepository {
                         proposer_account_id: actor_id.clone(),
                         proposer_name: actor_name.clone(),
                         action,
-                        target: request.target.unwrap_or_else(|| action.label().to_owned()),
+                        target: requested_target.unwrap_or_else(|| action.label().to_owned()),
                         cost,
                         status: ProposalStatus::Proposed,
                         created_tick,
