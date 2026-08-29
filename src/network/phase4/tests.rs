@@ -309,15 +309,24 @@ fn practice_button_queues_the_next_unstarted_root() {
 
 #[test]
 fn local_fight_cycles_through_readable_weapon_families() {
-    assert_eq!(next_combat_weapon(None), WeaponKind::IronSword);
     assert_eq!(
-        next_combat_weapon(Some(WeaponKind::IronSword)),
+        super::combat::next_combat_weapon(None),
+        WeaponKind::IronSword
+    );
+    assert_eq!(
+        super::combat::next_combat_weapon(Some(WeaponKind::IronSword)),
         WeaponKind::Spear
     );
-    assert_eq!(next_combat_weapon(Some(WeaponKind::Spear)), WeaponKind::Axe);
-    assert_eq!(next_combat_weapon(Some(WeaponKind::Axe)), WeaponKind::Bow);
     assert_eq!(
-        next_combat_weapon(Some(WeaponKind::Bow)),
+        super::combat::next_combat_weapon(Some(WeaponKind::Spear)),
+        WeaponKind::Axe
+    );
+    assert_eq!(
+        super::combat::next_combat_weapon(Some(WeaponKind::Axe)),
+        WeaponKind::Bow
+    );
+    assert_eq!(
+        super::combat::next_combat_weapon(Some(WeaponKind::Bow)),
         WeaponKind::Shield
     );
 }

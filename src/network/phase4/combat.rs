@@ -32,3 +32,29 @@ impl Phase4Client {
         );
     }
 }
+
+pub(super) fn advance_crafting(challenge: &mut Option<CraftingChallenge>, dt: f32) {
+    let Some(challenge) = challenge else {
+        return;
+    };
+    challenge.progress += dt.max(0.0) * 0.45 * challenge.direction;
+    if challenge.progress >= 1.0 {
+        challenge.progress = 1.0;
+        challenge.direction = -1.0;
+    } else if challenge.progress <= 0.0 {
+        challenge.progress = 0.0;
+        challenge.direction = 1.0;
+    }
+}
+
+pub(super) fn next_combat_weapon(current: Option<WeaponKind>) -> WeaponKind {
+    match current {
+        None => WeaponKind::IronSword,
+        Some(WeaponKind::IronSword) => WeaponKind::Spear,
+        Some(WeaponKind::Spear) => WeaponKind::Axe,
+        Some(WeaponKind::Axe) => WeaponKind::Bow,
+        Some(WeaponKind::Bow) => WeaponKind::Shield,
+        Some(WeaponKind::Shield) => WeaponKind::ImprovisedClub,
+        Some(WeaponKind::ImprovisedClub) => WeaponKind::IronSword,
+    }
+}

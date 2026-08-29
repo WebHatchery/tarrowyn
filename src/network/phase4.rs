@@ -14,9 +14,13 @@ use tarrowyn_protocol::{
 mod combat;
 mod lifecycle;
 mod online;
+mod polling;
 mod recovery;
 mod registry;
 mod summary;
+
+use combat::advance_crafting;
+use polling::{phase4_notice, poll_projection, short_error};
 
 enum Phase4Command {
     Governance(GovernanceRequest),
@@ -718,77 +722,3 @@ impl Phase4Client {
 
 #[cfg(test)]
 mod tests;
-
-fn advance_crafting(challenge: &mut Option<CraftingChallenge>, dt: f32) {
-    let Some(challenge) = challenge else {
-        return;
-    };
-    challenge.progress += dt.max(0.0) * 0.45 * challenge.direction;
-    if challenge.progress >= 1.0 {
-        challenge.progress = 1.0;
-        challenge.direction = -1.0;
-    } else if challenge.progress <= 0.0 {
-        challenge.progress = 0.0;
-        challenge.direction = 1.0;
-    }
-}
-
-fn next_combat_weapon(current: Option<WeaponKind>) -> WeaponKind {
-    match current {
-        None => WeaponKind::IronSword,
-        Some(WeaponKind::IronSword) => WeaponKind::Spear,
-        Some(WeaponKind::Spear) => WeaponKind::Axe,
-        Some(WeaponKind::Axe) => WeaponKind::Bow,
-        Some(WeaponKind::Bow) => WeaponKind::Shield,
-        Some(WeaponKind::Shield) => WeaponKind::ImprovisedClub,
-        Some(WeaponKind::ImprovisedClub) => WeaponKind::IronSword,
-    }
-}
-
-fn poll_projection<T, F>(
-    pending: &mut Option<Pending<ApiResponse<T>>>,
-    dt: f32,
-    apply: F,
-    notices: &mut Vec<NetworkNotice>,
-    label: &str,
-) where
-    T: serde::de::DeserializeOwned,
-    F: FnOnce(ApiResponse<T>),
-{
-    if let Some(result) = pending
-        .as_mut()
-        .and_then(|pending| pending.poll_timed(dt, REQUEST_TIMEOUT_SECONDS))
-    {
-        *pending = None;
-        match result {
-            Ok(response) => apply(response),
-            Err(error) => notices.push(NetworkNotice::Warning(format!(
-                "The Phase 4 {label} could not be refreshed: {}",
-                short_error(&error)
-            ))),
-        }
-    }
-}
-
-fn phase4_notice(
-    accepted: bool,
-    reason: Option<String>,
-    success: &str,
-    notices: &mut Vec<NetworkNotice>,
-) {
-    if accepted {
-        notices.push(NetworkNotice::Success(success.to_owned()));
-    } else if let Some(reason) = reason {
-        notices.push(NetworkNotice::Warning(reason));
-    }
-}
-
-fn short_error(error: &str) -> String {
-    error
-        .lines()
-        .next()
-        .unwrap_or(error)
-        .chars()
-        .take(100)
-        .collect()
-}
