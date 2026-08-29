@@ -65,6 +65,7 @@ fn sessions_ok(state: &RepositoryState) -> bool {
             || !refresh_tokens.insert(session.refresh_token.as_str())
             || session.expires_at_tick == 0
             || session.refresh_expires_at_tick == 0
+            || session.refresh_expires_at_tick < session.expires_at_tick
             || !state
                 .phase6
                 .accounts

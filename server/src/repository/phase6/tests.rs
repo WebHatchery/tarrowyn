@@ -23,6 +23,7 @@ mod moderation_retention;
 mod moderation_validation;
 mod operations_metrics;
 mod service_orders;
+mod session_integrity;
 mod support_chronicle;
 mod support_inventory;
 mod support_travel;
