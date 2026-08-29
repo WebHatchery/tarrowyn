@@ -33,12 +33,7 @@ impl OnlineClient {
         if request.request_id.trim().is_empty() {
             request.request_id = self.next_request_id("trade");
         }
-        let action = request.action;
-        let request_id = request.request_id.clone();
         if super::queue::try_push(&mut self.trade_queue, request) {
-            self.pending_trade_action = Some(action);
-            self.pending_request_type = Some(format!("trade::{action:?}"));
-            self.pending_request_id = Some(request_id);
             self.status_message = "Trade command sent; waiting for the ledger…".to_owned();
         } else {
             self.status_message =
@@ -101,6 +96,9 @@ impl OnlineClient {
         }
         if self.pending_trade.is_none() {
             if let Some(request) = self.trade_queue.pop_front() {
+                self.pending_trade_action = Some(request.action);
+                self.pending_request_type = Some(format!("trade::{:?}", request.action));
+                self.pending_request_id = Some(request.request_id.clone());
                 self.pending_trade = Some(self.api.post_json("/v1/trades", &request));
             }
         }

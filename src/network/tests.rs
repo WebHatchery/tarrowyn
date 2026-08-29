@@ -319,6 +319,44 @@ fn trade_projection_selects_pending_and_incoming_offers_for_visible_actions() {
 }
 
 #[test]
+fn trade_metadata_waits_for_dispatch_and_keeps_queue_order() {
+    let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
+    client.state = ConnectionState::Online;
+    client.queue_trade(TradeRequest {
+        request_id: "first-trade".to_owned(),
+        action: tarrowyn_protocol::TradeAction::Create,
+        trade_id: None,
+        recipient_account_id: Some("friend".to_owned()),
+        offer: Some(Default::default()),
+        request: Some(Default::default()),
+    });
+    client.queue_trade(TradeRequest {
+        request_id: "second-trade".to_owned(),
+        action: tarrowyn_protocol::TradeAction::Accept,
+        trade_id: Some("trade-2".to_owned()),
+        recipient_account_id: None,
+        offer: None,
+        request: None,
+    });
+
+    assert!(client.pending_trade_action.is_none());
+    assert!(client.pending_request_id.is_none());
+
+    client.dispatch_trade_requests();
+
+    assert_eq!(
+        client.pending_trade_action,
+        Some(tarrowyn_protocol::TradeAction::Create)
+    );
+    assert_eq!(client.pending_request_id.as_deref(), Some("first-trade"));
+    assert_eq!(
+        client.pending_request_type.as_deref(),
+        Some("trade::Create")
+    );
+    assert_eq!(client.trade_queue.len(), 1);
+}
+
+#[test]
 fn trade_success_notice_describes_the_requested_action() {
     assert_eq!(
         super::trade_client::trade_success_message(Some(tarrowyn_protocol::TradeAction::Create)),
