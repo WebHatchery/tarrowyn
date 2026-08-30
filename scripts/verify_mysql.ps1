@@ -98,16 +98,22 @@ function Assert-SecondWorkerRejected {
         }
         Assert-True $second.HasExited "a second MySQL worker was allowed to start against the same world"
     } finally {
-        if ($null -ne $second -and -not $second.HasExited) {
-            $originalAddress = $ServerAddress
-            $ServerAddress = $secondAddress
-            Stop-PreviewServer $second
-            $ServerAddress = $originalAddress
-        }
-        if ($null -eq $previousAddress) {
-            Remove-Item "Env:TARROWYN_SERVER_ADDR" -ErrorAction SilentlyContinue
-        } else {
-            [Environment]::SetEnvironmentVariable("TARROWYN_SERVER_ADDR", $previousAddress, "Process")
+        try {
+            if ($null -ne $second -and -not $second.HasExited) {
+                $originalAddress = $ServerAddress
+                $ServerAddress = $secondAddress
+                try {
+                    Stop-PreviewServer $second
+                } finally {
+                    $ServerAddress = $originalAddress
+                }
+            }
+        } finally {
+            if ($null -eq $previousAddress) {
+                Remove-Item "Env:TARROWYN_SERVER_ADDR" -ErrorAction SilentlyContinue
+            } else {
+                [Environment]::SetEnvironmentVariable("TARROWYN_SERVER_ADDR", $previousAddress, "Process")
+            }
         }
     }
 }
@@ -377,14 +383,17 @@ try {
 
     Write-Host "MySQL acceptance passed: migration/readiness, single-worker authority, authoritative state, chat/movement/auth/moderation replay, backup, restart persistence, and native dump/restore." -ForegroundColor Green
 } finally {
-    if ($null -ne $server -and -not $server.HasExited) { Stop-PreviewServer $server }
-    foreach ($name in $environmentNames) {
-        $value = $oldEnvironment[$name]
-        if ($null -eq $value) {
-            Remove-Item "Env:$name" -ErrorAction SilentlyContinue
-        } else {
-            [Environment]::SetEnvironmentVariable($name, $value, "Process")
+    try {
+        if ($null -ne $server -and -not $server.HasExited) { Stop-PreviewServer $server }
+    } finally {
+        foreach ($name in $environmentNames) {
+            $value = $oldEnvironment[$name]
+            if ($null -eq $value) {
+                Remove-Item "Env:$name" -ErrorAction SilentlyContinue
+            } else {
+                [Environment]::SetEnvironmentVariable($name, $value, "Process")
+            }
         }
+        if (Test-Path -LiteralPath $temporaryRoot) { Remove-Item -LiteralPath $temporaryRoot -Recurse -Force }
     }
-    if (Test-Path -LiteralPath $temporaryRoot) { Remove-Item -LiteralPath $temporaryRoot -Recurse -Force }
 }

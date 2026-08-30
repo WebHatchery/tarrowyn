@@ -385,15 +385,18 @@ try {
     Write-Host ("Phase 6 load test passed: {0} clients, {1} rounds, {2} requests, {3} accepted, {4} rejected, {5} ms mixed-load wall time, {6} MB server working set, {7} ms restart recovery; event, market, travel, tick, backup, metrics, support-view, and restart checks passed ({8})." -f `
         $ClientCount, $Rounds, $load.requests, $load.accepted, $load.rejected, $load.elapsed_ms, $workingSetMb, $restartRecoveryMs, $alertSummary) -ForegroundColor Green
 } finally {
-    if ($null -ne $server -and -not $server.HasExited) { Stop-Phase6Server $server }
-    foreach ($name in $environmentNames) {
-        $value = $previousEnvironment[$name]
-        if ($null -eq $value) {
-            Remove-Item "Env:$name" -ErrorAction SilentlyContinue
-        } else {
-            Set-Item "Env:$name" $value
+    try {
+        if ($null -ne $server -and -not $server.HasExited) { Stop-Phase6Server $server }
+    } finally {
+        foreach ($name in $environmentNames) {
+            $value = $previousEnvironment[$name]
+            if ($null -eq $value) {
+                Remove-Item "Env:$name" -ErrorAction SilentlyContinue
+            } else {
+                Set-Item "Env:$name" $value
+            }
         }
+        Remove-Item -LiteralPath $statePath -Force -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath $backupPath -Force -ErrorAction SilentlyContinue
     }
-    Remove-Item -LiteralPath $statePath -Force -ErrorAction SilentlyContinue
-    Remove-Item -LiteralPath $backupPath -Force -ErrorAction SilentlyContinue
 }
