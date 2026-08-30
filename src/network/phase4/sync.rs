@@ -2,6 +2,7 @@ use super::*;
 use crate::network::WorldProjection;
 
 impl Phase4Client {
+    #[cfg(test)]
     pub fn update(
         &mut self,
         dt: f32,
@@ -11,7 +12,28 @@ impl Phase4Client {
         another_mutation_pending: bool,
         notices: &mut Vec<NetworkNotice>,
     ) {
-        if !online {
+        self.update_with_mode(
+            dt,
+            api,
+            projection,
+            MutationContext {
+                online,
+                another_mutation_pending,
+                session_only: false,
+            },
+            notices,
+        );
+    }
+
+    pub(crate) fn update_with_mode(
+        &mut self,
+        dt: f32,
+        api: &mut HttpClient,
+        projection: &mut WorldProjection,
+        context: MutationContext,
+        notices: &mut Vec<NetworkNotice>,
+    ) {
+        if !context.online {
             return;
         }
         self.command_retry_timer = (self.command_retry_timer - dt.max(0.0)).max(0.0);
@@ -168,21 +190,26 @@ impl Phase4Client {
                 }
             }
         }
-        self.regional.update(
+        self.regional.update_with_mode(
             dt,
             api,
             projection,
-            online,
-            self.pending_command.is_some() || another_mutation_pending,
+            MutationContext {
+                online: context.online,
+                another_mutation_pending: self.pending_command.is_some()
+                    || context.another_mutation_pending,
+                session_only: context.session_only,
+            },
             notices,
         );
         self.dispatch(
             api,
-            another_mutation_pending || self.regional.command_pending(),
+            context.another_mutation_pending || self.regional.command_pending(),
             projection
                 .player
                 .as_ref()
                 .is_some_and(|player| player.knocked_out),
+            context.session_only,
         );
     }
 
@@ -191,8 +218,9 @@ impl Phase4Client {
         api: &mut HttpClient,
         another_mutation_pending: bool,
         player_knocked_out: bool,
+        session_only: bool,
     ) {
-        if !self.regional.dispatch_blocked() {
+        if !session_only && !self.regional.dispatch_blocked() {
             if self.pending_governance.is_none() {
                 self.pending_governance = Some(api.get("/v1/settlement/governance"));
             }
@@ -217,6 +245,7 @@ impl Phase4Client {
         }
         if self.pending_command.is_none()
             && !another_mutation_pending
+            && !session_only
             && !self.regional.dispatch_blocked()
             && self.command_retry_timer <= 0.0
         {

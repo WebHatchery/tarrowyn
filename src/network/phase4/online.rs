@@ -71,7 +71,7 @@ impl OnlineClient {
     }
 
     pub(crate) fn queue_report(&mut self) {
-        if !self.mutations_ready() {
+        if !self.session_mutations_ready() {
             return;
         }
         let own_account_id = self

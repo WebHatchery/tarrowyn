@@ -3,7 +3,17 @@
 use super::*;
 
 impl Phase5Client {
+    #[cfg(test)]
     pub(super) fn dispatch(&mut self, api: &mut HttpClient, another_mutation_pending: bool) {
+        self.dispatch_with_mode(api, another_mutation_pending, false);
+    }
+
+    pub(super) fn dispatch_with_mode(
+        &mut self,
+        api: &mut HttpClient,
+        another_mutation_pending: bool,
+        session_only: bool,
+    ) {
         if self.logged_out {
             return;
         }
@@ -11,7 +21,7 @@ impl Phase5Client {
         if self.dispatch_blocked() {
             return;
         }
-        if self.refresh_timer <= 0.0 {
+        if !session_only && self.refresh_timer <= 0.0 {
             if self.pending_region.is_none() {
                 self.pending_region = Some(api.get("/v1/region"));
             }
@@ -45,7 +55,18 @@ impl Phase5Client {
             && !another_mutation_pending
             && self.command_retry_timer <= 0.0
         {
-            if let Some(command) = self.commands.pop_front() {
+            let command_index = if session_only {
+                self.commands.iter().position(is_session_command)
+            } else if self.commands.is_empty() {
+                None
+            } else {
+                Some(0)
+            };
+            if let Some(command_index) = command_index {
+                let command = self
+                    .commands
+                    .remove(command_index)
+                    .expect("queued command index exists");
                 self.pending_market_action = match &command {
                     Phase5Command::Market(request) => Some(request.action),
                     _ => None,
@@ -66,4 +87,14 @@ impl Phase5Client {
             }
         }
     }
+}
+
+fn is_session_command(command: &Phase5Command) -> bool {
+    matches!(
+        command,
+        Phase5Command::Link(_)
+            | Phase5Command::Revoke(_)
+            | Phase5Command::Report(_)
+            | Phase5Command::Delete(_)
+    )
 }

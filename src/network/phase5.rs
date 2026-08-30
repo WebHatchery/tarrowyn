@@ -152,6 +152,7 @@ impl Phase5Client {
         self.linked_account = Some(response);
     }
 
+    #[cfg(test)]
     pub(super) fn update(
         &mut self,
         dt: f32,
@@ -161,7 +162,28 @@ impl Phase5Client {
         another_mutation_pending: bool,
         notices: &mut Vec<NetworkNotice>,
     ) {
-        if !online {
+        self.update_with_mode(
+            dt,
+            api,
+            projection,
+            MutationContext {
+                online,
+                another_mutation_pending,
+                session_only: false,
+            },
+            notices,
+        );
+    }
+
+    pub(crate) fn update_with_mode(
+        &mut self,
+        dt: f32,
+        api: &mut HttpClient,
+        projection: &mut WorldProjection,
+        context: MutationContext,
+        notices: &mut Vec<NetworkNotice>,
+    ) {
+        if !context.online {
             return;
         }
         self.refresh_timer = (self.refresh_timer - dt.max(0.0)).max(0.0);
@@ -301,7 +323,7 @@ impl Phase5Client {
                 }
             }
         }
-        self.dispatch(api, another_mutation_pending);
+        self.dispatch_with_mode(api, context.another_mutation_pending, context.session_only);
     }
 
     pub(super) fn queue_cycle(&mut self, id: &str) -> bool {

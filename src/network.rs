@@ -16,6 +16,13 @@ use tarrowyn_protocol::{
 
 const REQUEST_TIMEOUT_SECONDS: f32 = 6.0;
 
+#[derive(Clone, Copy)]
+pub(crate) struct MutationContext {
+    pub(crate) online: bool,
+    pub(crate) another_mutation_pending: bool,
+    pub(crate) session_only: bool,
+}
+
 pub(super) fn is_transient_transport_error(error: &str) -> bool {
     error.contains(" timed out after ")
         || (error.contains("HTTP request '") && error.contains("' failed:"))
@@ -375,12 +382,16 @@ impl OnlineClient {
             || self.pending_trade.is_some()
             || !self.trade_queue.is_empty();
         let mutations_ready = self.mutations_ready();
-        self.phase4.update(
+        let session_only = self.state == ConnectionState::Online && !mutations_ready;
+        self.phase4.update_with_mode(
             dt,
             &mut self.api,
             &mut self.projection,
-            mutations_ready,
-            other_mutation_pending,
+            MutationContext {
+                online: self.state == ConnectionState::Online,
+                another_mutation_pending: other_mutation_pending,
+                session_only,
+            },
             &mut notices,
         );
         if let Some(account) = self.phase4.take_linked_account(self.client_key.as_deref()) {
@@ -455,6 +466,10 @@ impl OnlineClient {
 
     fn mutations_ready(&self) -> bool {
         self.state == ConnectionState::Online && !self.state_reload_pending
+    }
+
+    fn session_mutations_ready(&self) -> bool {
+        self.state == ConnectionState::Online && !self.phase4.auth_refresh_pending()
     }
 
     pub fn refresh_tavern(&mut self) {

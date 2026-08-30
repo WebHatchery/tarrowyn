@@ -9,12 +9,7 @@ mod account_lifecycle;
 mod feedback;
 mod location_sync;
 mod regional_events;
-
-#[test]
-fn refresh_is_scheduled_before_a_production_session_expires() {
-    assert_eq!(refresh_delay(0), 1.0);
-    assert_eq!(refresh_delay(20), 15.0);
-}
+mod session_dispatch;
 
 #[test]
 fn clear_drops_cached_regional_projections() {

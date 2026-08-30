@@ -1,5 +1,7 @@
 use super::phase5::Phase5Client;
-use super::{is_transient_transport_error, NetworkNotice, REQUEST_TIMEOUT_SECONDS};
+use super::{
+    is_transient_transport_error, MutationContext, NetworkNotice, REQUEST_TIMEOUT_SECONDS,
+};
 use macroquad_toolkit::net::{HttpClient, Pending};
 use std::collections::VecDeque;
 use tarrowyn_protocol::{

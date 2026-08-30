@@ -2,7 +2,12 @@ use super::*;
 
 impl OnlineClient {
     pub(crate) fn queue_phase5(&mut self, id: &str) {
-        if self.mutations_ready() && !self.phase4.queue_region_cycle(id) {
+        let ready = if is_session_action(id) {
+            self.session_mutations_ready()
+        } else {
+            self.mutations_ready()
+        };
+        if ready && !self.phase4.queue_region_cycle(id) {
             self.status_message =
                 "That regional action is not ready; wait for its projection or queue to clear."
                     .to_owned();
@@ -72,4 +77,8 @@ impl OnlineClient {
     pub(crate) fn account_deletion_available(&self) -> bool {
         self.phase4.account_deletion_available()
     }
+}
+
+fn is_session_action(id: &str) -> bool {
+    matches!(id, "account" | "logout" | "delete-account")
 }

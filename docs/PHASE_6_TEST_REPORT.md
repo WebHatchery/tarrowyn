@@ -3003,3 +3003,15 @@ Windows/WebGL build, packaging, Preview deployment, and catalog-sync checks
 pass. No full workspace gate was repeated because this was a bounded
 session-control readiness correction, and no new external or deferred work was
 opened.
+
+The session-only dispatch lane now sends account link, logout, report, and
+account deletion commands while authoritative gameplay projection reload is in
+progress, without releasing queued travel, route, market, or event commands or
+opening new regional reads. The focused
+`network::phase5::tests::session_dispatch::session_only_dispatch_sends_logout_without_releasing_gameplay_queue`
+regression passes, along with client-package formatting and clippy. `git diff --check`
+and the Rust file-size scan pass. The project `publish.ps1`
+Windows/WebGL build, packaging, Preview deployment, and catalog-sync checks
+pass. No full workspace gate was repeated because this was a bounded
+session-dispatch recovery correction, and no new external or deferred work was
+opened.
