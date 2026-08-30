@@ -1514,12 +1514,13 @@ workspace gate was repeated because this was an isolated client session-boundary
 fix.
 
 The target MySQL acceptance gate was rechecked without touching the configured
-world. The preview credentials still pass password-safe `SELECT 1`, but the
-configured account cannot create a uniquely named disposable database (MySQL
-`ERROR 1044`), and no existing database was reused because the available
-schemas belong to other applications. The full migration/restart/replay/
-backup/restore script therefore remains unrun against a clean MySQL schema;
-the deployment gate now explicitly requires disposable-schema provisioning
-permission and an operator-supplied clean snapshot. The verifier now performs
-that create/drop privilege probe before launching the server and reports the
-operator action directly.
+world. The preview credentials still pass password-safe `SELECT 1`;
+`SHOW GRANTS` confirms `ALL PRIVILEGES` on the configured `tarrowyn` schema but
+no server-level `CREATE` or `DROP` grant. The configured account therefore
+cannot create a uniquely named disposable database (MySQL `ERROR 1044`), and
+no existing database was reused because the available schemas belong to other
+applications. The full migration/restart/replay/backup/restore script
+therefore remains unrun against a clean MySQL schema; the deployment gate now
+explicitly requires disposable-schema provisioning permission and an operator-
+supplied clean snapshot. The verifier now performs that create/drop privilege
+probe before launching the server and reports the operator action directly.
