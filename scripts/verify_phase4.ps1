@@ -59,7 +59,6 @@ try {
     $env:TARROWYN_STATE_PATH = $statePath
     $env:TARROWYN_MOVEMENT_COOLDOWN_TICKS = "0"
     $env:TARROWYN_TICK_MS = "50"
-    $env:TARROWYN_LEASE_DURATION_TICKS = "20"
     $env:TARROWYN_CLAIM_RECLAIM_GRACE_TICKS = "2"
     $env:TARROWYN_SESSION_TTL_SECONDS = "120"
 
@@ -176,7 +175,6 @@ try {
     Remove-Item Env:TARROWYN_STATE_PATH -ErrorAction SilentlyContinue
     Remove-Item Env:TARROWYN_MOVEMENT_COOLDOWN_TICKS -ErrorAction SilentlyContinue
     Remove-Item Env:TARROWYN_TICK_MS -ErrorAction SilentlyContinue
-    Remove-Item Env:TARROWYN_LEASE_DURATION_TICKS -ErrorAction SilentlyContinue
     Remove-Item Env:TARROWYN_CLAIM_RECLAIM_GRACE_TICKS -ErrorAction SilentlyContinue
     Remove-Item Env:TARROWYN_SESSION_TTL_SECONDS -ErrorAction SilentlyContinue
     Remove-Item -LiteralPath $statePath -Force -ErrorAction SilentlyContinue

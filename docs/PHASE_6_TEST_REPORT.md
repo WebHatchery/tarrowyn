@@ -1320,3 +1320,9 @@ the fixture exercises the current protected-grace rule instead of relying on a
 race between HTTP requests. The affected Phase 4 harness passes under an
 intentionally wrong ambient MySQL driver; no new external or deferred work was
 opened.
+
+The Phase 4 runbook and acceptance harness now use the server's real-time
+`TARROWYN_LEASE_DURATION_SECONDS` setting; the harness no longer carries a
+stale tick-based lease variable that the server ignores. The affected live
+acceptance passes, with no runtime source changes and no full workspace or
+publisher validation repeated. No new external or deferred work was opened.
