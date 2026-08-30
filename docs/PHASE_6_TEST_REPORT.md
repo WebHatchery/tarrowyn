@@ -1525,3 +1525,11 @@ therefore remains unrun against a clean MySQL schema; the deployment gate now
 explicitly requires disposable-schema provisioning permission and an operator-
 supplied clean snapshot. The verifier now performs that create/drop privilege
 probe before launching the server and reports the operator action directly.
+
+The Phase 6 broad integration fixtures now live in a dedicated child test
+module, leaving the parent focused on test-module wiring and keeping every Rust
+test file below the 800-line project limit. The focused server Phase 6 test
+filter passes (55 tests), with formatting and diff checks clean. No full
+workspace or publisher gate was repeated because
+this was test-organization-only maintenance, and no new external or deferred
+work was opened.
