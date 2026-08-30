@@ -75,8 +75,8 @@ fn erase_account(state: &mut RepositoryState, request: &PendingAccountDeletion) 
     state.phase3.request_results.retain(|key, response| {
         !super::super::phase3::is_request_cache_for_identity(key, &request.identity_key, response)
     });
-    state.phase4.request_results.retain(|key, _| {
-        !super::account::is_phase4_replay_key_for_account(key, &request.account_id)
+    state.phase4.request_results.retain(|key, response| {
+        !super::super::phase4::is_request_cache_for_account(key, &request.account_id, response)
     });
     state.phase5.request_results.retain(|key, response| {
         !super::super::phase5::is_exact_request_cache_for_identity(
@@ -123,10 +123,9 @@ fn erase_account(state: &mut RepositoryState, request: &PendingAccountDeletion) 
         .phase6
         .moderation_last_report_ticks
         .remove(&request.identity_key);
-    state
-        .phase6
-        .request_results
-        .retain(|key, _| !key.starts_with(&format!("repair:{}:", request.account_id)));
+    state.phase6.request_results.retain(|key, response| {
+        !super::is_support_replay_key_for_account(key, &request.account_id, response)
+    });
     state.phase6.audits.retain(|record| {
         record.actor_account_id != request.account_id && record.target != request.account_id
     });

@@ -51,3 +51,30 @@ fn malformed_support_replay_key_degrades_readiness() {
     assert!(!health.ready);
     assert!(!health.integrity_ok);
 }
+
+#[test]
+fn support_replay_cleanup_requires_complete_account_and_request_boundaries() {
+    let response = tarrowyn_protocol::SupportRepairResponse {
+        request_id: "support-boundary-request".to_owned(),
+        audit_id: "audit-1".to_owned(),
+        accepted: true,
+        summary: "The bounded repair completed.".to_owned(),
+        reason: None,
+    };
+
+    assert!(super::super::is_support_replay_key_for_account(
+        "repair:account-owner:support-boundary-request",
+        "account-owner",
+        &response,
+    ));
+    assert!(!super::super::is_support_replay_key_for_account(
+        "repair:account-owner:observer:support-boundary-request",
+        "account-owner",
+        &response,
+    ));
+    assert!(super::super::is_support_replay_key_for_account(
+        "repair:account-owner:observer:support-boundary-request",
+        "account-owner:observer",
+        &response,
+    ));
+}

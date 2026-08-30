@@ -34,15 +34,8 @@ pub(super) fn reset_guest(state: &mut RepositoryState, identity_key: &str) {
     state.phase4.lessons.retain(|lesson| {
         lesson.teacher_account_id != old_account_id && lesson.learner_account_id != old_account_id
     });
-    state.phase4.request_results.retain(|key, _| {
-        ![
-            format!("phase4:{old_account_id}:"),
-            format!("skill-practice:{old_account_id}:"),
-            format!("skill-lesson-begin:{old_account_id}:"),
-            format!("skill-lesson-complete:{old_account_id}:"),
-        ]
-        .iter()
-        .any(|prefix| key.starts_with(prefix))
+    state.phase4.request_results.retain(|key, response| {
+        !super::phase4::is_request_cache_for_account(key, &old_account_id, response)
     });
     state.phase5.travel.remove(identity_key);
     state.phase5.request_results.retain(|key, response| {
@@ -68,10 +61,9 @@ pub(super) fn reset_guest(state: &mut RepositoryState, identity_key: &str) {
         .phase6
         .moderation_last_report_ticks
         .remove(identity_key);
-    state
-        .phase6
-        .request_results
-        .retain(|key, _| !key.starts_with(&format!("repair:{old_account_id}:")));
+    state.phase6.request_results.retain(|key, response| {
+        !super::phase6::is_support_replay_key_for_account(key, &old_account_id, response)
+    });
     state.identities.remove(identity_key);
 }
 

@@ -351,6 +351,44 @@ pub(super) fn cache_key(account: &str, request_id: &str) -> String {
     format!("phase4:{account}:{request_id}")
 }
 
+const REPLAY_CACHE_PREFIXES: [&str; 4] = [
+    "phase4:",
+    "skill-practice:",
+    "skill-lesson-begin:",
+    "skill-lesson-complete:",
+];
+
+pub(super) fn replay_prefix_for_account(
+    key: &str,
+    account_id: &str,
+    response: &Phase4Response,
+) -> Option<&'static str> {
+    let request_id = replay_request_id(response);
+    REPLAY_CACHE_PREFIXES
+        .iter()
+        .copied()
+        .find(|prefix| key == format!("{prefix}{account_id}:{request_id}"))
+}
+
+pub(super) fn is_request_cache_for_account(
+    key: &str,
+    account_id: &str,
+    response: &Phase4Response,
+) -> bool {
+    replay_prefix_for_account(key, account_id, response).is_some()
+}
+
+pub(super) fn replay_request_id(response: &Phase4Response) -> &str {
+    match response {
+        Phase4Response::Governance(response) => &response.request_id,
+        Phase4Response::Claim(response) => &response.request_id,
+        Phase4Response::Profession(response) => &response.request_id,
+        Phase4Response::Knowledge(response) => &response.request_id,
+        Phase4Response::Combat(response) => &response.request_id,
+        Phase4Response::Skill(response) => &response.request_id,
+    }
+}
+
 pub(super) fn account_id(state: &RepositoryState, key: &str) -> String {
     state
         .identities

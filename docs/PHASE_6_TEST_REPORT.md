@@ -806,3 +806,11 @@ The focused replay-integrity regression covers detection and pruning; server
 clippy, size, diff, formatting, and publisher checks are the validation scope
 for this Phase 6 identity-maintenance slice. No new external or deferred work
 was opened.
+
+Account-link migration and account/reset cleanup now compare complete Phase 4
+and support-repair replay keys against their cached response request IDs. This
+keeps a delimiter-like account boundary from moving or deleting a neighbouring
+player's idempotent response. The focused Phase 4/support boundary tests and
+the account-link, deletion, and reset regressions pass; server clippy, size,
+diff, formatting, and publisher checks are the validation scope for this Phase
+6 identity-maintenance slice. No new external or deferred work was opened.

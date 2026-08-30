@@ -62,27 +62,18 @@ fn migrate_phase6_replay_caches(
     old_account_id: &str,
     new_account_id: &str,
 ) {
-    let prefix = format!("repair:{old_account_id}:");
     let mut migrated = std::collections::HashMap::new();
     for (key, response) in std::mem::take(&mut state.phase6.request_results) {
-        if let Some(request_id) = key.strip_prefix(&prefix) {
-            migrated.insert(format!("repair:{new_account_id}:{request_id}"), response);
+        if super::is_support_replay_key_for_account(&key, old_account_id, &response) {
+            migrated.insert(
+                format!("repair:{new_account_id}:{}", response.request_id),
+                response,
+            );
         } else {
             migrated.insert(key, response);
         }
     }
     state.phase6.request_results = migrated;
-}
-
-pub(super) fn is_phase4_replay_key_for_account(key: &str, account_id: &str) -> bool {
-    [
-        "phase4:",
-        "skill-practice:",
-        "skill-lesson-begin:",
-        "skill-lesson-complete:",
-    ]
-    .iter()
-    .any(|prefix| key.starts_with(&format!("{prefix}{account_id}:")))
 }
 
 fn migrate_phase4_replay_caches(
@@ -91,23 +82,17 @@ fn migrate_phase4_replay_caches(
     new_account_id: &str,
     new_display_name: &str,
 ) {
-    let prefixes = [
-        format!("phase4:{old_account_id}:"),
-        format!("skill-practice:{old_account_id}:"),
-        format!("skill-lesson-begin:{old_account_id}:"),
-        format!("skill-lesson-complete:{old_account_id}:"),
-    ];
     let mut migrated = std::collections::HashMap::new();
     for (key, mut response) in std::mem::take(&mut state.phase4.request_results) {
-        let replacement = prefixes.iter().find_map(|prefix| {
-            key.strip_prefix(prefix).map(|suffix| {
-                format!(
-                    "{}{}",
-                    prefix.replacen(old_account_id, new_account_id, 1),
-                    suffix
-                )
-            })
-        });
+        let replacement =
+            super::super::phase4::replay_prefix_for_account(&key, old_account_id, &response).map(
+                |prefix| {
+                    format!(
+                        "{prefix}{new_account_id}:{}",
+                        super::super::phase4::replay_request_id(&response)
+                    )
+                },
+            );
         if let Some(replacement) = replacement {
             migrate_phase4_response(
                 &mut response,

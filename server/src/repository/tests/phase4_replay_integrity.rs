@@ -66,3 +66,34 @@ fn phase4_replay_response_must_match_its_request_key() {
     assert!(!health.ready);
     assert!(!health.integrity_ok);
 }
+
+#[test]
+fn phase4_replay_cleanup_requires_complete_account_and_request_boundaries() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let (account_id, request_id) = seeded_claim_cache(&repository);
+    let response = {
+        let state = repository.state.lock().expect("repository lock");
+        state
+            .phase4
+            .request_results
+            .get(&format!("phase4:{account_id}:{request_id}"))
+            .cloned()
+            .expect("seeded replay result")
+    };
+
+    assert!(super::super::phase4::is_request_cache_for_account(
+        &format!("phase4:{account_id}:{request_id}"),
+        &account_id,
+        &response,
+    ));
+    assert!(!super::super::phase4::is_request_cache_for_account(
+        &format!("phase4:{account_id}:observer:{request_id}"),
+        &account_id,
+        &response,
+    ));
+    assert!(super::super::phase4::is_request_cache_for_account(
+        &format!("phase4:{account_id}:observer:{request_id}"),
+        &format!("{account_id}:observer"),
+        &response,
+    ));
+}

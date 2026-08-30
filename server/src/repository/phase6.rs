@@ -45,6 +45,14 @@ pub(super) const MAX_MODERATION_REPORTS: usize = 512;
 pub(super) const MODERATION_REPORT_RETENTION_SECONDS: u64 = 90 * 24 * 60 * 60;
 pub(super) const MAX_PENDING_DELETIONS: usize = 128;
 
+pub(super) fn is_support_replay_key_for_account(
+    key: &str,
+    account_id: &str,
+    response: &SupportRepairResponse,
+) -> bool {
+    key == format!("repair:{account_id}:{}", response.request_id)
+}
+
 pub(super) fn trim_auth_link_tokens(phase6: &mut Phase6State) {
     retention::trim_auth_link_tokens(phase6);
 }
