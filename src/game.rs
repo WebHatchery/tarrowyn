@@ -156,7 +156,11 @@ impl Game {
         let virtual_ui = begin_virtual_ui_frame(ui::LOGICAL_WIDTH, ui::LOGICAL_HEIGHT);
         let regional_inspection = match &self.mode {
             ClientMode::Online(client)
-                if self.regional_inspection_open && client.state == ConnectionState::Online =>
+                if self.regional_inspection_open
+                    && online_gameplay_modal_visible(
+                        client.state,
+                        client.projection.authoritative_player_position().is_some(),
+                    ) =>
             {
                 Some(client.phase5_inspection())
             }
@@ -249,8 +253,15 @@ impl Game {
                     regional_event_choices: client.phase5_event_choices(),
                     skills: client.phase4_skills(),
                     skill_selection_open: self.skill_selection_open
-                        && client.state == ConnectionState::Online,
-                    chronicle_open: self.chronicle_open && client.state == ConnectionState::Online,
+                        && online_gameplay_modal_visible(
+                            client.state,
+                            client.projection.authoritative_player_position().is_some(),
+                        ),
+                    chronicle_open: self.chronicle_open
+                        && online_gameplay_modal_visible(
+                            client.state,
+                            client.projection.authoritative_player_position().is_some(),
+                        ),
                     chronicle: &client.projection.chronicle,
                     chronicle_summary: client.projection.chronicle_summary.as_ref(),
                     chronicle_query: &self.chronicle_query,
@@ -269,7 +280,11 @@ impl Game {
                     account_summary: &client.account_summary(),
                     identity_pending: client.identity_pending(),
                     report_pending: client.report_pending(),
-                    crafting: online_crafting_view(client.state, client.crafting_view()),
+                    crafting: online_crafting_view(
+                        client.state,
+                        client.projection.authoritative_player_position().is_some(),
+                        client.crafting_view(),
+                    ),
                     combat: client.combat_state(),
                     storm_magic_unlocked: client.storm_magic_unlocked(),
                     skill_pending: client.skill_pending(),
@@ -642,11 +657,19 @@ impl Game {
     }
 }
 
+fn online_gameplay_modal_visible(
+    connection: ConnectionState,
+    position_authoritative: bool,
+) -> bool {
+    connection == ConnectionState::Online && position_authoritative
+}
+
 fn online_crafting_view(
     connection: ConnectionState,
+    position_authoritative: bool,
     crafting: Option<CraftingView>,
 ) -> Option<CraftingView> {
-    (connection == ConnectionState::Online)
+    online_gameplay_modal_visible(connection, position_authoritative)
         .then_some(crafting)
         .flatten()
 }

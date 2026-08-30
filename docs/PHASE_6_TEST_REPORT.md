@@ -3024,3 +3024,14 @@ the Rust file-size scan pass. The project `publish.ps1` Windows/WebGL build,
 packaging, Preview deployment, and catalog-sync checks pass. No full workspace
 gate was repeated because this was a bounded testability and file-ownership
 maintenance correction, and no new external or deferred work was opened.
+
+Gameplay-dependent overlays now wait for an authoritative player position
+before showing their actionable inspection, skill, Chronicle, or crafting
+surfaces during a state reload. The Account panel and visible Reconnect and
+Offline fixture recovery controls remain available. The focused overlay
+visibility regression passes, along with client-package formatting and clippy.
+`git diff --check` and the Rust file-size scan pass. The project `publish.ps1`
+Windows/WebGL build, packaging, Preview deployment, and catalog-sync checks
+pass. No full workspace gate was repeated because this was a bounded touch
+recovery presentation correction, and no new external or deferred work was
+opened.
