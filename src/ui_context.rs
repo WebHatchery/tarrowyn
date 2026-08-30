@@ -46,6 +46,7 @@ pub struct UiContext<'a> {
     pub server_tick: u64,
     pub connection: ConnectionState,
     pub status_message: &'a str,
+    pub expedition: Option<&'a tarrowyn_protocol::Expedition>,
     pub identity_name: Option<&'a str>,
     pub offline: bool,
     pub save_exists: bool,

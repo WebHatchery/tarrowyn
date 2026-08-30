@@ -4,6 +4,7 @@ use tarrowyn_protocol::{LocationKind, RouteStatus};
 pub(super) fn draw_map_overlay(ctx: &UiContext<'_>, view: &MapView, rect: Rect) {
     let Some(region) = ctx.regional_region else {
         draw_local_landmarks(view);
+        draw_expedition_outpost(ctx, view, rect);
         return;
     };
 
@@ -45,6 +46,25 @@ pub(super) fn draw_map_overlay(ctx: &UiContext<'_>, view: &MapView, rect: Rect) 
         if rect.overlaps(&view.tile_rect(tile)) {
             draw_landmark(view, tile, &location.name, location_color(location.kind));
         }
+    }
+    draw_expedition_outpost(ctx, view, rect);
+}
+
+fn draw_expedition_outpost(ctx: &UiContext<'_>, view: &MapView, rect: Rect) {
+    let Some(expedition) = ctx
+        .expedition
+        .filter(|expedition| expedition.status == tarrowyn_protocol::ExpeditionStatus::Succeeded)
+    else {
+        return;
+    };
+    let tile = TilePos::new(expedition.outpost_position.x, expedition.outpost_position.y);
+    if rect.overlaps(&view.tile_rect(tile)) {
+        draw_landmark(
+            view,
+            tile,
+            &expedition.outpost_name,
+            Color::new(0.82, 0.68, 0.32, 1.0),
+        );
     }
 }
 

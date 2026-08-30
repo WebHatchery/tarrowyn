@@ -850,3 +850,9 @@ client notification regressions are the validation scope for this presentation
 and wording maintenance slice; no full workspace gate was rerun because the
 change stays within the established expedition boundary. No new external or
 deferred work was opened.
+
+The client map now consumes the existing successful expedition projection and
+draws the founded outpost at its authoritative position, while retreated or
+planning expeditions remain absent from the landmark layer. Client clippy,
+formatting, size, diff, and publisher checks are the validation scope for this
+small Phase 3 presentation slice; no new external or deferred work was opened.
