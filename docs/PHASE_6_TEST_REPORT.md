@@ -3015,3 +3015,12 @@ Windows/WebGL build, packaging, Preview deployment, and catalog-sync checks
 pass. No full workspace gate was repeated because this was a bounded
 session-dispatch recovery correction, and no new external or deferred work was
 opened.
+
+The regional client's identity and retained-history clearing logic now lives in
+its own lifecycle module, keeping the main Phase 5 client below the 800-line
+Rust source limit without changing behavior. The focused lifecycle regression
+passes, along with client-package formatting and clippy. `git diff --check` and
+the Rust file-size scan pass. The project `publish.ps1` Windows/WebGL build,
+packaging, Preview deployment, and catalog-sync checks pass. No full workspace
+gate was repeated because this was a bounded testability and file-ownership
+maintenance correction, and no new external or deferred work was opened.
