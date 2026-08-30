@@ -559,8 +559,10 @@ fn command_notice(
 ) {
     if accepted {
         notices.push(NetworkNotice::Success(success.to_owned()));
-    } else if let Some(reason) = reason {
-        notices.push(NetworkNotice::Warning(reason));
+    } else {
+        notices.push(NetworkNotice::Warning(reason.unwrap_or_else(|| {
+            "The frontier action was not accepted.".to_owned()
+        })));
     }
 }
 

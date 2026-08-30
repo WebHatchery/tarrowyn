@@ -173,6 +173,19 @@ fn expedition_resolution_notice_explains_a_retreat() {
 }
 
 #[test]
+fn frontier_rejection_without_a_reason_still_leaves_a_visible_notice() {
+    let mut notices = Vec::new();
+
+    super::command_notice(false, None, "unused success", &mut notices);
+
+    assert!(matches!(
+        notices.first(),
+        Some(NetworkNotice::Warning(message))
+            if message == "The frontier action was not accepted."
+    ));
+}
+
+#[test]
 fn homestead_success_message_explains_lease_state() {
     let claim = tarrowyn_protocol::LandClaim {
         claim_id: "homestead-1".to_owned(),
