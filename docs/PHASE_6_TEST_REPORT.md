@@ -2503,3 +2503,12 @@ server-package formatting and clippy, `git diff --check`, and the Rust
 file-size scan pass. No full workspace gate was repeated because this was a
 bounded deletion-replay durability correction, and no new external or
 deferred work was opened.
+
+Settlement facility rollups now refresh in every persisted snapshot, so claim
+counts, available plots, and public works remain coherent after a mutation and
+restart instead of waiting for the next presentation or world tick. The
+focused `repository::phase5::tests::settlements` filter passes four tests;
+server-package formatting and clippy, `git diff --check`, and the Rust
+file-size scan pass. No full workspace gate was repeated because this was a
+bounded settlement-snapshot consistency correction, and no new external or
+deferred work was opened.

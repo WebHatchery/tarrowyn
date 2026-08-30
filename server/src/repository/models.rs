@@ -306,7 +306,7 @@ impl RepositoryState {
     }
 
     pub(crate) fn to_stored(&self) -> StoredState {
-        StoredState {
+        let mut stored = StoredState {
             storage_version: STORAGE_VERSION,
             tick: self.tick,
             clock: self.clock.clone(),
@@ -326,7 +326,9 @@ impl RepositoryState {
             phase4: self.phase4.clone(),
             phase5: self.phase5.clone(),
             phase6: self.phase6.clone(),
-        }
+        };
+        super::phase5::refresh_stored_settlement_facilities(&mut stored);
+        stored
     }
 }
 

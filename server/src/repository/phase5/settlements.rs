@@ -1,6 +1,6 @@
 //! Settlement condition, activity, and facility projections.
 
-use super::super::models::RepositoryState;
+use super::super::models::{RepositoryState, StoredState};
 use super::logic::{player_location, record_regional};
 use std::collections::{HashMap, HashSet};
 use tarrowyn_protocol::{
@@ -192,7 +192,7 @@ pub(super) fn refresh_settlement_facilities(state: &mut RepositoryState) {
         .iter()
         .map(|location| (location.location_id.clone(), location.position))
         .collect::<Vec<_>>();
-    let claims = state
+    let claim_positions = state
         .phase4
         .claims
         .iter()
@@ -207,19 +207,66 @@ pub(super) fn refresh_settlement_facilities(state: &mut RepositoryState) {
         .map(|record| (record.position, record.name.clone()))
         .collect::<Vec<_>>();
 
-    for settlement in &mut state.phase5.settlements {
+    refresh_settlement_facility_counts(
+        &locations,
+        &mut state.phase5.settlements,
+        &claim_positions,
+        &available_plots,
+        &public_works,
+    );
+}
+
+pub(crate) fn refresh_stored_settlement_facilities(stored: &mut StoredState) {
+    let locations = stored
+        .phase5
+        .locations
+        .iter()
+        .map(|location| (location.location_id.clone(), location.position))
+        .collect::<Vec<_>>();
+    let claim_positions = stored
+        .phase4
+        .claims
+        .iter()
+        .filter(|claim| claim.status != ClaimLifecycleStatus::Reclaimed)
+        .map(|claim| claim.position)
+        .collect::<Vec<_>>();
+    let available_plots = stored.phase4.available_plots.clone();
+    let public_works = stored
+        .phase4
+        .infrastructure
+        .iter()
+        .map(|record| (record.position, record.name.clone()))
+        .collect::<Vec<_>>();
+
+    refresh_settlement_facility_counts(
+        &locations,
+        &mut stored.phase5.settlements,
+        &claim_positions,
+        &available_plots,
+        &public_works,
+    );
+}
+
+fn refresh_settlement_facility_counts(
+    locations: &[(String, Position)],
+    settlements: &mut [tarrowyn_protocol::SettlementProjection],
+    claim_positions: &[Position],
+    available_plots: &[Position],
+    public_works: &[(Position, String)],
+) {
+    for settlement in settlements {
         let location_id = settlement.location_id.as_str();
-        settlement.claim_count = claims
+        settlement.claim_count = claim_positions
             .iter()
-            .filter(|position| nearest_location(&locations, **position) == Some(location_id))
+            .filter(|position| nearest_location(locations, **position) == Some(location_id))
             .count() as u32;
         settlement.available_plot_count = available_plots
             .iter()
-            .filter(|position| nearest_location(&locations, **position) == Some(location_id))
+            .filter(|position| nearest_location(locations, **position) == Some(location_id))
             .count() as u32;
         settlement.public_works = public_works
             .iter()
-            .filter(|(position, _)| nearest_location(&locations, *position) == Some(location_id))
+            .filter(|(position, _)| nearest_location(locations, *position) == Some(location_id))
             .map(|(_, name)| name.clone())
             .collect();
     }

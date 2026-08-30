@@ -114,6 +114,57 @@ fn settlement_projection_rolls_up_nearest_claims_plots_and_public_works() {
 }
 
 #[test]
+fn persisted_settlement_facilities_survive_a_restart_without_a_projection_read() {
+    let state_path = std::env::temp_dir().join(format!(
+        "tarrowyn-settlement-facilities-restart-{}.json",
+        std::process::id()
+    ));
+    let config = ServerConfig {
+        persistence_path: Some(state_path.to_string_lossy().into_owned()),
+        ..ServerConfig::default()
+    };
+    let repository = WorldRepository::new(config.clone());
+    let session = super::guest(&repository, "phase5-settlement-restart");
+    let claim = repository
+        .claim_lifecycle(
+            &session.account_token,
+            ClaimLifecycleRequest {
+                request_id: "facility-restart-claim".to_owned(),
+                action: ClaimLifecycleAction::Request,
+                claim_id: None,
+                target_account_id: None,
+            },
+        )
+        .expect("claim request")
+        .data;
+    assert!(claim.accepted);
+    drop(repository);
+
+    let restored = WorldRepository::new(config);
+    let state = restored.state.lock().expect("world repository lock");
+    assert_eq!(
+        state
+            .phase5
+            .settlements
+            .iter()
+            .map(|settlement| settlement.claim_count)
+            .sum::<u32>(),
+        1
+    );
+    assert_eq!(
+        state
+            .phase5
+            .settlements
+            .iter()
+            .map(|settlement| settlement.available_plot_count)
+            .sum::<u32>(),
+        2
+    );
+    drop(state);
+    let _ = std::fs::remove_file(state_path);
+}
+
+#[test]
 fn settlement_price_pressure_clamps_extreme_scarcity_without_wrapping() {
     let repository = WorldRepository::new(ServerConfig::default());
     {

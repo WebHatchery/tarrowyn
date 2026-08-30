@@ -22,6 +22,7 @@ pub(super) use market::{
     trim_market_orders, MAX_MARKET_ORDERS,
 };
 pub(super) use recovery::clear_stuck_travel;
+pub(super) use settlements::refresh_stored_settlement_facilities;
 use settlements::{refresh_settlement_facilities, update_households, update_settlements};
 pub(super) use state::{
     fresh, trim_event_history, trim_household_histories, trim_settlement_chronicles,
