@@ -175,6 +175,57 @@ fn reclaim_waits_for_the_configured_grace_period() {
 }
 
 #[test]
+fn selectorless_approval_targets_the_callers_own_requested_lease() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let older_owner = guest(&repository, "selectorless-older-owner");
+    let owner = guest(&repository, "selectorless-owner");
+    repository
+        .claim_lifecycle(
+            &older_owner.account_token,
+            ClaimLifecycleRequest {
+                request_id: "selectorless-older-request".to_owned(),
+                action: ClaimLifecycleAction::Request,
+                claim_id: None,
+                target_account_id: None,
+            },
+        )
+        .expect("older claim request");
+    let own_claim = repository
+        .claim_lifecycle(
+            &owner.account_token,
+            ClaimLifecycleRequest {
+                request_id: "selectorless-own-request".to_owned(),
+                action: ClaimLifecycleAction::Request,
+                claim_id: None,
+                target_account_id: None,
+            },
+        )
+        .expect("own claim request")
+        .data
+        .claim
+        .expect("own requested claim");
+
+    let approved = repository
+        .claim_lifecycle(
+            &owner.account_token,
+            ClaimLifecycleRequest {
+                request_id: "selectorless-own-approve".to_owned(),
+                action: ClaimLifecycleAction::Approve,
+                claim_id: None,
+                target_account_id: None,
+            },
+        )
+        .expect("selectorless approval")
+        .data;
+
+    assert!(approved.accepted);
+    assert_eq!(
+        approved.claim.expect("approved claim").claim_id,
+        own_claim.claim_id
+    );
+}
+
+#[test]
 fn unknown_claim_inspection_does_not_fall_back_to_the_latest_record() {
     let repository = WorldRepository::new(ServerConfig::default());
     let session = guest(&repository, "unknown-claim-selector");

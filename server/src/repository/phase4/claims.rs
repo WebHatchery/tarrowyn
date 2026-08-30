@@ -429,11 +429,16 @@ fn claim_index(
             .position(|claim| claim.claim_id == claim_id);
     }
     match action {
-        ClaimLifecycleAction::Approve => state
-            .phase4
-            .claims
-            .iter()
-            .position(|claim| claim.status == ClaimLifecycleStatus::Requested),
+        ClaimLifecycleAction::Approve => {
+            let steward = state.phase4.governance.offices.iter().any(|office| {
+                office.kind == tarrowyn_protocol::OfficeKind::Steward
+                    && office.holder_account_id.as_deref() == Some(actor_id)
+            });
+            state.phase4.claims.iter().position(|claim| {
+                claim.status == ClaimLifecycleStatus::Requested
+                    && (steward || claim.owner_account_id.as_deref() == Some(actor_id))
+            })
+        }
         ClaimLifecycleAction::Renew
         | ClaimLifecycleAction::Transfer
         | ClaimLifecycleAction::Inherit

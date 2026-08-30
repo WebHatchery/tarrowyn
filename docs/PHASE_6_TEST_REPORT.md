@@ -947,3 +947,11 @@ server clippy, direct formatting, size, diff, and publisher checks pass. No
 full workspace gate was rerun because this is a continuation of the bounded
 Phase 4 read-path maintenance slice. No new external or deferred work was
 opened.
+
+Selectorless lease approval now chooses the caller's own requested lease for
+ordinary residents while preserving the Settlement Steward's ability to
+approve the oldest pending request. The focused Phase 4 claim-lifecycle
+regression, server clippy, direct formatting, size, and diff checks pass. The
+publisher check also passes for this bounded Phase 4 selector maintenance
+slice; no full workspace gate is required. No new external or deferred work
+was opened.
