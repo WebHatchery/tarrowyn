@@ -2767,3 +2767,15 @@ and the Rust file-size scan pass. The project `publish.ps1` Windows/WebGL
 build, packaging, Preview deployment, and catalog-sync checks pass. No full
 workspace gate was repeated because this was a bounded stale-account-cache
 correction, and no new external or deferred work was opened.
+
+Global cursor recovery now cancels pending and queued movement, chat, farming,
+and trade mutations, and clears their confirmation indicators before the
+latest state is reloaded. A pre-restore response can no longer repopulate the
+rebuilt projections or reopen movement from an obsolete request. The focused
+`network::cursor::tests::restore_recovery_cancels_stale_low_level_mutations`
+regression passes; client-package formatting and clippy, `git diff --check`,
+and the Rust file-size scan pass. The project `publish.ps1` Windows/WebGL
+build, packaging, Preview deployment, and catalog-sync checks pass. No full
+workspace gate was repeated because this was a bounded cursor-recovery
+mutation-cancellation correction, and no new external or deferred work was
+opened.

@@ -18,6 +18,18 @@ pub(super) fn recover_from_cursor_boundary(
     client.pending_state = None;
     client.pending_events = None;
     client.pending_trades = None;
+    client.pending_movement = None;
+    client.pending_chat = None;
+    client.pending_farming = None;
+    client.pending_trade = None;
+    client.movement_queue.clear();
+    client.chat_queue.clear();
+    client.farming_queue.clear();
+    client.trade_queue.clear();
+    client.pending_request_type = None;
+    client.pending_request_id = None;
+    client.pending_trade_action = None;
+    client.action_awaiting_confirmation = false;
     client.trades.clear();
     client.state_refresh = 0.0;
     client.phase4.recover_cursor_boundary();
