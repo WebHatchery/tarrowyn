@@ -24,15 +24,21 @@ The client owns a small API/session module around the toolkit:
 
 ```rust
 use macroquad_toolkit::net::{HttpClient, Pending};
+use tarrowyn_protocol::StateSnapshot;
 
 let mut api = HttpClient::new(server_url);
 api.set_bearer_token(Some(account_token));
-let mut world: Pending<WorldSnapshot> = api.get("/v1/world");
+let mut state: Pending<StateSnapshot> = api.get("/v1/state");
 // Each update tick:
-if let Some(result) = world.poll_timed(dt, 6.0) {
+if let Some(result) = state.poll_timed(dt, 6.0) {
     // Adopt the snapshot or show a connection error.
 }
 ```
+
+The original Phase 1 contract exposed `/v1/world` as the initial projection.
+The current client uses authenticated `/v1/state`, whose `data.world` carries
+that projection alongside the authenticated player and tavern feed. The
+server keeps `/v1/world` for compatibility with the early acceptance script.
 
 The client must retain pending requests, poll them once per frame, and put
 retries behind an application-owned cooldown. A timed-out request is a state
