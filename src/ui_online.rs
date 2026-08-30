@@ -142,7 +142,7 @@ pub(super) fn draw_sidebar(
     );
     draw_ui_text_ex(
         if ctx.chat_draft.is_empty() {
-            "Type a message or tap a quick phrase"
+            "Type a message or tap Meet to call the Hearth"
         } else {
             ctx.chat_draft
         },

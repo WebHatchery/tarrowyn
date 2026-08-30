@@ -1577,3 +1577,11 @@ file-size checks pass. `publish.ps1` passes Windows/WebGL builds, packaging,
 Preview deployment, and catalog sync. No full workspace gate was repeated
 because this was a bounded progression-presentation slice, and no new external
 or deferred work was opened.
+
+The chat placeholder now names the visible `Meet` quick-chat control and its
+Hearth call, satisfying the touch prompt rule without changing the message
+payload. The focused online UI suite passes (8), the captured 1280x720 gameplay
+layout remains readable, and `publish.ps1` passes Windows/WebGL builds,
+packaging, Preview deployment, and catalog sync. No full workspace gate was
+repeated because this was a bounded touch-copy slice, and no new external or
+deferred work was opened.
