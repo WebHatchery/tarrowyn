@@ -167,8 +167,7 @@ identity gateway can replace that fixture with provider sign-in at deployment.
 For
 privacy deletion, use the visible Delete control after Account shows a linked
 production account. Account is active only for a guest fixture, so an already-
-linked character cannot submit a second link request; tap Delete once to arm it,
-then tap the relabelled
+the Delete control is disabled for a guest until linking succeeds; then tap the relabelled
 Tap again control to submit `/v1/account/delete`. The response is scheduled
 for the next authoritative tick; the client clears the session and exposes
 Reconnect so the player can return as a fresh guest. A development guest must

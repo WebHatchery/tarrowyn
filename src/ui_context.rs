@@ -64,6 +64,7 @@ pub struct UiContext<'a> {
     pub phase4_summary: &'a str,
     pub phase5_summary: &'a str,
     pub account_deletion_armed: bool,
+    pub account_deletion_available: bool,
     pub account_link_available: bool,
     pub crafting: Option<CraftingView>,
     pub combat: Option<&'a LocalCombatState>,

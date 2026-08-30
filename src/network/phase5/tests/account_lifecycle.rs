@@ -231,6 +231,8 @@ fn account_deletion_requires_two_taps_for_a_linked_account() {
     let mut client = Phase5Client::new();
     client.account = Some(account_response(false));
 
+    assert!(client.account_deletion_available());
+
     client.queue_cycle("delete-account");
     assert!(client.deletion_armed);
     assert!(client.commands.is_empty());
@@ -265,6 +267,7 @@ fn guest_account_cannot_arm_deletion() {
     let mut client = Phase5Client::new();
     client.account = Some(account_response(true));
 
+    assert!(!client.account_deletion_available());
     client.queue_cycle("delete-account");
     assert!(!client.deletion_armed);
     assert!(client.commands.is_empty());

@@ -357,7 +357,7 @@ pub(super) fn draw_sidebar(
                 } else {
                     "Delete"
                 },
-                true,
+                ctx.account_deletion_available,
                 ButtonTone::Secondary,
             ),
         ],

@@ -14,6 +14,10 @@ impl Phase4Client {
         self.regional.account_link_available()
     }
 
+    pub(crate) fn account_deletion_available(&self) -> bool {
+        self.regional.account_deletion_available()
+    }
+
     pub(crate) fn queue_region_report(
         &mut self,
         request_id: String,

@@ -380,6 +380,12 @@ impl Phase5Client {
             .is_none_or(|account| account.guest_fixture)
     }
 
+    pub(super) fn account_deletion_available(&self) -> bool {
+        self.account
+            .as_ref()
+            .is_some_and(|account| !account.guest_fixture)
+    }
+
     pub(super) fn clear(&mut self) {
         self.pending_region = None;
         self.pending_settlements = None;
@@ -649,5 +655,9 @@ impl OnlineClient {
 
     pub(crate) fn account_link_available(&self) -> bool {
         self.phase4.account_link_available()
+    }
+
+    pub(crate) fn account_deletion_available(&self) -> bool {
+        self.phase4.account_deletion_available()
     }
 }

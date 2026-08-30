@@ -639,6 +639,10 @@ client key before the visible Reconnect path, allowing the local release
 candidate to return as a fresh guest fixture instead of retrying a protected
 production identity. The focused reconnect regression and client checks pass.
 
+The Delete control now reflects the same account boundary: it is enabled only
+for a linked production projection, while a guest must use Account first. The
+focused account-lifecycle tests cover both states alongside the client checks.
+
 Phase 6 audit and session helpers now live in a dedicated child module, keeping
 the repository coordinator below the workspace's 800-line Rust limit while
 preserving the existing behavior. The 43 Phase 6-focused tests, server-only
