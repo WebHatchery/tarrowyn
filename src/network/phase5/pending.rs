@@ -54,4 +54,14 @@ impl Phase5Client {
             )
         })
     }
+
+    pub(crate) fn report_command_pending(&self) -> bool {
+        self.in_flight_command
+            .as_ref()
+            .is_some_and(|command| matches!(command, Phase5Command::Report(_)))
+            || self
+                .commands
+                .iter()
+                .any(|command| matches!(command, Phase5Command::Report(_)))
+    }
 }

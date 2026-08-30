@@ -80,6 +80,10 @@ impl Phase4Client {
         self.regional.identity_command_pending()
     }
 
+    pub(crate) fn report_command_pending(&self) -> bool {
+        self.regional.report_command_pending()
+    }
+
     pub(crate) fn regional_inspection(&self) -> String {
         self.regional.inspection()
     }

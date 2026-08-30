@@ -80,6 +80,7 @@ pub struct UiContext<'a> {
     pub account_open: bool,
     pub account_summary: &'a str,
     pub identity_pending: bool,
+    pub report_pending: bool,
     pub crafting: Option<CraftingView>,
     pub combat: Option<&'a LocalCombatState>,
     pub storm_magic_unlocked: bool,

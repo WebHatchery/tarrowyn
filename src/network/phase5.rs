@@ -330,6 +330,9 @@ impl Phase5Client {
                 );
             }
             "report" => {
+                if self.report_command_pending() {
+                    return false;
+                }
                 self.queue_report(request_id, None, None);
             }
             "delete-account" => {
@@ -378,6 +381,9 @@ impl Phase5Client {
         target_account_id: Option<String>,
         message_id: Option<u64>,
     ) -> bool {
+        if self.report_command_pending() {
+            return false;
+        }
         super::queue::try_push(
             &mut self.commands,
             Phase5Command::Report(ModerationReportRequest {

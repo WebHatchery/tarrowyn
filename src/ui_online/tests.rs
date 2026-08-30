@@ -378,6 +378,12 @@ fn identity_controls_wait_for_the_previous_account_command() {
 }
 
 #[test]
+fn report_controls_wait_for_the_previous_moderation_command() {
+    assert!(!super::report_control_enabled(true));
+    assert!(super::report_control_enabled(false));
+}
+
+#[test]
 fn claim_controls_wait_for_the_previous_lease_command() {
     assert!(!super::claim_control_enabled(true, true));
     assert!(super::claim_control_enabled(true, false));

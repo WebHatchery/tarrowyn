@@ -2305,3 +2305,12 @@ formatting, clippy, standards, and the Rust file-size check pass, and
 catalog sync. No full workspace gate was repeated because this was a bounded
 service-order control correction, and no new external or deferred work was
 opened.
+
+The Report control now closes while a moderation report is queued or in flight,
+preventing duplicate submissions from the same visible chat or player evidence
+while the regional projection catches up. The focused report-control filter
+passes two related tests; client formatting, clippy, standards, and the Rust
+file-size check pass, and `publish.ps1` passes Windows/WebGL builds, packaging,
+Preview deployment, and catalog sync. No full workspace gate was repeated
+because this was a bounded moderation-control correction, and no new external
+or deferred work was opened.

@@ -342,6 +342,29 @@ fn report_queue_keeps_selected_account_and_chat_evidence() {
 }
 
 #[test]
+fn report_controls_wait_for_one_queued_or_in_flight_command() {
+    let mut client = Phase5Client::new();
+    let request = tarrowyn_protocol::ModerationReportRequest {
+        request_id: "report-queued".to_owned(),
+        target_account_id: Some("account-2".to_owned()),
+        message_id: Some(17),
+        category: "player_report".to_owned(),
+        note: "queued".to_owned(),
+    };
+    client
+        .commands
+        .push_back(Phase5Command::Report(request.clone()));
+
+    assert!(client.report_command_pending());
+    assert!(!client.queue_cycle("report"));
+
+    client.commands.clear();
+    client.in_flight_command = Some(Phase5Command::Report(request));
+    assert!(client.report_command_pending());
+    assert!(!client.queue_report("report-in-flight".to_owned(), None, None));
+}
+
+#[test]
 fn guest_account_cannot_arm_deletion() {
     let mut client = Phase5Client::new();
     client.account = Some(account_response(true));

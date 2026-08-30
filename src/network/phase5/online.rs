@@ -45,6 +45,10 @@ impl OnlineClient {
         self.phase4.identity_command_pending()
     }
 
+    pub(crate) fn report_pending(&self) -> bool {
+        self.phase4.report_command_pending()
+    }
+
     pub(crate) fn phase5_inspection(&self) -> String {
         self.phase4.regional_inspection()
     }

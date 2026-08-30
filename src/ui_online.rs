@@ -470,7 +470,12 @@ pub(super) fn draw_sidebar(
                 identity_control_enabled(ctx.identity_pending),
                 ButtonTone::Secondary,
             ),
-            ("report", "Report", true, ButtonTone::Secondary),
+            (
+                "report",
+                "Report",
+                report_control_enabled(ctx.report_pending),
+                ButtonTone::Secondary,
+            ),
             (
                 "delete-account",
                 if ctx.identity_pending {
@@ -603,6 +608,10 @@ fn event_control_enabled(event_pending: bool) -> bool {
 
 fn identity_control_enabled(identity_pending: bool) -> bool {
     !identity_pending
+}
+
+fn report_control_enabled(report_pending: bool) -> bool {
+    !report_pending
 }
 
 fn claim_control_enabled(claim_available: bool, claim_pending: bool) -> bool {
