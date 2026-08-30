@@ -335,6 +335,25 @@ pub enum ExpeditionStatus {
     Retreated,
 }
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub struct ExpeditionRequirements {
+    pub food: u32,
+    pub tools: u32,
+    pub materials: u32,
+    pub safety: u32,
+}
+
+impl Default for ExpeditionRequirements {
+    fn default() -> Self {
+        Self {
+            food: 6,
+            tools: 3,
+            materials: 8,
+            safety: 3,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct Expedition {
     pub expedition_id: String,

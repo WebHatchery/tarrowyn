@@ -621,3 +621,24 @@ fn loading_an_oversized_pioneer_record_keeps_a_valid_leader_window() {
         .iter()
         .any(|member| member.account_id == expedition.leader_account_id));
 }
+
+#[test]
+fn state_advertises_configured_pioneer_requirements() {
+    let repository = WorldRepository::new(ServerConfig {
+        expedition_min_food: 10,
+        expedition_min_tools: 5,
+        expedition_min_materials: 12,
+        expedition_min_safety: 7,
+        ..ServerConfig::default()
+    });
+    let session = guest(&repository);
+    let snapshot = repository
+        .state(&session.account_token)
+        .expect("state")
+        .data;
+
+    assert_eq!(snapshot.world.expedition_requirements.food, 10);
+    assert_eq!(snapshot.world.expedition_requirements.tools, 5);
+    assert_eq!(snapshot.world.expedition_requirements.materials, 12);
+    assert_eq!(snapshot.world.expedition_requirements.safety, 7);
+}

@@ -228,6 +228,8 @@ pub struct WorldSnapshot {
     pub claim: Option<LandClaim>,
     #[serde(default)]
     pub expedition: Option<Expedition>,
+    #[serde(default)]
+    pub expedition_requirements: ExpeditionRequirements,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]

@@ -529,6 +529,7 @@ impl OnlineClient {
                 (ExpeditionAction::Announce, Some(ExpeditionRole::Scout))
             }
             Some(expedition) => {
+                let requirements = self.projection.expedition_requirements;
                 let own = self
                     .account
                     .as_ref()
@@ -547,10 +548,10 @@ impl OnlineClient {
                     .find(|role| expedition.members.iter().all(|member| member.role != *role))
                     .unwrap_or(ExpeditionRole::Builder);
                     (ExpeditionAction::Join, Some(role))
-                } else if expedition.food < 6
-                    || expedition.tools < 3
-                    || expedition.materials < 8
-                    || expedition.safety < 3
+                } else if expedition.food < requirements.food
+                    || expedition.tools < requirements.tools
+                    || expedition.materials < requirements.materials
+                    || expedition.safety < requirements.safety
                 {
                     (ExpeditionAction::Supply, None)
                 } else {

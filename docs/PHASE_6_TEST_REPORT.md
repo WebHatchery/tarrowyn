@@ -1176,3 +1176,17 @@ The publisher check passed the Windows and WebGL release builds, packaging,
 Preview deployment, and catalog sync. No full workspace gate was rerun because
 this is a bounded client presentation slice. No new external or deferred work
 was opened.
+
+The regional expedition policy now travels with the authoritative world
+snapshot. The client uses server-advertised food, tools, materials, and safety
+minimums before offering Launch, while older snapshots retain the default
+compatibility values. The focused protocol/client/server regressions pass (1
+client and 1 server test), full workspace clippy passes, and the publisher check
+passed the Windows and WebGL release builds, packaging, Preview deployment, and
+catalog sync. The milestone release gate reached content validation but stopped
+on known unrelated formatter drift in `route_history.rs`,
+`production_integrity.rs`, `reset.rs`, and its reset test. A manual full
+workspace test then recorded 387 passing tests and 11 existing stale fixture or
+read-path failures outside this contract; the focused regressions remain green.
+Direct formatting of changed files, diff, and Rust file-size checks pass. No new
+external or deferred work was opened.

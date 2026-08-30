@@ -84,6 +84,55 @@ fn expedition_cycle_chooses_the_missing_scout_role() {
     };
     assert_eq!(request.action, ExpeditionAction::Join);
     assert_eq!(request.role, Some(ExpeditionRole::Scout));
+
+    client
+        .projection
+        .expedition
+        .as_mut()
+        .expect("expedition projection")
+        .members
+        .push(tarrowyn_protocol::ExpeditionMember {
+            account_id: "account-4".to_owned(),
+            display_name: "The traveller".to_owned(),
+            role: ExpeditionRole::Scout,
+        });
+    client
+        .projection
+        .expedition
+        .as_mut()
+        .expect("expedition projection")
+        .food = 6;
+    client
+        .projection
+        .expedition
+        .as_mut()
+        .expect("expedition projection")
+        .tools = 3;
+    client
+        .projection
+        .expedition
+        .as_mut()
+        .expect("expedition projection")
+        .materials = 8;
+    client
+        .projection
+        .expedition
+        .as_mut()
+        .expect("expedition projection")
+        .safety = 3;
+    client.projection.expedition_requirements = tarrowyn_protocol::ExpeditionRequirements {
+        food: 10,
+        tools: 5,
+        materials: 12,
+        safety: 7,
+    };
+
+    client.frontier.commands.clear();
+    client.queue_expedition_cycle();
+    let Some(FrontierCommand::Expedition(request)) = client.frontier.commands.pop_front() else {
+        panic!("custom expedition requirements should queue another supply request");
+    };
+    assert_eq!(request.action, ExpeditionAction::Supply);
 }
 
 #[test]

@@ -7,11 +7,11 @@ use macroquad_toolkit::net::{HttpClient, Pending};
 use std::collections::VecDeque;
 use tarrowyn_protocol::{
     ApiResponse, ChatMessage, ChatRequest, ChronicleEntry, ChronicleSummary, EventsResponse,
-    Expedition, FarmAnimal, FarmingAction, FarmingRequest, FrontierEvent, GuestSessionRequest,
-    GuestSessionResponse, LandClaim, MovementIntent, OpportunitySignal, OpsHealthResponse,
-    PlayerPresence, PlayerProjection, StateSnapshot, TavernFeedResponse, TimeOfDay, TradeAction,
-    TradeOffer, TradeRequest, TradesResponse, WildernessZone, WorldClock, WorldEvent,
-    WorldSnapshot, MAX_CHAT_MESSAGE_LENGTH,
+    Expedition, ExpeditionRequirements, FarmAnimal, FarmingAction, FarmingRequest, FrontierEvent,
+    GuestSessionRequest, GuestSessionResponse, LandClaim, MovementIntent, OpportunitySignal,
+    OpsHealthResponse, PlayerPresence, PlayerProjection, StateSnapshot, TavernFeedResponse,
+    TimeOfDay, TradeAction, TradeOffer, TradeRequest, TradesResponse, WildernessZone, WorldClock,
+    WorldEvent, WorldSnapshot, MAX_CHAT_MESSAGE_LENGTH,
 };
 
 const REQUEST_TIMEOUT_SECONDS: f32 = 6.0;
@@ -63,6 +63,7 @@ pub struct WorldProjection {
     pub claim: Option<LandClaim>,
     pub outpost: Option<macroquad_toolkit::grid::TilePos>,
     pub expedition: Option<Expedition>,
+    pub expedition_requirements: ExpeditionRequirements,
 }
 
 impl WorldProjection {
@@ -93,6 +94,7 @@ impl WorldProjection {
             claim: None,
             outpost: None,
             expedition: None,
+            expedition_requirements: ExpeditionRequirements::default(),
         }
     }
 
@@ -138,6 +140,7 @@ impl WorldProjection {
             .map(|position| TilePos::new(position.x, position.y));
         self.claim = snapshot.claim;
         self.expedition = snapshot.expedition;
+        self.expedition_requirements = snapshot.expedition_requirements;
         if let Some(player) = self
             .players
             .iter()

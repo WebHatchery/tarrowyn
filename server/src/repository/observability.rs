@@ -2,8 +2,8 @@ use super::models::RepositoryState;
 use super::{phase3, world, ServerConfig, MAX_EVENTS, MAX_NOTICES};
 use std::collections::VecDeque;
 use tarrowyn_protocol::{
-    ApiMeta, EventRecord, PlayerPresence, Position, TavernFeedResponse, TavernNotice, WorldEvent,
-    WorldSnapshot,
+    ApiMeta, EventRecord, ExpeditionRequirements, PlayerPresence, Position, TavernFeedResponse,
+    TavernNotice, WorldEvent, WorldSnapshot,
 };
 
 pub(super) fn snapshot(
@@ -25,6 +25,12 @@ pub(super) fn snapshot(
         outpost: state.phase3.outpost,
         claim: state.phase3.claim.clone(),
         expedition: state.phase3.expedition.clone(),
+        expedition_requirements: ExpeditionRequirements {
+            food: config.expedition_min_food,
+            tools: config.expedition_min_tools,
+            materials: config.expedition_min_materials,
+            safety: config.expedition_min_safety,
+        },
     }
 }
 
