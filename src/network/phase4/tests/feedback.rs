@@ -221,6 +221,19 @@ fn knowledge_discovery_notice_names_the_recorded_clue() {
     );
 }
 
+#[test]
+fn phase_four_rejection_without_a_reason_still_leaves_a_visible_notice() {
+    let mut notices = Vec::new();
+
+    super::super::phase4_notice(false, None, "unused success", &mut notices);
+
+    assert!(matches!(
+        notices.first(),
+        Some(NetworkNotice::Warning(message))
+            if message == "The settlement action was not accepted."
+    ));
+}
+
 fn service_order_for_test(
     status: tarrowyn_protocol::ServiceOrderStatus,
 ) -> tarrowyn_protocol::ServiceOrder {

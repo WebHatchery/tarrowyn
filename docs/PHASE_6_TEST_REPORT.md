@@ -1962,3 +1962,11 @@ regression passes, server clippy and the Rust file-size check pass, and
 catalog sync. No full workspace gate was repeated because this was a bounded
 refresh-revocation correction, and no new external or deferred work was
 opened.
+
+Phase 4 command rejection handling now leaves a visible fallback warning when
+the server omits its optional reason, covering governance, claims, professions,
+knowledge, combat, and skill actions. The focused client feedback regression
+passes, client clippy and the Rust file-size check pass, and `publish.ps1`
+passes Windows/WebGL builds, packaging, Preview deployment, and catalog sync.
+No full workspace gate was repeated because this was a bounded Phase 4
+feedback correction, and no new external or deferred work was opened.
