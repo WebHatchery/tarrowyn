@@ -484,12 +484,15 @@ impl OnlineClient {
     }
 
     fn connection_failed(&mut self, error: String, notices: &mut Vec<NetworkNotice>) {
+        let rate_limited = is_rate_limited_error(&error);
         self.state = if self.had_world {
             ConnectionState::Degraded
         } else {
             ConnectionState::Offline
         };
-        self.status_message = if self.state == ConnectionState::Degraded {
+        self.status_message = if rate_limited {
+            "The road is rate-limited; wait briefly, then tap Reconnect.".to_owned()
+        } else if self.state == ConnectionState::Degraded {
             "The server stopped answering; the last shared road is shown.".to_owned()
         } else {
             "The development server is unavailable.".to_owned()
@@ -512,7 +515,9 @@ impl OnlineClient {
         self.pending_trade_action = None;
         self.action_awaiting_confirmation = false;
         self.state_reload_pending = false;
-        let retry_message = if self.retry_count >= self.max_retry_count {
+        let retry_message = if rate_limited {
+            "Wait briefly, then use Reconnect when it is available."
+        } else if self.retry_count >= self.max_retry_count {
             "Retry limit reached; use Reconnect when the server is ready."
         } else {
             "Reconnect is available below."
@@ -538,6 +543,10 @@ impl OnlineClient {
             || !self.chat_queue.is_empty()
             || !self.farming_queue.is_empty()
     }
+}
+
+fn is_rate_limited_error(error: &str) -> bool {
+    error.contains("rate_limited") || error.contains("status code 429")
 }
 
 #[derive(Debug, PartialEq, Eq)]

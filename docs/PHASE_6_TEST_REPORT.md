@@ -3124,3 +3124,12 @@ pass. The project `publish.ps1` Windows/WebGL build, packaging, Preview
 deployment, and catalog-sync checks pass. No full workspace gate was repeated
 because this was a bounded identity-summary correction, and no new external or
 deferred work was opened.
+
+Rate-limited client failures now explain that the player should wait briefly
+and use the visible Reconnect control, while preserving the existing degraded
+road state and cooldown. The focused connection-recovery regression passes,
+along with client-package formatting and strict clippy. `git diff --check` and
+the Rust file-size scan pass. The project `publish.ps1` Windows/WebGL build,
+packaging, Preview deployment, and catalog-sync checks pass. No full workspace
+gate was repeated because this was a bounded player incident-path correction,
+and no new external or deferred work was opened.

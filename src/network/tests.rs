@@ -177,6 +177,26 @@ fn connection_failure_exposes_recovery_and_reconnect_cooldown() {
 }
 
 #[test]
+fn rate_limit_failure_explains_wait_and_reconnect_recovery() {
+    let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
+    client.had_world = true;
+    let mut notices = Vec::new();
+
+    client.connection_failed(
+        "HTTP API error in 'GET /v1/state' [rate_limited]: Try again shortly.".to_owned(),
+        &mut notices,
+    );
+
+    assert_eq!(client.state, ConnectionState::Degraded);
+    assert!(client.status_message.contains("rate-limited"));
+    assert!(client.status_message.contains("Reconnect"));
+    assert!(notices.iter().any(|notice| matches!(
+        notice,
+        NetworkNotice::Danger(message) if message.contains("Wait briefly")
+    )));
+}
+
+#[test]
 fn reconnect_rotates_a_linked_session_before_guest_fallback() {
     let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
     client
