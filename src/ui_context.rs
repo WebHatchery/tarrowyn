@@ -4,8 +4,8 @@ use crate::state::WorldState;
 use macroquad_toolkit::grid::TilePos;
 use macroquad_toolkit::ui::VirtualUi;
 use tarrowyn_protocol::{
-    ChatMessage, ChronicleEntry, ChronicleSummary, LocalCombatState, OpportunitySignal,
-    RegionSnapshot, TimeOfDay, TradeOffer, WildernessZone,
+    ChatMessage, ChronicleEntry, ChronicleSummary, ExpeditionRequirements, LocalCombatState,
+    OpportunitySignal, RegionSnapshot, TimeOfDay, TradeOffer, WildernessZone,
 };
 
 #[derive(Debug, Clone, PartialEq)]
@@ -47,6 +47,7 @@ pub struct UiContext<'a> {
     pub connection: ConnectionState,
     pub status_message: &'a str,
     pub expedition: Option<&'a tarrowyn_protocol::Expedition>,
+    pub expedition_requirements: ExpeditionRequirements,
     pub identity_name: Option<&'a str>,
     pub offline: bool,
     pub save_exists: bool,

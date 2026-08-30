@@ -384,7 +384,7 @@ pub(super) fn draw_sidebar(
     );
     let chronicle_line = ctx
         .expedition
-        .map(pioneer_status_line)
+        .map(|expedition| pioneer_status_line(expedition, ctx.expedition_requirements))
         .or_else(|| {
             ctx.chronicle_summary.map(|summary| {
                 format!(
@@ -460,7 +460,10 @@ fn travel_control_enabled(available: bool, knocked_out: bool) -> bool {
     available && !knocked_out
 }
 
-fn pioneer_status_line(expedition: &tarrowyn_protocol::Expedition) -> String {
+fn pioneer_status_line(
+    expedition: &tarrowyn_protocol::Expedition,
+    requirements: tarrowyn_protocol::ExpeditionRequirements,
+) -> String {
     let status = match expedition.status {
         tarrowyn_protocol::ExpeditionStatus::Planning => "planning",
         tarrowyn_protocol::ExpeditionStatus::Launched => "on the road",
@@ -468,12 +471,16 @@ fn pioneer_status_line(expedition: &tarrowyn_protocol::Expedition) -> String {
         tarrowyn_protocol::ExpeditionStatus::Retreated => "retreated",
     };
     format!(
-        "Pioneer {status} • {} companions • supplies {}/{}/{}/{} • {}",
+        "Pioneer {status} • {} companions • F{}/{} T{}/{} M{}/{} S{}/{} • {}",
         expedition.members.len(),
         expedition.food,
+        requirements.food,
         expedition.tools,
+        requirements.tools,
         expedition.materials,
+        requirements.materials,
         expedition.safety,
+        requirements.safety,
         expedition.outpost_name,
     )
 }

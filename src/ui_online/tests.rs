@@ -137,10 +137,18 @@ fn pioneer_status_line_keeps_an_active_party_visible() {
         outpost_position: tarrowyn_protocol::Position { x: 14, y: 8 },
     };
 
-    let line = super::pioneer_status_line(&expedition);
+    let line = super::pioneer_status_line(
+        &expedition,
+        tarrowyn_protocol::ExpeditionRequirements {
+            food: 10,
+            tools: 5,
+            materials: 12,
+            safety: 7,
+        },
+    );
     assert!(line.contains("Pioneer on the road"));
     assert!(line.contains("1 companions"));
-    assert!(line.contains("supplies 6/3/8/3"));
+    assert!(line.contains("F6/10 T3/5 M8/12 S3/7"));
     assert!(line.contains("Lantern Rest"));
 }
 

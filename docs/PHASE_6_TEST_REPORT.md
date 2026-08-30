@@ -1241,3 +1241,12 @@ Preview deployment, and catalog sync completed successfully. The gate required
 removing only the exact stale generated Windows archive before packaging. The
 future-incompatibility warning for `net2 v0.2.39` remains non-blocking. No new
 external or deferred work was opened.
+
+The online pioneer status now pairs each server-advertised supply total with
+its required minimum in a compact `F/T/M current/required` line, so a disabled
+Launch state remains explainable when deployment thresholds differ from the
+development defaults. The focused UI regression passes (1), client clippy,
+direct formatting, diff, and Rust file-size checks pass, and the publisher
+check completed Windows/WebGL builds, packaging, Preview deployment, and
+catalog sync. No full workspace gate was rerun because this is a bounded client
+presentation slice. No new external or deferred work was opened.
