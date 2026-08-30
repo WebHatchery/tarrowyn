@@ -1,8 +1,23 @@
 use super::*;
 use tarrowyn_protocol::{RouteStatus, TradeStatus};
 
+#[path = "ui_online/controls.rs"]
+mod controls;
 #[path = "ui_online/panels.rs"]
 mod panels;
+pub(super) use controls::{
+    cancel_market_control_enabled, claim_control_enabled, combat_control_enabled,
+    contract_control_enabled, event_control_enabled, expedition_control_enabled,
+    farming_control_enabled, frontier_combat_control_enabled, governance_control_enabled,
+    identity_control_enabled, knowledge_control_enabled, market_control_enabled, movement_enabled,
+    movement_tooltip, order_control_enabled, pioneer_status_line, recovery_control_enabled,
+    report_control_enabled, route_control_enabled, skill_control_enabled, trade_control_enabled,
+    travel_control_enabled, visible_companion_count, visible_player_count,
+};
+#[cfg(test)]
+pub(crate) use controls::{
+    movement_tooltip_for, walking_connection_enabled, walking_projection_enabled,
+};
 pub(super) use panels::{
     combat_side_control, draw_account, draw_button_row, draw_chronicle, draw_combat_status,
     draw_regional_inspection, draw_skill_selection, frontier_threat_is_reachable,
@@ -582,170 +597,4 @@ pub(super) fn draw_sidebar(
         top + 454.0,
         TextStyle::new(8.25, dark::TEXT_DIM).params(),
     );
-}
-
-fn travel_control_enabled(available: bool, knocked_out: bool, travel_pending: bool) -> bool {
-    available && !knocked_out && !travel_pending
-}
-
-fn recovery_control_enabled(knocked_out: bool, recovery_pending: bool) -> bool {
-    knocked_out && !recovery_pending
-}
-
-fn market_control_enabled(market_pending: bool) -> bool {
-    !market_pending
-}
-
-fn trade_control_enabled(available: bool, trade_pending: bool) -> bool {
-    available && !trade_pending
-}
-
-fn farming_control_enabled(available: bool, farming_pending: bool) -> bool {
-    available && !farming_pending
-}
-
-fn cancel_market_control_enabled(has_open_market_order: bool, market_pending: bool) -> bool {
-    has_open_market_order && !market_pending
-}
-
-fn event_control_enabled(event_pending: bool) -> bool {
-    !event_pending
-}
-
-fn identity_control_enabled(identity_pending: bool) -> bool {
-    !identity_pending
-}
-
-fn report_control_enabled(report_pending: bool) -> bool {
-    !report_pending
-}
-
-fn claim_control_enabled(claim_available: bool, claim_pending: bool) -> bool {
-    claim_available && !claim_pending
-}
-
-fn route_control_enabled(route_available: bool, route_pending: bool) -> bool {
-    route_available && !route_pending
-}
-
-fn governance_control_enabled(governance_pending: bool) -> bool {
-    !governance_pending
-}
-
-fn skill_control_enabled(available: bool, skill_pending: bool) -> bool {
-    available && !skill_pending
-}
-
-fn knowledge_control_enabled(knowledge_pending: bool) -> bool {
-    !knowledge_pending
-}
-
-fn order_control_enabled(available: bool, order_pending: bool) -> bool {
-    available && !order_pending
-}
-
-fn combat_control_enabled(available: bool, combat_pending: bool) -> bool {
-    available && !combat_pending
-}
-
-fn contract_control_enabled(available: bool, contract_pending: bool) -> bool {
-    available && !contract_pending
-}
-
-fn expedition_control_enabled(available: bool, expedition_pending: bool) -> bool {
-    available && !expedition_pending
-}
-
-fn frontier_combat_control_enabled(reachable: bool, combat_pending: bool) -> bool {
-    reachable && !combat_pending
-}
-
-pub(super) fn movement_enabled(ctx: &UiContext<'_>) -> bool {
-    !ctx.knocked_out
-        && walking_connection_enabled(ctx.connection, ctx.offline)
-        && walking_projection_enabled(ctx.player_position_authoritative, ctx.offline)
-        && !panels::regional_travel_blocks_movement(ctx.regional_region)
-}
-
-pub(super) fn movement_tooltip(ctx: &UiContext<'_>) -> &'static str {
-    movement_tooltip_for(
-        ctx.connection,
-        ctx.offline,
-        ctx.knocked_out,
-        ctx.player_position_authoritative,
-        panels::regional_travel_blocks_movement(ctx.regional_region),
-    )
-}
-
-fn walking_connection_enabled(connection: ConnectionState, offline_fixture: bool) -> bool {
-    offline_fixture || connection == ConnectionState::Online
-}
-
-fn walking_projection_enabled(player_position_authoritative: bool, offline_fixture: bool) -> bool {
-    offline_fixture || player_position_authoritative
-}
-
-fn movement_tooltip_for(
-    connection: ConnectionState,
-    offline_fixture: bool,
-    knocked_out: bool,
-    player_position_authoritative: bool,
-    regional_travel_blocked: bool,
-) -> &'static str {
-    if !offline_fixture && connection != ConnectionState::Online {
-        "The shared road is reconnecting; tap Reconnect when it is available."
-    } else if knocked_out {
-        "Choose a recovery prompt before walking."
-    } else if !offline_fixture && !player_position_authoritative {
-        "Your position is still loading; wait for the authoritative road snapshot."
-    } else if regional_travel_blocked {
-        "Your regional journey is underway; use the visible Travel or Recover control."
-    } else {
-        "Tap a walkable tile to take one step toward it."
-    }
-}
-
-fn visible_companion_count(
-    players: &[RemotePlayer],
-    own_account_id: Option<&str>,
-    server_tick: u64,
-) -> usize {
-    players
-        .iter()
-        .filter(|player| {
-            own_account_id != Some(player.account_id.as_str()) && !player.stale(server_tick)
-        })
-        .count()
-}
-
-pub(super) fn visible_player_count(players: &[RemotePlayer], server_tick: u64) -> usize {
-    players
-        .iter()
-        .filter(|player| !player.stale(server_tick))
-        .count()
-}
-
-fn pioneer_status_line(
-    expedition: &tarrowyn_protocol::Expedition,
-    requirements: tarrowyn_protocol::ExpeditionRequirements,
-) -> String {
-    let status = match expedition.status {
-        tarrowyn_protocol::ExpeditionStatus::Planning => "planning",
-        tarrowyn_protocol::ExpeditionStatus::Launched => "on the road",
-        tarrowyn_protocol::ExpeditionStatus::Succeeded => "founded",
-        tarrowyn_protocol::ExpeditionStatus::Retreated => "retreated",
-    };
-    format!(
-        "Pioneer {status} • {} companions • F{}/{} T{}/{} M{}/{} S{}/{} • {}",
-        expedition.members.len(),
-        expedition.food,
-        requirements.food,
-        expedition.tools,
-        requirements.tools,
-        expedition.materials,
-        requirements.materials,
-        expedition.safety,
-        requirements.safety,
-        expedition.outpost_name,
-    )
 }

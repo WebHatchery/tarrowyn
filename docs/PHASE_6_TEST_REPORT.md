@@ -3089,3 +3089,12 @@ client-package formatting and strict clippy. `git diff --check` and the Rust
 file-size scan pass. No publisher or full workspace gate was repeated because
 this was test-only organization maintenance, and no new external or deferred
 work was opened.
+
+The online sidebar's control-state, movement-recovery, population, and pioneer
+status helpers now live in `ui_online/controls.rs`, reducing the primary online
+UI module from 751 to 600 lines without changing its parent exports or touch
+behavior. The focused movement-recovery tooltip regression passes, along with
+client-package formatting and strict clippy. `git diff --check` and the Rust
+file-size scan pass. No publisher or full workspace gate was repeated because
+this was behavior-preserving ownership maintenance, and no new external or
+deferred work was opened.
