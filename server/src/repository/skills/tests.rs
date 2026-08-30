@@ -460,3 +460,55 @@ fn a_discovered_advanced_skill_can_be_taught_without_granting_mastery() {
         .expect("storm magic should remain in the catalogue");
     assert!(ready_storm.usable);
 }
+
+#[test]
+fn a_discovered_advanced_skill_without_its_requirements_cannot_be_taught() {
+    let repository = WorldRepository::new(ServerConfig {
+        backup_path: None,
+        ..ServerConfig::default()
+    });
+    let teacher = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("unready-advanced-school-teacher".to_owned()),
+            reset: false,
+        })
+        .expect("guest session");
+    let learner = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("unready-advanced-school-learner".to_owned()),
+            reset: false,
+        })
+        .expect("guest session");
+    {
+        let mut state = repository.state.lock().expect("state lock");
+        state
+            .identities
+            .get_mut(&teacher.data.client_key)
+            .expect("teacher identity exists")
+            .skills
+            .known
+            .push("storm-magic".to_owned());
+        for _ in 0..4 {
+            record_practice(&mut state, &teacher.data.client_key, "teaching");
+        }
+    }
+
+    let response = repository
+        .begin_skill_lesson(
+            &teacher.data.account_token,
+            SkillRequest {
+                request_id: "unready-advanced-school-lesson".to_owned(),
+                action: SkillAction::BeginLesson,
+                lesson_id: None,
+                skill_id: Some("storm-magic".to_owned()),
+                target_account_id: Some(learner.data.account_id.clone()),
+            },
+        )
+        .unwrap()
+        .data;
+    assert!(!response.accepted);
+    assert_eq!(
+        response.reason.as_deref(),
+        Some("Master the discipline before offering it as a lesson.")
+    );
+}

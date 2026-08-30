@@ -27,3 +27,20 @@ fn root_practice_requests_keep_the_entry_skill_explicit() {
     assert!(encoded.contains("\"action\":\"practice\""));
     assert!(encoded.contains("\"skill_id\":\"fishing\""));
 }
+
+#[test]
+fn older_skill_views_default_new_usability_to_false() {
+    let value = serde_json::json!({
+        "skill_id": "storm-magic",
+        "name": "Storm Magic",
+        "family": "magic",
+        "depth": 2,
+        "mastery": 0,
+        "status": "discovered",
+        "description": "A deliberate storm working.",
+        "entry_hint": "The three currents answer one another."
+    });
+
+    let skill: SkillView = serde_json::from_value(value).expect("older skill view should decode");
+    assert!(!skill.usable);
+}
