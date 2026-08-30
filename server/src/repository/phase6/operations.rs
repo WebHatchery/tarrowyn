@@ -119,7 +119,8 @@ impl WorldRepository {
     }
 
     pub fn ops_health(&self) -> ApiResponse<OpsHealthResponse> {
-        let state = self.state.lock().expect("world repository lock poisoned");
+        let mut state = self.state.lock().expect("world repository lock poisoned");
+        expire_sessions(&mut state, &self.config);
         let persistence_failed = *self
             .persistence_failed
             .lock()

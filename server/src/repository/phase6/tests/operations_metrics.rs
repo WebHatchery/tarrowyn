@@ -1,5 +1,5 @@
 use super::super::super::{ServerConfig, WorldRepository};
-use tarrowyn_protocol::{GuestSessionRequest, MovementIntent};
+use tarrowyn_protocol::{AuthLinkRequest, GuestSessionRequest, MovementIntent};
 
 #[test]
 fn operational_metrics_require_a_configured_support_operator() {
@@ -105,4 +105,45 @@ fn operational_metrics_exclude_sessions_expired_since_the_last_world_tick() {
     assert_eq!(metrics.connected_sessions, 1);
     let state = repository.state.lock().expect("repository lock");
     assert!(!state.sessions.contains_key(&player.account_token));
+}
+
+#[test]
+fn operational_health_cleans_expired_sessions_before_checking_readiness() {
+    let config = ServerConfig {
+        production_session_ttl_seconds: 1,
+        support_operator_accounts: vec!["dev-account-1".to_owned()],
+        ..ServerConfig::default()
+    };
+    let repository = WorldRepository::new(config);
+    let guest = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("health-expired-session".to_owned()),
+            reset: false,
+        })
+        .expect("guest session")
+        .data;
+    let linked = repository
+        .auth_link(
+            &guest.account_token,
+            AuthLinkRequest {
+                request_id: "health-expired-link".to_owned(),
+                provider: "webhatchery-identity-oidc".to_owned(),
+                subject: "health-expired-subject".to_owned(),
+                display_name: None,
+            },
+        )
+        .expect("linked session")
+        .data;
+
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state.tick = linked.session.expires_at_tick;
+        assert!(state.sessions.contains_key(&linked.session.account_token));
+    }
+
+    let health = repository.ops_health().data;
+    assert!(health.ready);
+    assert!(health.integrity_ok);
+    let state = repository.state.lock().expect("repository lock");
+    assert!(!state.sessions.contains_key(&linked.session.account_token));
 }

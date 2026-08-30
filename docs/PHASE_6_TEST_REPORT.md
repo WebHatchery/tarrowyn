@@ -2485,3 +2485,12 @@ passes; client-package formatting and clippy, `git diff --check`, and the Rust
 file-size scan pass. No full workspace gate was repeated because this was a
 bounded authenticated-session presentation correction, and no new external or
 deferred work was opened.
+
+Operational health now expires stale sessions before evaluating production
+integrity, so a credential that crossed its access deadline between world
+ticks does not falsely mark public readiness as degraded. The focused
+`repository::phase6::tests::operations_metrics::operational_health_cleans_expired_sessions_before_checking_readiness`
+test passes; server-package formatting and clippy, `git diff --check`, and the
+Rust file-size scan pass. No full workspace gate was repeated because this was
+a bounded operator-readiness session correction, and no new external or
+deferred work was opened.
