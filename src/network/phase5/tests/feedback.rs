@@ -109,6 +109,19 @@ fn moderation_success_message_keeps_the_report_reference() {
 }
 
 #[test]
+fn regional_rejection_without_a_reason_still_leaves_a_visible_notice() {
+    let mut notices = Vec::new();
+
+    super::super::phase5_notice(false, None, "unused success", &mut notices);
+
+    assert!(matches!(
+        notices.first(),
+        Some(NetworkNotice::Warning(message))
+            if message == "The regional action was not accepted."
+    ));
+}
+
+#[test]
 fn travel_success_message_explains_progress_and_risk() {
     let travel = tarrowyn_protocol::TravelState {
         travel_id: "travel-1".to_owned(),

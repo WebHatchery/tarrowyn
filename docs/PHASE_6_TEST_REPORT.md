@@ -1920,3 +1920,11 @@ file-size check pass, and `publish.ps1` passes Windows/WebGL builds, packaging,
 Preview deployment, and catalog sync. No full workspace gate was repeated
 because this was a bounded client readiness correction, and no new external
 or deferred work was opened.
+
+Regional command rejection handling now leaves a visible fallback warning when
+the server omits its optional reason, covering travel, routes, market, events,
+and moderation commands. The focused client regression, client clippy, and
+Rust file-size check pass, and `publish.ps1` passes Windows/WebGL builds,
+packaging, Preview deployment, and catalog sync. No full workspace gate was
+repeated because this was a bounded Phase 5 feedback correction, and no new
+external or deferred work was opened.
