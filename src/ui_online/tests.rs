@@ -53,6 +53,37 @@ fn combat_side_control_exposes_retreat_or_contract_by_state() {
 }
 
 #[test]
+fn frontier_retreat_requires_an_active_threat_within_reach() {
+    let mut zone = tarrowyn_protocol::WildernessZone {
+        zone_id: "whisperwood-edge".to_owned(),
+        name: "Whisperwood Edge".to_owned(),
+        monster: tarrowyn_protocol::MonsterKind::Brambleback,
+        monster_health: 3,
+        threat_active: true,
+        road_open: false,
+        position: tarrowyn_protocol::Position { x: 12, y: 4 },
+        price_modifier_percent: 20,
+        resource_demand: "iron".to_owned(),
+        rumour: "The road is costly.".to_owned(),
+    };
+
+    assert!(super::panels::frontier_threat_is_reachable(
+        TilePos::new(10, 4),
+        Some(&zone)
+    ));
+    assert!(!super::panels::frontier_threat_is_reachable(
+        TilePos::new(9, 4),
+        Some(&zone)
+    ));
+
+    zone.threat_active = false;
+    assert!(!super::panels::frontier_threat_is_reachable(
+        TilePos::new(10, 4),
+        Some(&zone)
+    ));
+}
+
+#[test]
 fn skill_selection_keeps_roots_open_and_advanced_arts_hidden() {
     let available = tarrowyn_protocol::SkillView {
         skill_id: "fishing".to_owned(),

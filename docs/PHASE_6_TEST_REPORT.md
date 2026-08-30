@@ -2044,3 +2044,12 @@ clippy and the Rust file-size check pass, and `publish.ps1` passes
 Windows/WebGL builds, packaging, Preview deployment, and catalog sync. No full
 workspace gate was repeated because this was a bounded recovery control-cache
 correction, and no new external or deferred work was opened.
+
+The online sidebar now offers frontier Retreat only when the active threat is
+within the server's two-tile reach, so a recovered traveller at the Hearth no
+longer receives an immediately invalid retreat control. The focused client UI
+reachability regression passes for near, far, and quiet-threat states, client
+clippy and the Rust file-size check pass, and `publish.ps1` passes Windows/WebGL
+builds, packaging, Preview deployment, and catalog sync. No full workspace gate
+was repeated because this was a bounded touch-control correction, and no new
+external or deferred work was opened.

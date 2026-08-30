@@ -256,6 +256,17 @@ pub fn combat_side_control(
     }
 }
 
+pub fn frontier_threat_is_reachable(
+    player_position: TilePos,
+    wilderness: Option<&tarrowyn_protocol::WildernessZone>,
+) -> bool {
+    wilderness.is_some_and(|zone| {
+        zone.threat_active
+            && player_position.manhattan_distance(&TilePos::new(zone.position.x, zone.position.y))
+                <= 2
+    })
+}
+
 pub fn draw_regional_inspection(ctx: &UiContext<'_>, mouse: Vec2, actions: &mut Vec<UiAction>) {
     let Some(details) = ctx.regional_inspection else {
         return;

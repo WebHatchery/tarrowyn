@@ -5,7 +5,7 @@ use tarrowyn_protocol::{RouteStatus, TradeStatus};
 mod panels;
 pub(super) use panels::{
     combat_side_control, draw_account, draw_button_row, draw_chronicle, draw_combat_status,
-    draw_regional_inspection, draw_skill_selection,
+    draw_regional_inspection, draw_skill_selection, frontier_threat_is_reachable,
 };
 
 #[cfg(test)]
@@ -73,7 +73,7 @@ pub(super) fn draw_sidebar(
     });
     let (combat_side_id, combat_side_label) = combat_side_control(
         ctx.combat,
-        ctx.wilderness.is_some_and(|zone| zone.threat_active),
+        frontier_threat_is_reachable(ctx.player_position, ctx.wilderness),
     );
 
     draw_button_row(
