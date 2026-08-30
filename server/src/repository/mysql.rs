@@ -32,6 +32,16 @@ impl MysqlStore {
                 "DB_DATABASE must be non-empty when DB_DRIVER=mysql",
             ));
         }
+        if config.db_username.trim().is_empty() {
+            return Err(PersistenceBackendError::new(
+                "DB_USERNAME must be non-empty when DB_DRIVER=mysql",
+            ));
+        }
+        if config.db_password.is_empty() {
+            return Err(PersistenceBackendError::new(
+                "DB_PASSWORD must be non-empty when DB_DRIVER=mysql",
+            ));
+        }
         let options = OptsBuilder::new()
             .ip_or_hostname(Some(config.db_host.as_str()))
             .tcp_port(config.db_port)

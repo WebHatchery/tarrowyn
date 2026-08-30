@@ -1483,3 +1483,12 @@ file-size checks clean. `publish.ps1` again passed the Windows and WebGL
 release builds, packaging, Preview deployment, and catalog synchronization. No
 full workspace gate was repeated because this was an isolated refresh-recovery
 guard.
+
+MySQL startup now fails fast when the canonical `DB_USERNAME` or `DB_PASSWORD`
+configuration is empty, before attempting pool creation or migrations. The
+focused `mysql_backend_requires_` filter passes (3 matching tests), with
+server-package clippy, formatting, diff, and Rust file-size checks clean.
+`publish.ps1` passed the Windows and WebGL release builds, packaging, Preview
+deployment, and catalog synchronization. No full workspace gate was repeated
+because this was an isolated MySQL configuration-boundary check; the existing
+preview database was not changed.
