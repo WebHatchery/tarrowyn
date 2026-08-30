@@ -2090,3 +2090,11 @@ file-size check pass, and `publish.ps1` passes Windows/WebGL builds, packaging,
 Preview deployment, and catalog sync. No full workspace gate was repeated
 because this was a bounded regional movement presence correction, and no new
 external or deferred work was opened.
+
+The regional event stream now carries the traveller's move for automatic
+arrival and support-cleared travel, using the active-session state instead of
+assuming every repaired identity is online. Focused Phase 5 and Phase 6 server
+regressions pass, server clippy and the Rust file-size check pass, and
+`publish.ps1` passes Windows/WebGL builds, packaging, Preview deployment, and
+catalog sync. No full workspace gate was repeated because this was a bounded
+regional presence correction, and no new external or deferred work was opened.
