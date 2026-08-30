@@ -1412,3 +1412,12 @@ secure random source. This documentation-only consistency fix required no
 additional runtime tests; the already-passing full milestone gate remains the
 authoritative validation for the implementation. No new external or deferred
 work was opened.
+
+Scheduled backup metadata is now included in the snapshot being written, while
+failed encoding, directory creation, or replacement restores the previous
+metadata instead of reporting an uncommitted backup. The focused backup tests
+pass (3 matching tests, including the existing public-health path regression),
+with server-package clippy, formatting, diff, and Rust file-size checks clean.
+No full workspace or publisher gate was repeated because this is an isolated
+backup metadata correctness change; no new external or deferred work was
+opened.

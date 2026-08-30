@@ -53,6 +53,8 @@ fn backup_replaces_the_snapshot_as_one_complete_json_file() {
     let bytes = fs::read(&path).expect("backup should be written");
     let stored: StoredState = serde_json::from_slice(&bytes).expect("backup should be complete");
     assert_eq!(stored.storage_version, super::super::STORAGE_VERSION);
+    assert_eq!(stored.phase6.last_backup_tick, Some(7));
+    assert_eq!(stored.phase6.last_backup_path.as_deref(), path.to_str());
     assert_eq!(state.phase6.last_backup_tick, Some(7));
     assert_eq!(state.phase6.last_backup_path.as_deref(), path.to_str());
     let _ = fs::remove_dir_all(root);
@@ -87,6 +89,7 @@ fn failed_scheduled_backup_degrades_readiness_until_recovery() {
         .backup_error
         .as_deref()
         .is_some_and(|message| message.contains("scheduled backup failed")));
+    assert!(health.last_backup_tick.is_none());
     let metrics = repository
         .ops_metrics(&operator.account_token)
         .unwrap()

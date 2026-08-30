@@ -18,13 +18,21 @@ pub(super) fn write(state: &mut RepositoryState, config: &ServerConfig) -> bool 
     } else {
         format!("{path}.backup")
     };
+    let previous_backup_tick = state.phase6.last_backup_tick;
+    let previous_backup_path = state.phase6.last_backup_path.clone();
+    state.phase6.last_backup_tick = Some(state.tick);
+    state.phase6.last_backup_path = Some(backup_path.clone());
     let Ok(data) = serde_json::to_vec_pretty(&state.to_stored()) else {
+        state.phase6.last_backup_tick = previous_backup_tick;
+        state.phase6.last_backup_path = previous_backup_path;
         eprintln!("Tarrowyn backup write failed: the snapshot could not be encoded");
         return false;
     };
     let path = Path::new(&backup_path);
     if let Some(parent) = path.parent() {
         if fs::create_dir_all(parent).is_err() {
+            state.phase6.last_backup_tick = previous_backup_tick;
+            state.phase6.last_backup_path = previous_backup_path;
             eprintln!("Tarrowyn backup write failed: could not create the backup directory");
             return false;
         }
@@ -38,10 +46,10 @@ pub(super) fn write(state: &mut RepositoryState, config: &ServerConfig) -> bool 
     ));
     if write_and_sync(&temporary_path, &data).is_ok() && replace_file(&temporary_path, path).is_ok()
     {
-        state.phase6.last_backup_tick = Some(state.tick);
-        state.phase6.last_backup_path = Some(backup_path);
         true
     } else {
+        state.phase6.last_backup_tick = previous_backup_tick;
+        state.phase6.last_backup_path = previous_backup_path;
         let _ = fs::remove_file(temporary_path);
         eprintln!("Tarrowyn backup write failed: could not replace the backup snapshot");
         false
