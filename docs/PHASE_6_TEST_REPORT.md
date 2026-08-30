@@ -1623,3 +1623,13 @@ the initial Weapon Fighting and Storm Magic discovery IDs, while still allowing
 future skills to be added. The focused `validate_content.ps1` run passes with
 the complete current catalogue; no Rust or workspace-wide gate was repeated
 because this was a stable-content-ID check.
+
+The online footer now surfaces the first pending direct trade's direction,
+neighbour, and exact offered/requested goods alongside the wallet, inventory,
+and presence ledger; terminal trade history remains out of the attention line.
+The two focused footer regressions pass, client clippy and the Rust file-size
+check pass, and the captured 1280x720 layout remains readable with no pending
+trade. `publish.ps1` passes Windows/WebGL builds, packaging, Preview deployment,
+and catalog sync. No full workspace gate was repeated because this was a
+bounded trade-inspection presentation slice, and no new external or deferred
+work was opened.

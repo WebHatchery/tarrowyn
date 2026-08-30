@@ -453,25 +453,88 @@ fn draw_footer(ctx: &UiContext<'_>) {
             ctx.save_slots.len()
         )
     } else {
-        online_footer_detail(ctx.stats, ctx.remote_players.len())
+        online_footer_detail(
+            ctx.stats,
+            ctx.remote_players.len(),
+            pending_trade_detail(ctx.trades, ctx.own_account_id).as_deref(),
+        )
     };
-    draw_text_block(
+    let has_trade_detail = !footer_detail.lines().nth(2).unwrap_or_default().is_empty();
+    draw_text_block_ex(
         &footer_detail,
         rect.x + 600.0,
         rect.y + 38.0,
         rect.w - 616.0,
-        30.0,
-        13.0,
-        2.0,
-        dark::TEXT_DIM,
+        if has_trade_detail { 40.0 } else { 30.0 },
+        TextStyle::new(if has_trade_detail { 10.5 } else { 13.0 }, dark::TEXT_DIM)
+            .with_line_gap(1.0),
+        8.0,
     );
 }
 
-fn online_footer_detail(stats: &str, visible_players: usize) -> String {
+fn online_footer_detail(stats: &str, visible_players: usize, trade: Option<&str>) -> String {
     let mut lines = stats.lines();
     let overview = lines.next().unwrap_or("Player ledger loading");
     let inventory = lines.nth(2).unwrap_or("Inventory loading");
-    format!("{overview} • {visible_players} players\n{inventory}")
+    let mut detail = format!("{overview} • {visible_players} players\n{inventory}");
+    if let Some(trade) = trade {
+        detail.push('\n');
+        detail.push_str(trade);
+    }
+    detail
+}
+
+fn pending_trade_detail(
+    trades: &[tarrowyn_protocol::TradeOffer],
+    own_account_id: Option<&str>,
+) -> Option<String> {
+    let own_account_id = own_account_id?;
+    let trade = trades.iter().find(|trade| {
+        trade.status == tarrowyn_protocol::TradeStatus::Pending
+            && (trade.creator_account_id == own_account_id
+                || trade.recipient_account_id == own_account_id)
+    })?;
+    let (direction, other_name, offered, requested) =
+        if trade.recipient_account_id == own_account_id {
+            (
+                "from",
+                trade.creator_name.as_str(),
+                trade.offer,
+                trade.request,
+            )
+        } else {
+            (
+                "to",
+                trade.recipient_name.as_str(),
+                trade.offer,
+                trade.request,
+            )
+        };
+    Some(format!(
+        "Trade {direction} {other_name}: {} for {}",
+        trade_bundle_detail(offered),
+        trade_bundle_detail(requested)
+    ))
+}
+
+fn trade_bundle_detail(bundle: tarrowyn_protocol::TradeBundle) -> String {
+    let mut goods = Vec::new();
+    for (amount, name) in [
+        (bundle.wheat, "wheat"),
+        (bundle.turnips, "turnips"),
+        (bundle.moonberries, "moonberries"),
+        (bundle.seeds, "seeds"),
+        (bundle.gold, "gold"),
+    ] {
+        if amount > 0 {
+            goods.push(format!("{amount} {name}"));
+        }
+    }
+    if goods.is_empty() {
+        "nothing".to_owned()
+    } else {
+        goods.join(", ")
+    }
 }
 
 fn format_clock(minutes: u32) -> String {
