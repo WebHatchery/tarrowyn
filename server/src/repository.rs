@@ -138,6 +138,7 @@ impl WorldRepository {
         request: GuestSessionRequest,
     ) -> Result<ApiResponse<GuestSessionResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
+        self.expire_and_persist_sessions(&mut state);
         if request.client_key.as_deref().is_some_and(|key| {
             let trimmed = key.trim();
             !trimmed.is_empty()

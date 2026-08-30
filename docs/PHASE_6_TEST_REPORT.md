@@ -2629,3 +2629,14 @@ file-size scan pass. The project `publish.ps1` Windows/WebGL build, packaging,
 Preview deployment, and catalog-sync checks pass. No full workspace gate was
 repeated because this was a bounded refresh-expiry persistence correction, and
 no new external or deferred work was opened.
+
+Guest-session resume now runs the shared expiry sweep before issuing a new
+session, so reconnecting with an expired client key records the prior
+character's durable offline-presence event instead of silently replacing its
+token. The focused binary test
+`repository::session::tests::guest_resume_records_departure_before_issuing_a_new_session`
+passes; server-package formatting and clippy, `git diff --check`, and the Rust
+file-size scan pass. The project `publish.ps1` Windows/WebGL build, packaging,
+Preview deployment, and catalog-sync checks pass. No full workspace gate was
+repeated because this was a bounded guest-session expiry correction, and no
+new external or deferred work was opened.

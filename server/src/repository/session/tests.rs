@@ -52,6 +52,45 @@ fn guest_session_expires_at_the_configured_tick_boundary() {
 }
 
 #[test]
+fn guest_resume_records_departure_before_issuing_a_new_session() {
+    let repository = WorldRepository::new(ServerConfig {
+        backup_path: None,
+        session_ttl_seconds: 1,
+        ..ServerConfig::default()
+    });
+    let first = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("expired-guest-resume".to_owned()),
+            reset: false,
+        })
+        .expect("first guest session")
+        .data;
+
+    {
+        let mut state = repository.state.lock().expect("state lock");
+        state.tick = repository.config.session_ttl_ticks();
+    }
+
+    let resumed = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some(first.client_key.clone()),
+            reset: false,
+        })
+        .expect("guest resume")
+        .data;
+    assert_eq!(resumed.account_id, first.account_id);
+    assert_ne!(resumed.account_token, first.account_token);
+
+    let state = repository.state.lock().expect("state lock");
+    assert!(!state.sessions.contains_key(&first.account_token));
+    assert!(state.events.iter().any(|record| matches!(
+        &record.event,
+        WorldEvent::Presence(presence)
+            if !presence.online && presence.account_id == first.account_id
+    )));
+}
+
+#[test]
 fn expired_account_read_persists_presence_before_rejecting_access() {
     let path = std::env::temp_dir().join(format!(
         "tarrowyn-session-expiry-read-{}.json",
