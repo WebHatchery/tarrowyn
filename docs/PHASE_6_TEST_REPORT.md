@@ -750,6 +750,16 @@ one-day behaviour. The focused multi-day and existing animal-care regressions,
 server clippy, size, diff, and publisher checks pass. No new external or
 deferred work was opened.
 
+Accepted Town Hall responses now explain the requested public action using the
+in-flight request and returned governance state: office ownership, the current
+tax rate and treasury, posted proposals, approvals with the visible completion
+path, and completed action target plus cost. The focused Phase 4 feedback suite
+passes three regressions, client clippy and the Rust file-size check pass, and
+`publish.ps1` passes Windows/WebGL builds, packaging, Preview deployment, and
+catalog sync. No full workspace gate was repeated because this was a bounded
+client Town Hall-feedback slice, and no new external or deferred work was
+opened.
+
 Full account-deletion queues now count a blocked request in the operational
 rejection metrics and persist that updated counter. The focused deletion-queue
 regression covers the full-queue response and rejection count; server clippy,

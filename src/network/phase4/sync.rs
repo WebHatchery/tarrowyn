@@ -131,6 +131,7 @@ impl Phase4Client {
                         response.data,
                         response.meta.cursor,
                         projection_current,
+                        in_flight_command.as_ref(),
                         notices,
                     );
                 }

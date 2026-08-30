@@ -79,7 +79,7 @@ fn older_same_cursor_phase_four_command_cannot_replace_newer_ledger() {
     let mut notices = Vec::new();
     let projection_current = projection.accept_response_version(7, Some(12));
 
-    client.apply_command(response, Some(12), projection_current, &mut notices);
+    client.apply_command(response, Some(12), projection_current, None, &mut notices);
 
     assert_eq!(client.claims, Some(current));
     assert_eq!(notices.len(), 1);

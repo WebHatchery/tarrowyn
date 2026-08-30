@@ -508,21 +508,22 @@ impl Phase4Client {
         response: Phase4CommandResponse,
         response_cursor: Option<u64>,
         projection_current: bool,
+        command: Option<&Phase4Command>,
         notices: &mut Vec<NetworkNotice>,
     ) {
         let current = projection_current
             && accept_projection_cursor(&mut self.projection_cursor, response_cursor);
         match response {
             Phase4CommandResponse::Governance(response) => {
+                let request = command.and_then(|command| match command {
+                    Phase4Command::Governance(request) => Some(request),
+                    _ => None,
+                });
+                let message = governance_success_message(&response, request);
                 if current {
                     self.governance = Some(response.governance);
                 }
-                phase4_notice(
-                    response.accepted,
-                    response.reason,
-                    "The town-hall ledger recorded the public action.",
-                    notices,
-                );
+                phase4_notice(response.accepted, response.reason, &message, notices);
             }
             Phase4CommandResponse::Claim(response) => {
                 let message = claim_success_message(response.claim.as_ref());
@@ -644,6 +645,99 @@ fn profession_success_message(order: Option<&ServiceOrder>) -> String {
         ServiceOrderStatus::Cancelled => {
             format!("Service order cancelled: {}.", order.service)
         }
+    }
+}
+
+fn governance_success_message(
+    response: &GovernanceResponse,
+    request: Option<&GovernanceRequest>,
+) -> String {
+    let Some(request) = request else {
+        return "The town-hall ledger recorded the public action.".to_owned();
+    };
+    match request.action {
+        GovernanceAction::ClaimOffice => {
+            let office = request.office_id.as_deref().and_then(|office_id| {
+                response
+                    .governance
+                    .offices
+                    .iter()
+                    .find(|office| office.office_id == office_id)
+            });
+            office
+                .map(|office| {
+                    format!(
+                        "Town hall recorded the {} office; {} now holds it.",
+                        office.title,
+                        office.holder_name.as_deref().unwrap_or("a named resident")
+                    )
+                })
+                .unwrap_or_else(|| "The town-hall ledger recorded the public action.".to_owned())
+        }
+        GovernanceAction::SetTaxRate => {
+            let rate = response
+                .governance
+                .taxation
+                .as_ref()
+                .map(|policy| policy.rate_percent)
+                .unwrap_or(0);
+            format!(
+                "Public settlement tax is now {rate}%; the public treasury holds {} gold.",
+                response.governance.public_treasury
+            )
+        }
+        GovernanceAction::Propose => response
+            .governance
+            .proposals
+            .last()
+            .map(|proposal| {
+                format!(
+                    "Public proposal posted: {} for {}; {} public gold awaits Town hall approval.",
+                    proposal.action.label(),
+                    proposal.target,
+                    proposal.cost
+                )
+            })
+            .unwrap_or_else(|| "The town-hall ledger recorded the public action.".to_owned()),
+        GovernanceAction::Approve => request
+            .proposal_id
+            .as_deref()
+            .and_then(|proposal_id| {
+                response
+                    .governance
+                    .proposals
+                    .iter()
+                    .find(|proposal| proposal.proposal_id == proposal_id)
+            })
+            .filter(|proposal| proposal.status == tarrowyn_protocol::ProposalStatus::Approved)
+            .map(|proposal| {
+                format!(
+                    "Public proposal approved: {}; use the Town hall control to complete it.",
+                    proposal.target
+                )
+            })
+            .unwrap_or_else(|| "The town-hall ledger recorded the public action.".to_owned()),
+        GovernanceAction::Complete => request
+            .proposal_id
+            .as_deref()
+            .and_then(|proposal_id| {
+                response
+                    .governance
+                    .proposals
+                    .iter()
+                    .find(|proposal| proposal.proposal_id == proposal_id)
+            })
+            .filter(|proposal| proposal.status == tarrowyn_protocol::ProposalStatus::Completed)
+            .map(|proposal| {
+                format!(
+                    "Public action completed: {} for {}; {} public gold spent.",
+                    proposal.action.label(),
+                    proposal.target,
+                    proposal.cost
+                )
+            })
+            .unwrap_or_else(|| "The town-hall ledger recorded the public action.".to_owned()),
+        GovernanceAction::Inspect => "The town-hall ledger recorded the public action.".to_owned(),
     }
 }
 
