@@ -1303,10 +1303,11 @@ intentionally wrong ambient MySQL driver; no new external or deferred work was
 opened.
 
 The Phase 1, Phase 2, Phase 3, and Phase 4 JSON acceptance harnesses now force
-`DB_DRIVER=json` for their temporary workers and restore the caller's value on
-exit. Each affected script passes under an intentionally wrong ambient MySQL
-driver, preventing a shell-level database setting from redirecting historical
-acceptance fixtures. No new external or deferred work was opened.
+`DB_DRIVER=json` for their temporary workers, isolate their state files, and
+restore every process environment value they override on exit. Each affected
+script passes under intentionally wrong ambient MySQL and timing settings,
+preventing shell-level configuration from redirecting or contaminating
+historical acceptance fixtures. No new external or deferred work was opened.
 
 The Phase 3 cursor acceptance now tolerates legitimate clock events arriving
 between the cursor read and its follow-up request, while still rejecting any

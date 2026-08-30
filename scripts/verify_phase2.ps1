@@ -3,7 +3,18 @@ $ErrorActionPreference = "Stop"
 $gameDir = Split-Path $PSScriptRoot -Parent
 $statePath = Join-Path ([System.IO.Path]::GetTempPath()) "tarrowyn-phase2-$PID.json"
 $server = $null
-$oldDbDriver = $env:DB_DRIVER
+$environmentNames = @(
+    "DB_DRIVER",
+    "TARROWYN_STATE_PATH",
+    "TARROWYN_MOVEMENT_COOLDOWN_TICKS",
+    "TARROWYN_TICK_MS",
+    "TARROWYN_WORLD_SECONDS_PER_TICK",
+    "TARROWYN_CROP_STAGE_SECONDS"
+)
+$previousEnvironment = @{}
+foreach ($name in $environmentNames) {
+    $previousEnvironment[$name] = [Environment]::GetEnvironmentVariable($name, "Process")
+}
 
 function Assert-True([bool]$condition, [string]$message) {
     if (-not $condition) {
@@ -129,11 +140,13 @@ try {
     Write-Host "Phase 2 acceptance passed: persistent farming, idempotent exchange, tavern feed, and restart recovery." -ForegroundColor Green
 } finally {
     if ($null -ne $server -and -not $server.HasExited) { Stop-Phase2Server $server }
-    if ($null -eq $oldDbDriver) { Remove-Item Env:DB_DRIVER -ErrorAction SilentlyContinue } else { $env:DB_DRIVER = $oldDbDriver }
-    Remove-Item Env:TARROWYN_STATE_PATH -ErrorAction SilentlyContinue
-    Remove-Item Env:TARROWYN_MOVEMENT_COOLDOWN_TICKS -ErrorAction SilentlyContinue
-    Remove-Item Env:TARROWYN_TICK_MS -ErrorAction SilentlyContinue
-    Remove-Item Env:TARROWYN_WORLD_SECONDS_PER_TICK -ErrorAction SilentlyContinue
-    Remove-Item Env:TARROWYN_CROP_STAGE_SECONDS -ErrorAction SilentlyContinue
+    foreach ($name in $environmentNames) {
+        $value = $previousEnvironment[$name]
+        if ($null -eq $value) {
+            Remove-Item "Env:$name" -ErrorAction SilentlyContinue
+        } else {
+            Set-Item -Path "Env:$name" -Value $value
+        }
+    }
     Remove-Item -LiteralPath $statePath -Force -ErrorAction SilentlyContinue
 }

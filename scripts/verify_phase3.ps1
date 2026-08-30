@@ -3,7 +3,18 @@ $ErrorActionPreference = "Stop"
 $gameDir = Split-Path $PSScriptRoot -Parent
 $statePath = Join-Path ([System.IO.Path]::GetTempPath()) "tarrowyn-phase3-$PID.json"
 $server = $null
-$oldDbDriver = $env:DB_DRIVER
+$environmentNames = @(
+    "DB_DRIVER",
+    "TARROWYN_STATE_PATH",
+    "TARROWYN_MOVEMENT_COOLDOWN_TICKS",
+    "TARROWYN_TICK_MS",
+    "TARROWYN_CLAIM_RECLAIM_TICKS",
+    "TARROWYN_SESSION_TTL_SECONDS"
+)
+$previousEnvironment = @{}
+foreach ($name in $environmentNames) {
+    $previousEnvironment[$name] = [Environment]::GetEnvironmentVariable($name, "Process")
+}
 
 function Assert-True([bool]$condition, [string]$message) {
     if (-not $condition) { throw "Phase 3 acceptance failed: $message" }
@@ -205,11 +216,13 @@ try {
     Write-Host "Phase 3 acceptance passed: threat ripple, contract, knockout recovery, household signal, chronicle, renewable claim, expedition outpost, cursor catch-up, restartable state, and concurrent 20-client polling." -ForegroundColor Green
 } finally {
     if ($null -ne $server -and -not $server.HasExited) { Stop-Phase3Server $server }
-    if ($null -eq $oldDbDriver) { Remove-Item Env:DB_DRIVER -ErrorAction SilentlyContinue } else { $env:DB_DRIVER = $oldDbDriver }
-    Remove-Item Env:TARROWYN_STATE_PATH -ErrorAction SilentlyContinue
-    Remove-Item Env:TARROWYN_MOVEMENT_COOLDOWN_TICKS -ErrorAction SilentlyContinue
-    Remove-Item Env:TARROWYN_TICK_MS -ErrorAction SilentlyContinue
-    Remove-Item Env:TARROWYN_CLAIM_RECLAIM_TICKS -ErrorAction SilentlyContinue
-    Remove-Item Env:TARROWYN_SESSION_TTL_SECONDS -ErrorAction SilentlyContinue
+    foreach ($name in $environmentNames) {
+        $value = $previousEnvironment[$name]
+        if ($null -eq $value) {
+            Remove-Item "Env:$name" -ErrorAction SilentlyContinue
+        } else {
+            Set-Item -Path "Env:$name" -Value $value
+        }
+    }
     Remove-Item -LiteralPath $statePath -Force -ErrorAction SilentlyContinue
 }
