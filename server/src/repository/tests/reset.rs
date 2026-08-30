@@ -141,7 +141,7 @@ fn guest_reset_replaces_private_state_and_releases_world_ownership() {
         .data;
     assert!(market.accepted);
 
-    repository
+    let revoke = repository
         .auth_revoke(
             &first.account_token,
             AuthRevokeRequest {
@@ -150,6 +150,8 @@ fn guest_reset_replaces_private_state_and_releases_world_ownership() {
             },
         )
         .unwrap();
+    assert_eq!(revoke.data.revoked_sessions, 1);
+    assert!(repository.world(&first.account_token).is_err());
 
     let second = repository
         .guest_session(GuestSessionRequest {

@@ -4,7 +4,7 @@ use super::models::{RepositoryState, MAX_REPLAY_CACHE};
 use super::*;
 use crate::config::ServerConfig;
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, VecDeque};
+use std::collections::{HashMap, HashSet, VecDeque};
 use tarrowyn_protocol::{
     AccountDeletionRequest, AccountDeletionResponse, AccountResponse, ApiResponse, AuditRecord,
     AuthLinkRequest, AuthLinkResponse, AuthRefreshRequest, AuthRefreshResponse, AuthRevokeRequest,
@@ -456,7 +456,7 @@ impl WorldRepository {
             .expect("identity exists")
             .account_id
             .clone();
-        let tokens: Vec<String> = state
+        let mut tokens: HashSet<String> = state
             .phase6
             .sessions
             .iter()
@@ -465,6 +465,11 @@ impl WorldRepository {
             })
             .map(|(session_token, _)| session_token.clone())
             .collect();
+        for (session_token, session) in &state.sessions {
+            if session.identity_key == key && (request.revoke_all || session_token == token) {
+                tokens.insert(session_token.clone());
+            }
+        }
         for session_token in &tokens {
             if let Some(session) = state.phase6.sessions.get_mut(session_token) {
                 session.revoked = true;

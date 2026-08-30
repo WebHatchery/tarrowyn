@@ -870,3 +870,10 @@ is still listed as available. The focused support repair regression, server
 clippy, formatting, size, and diff checks pass; no full workspace gate was
 rerun because this is a bounded claim-recovery maintenance slice. No new
 external or deferred work was opened.
+
+Session revocation now removes the active legacy guest bearer as well as
+production access sessions, so the visible logout boundary cannot leave a guest
+token usable until its normal timeout. The focused guest reset/logout regression,
+server clippy, formatting, size, and diff checks pass; no full workspace gate
+was rerun because this is a bounded session-boundary maintenance slice. No new
+external or deferred work was opened.
