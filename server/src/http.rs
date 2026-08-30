@@ -23,6 +23,7 @@ const MAX_REQUEST_BODY_BYTES: usize = 64 * 1024;
 const GUEST_SESSION_RATE_WINDOW: Duration = Duration::from_secs(60);
 const GUEST_SESSION_BURST_LIMIT: u16 = 32;
 const MAX_TRACKED_GUEST_SOURCES: usize = 4096;
+const GUEST_SESSION_RETRY_AFTER_SECONDS: &str = "60";
 
 #[derive(Default)]
 struct GuestSessionRateLimiter {
@@ -151,13 +152,7 @@ fn handle_request(
         (Method::Get, "/v1/ops/health") => json_response(StatusCode(200), repository.ops_health()),
         (Method::Post, "/v1/session/guest") => {
             if !guest_session_limiter.allow(&request) {
-                error_response(
-                    429,
-                    "rate_limited",
-                    "Too many guest-session attempts from this source; try again shortly."
-                        .to_owned(),
-                    repository.health().meta,
-                )
+                rate_limited_response(429, repository.health().meta)
             } else {
                 match read_json_or_default(&mut request) {
                     Ok(body) => match repository.guest_session(body) {
@@ -659,6 +654,18 @@ fn error_response(status: u16, code: &str, message: String, meta: ApiMeta) -> Js
                 message,
             },
         },
+    )
+}
+
+fn rate_limited_response(status: u16, meta: ApiMeta) -> JsonResponse {
+    error_response(
+        status,
+        "rate_limited",
+        "Too many guest-session attempts from this source; try again shortly.".to_owned(),
+        meta,
+    )
+    .with_header(
+        Header::from_bytes("Retry-After", GUEST_SESSION_RETRY_AFTER_SECONDS).expect("valid header"),
     )
 }
 

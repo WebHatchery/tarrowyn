@@ -1350,3 +1350,10 @@ operations regression passes (1), with server-package clippy, formatting, and
 diff checks clean. No full workspace or publisher gate was repeated because
 this is an isolated public-health privacy fix; no new external or deferred
 work was opened.
+
+The bounded guest-session `429` response now carries the standard
+`Retry-After: 60` recovery hint, allowing touch clients and deployment proxies
+to wait for the same admission window. The focused HTTP header regression
+passes (1), with server-package clippy, formatting, and diff checks clean. No
+full workspace or publisher gate was repeated because this is a narrow
+rate-limit response improvement; no new external or deferred work was opened.

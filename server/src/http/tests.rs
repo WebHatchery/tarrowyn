@@ -109,6 +109,20 @@ fn api_responses_emit_one_cors_origin_header() {
 }
 
 #[test]
+fn rate_limited_guest_sessions_advertise_the_retry_window() {
+    let response = rate_limited_response(429, ApiMeta::at(7));
+
+    assert_eq!(
+        response
+            .headers()
+            .iter()
+            .find(|header| header.field.equiv("Retry-After"))
+            .map(|header| header.value.as_str()),
+        Some(GUEST_SESSION_RETRY_AFTER_SECONDS)
+    );
+}
+
+#[test]
 fn guest_session_rate_limiter_bounds_a_source_window() {
     let mut limiter = GuestSessionRateLimiter::default();
     let source = "192.0.2.10".parse().expect("test source address");
