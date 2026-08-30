@@ -460,6 +460,56 @@ fn market_success_notice_describes_the_requested_action() {
 }
 
 #[test]
+fn travel_success_message_explains_progress_and_risk() {
+    let travel = tarrowyn_protocol::TravelState {
+        travel_id: "travel-1".to_owned(),
+        route_id: "north-pack-road".to_owned(),
+        origin_location_id: "hearth".to_owned(),
+        destination_location_id: "saltmere".to_owned(),
+        departure_tick: 4,
+        eta_tick: 8,
+        progress: 50,
+        risk_percent: 18,
+        status: TravelStatus::Travelling,
+        interruption: None,
+        recovery_note: None,
+    };
+
+    assert_eq!(
+        super::commands::travel_success_message(Some(&travel), "hearth"),
+        "Journey underway to saltmere • 50% complete • 18% risk."
+    );
+}
+
+#[test]
+fn travel_success_message_names_arrival_and_recovery_control() {
+    let mut travel = tarrowyn_protocol::TravelState {
+        travel_id: "travel-1".to_owned(),
+        route_id: "north-pack-road".to_owned(),
+        origin_location_id: "hearth".to_owned(),
+        destination_location_id: "saltmere".to_owned(),
+        departure_tick: 4,
+        eta_tick: 8,
+        progress: 50,
+        risk_percent: 18,
+        status: TravelStatus::Interrupted,
+        interruption: Some("A fallen marker blocks the trail.".to_owned()),
+        recovery_note: None,
+    };
+    assert_eq!(
+        super::commands::travel_success_message(Some(&travel), "hearth"),
+        "Journey interrupted before saltmere; tap Recover to continue."
+    );
+
+    travel.status = TravelStatus::Arrived;
+    travel.progress = 100;
+    assert_eq!(
+        super::commands::travel_success_message(Some(&travel), "saltmere"),
+        "Arrived at saltmere."
+    );
+}
+
+#[test]
 fn regional_summary_shows_local_condition_and_recovery_signal() {
     let mut client = Phase5Client::new();
     client.region = Some(tarrowyn_protocol::RegionSnapshot {

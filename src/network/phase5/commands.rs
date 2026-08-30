@@ -4,7 +4,7 @@ use tarrowyn_protocol::{
     AccountDeletionRequest, AccountDeletionResponse, AuthLinkRequest, AuthLinkResponse,
     AuthRevokeRequest, AuthRevokeResponse, MarketOrderRequest, MarketOrderResponse,
     ModerationReportRequest, ModerationReportResponse, RegionalEventRequest, RegionalEventResponse,
-    RouteRequest, RouteResponse, TravelRequest, TravelResponse,
+    RouteRequest, RouteResponse, TravelRequest, TravelResponse, TravelState, TravelStatus,
 };
 
 pub(super) enum Phase5Command {
@@ -16,6 +16,28 @@ pub(super) enum Phase5Command {
     Revoke(AuthRevokeRequest),
     Report(ModerationReportRequest),
     Delete(AccountDeletionRequest),
+}
+
+pub(super) fn travel_success_message(travel: Option<&TravelState>, location_id: &str) -> String {
+    let Some(travel) = travel else {
+        return format!("The journey ledger is ready at {location_id}.");
+    };
+    match travel.status {
+        TravelStatus::Travelling => format!(
+            "Journey underway to {} • {}% complete • {}% risk.",
+            travel.destination_location_id, travel.progress, travel.risk_percent
+        ),
+        TravelStatus::Interrupted => format!(
+            "Journey interrupted before {}; tap Recover to continue.",
+            travel.destination_location_id
+        ),
+        TravelStatus::Recovering => format!(
+            "Journey recovery is underway toward {} • {}% complete.",
+            travel.destination_location_id, travel.progress
+        ),
+        TravelStatus::Arrived => format!("Arrived at {}.", location_id),
+        TravelStatus::Idle => format!("The journey ledger is ready at {location_id}."),
+    }
 }
 
 #[derive(Deserialize)]
@@ -40,12 +62,11 @@ impl Phase5Client {
         notices: &mut Vec<NetworkNotice>,
     ) {
         match response {
-            Phase5CommandResponse::Travel(response) => phase5_notice(
-                response.accepted,
-                response.reason,
-                "The server recorded the journey and kept recovery available.",
-                notices,
-            ),
+            Phase5CommandResponse::Travel(response) => {
+                let message =
+                    travel_success_message(response.travel.as_ref(), &response.location_id);
+                phase5_notice(response.accepted, response.reason, &message, notices);
+            }
             Phase5CommandResponse::Route(response) => phase5_notice(
                 response.accepted,
                 response.reason,
