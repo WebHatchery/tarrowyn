@@ -97,3 +97,85 @@ fn expired_market_order_history_reaches_its_recorded_endpoints() {
         .iter()
         .any(|entry| entry.kind == "market fulfilment failed"));
 }
+
+#[test]
+fn market_order_owner_cannot_fulfil_their_own_shipment() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("phase5-market-self-fulfil".to_owned()),
+            reset: false,
+        })
+        .expect("guest session")
+        .data;
+    let order = repository
+        .market_order(
+            &session.account_token,
+            MarketOrderRequest {
+                request_id: "self-fulfil-create".to_owned(),
+                action: MarketOrderAction::Create,
+                order_id: None,
+                destination_location_id: Some("saltmere".to_owned()),
+                commodity: Some(CommodityKind::Seeds),
+                quantity: Some(1),
+            },
+        )
+        .expect("market order")
+        .data
+        .order
+        .expect("created order");
+    let order_id = order.order_id.clone();
+    let before = {
+        let mut state = repository.state.lock().expect("repository lock");
+        let saltmere = state
+            .phase5
+            .locations
+            .iter()
+            .find(|location| location.location_id == "saltmere")
+            .expect("saltmere location")
+            .position;
+        let identity = state
+            .identities
+            .get_mut(&session.client_key)
+            .expect("identity exists");
+        identity.position = saltmere;
+        (identity.gold, identity.inventory.seeds)
+    };
+
+    let response = repository
+        .market_order(
+            &session.account_token,
+            MarketOrderRequest {
+                request_id: "self-fulfil-at-destination".to_owned(),
+                action: MarketOrderAction::Fulfil,
+                order_id: Some(order_id.clone()),
+                destination_location_id: None,
+                commodity: None,
+                quantity: None,
+            },
+        )
+        .expect("self fulfil response")
+        .data;
+
+    assert!(!response.accepted);
+    assert_eq!(
+        response.reason.as_deref(),
+        Some("The order owner cannot fulfil their own shipment.")
+    );
+    let state = repository.state.lock().expect("repository lock");
+    let identity = state
+        .identities
+        .get(&session.client_key)
+        .expect("identity exists");
+    assert_eq!((identity.gold, identity.inventory.seeds), before);
+    assert_eq!(
+        state
+            .phase5
+            .market_orders
+            .iter()
+            .find(|order| order.order_id == order_id)
+            .expect("order remains recorded")
+            .status,
+        MarketOrderStatus::Open
+    );
+}

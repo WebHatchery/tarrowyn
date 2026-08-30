@@ -770,6 +770,7 @@ regression covers that replay boundary; server clippy, size, diff, and publisher
 checks are the validation scope for this Phase 6 identity-maintenance slice. No
 new external or deferred work was opened.
 
+
 Chronicle search now rejects a cursor ahead of the authoritative world with the
 same structured `cursor_ahead` boundary used by the other history endpoints.
 The focused chronicle-search regression covers the invalid cursor response;
@@ -1088,3 +1089,12 @@ passed), client clippy, direct formatting, diff, and Rust file-size checks pass.
 The publisher check remains the runtime validation path; no full workspace gate
 was rerun because this is a bounded regional inspection affordance slice. No
 new external or deferred work was opened.
+
+Regional market fulfilment now rejects the order owner at the destination, so
+a player cannot award their own shipment both its goods and its sale gold. The
+client also ignores the owner's open order when selecting a destination
+fulfilment action. Focused market tests (3 server and 31 client tests passed),
+server and client clippy, direct formatting, diff, and Rust file-size checks
+pass. The publisher check remains the runtime validation path; no full
+workspace gate was rerun because this is a bounded regional economy safety
+slice. No new external or deferred work was opened.

@@ -177,6 +177,19 @@ pub(crate) fn fulfil_order(
             Some("Arrive at the order destination before settling the shipment.".to_owned()),
         );
     }
+    let fulfiller_account = state
+        .identities
+        .get(key)
+        .expect("identity exists")
+        .account_id
+        .clone();
+    if order.owner_account_id == fulfiller_account {
+        return (
+            false,
+            Some(order),
+            Some("The order owner cannot fulfil their own shipment.".to_owned()),
+        );
+    }
     let owner_key = state
         .identities
         .iter()

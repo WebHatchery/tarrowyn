@@ -11,6 +11,10 @@ impl Phase5Client {
             market.orders.iter().find(|order| {
                 order.status == tarrowyn_protocol::MarketOrderStatus::Open
                     && order.destination_location_id == location
+                    && self
+                        .own_account_id
+                        .as_deref()
+                        .is_some_and(|account_id| order.owner_account_id != account_id)
             })
         }) {
             super::super::queue::try_push(
