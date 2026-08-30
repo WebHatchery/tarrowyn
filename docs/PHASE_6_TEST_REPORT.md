@@ -991,3 +991,12 @@ network regression, direct formatting, diff, Rust file-size, and client clippy
 checks pass. The publisher check remains the runtime validation path; no full
 workspace gate was rerun because this is a bounded continuation of client
 cursor-ordering maintenance. No new external or deferred work was opened.
+
+Phase 4 and Phase 5 ledger responses, regional history, and frontier read views
+now also advance the root client projection version before applying their
+bounded caches. A delayed root snapshot can no longer rewind world state after
+an auxiliary projection response. The focused client network tests (88 passed),
+direct formatting, diff, Rust file-size, and client clippy checks pass. The
+publisher check remains the runtime validation path; no full workspace gate was
+rerun because this is a bounded continuation of client cursor-ordering
+maintenance. No new external or deferred work was opened.

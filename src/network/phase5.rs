@@ -113,6 +113,7 @@ impl Phase5Client {
         &mut self,
         dt: f32,
         api: &mut HttpClient,
+        projection: &mut WorldProjection,
         online: bool,
         another_mutation_pending: bool,
         notices: &mut Vec<NetworkNotice>,
@@ -128,6 +129,7 @@ impl Phase5Client {
             &mut self.pending_region,
             dt,
             |response| {
+                projection.record_response_version(response.meta.server_tick, response.meta.cursor);
                 if accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor) {
                     self.region = Some(response.data);
                 }
@@ -139,6 +141,7 @@ impl Phase5Client {
             &mut self.pending_settlements,
             dt,
             |response| {
+                projection.record_response_version(response.meta.server_tick, response.meta.cursor);
                 if accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor) {
                     self.settlements = Some(response.data);
                 }
@@ -150,6 +153,7 @@ impl Phase5Client {
             &mut self.pending_households,
             dt,
             |response| {
+                projection.record_response_version(response.meta.server_tick, response.meta.cursor);
                 if accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor) {
                     self.households = Some(response.data);
                 }
@@ -161,6 +165,7 @@ impl Phase5Client {
             &mut self.pending_market,
             dt,
             |response| {
+                projection.record_response_version(response.meta.server_tick, response.meta.cursor);
                 if accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor) {
                     self.market = Some(response.data);
                 }
@@ -168,18 +173,24 @@ impl Phase5Client {
             notices,
             "market telemetry",
         );
-        self.poll_events(dt, notices);
+        self.poll_events(dt, projection, notices);
         poll(
             &mut self.pending_law,
             dt,
-            |response| self.law = Some(response.data),
+            |response| {
+                projection.record_response_version(response.meta.server_tick, response.meta.cursor);
+                self.law = Some(response.data);
+            },
             notices,
             "law boundary",
         );
         poll(
             &mut self.pending_account,
             dt,
-            |response| self.account = Some(response.data),
+            |response| {
+                projection.record_response_version(response.meta.server_tick, response.meta.cursor);
+                self.account = Some(response.data);
+            },
             notices,
             "account boundary",
         );
@@ -196,6 +207,8 @@ impl Phase5Client {
                 Ok(response) => {
                     self.command_retry_timer = 0.0;
                     self.command_retry_count = 0;
+                    projection
+                        .record_response_version(response.meta.server_tick, response.meta.cursor);
                     accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor);
                     self.apply_command(response.data, market_action, api, notices);
                 }
@@ -566,7 +579,12 @@ fn poll<T, F>(
 }
 
 impl Phase5Client {
-    fn poll_events(&mut self, dt: f32, notices: &mut Vec<NetworkNotice>) {
+    fn poll_events(
+        &mut self,
+        dt: f32,
+        projection: &mut WorldProjection,
+        notices: &mut Vec<NetworkNotice>,
+    ) {
         let result = self
             .pending_events
             .as_mut()
@@ -575,6 +593,7 @@ impl Phase5Client {
         self.pending_events = None;
         match result {
             Ok(response) => {
+                projection.record_response_version(response.meta.server_tick, response.meta.cursor);
                 if accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor) {
                     merge_regional_events(&mut self.events, response.data);
                 }

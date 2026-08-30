@@ -370,6 +370,7 @@ impl OnlineClient {
         self.phase4.update(
             dt,
             &mut self.api,
+            &mut self.projection,
             self.state == ConnectionState::Online,
             other_mutation_pending,
             &mut notices,

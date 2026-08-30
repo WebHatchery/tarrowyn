@@ -1,10 +1,12 @@
 use super::*;
+use crate::network::WorldProjection;
 
 impl Phase4Client {
     pub fn update(
         &mut self,
         dt: f32,
         api: &mut HttpClient,
+        projection: &mut WorldProjection,
         online: bool,
         another_mutation_pending: bool,
         notices: &mut Vec<NetworkNotice>,
@@ -18,6 +20,7 @@ impl Phase4Client {
             &mut self.pending_governance,
             dt,
             |response| {
+                projection.record_response_version(response.meta.server_tick, response.meta.cursor);
                 if accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor) {
                     self.governance = Some(response.data.governance);
                 }
@@ -29,6 +32,7 @@ impl Phase4Client {
             &mut self.pending_claims,
             dt,
             |response| {
+                projection.record_response_version(response.meta.server_tick, response.meta.cursor);
                 if accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor) {
                     self.claims = Some(response.data);
                 }
@@ -40,6 +44,7 @@ impl Phase4Client {
             &mut self.pending_professions,
             dt,
             |response| {
+                projection.record_response_version(response.meta.server_tick, response.meta.cursor);
                 if accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor) {
                     self.professions = Some(response.data);
                 }
@@ -51,6 +56,7 @@ impl Phase4Client {
             &mut self.pending_knowledge,
             dt,
             |response| {
+                projection.record_response_version(response.meta.server_tick, response.meta.cursor);
                 if accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor) {
                     self.knowledge = Some(response.data);
                 }
@@ -62,6 +68,7 @@ impl Phase4Client {
             &mut self.pending_skills,
             dt,
             |response| {
+                projection.record_response_version(response.meta.server_tick, response.meta.cursor);
                 if accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor) {
                     self.skills = Some(response.data);
                 }
@@ -73,6 +80,7 @@ impl Phase4Client {
             &mut self.pending_households,
             dt,
             |response| {
+                projection.record_response_version(response.meta.server_tick, response.meta.cursor);
                 if accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor) {
                     self.households = Some(response.data);
                 }
@@ -84,6 +92,7 @@ impl Phase4Client {
             &mut self.pending_combat,
             dt,
             |response| {
+                projection.record_response_version(response.meta.server_tick, response.meta.cursor);
                 if accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor) {
                     self.combat = Some(response.data);
                 }
@@ -102,6 +111,8 @@ impl Phase4Client {
                 Ok(response) => {
                     self.command_retry_timer = 0.0;
                     self.command_retry_count = 0;
+                    projection
+                        .record_response_version(response.meta.server_tick, response.meta.cursor);
                     self.apply_command(response.data, response.meta.cursor, notices);
                 }
                 Err(error)
@@ -133,6 +144,7 @@ impl Phase4Client {
         self.regional.update(
             dt,
             api,
+            projection,
             online,
             self.pending_command.is_some() || another_mutation_pending,
             notices,

@@ -81,7 +81,14 @@ impl FrontierClient {
         {
             self.pending_contracts = None;
             match result {
-                Ok(response) => self.contracts = response.data.contracts,
+                Ok(response) => {
+                    let cursor = response.meta.cursor.unwrap_or(response.data.cursor);
+                    let current = projection.response_is_current(response.meta.server_tick, cursor);
+                    projection.record_response_version(response.meta.server_tick, Some(cursor));
+                    if current {
+                        self.contracts = response.data.contracts;
+                    }
+                }
                 Err(error) => notices.push(NetworkNotice::Warning(refresh_error_notice(
                     "tavern contracts",
                     &error,
@@ -96,11 +103,16 @@ impl FrontierClient {
             self.pending_chronicle = None;
             match result {
                 Ok(response) => {
-                    if response.data.summary.is_some() {
-                        projection.chronicle_summary = response.data.summary;
-                    }
-                    for entry in response.data.entries {
-                        super::merge_chronicle_entry(&mut projection.chronicle, entry);
+                    let cursor = response.meta.cursor.unwrap_or(response.data.cursor);
+                    let current = projection.response_is_current(response.meta.server_tick, cursor);
+                    projection.record_response_version(response.meta.server_tick, Some(cursor));
+                    if current {
+                        if response.data.summary.is_some() {
+                            projection.chronicle_summary = response.data.summary;
+                        }
+                        for entry in response.data.entries {
+                            super::merge_chronicle_entry(&mut projection.chronicle, entry);
+                        }
                     }
                 }
                 Err(error) if super::cursor::is_cursor_recovery_error(&error) => {
@@ -119,7 +131,14 @@ impl FrontierClient {
         {
             self.pending_opportunities = None;
             match result {
-                Ok(response) => projection.opportunities = response.data.opportunities,
+                Ok(response) => {
+                    let cursor = response.meta.cursor.unwrap_or(response.data.cursor);
+                    let current = projection.response_is_current(response.meta.server_tick, cursor);
+                    projection.record_response_version(response.meta.server_tick, Some(cursor));
+                    if current {
+                        projection.opportunities = response.data.opportunities;
+                    }
+                }
                 Err(error) => notices.push(NetworkNotice::Warning(refresh_error_notice(
                     "frontier opportunities",
                     &error,

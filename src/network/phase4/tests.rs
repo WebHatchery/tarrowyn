@@ -1,4 +1,5 @@
 use super::*;
+use crate::network::WorldProjection;
 use tarrowyn_protocol::{
     KnowledgeAction, KnowledgeItem, KnowledgeResponse, KnowledgeState, LocalCombatAction,
     LocalCombatRequest, LocalCombatState, ProfessionAction, SkillAction, SkillLesson, SkillStatus,
@@ -75,8 +76,10 @@ fn transient_phase_four_action_requeues_the_same_request() {
     client.in_flight_command = Some(Phase4Command::Profession(request.clone()));
 
     let mut api = HttpClient::new("https://example.test");
+    let data = crate::data::GameData::load().expect("embedded game data should load");
+    let mut projection = WorldProjection::new(&data.config);
     let mut notices = Vec::new();
-    client.update(0.0, &mut api, true, false, &mut notices);
+    client.update(0.0, &mut api, &mut projection, true, false, &mut notices);
 
     assert!(matches!(
         client.commands.front(),

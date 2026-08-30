@@ -144,8 +144,10 @@ fn another_subsystem_mutation_blocks_refresh_and_regional_dispatch() {
     client.queue_report("queued-report".to_owned(), None, None);
 
     let mut api = HttpClient::new("https://example.test");
+    let data = crate::data::GameData::load().expect("embedded game data should load");
+    let mut projection = WorldProjection::new(&data.config);
     let mut notices = Vec::new();
-    client.update(0.0, &mut api, true, true, &mut notices);
+    client.update(0.0, &mut api, &mut projection, true, true, &mut notices);
 
     assert!(client.pending_refresh.is_none());
     assert!(client.pending_command.is_none());
@@ -214,8 +216,10 @@ fn transient_command_failure_requeues_the_same_request() {
     client.in_flight_command = Some(Phase5Command::Link(request));
 
     let mut api = HttpClient::new("https://example.test");
+    let data = crate::data::GameData::load().expect("embedded game data should load");
+    let mut projection = WorldProjection::new(&data.config);
     let mut notices = Vec::new();
-    client.update(0.0, &mut api, true, false, &mut notices);
+    client.update(0.0, &mut api, &mut projection, true, false, &mut notices);
 
     assert!(matches!(
         client.commands.front(),
