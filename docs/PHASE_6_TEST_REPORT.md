@@ -778,6 +778,17 @@ builds, packaging, Preview deployment, and catalog sync. No full workspace gate
 was repeated because this was a bounded client homestead-feedback slice, and
 no new external or deferred work was opened.
 
+The online crafting overlay now appears only while the shared connection is
+Online, so a disconnect during timing play no longer hides the visible
+Reconnect control behind an action that the request layer cannot submit. The
+focused binary test
+`game::tests::crafting_overlay_waits_for_the_shared_road_before_hiding_reconnect`
+passes; client-package formatting and clippy, `git diff --check`, and the Rust
+file-size scan pass. The project `publish.ps1` Windows/WebGL build, packaging,
+Preview deployment, and catalog-sync checks pass. No full workspace gate was
+repeated because this was a bounded client recovery-overlay correction, and no
+new external or deferred work was opened.
+
 Accepted direct-trade responses now explain the returned exchange: the other
 resident and the exact give/receive bundles, while retaining the existing
 action fallback when no offer record is present. The focused trade-success

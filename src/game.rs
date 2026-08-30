@@ -1,7 +1,7 @@
 //! Client loop, online authority boundary, offline fixture, and presentation services.
 
 use crate::data::GameData;
-use crate::network::{ConnectionState, NetworkNotice, OnlineClient};
+use crate::network::{ConnectionState, CraftingView, NetworkNotice, OnlineClient};
 use crate::state::{migrate_save_value, GameSession, SaveData};
 use crate::ui::{self, UiAction, UiContext};
 use macroquad::prelude::*;
@@ -269,7 +269,7 @@ impl Game {
                     account_summary: &client.account_summary(),
                     identity_pending: client.identity_pending(),
                     report_pending: client.report_pending(),
-                    crafting: client.crafting_view(),
+                    crafting: online_crafting_view(client.state, client.crafting_view()),
                     combat: client.combat_state(),
                     storm_magic_unlocked: client.storm_magic_unlocked(),
                     skill_pending: client.skill_pending(),
@@ -640,4 +640,13 @@ impl Game {
             NetworkNotice::Danger(message) => self.notifications.danger(message),
         }
     }
+}
+
+fn online_crafting_view(
+    connection: ConnectionState,
+    crafting: Option<CraftingView>,
+) -> Option<CraftingView> {
+    (connection == ConnectionState::Online)
+        .then_some(crafting)
+        .flatten()
 }
