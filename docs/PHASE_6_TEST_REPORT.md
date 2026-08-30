@@ -1167,3 +1167,12 @@ formatting, diff, and size checks pass. The publisher check passed the Windows
 and WebGL release builds, packaging, Preview deployment, and catalog sync. No
 full workspace gate was rerun because this is a bounded presentation slice. No
 new external or deferred work was opened.
+
+The online Travel and Recover controls now close while the character is knocked
+out, matching the server's journey recovery boundary and leaving the visible
+recovery choices as the next touch action. The focused online UI regression (1
+passed), client clippy, direct formatting, diff, and Rust file-size checks pass.
+The publisher check passed the Windows and WebGL release builds, packaging,
+Preview deployment, and catalog sync. No full workspace gate was rerun because
+this is a bounded client presentation slice. No new external or deferred work
+was opened.

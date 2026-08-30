@@ -143,3 +143,10 @@ fn pioneer_status_line_keeps_an_active_party_visible() {
     assert!(line.contains("supplies 6/3/8/3"));
     assert!(line.contains("Lantern Rest"));
 }
+
+#[test]
+fn travel_controls_close_while_knocked_out() {
+    assert!(super::travel_control_enabled(true, false));
+    assert!(!super::travel_control_enabled(true, true));
+    assert!(!super::travel_control_enabled(false, false));
+}

@@ -304,13 +304,13 @@ pub(super) fn draw_sidebar(
             (
                 "travel",
                 ctx.travel_label,
-                ctx.can_travel,
+                travel_control_enabled(ctx.can_travel, ctx.knocked_out),
                 ButtonTone::Primary,
             ),
             (
                 "recover-travel",
                 "Recover",
-                ctx.can_recover_travel,
+                travel_control_enabled(ctx.can_recover_travel, ctx.knocked_out),
                 ButtonTone::Primary,
             ),
             (
@@ -454,6 +454,10 @@ pub(super) fn draw_sidebar(
         top + 454.0,
         TextStyle::new(8.25, dark::TEXT_DIM).params(),
     );
+}
+
+fn travel_control_enabled(available: bool, knocked_out: bool) -> bool {
+    available && !knocked_out
 }
 
 fn pioneer_status_line(expedition: &tarrowyn_protocol::Expedition) -> String {
