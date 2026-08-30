@@ -93,6 +93,22 @@ fn event_success_message_names_intervention_and_outcome() {
 }
 
 #[test]
+fn moderation_success_message_keeps_the_report_reference() {
+    let response = tarrowyn_protocol::ModerationReportResponse {
+        request_id: "report-request".to_owned(),
+        accepted: true,
+        report_id: "report-42".to_owned(),
+        status: "queued".to_owned(),
+        reason: None,
+    };
+
+    assert_eq!(
+        super::super::commands::moderation_success_message(&response),
+        "Moderation report report-42 is queued; the report is recorded for review."
+    );
+}
+
+#[test]
 fn travel_success_message_explains_progress_and_risk() {
     let travel = tarrowyn_protocol::TravelState {
         travel_id: "travel-1".to_owned(),

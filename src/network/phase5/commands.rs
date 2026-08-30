@@ -112,6 +112,13 @@ pub(super) fn event_success_message(event: Option<&RegionalEvent>) -> String {
     }
 }
 
+pub(super) fn moderation_success_message(response: &ModerationReportResponse) -> String {
+    format!(
+        "Moderation report {} is {}; the report is recorded for review.",
+        response.report_id, response.status
+    )
+}
+
 #[derive(Deserialize)]
 #[serde(untagged)]
 pub(super) enum Phase5CommandResponse {
@@ -200,12 +207,10 @@ impl Phase5Client {
                     response.revoked_sessions
                 )));
             }
-            Phase5CommandResponse::Report(response) => phase5_notice(
-                response.accepted,
-                response.reason,
-                "The moderation report is queued with an audit ID.",
-                notices,
-            ),
+            Phase5CommandResponse::Report(response) => {
+                let message = moderation_success_message(&response);
+                phase5_notice(response.accepted, response.reason, &message, notices);
+            }
             Phase5CommandResponse::Delete(response) => {
                 self.deletion_armed = false;
                 if response.accepted {
