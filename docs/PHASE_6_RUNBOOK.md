@@ -193,14 +193,14 @@ session is recovered through its refresh credential before the client requests
 authoritative state; only explicit logout, failed refresh, or the absence of a
 refresh session uses the fresh-guest path.
 For privacy deletion, use the visible Delete control after Account shows a linked
-production account. Account is active only for a guest fixture, so an already-
-linked character cannot submit a second link request. The Delete control is
-disabled for a guest until linking succeeds; then tap the relabelled
-Tap again control to submit `/v1/account/delete`. The response is scheduled
-for the next authoritative tick; the client clears the session and exposes
-Reconnect so the player can return as a fresh guest. A development guest must
-link first. During a restore-era or retention-era cursor mismatch, the client
-recognizes the `cursor_ahead` or `cursor_stale` API code, clears stale
-cursor-derived projections, cancels the old history requests, reloads
-authoritative state from cursor zero, and does not present cached history as a
-current reward.
+production account. Account opens the link path for a guest fixture and a
+read-only identity and character view for an already-linked character; the
+latter cannot submit a second link request. The Delete control is disabled for
+a guest until linking succeeds; then tap the relabelled Tap again control to
+submit `/v1/account/delete`. The response is scheduled for the next
+authoritative tick; the client clears the session and exposes Reconnect so the
+player can return as a fresh guest. A development guest must link first.
+During a restore-era or retention-era cursor mismatch, the client recognizes
+the `cursor_ahead` or `cursor_stale` API code, clears stale cursor-derived
+projections, cancels the old history requests, reloads authoritative state from
+cursor zero, and does not present cached history as a current reward.
