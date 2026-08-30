@@ -272,6 +272,7 @@ impl Game {
                     recovery_pending: client.recovery_pending(),
                     has_open_market_order: client.has_open_market_order(),
                     market_pending: client.market_pending(),
+                    event_pending: client.event_pending(),
                     can_abandon_claim: client.can_abandon_claim(),
                     can_transfer_claim: client.can_transfer_claim()
                         && client.projection.players.iter().any(|player| {
@@ -360,6 +361,7 @@ impl Game {
                     recovery_pending: false,
                     has_open_market_order: false,
                     market_pending: false,
+                    event_pending: false,
                     can_abandon_claim: false,
                     can_transfer_claim: false,
                     knowledge_label: "Knowledge",

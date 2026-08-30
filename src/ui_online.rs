@@ -378,7 +378,12 @@ pub(super) fn draw_sidebar(
                 market_control_enabled(ctx.market_pending),
                 ButtonTone::Primary,
             ),
-            ("region-event", "Event", true, ButtonTone::Primary),
+            (
+                "region-event",
+                "Event",
+                event_control_enabled(ctx.event_pending),
+                ButtonTone::Primary,
+            ),
             ("region-details", "Inspect", true, ButtonTone::Secondary),
             (
                 "cancel-market",
@@ -522,6 +527,10 @@ fn market_control_enabled(market_pending: bool) -> bool {
 
 fn cancel_market_control_enabled(has_open_market_order: bool, market_pending: bool) -> bool {
     has_open_market_order && !market_pending
+}
+
+fn event_control_enabled(event_pending: bool) -> bool {
+    !event_pending
 }
 
 pub(super) fn movement_enabled(ctx: &UiContext<'_>) -> bool {

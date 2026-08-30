@@ -1912,6 +1912,16 @@ Windows/WebGL builds, packaging, Preview deployment, and catalog sync. No full
 workspace gate was repeated because this was a bounded account-feedback
 correction, and no new external or deferred work was opened.
 
+Regional Event and intervention controls now close while an event command is
+queued or in flight, preventing a second event decision before the first
+authoritative response arrives. The focused event filter passes, and the
+regional OnlineClient facade was extracted into `src/network/phase5/online.rs`
+after the standards gate found `phase5.rs` over the 800-line limit; the client
+standards, clippy, file-size check, and `publish.ps1` all pass for the corrected
+layout. No full workspace gate was repeated because this was a bounded event
+control and file-ownership correction, and no new external or deferred work was
+opened.
+
 Market and Cancel controls now close while a market order command is queued or
 in flight, preventing repeated taps from creating duplicate shipments or
 submitting a second settlement for the same order before the authoritative

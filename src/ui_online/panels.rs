@@ -318,7 +318,13 @@ pub fn draw_regional_inspection(ctx: &UiContext<'_>, mouse: Vec2, actions: &mut 
         CREAM,
     );
     if !ctx.regional_event_choices.is_empty() {
-        draw_event_choices(panel, ctx.regional_event_choices, mouse, actions);
+        draw_event_choices(
+            panel,
+            ctx.regional_event_choices,
+            ctx.event_pending,
+            mouse,
+            actions,
+        );
     }
     draw_button_row(
         Rect::new(panel.x + 20.0, panel.bottom() - 82.0, panel.w - 40.0, 28.0),
@@ -367,7 +373,13 @@ pub(super) fn has_local_route(region: Option<&RegionSnapshot>, action: RouteActi
     })
 }
 
-fn draw_event_choices(panel: Rect, choices: &[String], mouse: Vec2, actions: &mut Vec<UiAction>) {
+fn draw_event_choices(
+    panel: Rect,
+    choices: &[String],
+    event_pending: bool,
+    mouse: Vec2,
+    actions: &mut Vec<UiAction>,
+) {
     let gap = 4.0;
     let visible = choices.iter().take(3).collect::<Vec<_>>();
     let width = (panel.w - 40.0 - gap * (visible.len().saturating_sub(1) as f32))
@@ -381,7 +393,7 @@ fn draw_event_choices(panel: Rect, choices: &[String], mouse: Vec2, actions: &mu
                 28.0,
             ),
             choice,
-            true,
+            !event_pending,
             ButtonTone::Primary,
             mouse,
         ) {

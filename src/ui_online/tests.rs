@@ -351,6 +351,12 @@ fn market_controls_wait_for_the_previous_order_command() {
 }
 
 #[test]
+fn event_controls_wait_for_the_previous_resolution_command() {
+    assert!(!super::event_control_enabled(true));
+    assert!(super::event_control_enabled(false));
+}
+
+#[test]
 fn chronicle_panel_text_keeps_archive_context_and_recent_records() {
     let entries = vec![
         tarrowyn_protocol::ChronicleEntry {

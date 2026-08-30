@@ -13,6 +13,7 @@ fn event_button_waits_during_the_resolution_window() {
     });
 
     client.queue_cycle("region-event");
+    assert!(!client.event_command_pending());
     assert!(client.commands.is_empty());
 }
 
@@ -34,6 +35,7 @@ fn event_button_uses_the_server_listed_intervention() {
     });
 
     client.queue_cycle("region-event");
+    assert!(client.event_command_pending());
     let Some(Phase5Command::Event(request)) = client.commands.pop_front() else {
         panic!("an active event should queue an intervention");
     };
@@ -42,6 +44,7 @@ fn event_button_uses_the_server_listed_intervention() {
         request.intervention.as_deref(),
         Some("protect grain stores")
     );
+    assert!(!client.event_command_pending());
 }
 
 #[test]
@@ -64,10 +67,12 @@ fn selected_event_choice_queues_the_exact_visible_intervention() {
     assert!(
         client.queue_event_intervention("selected-event-1".to_owned(), "close the ford".to_owned())
     );
+    assert!(client.event_command_pending());
     let Some(Phase5Command::Event(request)) = client.commands.pop_front() else {
         panic!("a selected event choice should queue an intervention");
     };
     assert_eq!(request.intervention.as_deref(), Some("close the ford"));
+    assert!(!client.event_command_pending());
 }
 
 #[test]
