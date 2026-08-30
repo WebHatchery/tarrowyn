@@ -1,7 +1,51 @@
 use super::*;
+use tarrowyn_protocol::{CropKind, FarmPlot};
 
 pub(super) const MAX_COMMAND_RETRIES: u8 = 3;
 pub(super) const COMMAND_RETRY_DELAY_SECONDS: f32 = 1.0;
+
+pub(super) fn farming_success_notice(
+    action: FarmingAction,
+    plot: Option<FarmPlot>,
+    animal: Option<&FarmAnimal>,
+) -> String {
+    if action == FarmingAction::TendAnimal {
+        return animal
+            .map(|animal| {
+                format!(
+                    "Cared for {} • condition {}/{}.",
+                    animal.name, animal.condition, animal.max_condition
+                )
+            })
+            .unwrap_or_else(|| "The server accepted animal care.".to_owned());
+    }
+    let Some(plot) = plot else {
+        return "The server accepted the farm action.".to_owned();
+    };
+    let Some(crop) = plot.crop else {
+        return "The server accepted the farm action.".to_owned();
+    };
+    let crop_name = match crop.kind {
+        CropKind::Wheat => "Wheat",
+        CropKind::Turnip => "Turnip",
+        CropKind::Moonberry => "Moonberry",
+    };
+    match action {
+        FarmingAction::Plant => format!(
+            "Planted {crop_name} at plot ({}, {}).",
+            plot.position.x, plot.position.y
+        ),
+        FarmingAction::Tend => format!(
+            "Tended {crop_name} at plot ({}, {}); growth stage {}/3.",
+            plot.position.x, plot.position.y, crop.stage
+        ),
+        FarmingAction::Harvest => format!(
+            "Harvested {crop_name} from plot ({}, {}).",
+            plot.position.x, plot.position.y
+        ),
+        FarmingAction::TendAnimal => unreachable!("animal care is handled above"),
+    }
+}
 
 impl OnlineClient {
     pub(super) fn poll_movement(&mut self, dt: f32, notices: &mut Vec<NetworkNotice>) {
@@ -98,9 +142,11 @@ impl OnlineClient {
                 self.pending_request_id = None;
                 self.state_refresh = 0.0;
                 if response.data.accepted {
-                    notices.push(NetworkNotice::Success(
-                        "The server accepted the farm action.".to_owned(),
-                    ));
+                    notices.push(NetworkNotice::Success(farming_success_notice(
+                        response.data.action,
+                        response.data.plot,
+                        response.data.animal.as_ref(),
+                    )));
                 } else {
                     notices.push(NetworkNotice::Warning(response.data.reason.unwrap_or_else(
                         || "The server rejected that farm action.".to_owned(),

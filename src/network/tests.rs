@@ -2,9 +2,9 @@ use super::*;
 use crate::data::GameConfig;
 use macroquad_toolkit::net::Pending;
 use tarrowyn_protocol::{
-    ChatRequest, ChronicleEntry, EventRecord, EventsResponse, FarmingAction, FarmingRequest,
-    MovementIntent, Position, TileKind as ProtocolTileKind, TradeAction, TradeRequest, WorldClock,
-    WorldEvent, WorldTile,
+    ChatRequest, ChronicleEntry, CropKind, CropState, EventRecord, EventsResponse, FarmAnimal,
+    FarmAnimalKind, FarmPlot, FarmingAction, FarmingRequest, MovementIntent, Position,
+    TileKind as ProtocolTileKind, TradeAction, TradeRequest, WorldClock, WorldEvent, WorldTile,
 };
 
 fn config() -> GameConfig {
@@ -379,6 +379,48 @@ fn farming_actions_choose_a_nearby_plot_matching_the_action() {
     assert_eq!(
         client.farming_queue.back().map(|request| request.position),
         Some(Position { x: 2, y: 1 })
+    );
+}
+
+#[test]
+fn farming_success_notice_names_crop_and_plot() {
+    let plot = FarmPlot {
+        position: Position { x: 2, y: 3 },
+        crop: Some(CropState {
+            kind: CropKind::Turnip,
+            stage: 2,
+            quality: 2,
+            planted_tick: 4,
+            last_tended_tick: Some(5),
+        }),
+    };
+
+    assert_eq!(
+        super::commands::farming_success_notice(FarmingAction::Tend, Some(plot), None),
+        "Tended Turnip at plot (2, 3); growth stage 2/3."
+    );
+    assert_eq!(
+        super::commands::farming_success_notice(FarmingAction::Harvest, Some(plot), None),
+        "Harvested Turnip from plot (2, 3)."
+    );
+}
+
+#[test]
+fn farming_success_notice_names_animal_condition() {
+    let animal = FarmAnimal {
+        animal_id: "bellweather-goat".to_owned(),
+        name: "Bellweather".to_owned(),
+        kind: FarmAnimalKind::Goat,
+        position: Position { x: 1, y: 1 },
+        condition: 3,
+        max_condition: 3,
+        last_cared_tick: 8,
+        last_cared_day: 2,
+    };
+
+    assert_eq!(
+        super::commands::farming_success_notice(FarmingAction::TendAnimal, None, Some(&animal)),
+        "Cared for Bellweather • condition 3/3."
     );
 }
 
