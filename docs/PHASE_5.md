@@ -1,5 +1,12 @@
 # Phase 5 — The Roads Between
 
+> Implementation status: complete for the bounded regional proof. The design
+> record, deterministic playthrough, and regional runbook are recorded in
+> [`PHASE_5_DESIGN.md`](PHASE_5_DESIGN.md),
+> [`PHASE_5_PLAYTHROUGH.md`](PHASE_5_PLAYTHROUGH.md), and
+> [`PHASE_5_RUNBOOK.md`](PHASE_5_RUNBOOK.md). Target deployment, final pacing,
+> and human regional evidence remain tracked in the Phase 6 follow-up register.
+
 ## Purpose
 
 Phase 5 expands Tarrowyn from one durable settlement into a connected region.
@@ -81,8 +88,8 @@ versions of it.
 
 ### PvP and law decision
 
-The GDD leaves PvP, crime, theft, and law enforcement open. Phase 5 must make
-an explicit product decision before regional travel and property are exposed:
+The GDD left PvP, crime, theft, and law enforcement open. Phase 5 made the
+explicit product decision before regional travel and property were exposed:
 
 - If PvP is selected, implement a bounded, opt-in ruleset with consent,
   protected spaces, evidence, consequences, reporting, and recovery.
@@ -90,7 +97,8 @@ an explicit product decision before regional travel and property are exposed:
   claims, and travel systems from accidental player-versus-player ownership
   or theft mechanics.
 
-The phase is not complete with an ambiguous mixture of both behaviours.
+The phase uses the protected no-PvP boundary; there is no ambiguous mixture of
+player ownership or theft behaviours in the regional proof.
 
 ## Server, protocol, and client work
 
@@ -172,12 +180,15 @@ proof, not a promise of an unlimited seamless world.
 
 ## Exit artifacts
 
-- A region map and topology decision record covering location boundaries,
-  travel handoff, interest management, and cursor recovery.
-- An economy and calendar decision record covering route costs, sinks, market
-  telemetry, and seasonal timing.
-- A written PvP/law decision with the corresponding acceptance fixtures.
-- A human regional playthrough and decline/recovery report.
-- A future `PHASE_5_RUNBOOK.md` covering multiple server locations or region
-  fixtures, travel recovery, market inspection, event seeding, and soak-test
-  collection.
+- Complete: [`PHASE_5_DESIGN.md`](PHASE_5_DESIGN.md) records the region map,
+  topology, travel handoff, economy, calendar fixture, market telemetry, and
+  protected no-PvP boundary.
+- Complete: the regional acceptance fixtures cover route and market recovery,
+  event effects, household movement, cursor recovery, and the supported client
+  load target.
+- Complete for automated evidence: [`PHASE_5_PLAYTHROUGH.md`](PHASE_5_PLAYTHROUGH.md)
+  records the deterministic regional journey and decline/recovery signals. A
+  human regional playthrough remains evidence still desired in the Phase 6
+  follow-up register.
+- Complete: [`PHASE_5_RUNBOOK.md`](PHASE_5_RUNBOOK.md) covers regional fixtures,
+  travel recovery, market inspection, event seeding, and soak-test collection.
