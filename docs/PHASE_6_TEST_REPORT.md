@@ -1945,3 +1945,11 @@ server clippy and the Rust file-size check pass, and `publish.ps1` passes
 Windows/WebGL builds, packaging, Preview deployment, and catalog sync. No
 full workspace gate was repeated because this was a bounded session-expiry
 correction, and no new external or deferred work was opened.
+
+Successful account linking now cancels any in-flight guest account projection
+so a delayed pre-link response cannot overwrite the newly linked production
+boundary. The focused client account-lifecycle regression passes, client
+clippy and the Rust file-size check pass, and `publish.ps1` passes Windows/WebGL
+builds, packaging, Preview deployment, and catalog sync. No full workspace
+gate was repeated because this was a bounded account-projection ordering
+correction, and no new external or deferred work was opened.

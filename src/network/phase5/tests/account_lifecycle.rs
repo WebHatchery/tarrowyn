@@ -28,6 +28,34 @@ fn linked_production_session_replaces_the_guest_projection() {
 }
 
 #[test]
+fn linking_discards_an_in_flight_guest_account_projection() {
+    let mut client = Phase5Client::new();
+    client.pending_account = Some(Pending::failed("guest account still in flight"));
+    let response = Phase5CommandResponse::Link(AuthLinkResponse {
+        request_id: "link-race".to_owned(),
+        provider: "webhatchery-identity-oidc".to_owned(),
+        account_id: "account-1".to_owned(),
+        character_id: "character-1".to_owned(),
+        display_name: "Linked traveller".to_owned(),
+        session: tarrowyn_protocol::AuthSession {
+            account_token: "prod-session-1".to_owned(),
+            refresh_token: "prod-refresh-1".to_owned(),
+            expires_in_seconds: 900,
+            expires_at_tick: 3600,
+        },
+        linked_guest: true,
+    });
+    let mut api = HttpClient::new("https://example.test");
+    let mut notices = Vec::new();
+
+    client.apply_command(response, None, &mut api, &mut notices);
+
+    assert!(client.pending_account.is_none());
+    assert!(client.account.is_none());
+    assert_eq!(client.refresh_token.as_deref(), Some("prod-refresh-1"));
+}
+
+#[test]
 fn logout_signal_is_consumed_once() {
     let mut client = Phase5Client::new();
     client.logged_out = true;
