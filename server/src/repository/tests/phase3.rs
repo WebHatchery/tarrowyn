@@ -311,6 +311,50 @@ fn phase_three_claim_and_expedition_survive_as_durable_world_state() {
         resolved.expedition.unwrap().status,
         tarrowyn_protocol::ExpeditionStatus::Succeeded
     );
+    let late_supply = repo
+        .expedition(
+            &one.account_token,
+            ExpeditionRequest {
+                request_id: "late-supply".to_owned(),
+                action: ExpeditionAction::Supply,
+                expedition_id: Some("pioneer-1".to_owned()),
+                role: None,
+                food: 6,
+                tools: 3,
+                materials: 8,
+                safety: 3,
+                outpost_name: None,
+            },
+        )
+        .unwrap()
+        .data;
+    assert!(!late_supply.accepted);
+    assert!(late_supply
+        .reason
+        .as_deref()
+        .is_some_and(|reason| reason.contains("gathering")));
+    let relaunch = repo
+        .expedition(
+            &one.account_token,
+            ExpeditionRequest {
+                request_id: "relaunch".to_owned(),
+                action: ExpeditionAction::Launch,
+                expedition_id: Some("pioneer-1".to_owned()),
+                role: None,
+                food: 0,
+                tools: 0,
+                materials: 0,
+                safety: 0,
+                outpost_name: None,
+            },
+        )
+        .unwrap()
+        .data;
+    assert!(!relaunch.accepted);
+    assert_eq!(
+        relaunch.expedition.unwrap().status,
+        tarrowyn_protocol::ExpeditionStatus::Succeeded
+    );
     assert!(repo
         .world(&two.account_token)
         .unwrap()

@@ -320,7 +320,10 @@ impl WorldRepository {
                         data: response,
                     });
                 };
-                if expedition
+                if expedition.status != ExpeditionStatus::Planning {
+                    response.reason =
+                        Some("Only a gathering expedition can receive supplies.".to_owned());
+                } else if expedition
                     .members
                     .iter()
                     .any(|member| member.account_id == account_id)
@@ -355,7 +358,10 @@ impl WorldRepository {
                     && existing.tools >= self.config.expedition_min_tools
                     && existing.materials >= self.config.expedition_min_materials
                     && existing.safety >= self.config.expedition_min_safety;
-                if !ready {
+                if existing.status != ExpeditionStatus::Planning {
+                    response.reason =
+                        Some("Only a gathering expedition can be launched.".to_owned());
+                } else if !ready {
                     response.reason = Some("The party still needs food, tools, materials, safety, and scout, farmer, and builder roles.".to_owned());
                 } else {
                     let expedition = state.phase3.expedition.as_mut().expect("expedition exists");

@@ -717,3 +717,8 @@ Account deletion now anonymises composite moderation audit targets such as a
 deleted account paired with a retained message evidence ID, while preserving
 the report audit. The focused account-cleanup suite covers this target
 boundary; the next full workspace gate remains reserved for a major milestone.
+
+Terminal pioneer expeditions now reject late supply and relaunch commands,
+preserving the succeeded or retreated lifecycle boundary. The focused Phase 3
+expedition flow covers both rejected mutations after successful resolution;
+server clippy, size, diff, and publisher checks pass for the change.
