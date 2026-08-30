@@ -28,6 +28,9 @@ function Import-PreviewEnvironment {
     if (-not (Test-Path -LiteralPath $resolvedPreviewPath)) {
         throw "Preview configuration not found: $resolvedPreviewPath"
     }
+    foreach ($name in $environmentNames) {
+        Remove-Item "Env:$name" -ErrorAction SilentlyContinue
+    }
     foreach ($line in Get-Content -LiteralPath $resolvedPreviewPath) {
         if ($line -notmatch '^\s*([A-Z][A-Z0-9_]*)\s*=\s*(.*?)\s*$') { continue }
         $name = $Matches[1]
@@ -38,6 +41,9 @@ function Import-PreviewEnvironment {
         [Environment]::SetEnvironmentVariable($name, $value, "Process")
     }
     Assert-True ($env:DB_DRIVER -eq "mysql") "preview DB_DRIVER must be mysql"
+    Assert-True (-not [string]::IsNullOrWhiteSpace($env:DB_HOST)) "preview DB_HOST must be non-empty"
+    Assert-True (-not [string]::IsNullOrWhiteSpace($env:DB_USERNAME)) "preview DB_USERNAME must be non-empty; do not rely on an inherited process variable"
+    Assert-True (-not [string]::IsNullOrWhiteSpace($env:DB_PASSWORD)) "preview DB_PASSWORD must be non-empty"
     Assert-True (-not [string]::IsNullOrWhiteSpace($env:DB_DATABASE)) "preview DB_DATABASE must be non-empty"
 }
 

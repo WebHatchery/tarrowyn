@@ -1286,3 +1286,11 @@ server to return an empty `integrity_failures` list, covering the new health
 diagnostic contract at the executable recovery boundary. The focused restore
 drill passes, with no runtime source changes and no workspace or publisher
 validation repeated. No new external or deferred work was opened.
+
+The MySQL verifier now clears inherited database and test variables before
+loading `.env.preview` and fails fast when the canonical host, username, or
+password keys are absent. A rerun reached that guard because the ignored local
+preview file does not define `DB_USERNAME`; it no longer attempts the unrelated
+inherited `ODBC` account. The target migration, restore, and persistence gate
+remains unclaimed until valid preview credentials are supplied. No new
+external or deferred work was opened.
