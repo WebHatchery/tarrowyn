@@ -44,4 +44,34 @@ fn offline_presence_does_not_authorize_player_movement() {
     );
 
     assert_eq!(projection.authoritative_player_position(), None);
+
+    projection.apply_presence(
+        PlayerPresence {
+            account_id: "account-1".to_owned(),
+            character_id: "character-1".to_owned(),
+            display_name: "Traveller".to_owned(),
+            position: Position { x: 10, y: 5 },
+            last_seen_tick: 3,
+            online: true,
+        },
+        "account-1",
+    );
+    assert_eq!(
+        projection.authoritative_player_position(),
+        Some(TilePos::new(10, 5))
+    );
+
+    projection.apply_presence(
+        PlayerPresence {
+            account_id: "account-1".to_owned(),
+            character_id: "character-1".to_owned(),
+            display_name: "Traveller".to_owned(),
+            position: Position { x: 10, y: 5 },
+            last_seen_tick: 4,
+            online: false,
+        },
+        "account-1",
+    );
+
+    assert_eq!(projection.authoritative_player_position(), None);
 }

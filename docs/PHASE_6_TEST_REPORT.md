@@ -2744,3 +2744,14 @@ and the Rust file-size scan pass. The project `publish.ps1` Windows/WebGL
 build, packaging, Preview deployment, and catalog-sync checks pass. No full
 workspace gate was repeated because this was a bounded presence-state
 correction, and no new external or deferred work was opened.
+
+An offline local-account presence now also revokes any previously authoritative
+position, covering the online-to-offline transition rather than only a fresh
+offline projection. The focused
+`network::tests::location_projection::offline_presence_does_not_authorize_player_movement`
+regression covers both directions and passes; client-package formatting and
+clippy, `git diff --check`, and the Rust file-size scan pass. The project
+`publish.ps1` Windows/WebGL build, packaging, Preview deployment, and
+catalog-sync checks pass. No full workspace gate was repeated because this was
+a bounded presence-transition correction, and no new external or deferred
+work was opened.
