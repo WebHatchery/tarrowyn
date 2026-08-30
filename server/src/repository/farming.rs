@@ -36,6 +36,15 @@ impl WorldRepository {
             player: player_projection(&state, &identity_key),
             reason: None,
         };
+        if state
+            .identities
+            .get(&identity_key)
+            .is_some_and(|identity| identity.knocked_out)
+        {
+            response.reason =
+                Some("You are knocked out; choose a recovery prompt first.".to_owned());
+            return self.store_farming_result(&mut state, identity_key, response);
+        }
         if request.action == FarmingAction::TendAnimal {
             let Some(animal_index) = state.phase4.animals.iter().position(|animal| {
                 animal.position == request.position

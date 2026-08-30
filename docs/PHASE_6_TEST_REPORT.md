@@ -1046,3 +1046,10 @@ server clippy, direct formatting, diff, and Rust file-size checks pass. The
 publisher check remains the runtime validation path; no full workspace gate was
 rerun because this is a bounded server input-safety maintenance slice. No new
 external or deferred work was opened.
+
+Farming now rejects every shared-field action while a player is knocked out,
+preserving the recovery boundary already enforced by movement, travel, and
+combat. The focused farming tests (10 passed), server clippy, direct formatting,
+diff, and Rust file-size checks pass. The publisher check remains the runtime
+validation path; no full workspace gate was rerun because this is a bounded
+Phase 4 farming authority slice. No new external or deferred work was opened.

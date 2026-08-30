@@ -521,6 +521,59 @@ fn farming_rewards_saturate_player_counters_at_the_numeric_ceiling() {
 }
 
 #[test]
+fn knocked_out_player_cannot_change_shared_fields_before_recovery() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = guest(&repository, "farming-knockout-boundary");
+    let plot_position = crate::content::farm_plot_positions()[0];
+    let seeds_before;
+    let skill_before;
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        let identity = state
+            .identities
+            .get_mut(&session.client_key)
+            .expect("guest identity");
+        identity.position = plot_position;
+        identity.knocked_out = true;
+        identity.injuries = 1;
+        seeds_before = identity.inventory.seeds;
+        skill_before = identity.skill;
+    }
+
+    let response = repository
+        .farming(
+            &session.account_token,
+            FarmingRequest {
+                request_id: "farming-knockout-plant".to_owned(),
+                action: FarmingAction::Plant,
+                position: plot_position,
+            },
+        )
+        .expect("knocked-out farming response")
+        .data;
+
+    assert!(!response.accepted);
+    assert!(response.player.knocked_out);
+    assert!(response
+        .reason
+        .as_deref()
+        .is_some_and(|reason| reason.contains("recovery prompt")));
+    assert_eq!(response.player.inventory.seeds, seeds_before);
+    assert_eq!(response.player.skill, skill_before);
+    assert!(repository
+        .state(&session.account_token)
+        .unwrap()
+        .data
+        .world
+        .plots
+        .iter()
+        .find(|plot| plot.position == plot_position)
+        .unwrap()
+        .crop
+        .is_none());
+}
+
+#[test]
 fn crop_tending_rejects_a_same_beat_burst_without_spending_tool_condition() {
     let repository = WorldRepository::new(ServerConfig::default());
     let session = guest(&repository, "farming-same-beat");
