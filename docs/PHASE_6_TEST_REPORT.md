@@ -3080,3 +3080,12 @@ full workspace gate was repeated because this was server-only ownership
 maintenance; the existing session-integrity test also replaced an iterator
 warning exposed by the package clippy gate, and no new external or deferred
 work was opened.
+
+The client farming queue and target-selection cases now live in a dedicated
+`network/tests/farming.rs` child module, keeping the root network test ledger
+below the 800-line Rust source limit while preserving the farming coverage.
+The focused farming target-selection regression passes, along with
+client-package formatting and strict clippy. `git diff --check` and the Rust
+file-size scan pass. No publisher or full workspace gate was repeated because
+this was test-only organization maintenance, and no new external or deferred
+work was opened.
