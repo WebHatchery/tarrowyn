@@ -131,6 +131,7 @@ impl Phase4Client {
     pub(super) fn queue_cycle(&mut self, id: &str, request_id: String) -> bool {
         if ((id == "town-hall" || id == "tax-rate") && self.governance_command_pending())
             || (id == "registry" && self.claim_command_pending())
+            || (id == "knowledge" && self.knowledge_command_pending())
             || (id == "practice" && self.skill_command_pending())
             || (matches!(
                 id,
@@ -185,6 +186,16 @@ impl Phase4Client {
                 .commands
                 .iter()
                 .any(|command| matches!(command, Phase4Command::Skill(_)))
+    }
+
+    pub(super) fn knowledge_command_pending(&self) -> bool {
+        self.in_flight_command
+            .as_ref()
+            .is_some_and(|command| matches!(command, Phase4Command::Knowledge(_)))
+            || self
+                .commands
+                .iter()
+                .any(|command| matches!(command, Phase4Command::Knowledge(_)))
     }
 
     pub(super) fn combat_command_pending(&self) -> bool {
@@ -447,6 +458,9 @@ impl Phase4Client {
         request_id: String,
         target_account_id: Option<String>,
     ) -> bool {
+        if self.knowledge_command_pending() {
+            return false;
+        }
         let action = self.next_knowledge_action(target_account_id.as_deref());
         let target_account_id = (action == KnowledgeAction::Teach)
             .then_some(target_account_id)

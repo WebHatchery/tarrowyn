@@ -405,6 +405,12 @@ fn skill_controls_wait_for_the_previous_ledger_command() {
 }
 
 #[test]
+fn knowledge_controls_wait_for_the_previous_archive_command() {
+    assert!(!super::knowledge_control_enabled(true));
+    assert!(super::knowledge_control_enabled(false));
+}
+
+#[test]
 fn combat_controls_wait_for_the_previous_encounter_command() {
     assert!(!super::combat_control_enabled(true, true));
     assert!(super::combat_control_enabled(true, false));

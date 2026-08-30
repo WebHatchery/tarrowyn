@@ -84,6 +84,7 @@ pub struct UiContext<'a> {
     pub combat: Option<&'a LocalCombatState>,
     pub storm_magic_unlocked: bool,
     pub skill_pending: bool,
+    pub knowledge_pending: bool,
     pub combat_pending: bool,
     pub contract_pending: bool,
     pub expedition_pending: bool,

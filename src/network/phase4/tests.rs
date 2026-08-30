@@ -8,6 +8,7 @@ use tarrowyn_protocol::{
 
 mod account_lifecycle;
 mod feedback;
+mod knowledge_pending;
 mod projection_ordering;
 
 #[test]

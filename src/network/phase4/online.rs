@@ -145,6 +145,10 @@ impl OnlineClient {
         self.phase4.skill_command_pending()
     }
 
+    pub(crate) fn knowledge_pending(&self) -> bool {
+        self.phase4.knowledge_command_pending()
+    }
+
     pub(crate) fn combat_pending(&self) -> bool {
         self.phase4.combat_command_pending()
     }

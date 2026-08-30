@@ -2286,3 +2286,12 @@ Rust file-size check pass, and `publish.ps1` passes Windows/WebGL builds,
 packaging, Preview deployment, and catalog sync. No full workspace gate was
 repeated because this was a bounded frontier-combat control and file-ownership
 correction, and no new external or deferred work was opened.
+
+The Knowledge control now closes while a knowledge command is queued or in
+flight, preventing duplicate Discover, Record, Teach, or Apply requests while
+the archive projection catches up. The focused `knowledge` filter passes four
+related tests; client formatting, clippy, standards, and the Rust file-size
+check pass, and `publish.ps1` passes Windows/WebGL builds, packaging, Preview
+deployment, and catalog sync. No full workspace gate was repeated because this
+was a bounded knowledge-control correction, and no new external or deferred
+work was opened.

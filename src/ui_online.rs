@@ -356,7 +356,7 @@ pub(super) fn draw_sidebar(
             (
                 "knowledge",
                 ctx.knowledge_label,
-                true,
+                knowledge_control_enabled(ctx.knowledge_pending),
                 ButtonTone::Secondary,
             ),
             ("households", "Households", true, ButtonTone::Secondary),
@@ -614,6 +614,10 @@ fn governance_control_enabled(governance_pending: bool) -> bool {
 
 fn skill_control_enabled(available: bool, skill_pending: bool) -> bool {
     available && !skill_pending
+}
+
+fn knowledge_control_enabled(knowledge_pending: bool) -> bool {
+    !knowledge_pending
 }
 
 fn combat_control_enabled(available: bool, combat_pending: bool) -> bool {
