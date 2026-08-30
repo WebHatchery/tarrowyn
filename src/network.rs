@@ -240,7 +240,7 @@ impl WorldProjection {
 
     fn apply_presence(&mut self, presence: PlayerPresence, own_account: &str) {
         let remote = remote_player(presence);
-        if remote.account_id == own_account {
+        if remote.account_id == own_account && remote.online {
             self.set_authoritative_player_position(remote.position);
         }
         if let Some(existing) = self

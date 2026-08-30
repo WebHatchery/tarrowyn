@@ -2733,3 +2733,14 @@ and the Rust file-size scan pass. The project `publish.ps1` Windows/WebGL
 build, packaging, Preview deployment, and catalog-sync checks pass. No full
 workspace gate was repeated because this was a bounded frontier projection
 consistency correction, and no new external or deferred work was opened.
+
+Offline local-account presence events now update the companion roster without
+marking the local position authoritative. A session-departure event therefore
+cannot reopen movement controls with its last-known position while the client
+is recovering or re-authenticating. The focused
+`network::tests::location_projection::offline_presence_does_not_authorize_player_movement`
+regression passes; client-package formatting and clippy, `git diff --check`,
+and the Rust file-size scan pass. The project `publish.ps1` Windows/WebGL
+build, packaging, Preview deployment, and catalog-sync checks pass. No full
+workspace gate was repeated because this was a bounded presence-state
+correction, and no new external or deferred work was opened.
