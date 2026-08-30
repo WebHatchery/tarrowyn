@@ -1,5 +1,11 @@
 # Phase 1 — The Shared Road
 
+> Implementation status: complete for the documented multiplayer foundation.
+> The local developer runbook and repeated client/server verification are
+> recorded in [`PHASE_1_RUNBOOK.md`](PHASE_1_RUNBOOK.md). Later phases build
+> persistence, society, regional travel, and release readiness on this
+> server-owned authority boundary.
+
 ## Purpose
 
 Turn the Phase 0 client into the first real multiplayer build. A player should
@@ -120,7 +126,7 @@ more things to replicate.
 
 ## Exit artifact
 
-Deliver a local developer runbook covering server start, client configuration,
-guest-session reset, protocol versioning, test fixtures, and how to capture a
-three-client verification session. Update the client’s `game_page.json` status
-only after the three-client test passes repeatedly.
+Complete: [`PHASE_1_RUNBOOK.md`](PHASE_1_RUNBOOK.md) covers server start, client
+configuration, guest-session reset, protocol versioning, test fixtures, and
+three-client verification. The client’s current `game_page.json` status now
+reflects the later Phase 6 release-candidate scope built on this foundation.
