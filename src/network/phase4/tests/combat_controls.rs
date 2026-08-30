@@ -172,6 +172,7 @@ fn discovered_storm_magic_changes_the_visible_spell_capability() {
             family: tarrowyn_protocol::SkillFamily::Magic,
             depth: 2,
             mastery: 0,
+            usable: true,
             status: SkillStatus::Discovered,
             description: "A deliberate storm working.".to_owned(),
             entry_hint: "The three currents answer one another.".to_owned(),
@@ -181,4 +182,26 @@ fn discovered_storm_magic_changes_the_visible_spell_capability() {
     });
 
     assert!(client.storm_magic_unlocked());
+}
+
+#[test]
+fn discovered_but_unready_storm_magic_keeps_the_basic_spell_capability() {
+    let mut client = Phase4Client::new();
+    client.skills = Some(SkillsResponse {
+        skills: vec![SkillView {
+            skill_id: "storm-magic".to_owned(),
+            name: "Storm Magic".to_owned(),
+            family: tarrowyn_protocol::SkillFamily::Magic,
+            depth: 2,
+            mastery: 0,
+            usable: false,
+            status: SkillStatus::Discovered,
+            description: "A deliberate storm working.".to_owned(),
+            entry_hint: "The three currents answer one another.".to_owned(),
+        }],
+        lessons: Vec::new(),
+        cursor: 0,
+    });
+
+    assert!(!client.storm_magic_unlocked());
 }

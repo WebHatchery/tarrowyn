@@ -224,6 +224,30 @@ impl OnlineClient {
         queued
     }
 
+    pub(crate) fn queue_skill_teach_for(
+        &mut self,
+        target_account_id: &str,
+        skill_id: &str,
+    ) -> bool {
+        if !self.mutations_ready() {
+            return false;
+        }
+        let request_id = self.next_request_id("school");
+        let queued =
+            self.phase4
+                .queue_school_for(request_id, target_account_id.to_owned(), Some(skill_id));
+        if !queued {
+            self.status_message =
+                "That school subject is not ready; refresh the skill ledger and try again."
+                    .to_owned();
+        }
+        queued
+    }
+
+    pub(crate) fn has_open_skill_lesson(&self, target_account_id: &str) -> bool {
+        self.phase4.has_open_skill_lesson(target_account_id)
+    }
+
     pub(crate) fn queue_skill_practice(&mut self, skill_id: String) {
         if !self.mutations_ready() {
             return;

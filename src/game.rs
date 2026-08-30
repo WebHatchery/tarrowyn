@@ -46,6 +46,7 @@ pub struct Game {
     chat_draft: String,
     regional_inspection_open: bool,
     skill_selection_open: bool,
+    school_selection_open: bool,
     chronicle_open: bool,
     chronicle_query: String,
     account_open: bool,
@@ -109,6 +110,7 @@ impl Game {
             chat_draft: String::new(),
             regional_inspection_open: false,
             skill_selection_open: false,
+            school_selection_open: false,
             chronicle_open: false,
             chronicle_query: String::new(),
             account_open: false,
@@ -257,6 +259,11 @@ impl Game {
                             client.state,
                             client.projection.authoritative_player_position().is_some(),
                         ),
+                    school_selection_open: self.school_selection_open
+                        && online_gameplay_modal_visible(
+                            client.state,
+                            client.projection.authoritative_player_position().is_some(),
+                        ),
                     chronicle_open: self.chronicle_open
                         && online_gameplay_modal_visible(
                             client.state,
@@ -374,6 +381,7 @@ impl Game {
                     regional_event_choices: &[],
                     skills: &[],
                     skill_selection_open: false,
+                    school_selection_open: false,
                     chronicle_open: false,
                     chronicle: &[],
                     chronicle_summary: None,
@@ -444,6 +452,7 @@ impl Game {
                 self.mode = ClientMode::Offline(GameSession::new(&self.data.config));
                 self.regional_inspection_open = false;
                 self.skill_selection_open = false;
+                self.school_selection_open = false;
                 self.chronicle_open = false;
                 self.chronicle_query.clear();
                 self.account_open = false;
@@ -459,6 +468,7 @@ impl Game {
                 )));
                 self.regional_inspection_open = false;
                 self.skill_selection_open = false;
+                self.school_selection_open = false;
                 self.chronicle_open = false;
                 self.chronicle_query.clear();
                 self.account_open = false;
@@ -470,6 +480,7 @@ impl Game {
                 ClientMode::Online(client) => {
                     self.regional_inspection_open = false;
                     self.skill_selection_open = false;
+                    self.school_selection_open = false;
                     self.chronicle_open = false;
                     self.chronicle_query.clear();
                     self.account_open = false;
@@ -485,6 +496,7 @@ impl Game {
                     )));
                     self.regional_inspection_open = false;
                     self.skill_selection_open = false;
+                    self.school_selection_open = false;
                     self.chronicle_open = false;
                     self.chronicle_query.clear();
                     self.account_open = false;
@@ -511,9 +523,42 @@ impl Game {
             UiAction::Interact(id) => self.interact(&id),
             UiAction::Practice(skill_id) => {
                 self.skill_selection_open = false;
+                self.school_selection_open = false;
                 self.chronicle_open = false;
                 if let ClientMode::Online(client) = &mut self.mode {
                     client.queue_skill_practice(skill_id);
+                }
+            }
+            UiAction::Teach(skill_id) => {
+                self.school_selection_open = false;
+                self.chronicle_open = false;
+                if let ClientMode::Online(client) = &mut self.mode {
+                    let own = client
+                        .account
+                        .as_ref()
+                        .map(|account| account.account_id.as_str());
+                    let target = own.and_then(|own| {
+                        client
+                            .projection
+                            .players
+                            .iter()
+                            .find(|player| {
+                                player.account_id != own
+                                    && !player.stale(client.projection.server_tick)
+                                    && player.position == client.projection.player_position
+                            })
+                            .map(|player| player.account_id.clone())
+                    });
+                    if let Some(target) = target {
+                        if !client.queue_skill_teach_for(&target, &skill_id) {
+                            self.notifications.warning(
+                                "That discipline is no longer ready to teach; refresh the school ledger.",
+                            );
+                        }
+                    } else {
+                        self.notifications
+                            .warning("Another nearby player must be present for a school lesson.");
+                    }
                 }
             }
             UiAction::RegionalEvent(intervention) => {

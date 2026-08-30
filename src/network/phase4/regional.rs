@@ -2,7 +2,7 @@ use super::Phase4Client;
 #[cfg(test)]
 use crate::network::{NetworkNotice, WorldProjection};
 use macroquad_toolkit::net::HttpClient;
-use tarrowyn_protocol::{AuthSession, GuestSessionResponse, SkillStatus};
+use tarrowyn_protocol::{AuthSession, GuestSessionResponse};
 
 impl Phase4Client {
     #[cfg(test)]
@@ -128,9 +128,10 @@ impl Phase4Client {
 
     pub(crate) fn storm_magic_unlocked(&self) -> bool {
         self.skills.as_ref().is_some_and(|skills| {
-            skills.skills.iter().any(|skill| {
-                skill.skill_id == "storm-magic" && skill.status == SkillStatus::Discovered
-            })
+            skills
+                .skills
+                .iter()
+                .any(|skill| skill.skill_id == "storm-magic" && skill.usable)
         })
     }
 }

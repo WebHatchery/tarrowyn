@@ -214,6 +214,7 @@ fn practice_is_persistent_and_complete_discoveries_are_authoritative() {
         .find(|skill| skill.skill_id == "weapon-fighting")
         .unwrap();
     assert_eq!(weapon.status, SkillStatus::Discovered);
+    assert!(weapon.usable);
     assert!(response.data.cursor > 0);
 }
 
@@ -254,6 +255,7 @@ fn skills_read_rechecks_stored_history_for_new_discoveries() {
         .find(|skill| skill.skill_id == "weapon-fighting")
         .expect("advanced skill remains in the catalogue");
     assert_eq!(weapon.status, SkillStatus::Discovered);
+    assert!(weapon.usable);
     assert!(response.data.cursor > 0);
 }
 
@@ -377,6 +379,12 @@ fn a_discovered_advanced_skill_can_be_taught_without_granting_mastery() {
             .get_mut(&teacher.data.client_key)
             .expect("teacher identity exists")
             .skills;
+        for skill in ["wind-magic", "water-magic", "electricity-magic"] {
+            teacher_skills.practice.insert(skill.to_owned(), 16);
+        }
+        teacher_skills
+            .qualifying_events
+            .insert("storm_interactions".to_owned(), 25);
         teacher_skills.known.push("storm-magic".to_owned());
         for _ in 0..4 {
             record_practice(&mut state, &teacher.data.client_key, "teaching");
@@ -426,4 +434,29 @@ fn a_discovered_advanced_skill_can_be_taught_without_granting_mastery() {
         .expect("storm magic should remain in the catalogue");
     assert_eq!(storm_magic.status, SkillStatus::Discovered);
     assert_eq!(storm_magic.mastery, 0);
+    assert!(!storm_magic.usable);
+
+    {
+        let mut state = repository.state.lock().expect("state lock");
+        let learner_skills = &mut state
+            .identities
+            .get_mut(&learner.data.client_key)
+            .expect("learner identity exists")
+            .skills;
+        for skill in ["wind-magic", "water-magic", "electricity-magic"] {
+            learner_skills.practice.insert(skill.to_owned(), 16);
+        }
+        learner_skills
+            .qualifying_events
+            .insert("storm_interactions".to_owned(), 25);
+    }
+    let ready_storm = repository
+        .skills(&learner.data.account_token)
+        .unwrap()
+        .data
+        .skills
+        .into_iter()
+        .find(|skill| skill.skill_id == "storm-magic")
+        .expect("storm magic should remain in the catalogue");
+    assert!(ready_storm.usable);
 }

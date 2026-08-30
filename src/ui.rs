@@ -55,6 +55,7 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
     ui_online::draw_account(&ctx, mouse, &mut actions);
     ui_online::draw_regional_inspection(&ctx, mouse, &mut actions);
     ui_online::draw_skill_selection(&ctx, mouse, &mut actions);
+    ui_online::draw_school_selection(&ctx, mouse, &mut actions);
     ui_online::draw_chronicle(&ctx, mouse, &mut actions);
     if let Some(crafting) = ctx.crafting {
         ui_crafting::draw(crafting, mouse, &mut actions);
@@ -69,6 +70,13 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
         actions.retain(|action| {
             matches!(action, UiAction::Practice(_))
                 || matches!(action, UiAction::Interact(id) if id == "skill-close")
+                || is_recovery_action(action)
+        });
+    }
+    if ctx.school_selection_open {
+        actions.retain(|action| {
+            matches!(action, UiAction::Teach(_))
+                || matches!(action, UiAction::Interact(id) if id == "school-close")
                 || is_recovery_action(action)
         });
     }

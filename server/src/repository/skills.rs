@@ -555,14 +555,19 @@ pub(super) fn record_qualifying_event(state: &mut RepositoryState, key: &str, ev
 }
 
 pub(super) fn storm_magic_discovered(state: &RepositoryState, key: &str) -> bool {
-    state
-        .identities
-        .get(key)
-        .expect("identity exists")
+    let ledger = &state.identities.get(key).expect("identity exists").skills;
+    let Some(definition) = catalog()
         .skills
+        .iter()
+        .find(|skill| skill.id == "storm-magic")
+    else {
+        return false;
+    };
+    ledger
         .known
         .iter()
         .any(|skill_id| skill_id == "storm-magic")
+        && advanced_skill_ready(ledger, definition)
 }
 
 pub(super) fn storm_prerequisites_mastered(state: &RepositoryState, key: &str) -> bool {
@@ -590,11 +595,7 @@ fn discover_eligible(state: &mut RepositoryState, key: &str) -> bool {
                     .known
                     .iter()
                     .any(|known| known == &definition.id)
-                && definition
-                    .prerequisites
-                    .iter()
-                    .all(|prerequisite| mastery(&identity.skills, prerequisite) >= 5)
-                && qualifying_requirements_met(&identity.skills, definition)
+                && advanced_skill_ready(&identity.skills, definition)
         })
         .map(|definition| definition.id.clone())
         .collect();
@@ -640,8 +641,23 @@ fn qualifying_requirements_met(ledger: &SkillLedger, definition: &SkillDefinitio
     }
 }
 
+fn advanced_skill_ready(ledger: &SkillLedger, definition: &SkillDefinition) -> bool {
+    definition.depth > 1
+        && definition
+            .prerequisites
+            .iter()
+            .all(|prerequisite| mastery(ledger, prerequisite) >= 5)
+        && qualifying_requirements_met(ledger, definition)
+}
+
 fn skill_view(ledger: &SkillLedger, definition: &SkillDefinition) -> SkillView {
     let skill_mastery = mastery(ledger, &definition.id);
+    let discovered = ledger.known.iter().any(|known| known == &definition.id);
+    let usable = if definition.depth == 1 {
+        skill_mastery > 0
+    } else {
+        discovered && advanced_skill_ready(ledger, definition)
+    };
     let status = if definition.depth == 1 {
         if skill_mastery == 0 {
             SkillStatus::Available
@@ -650,7 +666,7 @@ fn skill_view(ledger: &SkillLedger, definition: &SkillDefinition) -> SkillView {
         } else {
             SkillStatus::Practising
         }
-    } else if ledger.known.iter().any(|known| known == &definition.id) {
+    } else if discovered {
         SkillStatus::Discovered
     } else if definition
         .prerequisites
@@ -673,6 +689,7 @@ fn skill_view(ledger: &SkillLedger, definition: &SkillDefinition) -> SkillView {
         family: definition.family,
         depth: definition.depth,
         mastery: skill_mastery,
+        usable,
         status,
         description: definition.description.clone(),
         entry_hint,
@@ -692,10 +709,12 @@ fn teacher_can_teach(ledger: &SkillLedger, definition: &SkillDefinition) -> bool
     if definition.depth == 1 {
         mastery(ledger, &definition.id) >= 5
     } else {
-        ledger
-            .known
-            .iter()
-            .any(|skill_id| skill_id == &definition.id)
+        definition.directly_teachable
+            && ledger
+                .known
+                .iter()
+                .any(|skill_id| skill_id == &definition.id)
+            && advanced_skill_ready(ledger, definition)
     }
 }
 

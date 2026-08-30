@@ -489,14 +489,34 @@ impl Phase4Client {
         )
     }
 
+    pub(super) fn has_open_skill_lesson(&self, target_account_id: &str) -> bool {
+        self.skills.as_ref().and_then(|skills| {
+            let own = self.own_account_id.as_deref()?;
+            Some(skills.lessons.iter().any(|lesson| {
+                lesson.learner_account_id == own && lesson.teacher_account_id == target_account_id
+            }))
+        }) == Some(true)
+    }
+
     pub(super) fn queue_school(&mut self, request_id: String, target_account_id: String) -> bool {
+        self.queue_school_for(request_id, target_account_id, None)
+    }
+
+    pub(super) fn queue_school_for(
+        &mut self,
+        request_id: String,
+        target_account_id: String,
+        selected_skill_id: Option<&str>,
+    ) -> bool {
         if self.skill_command_pending() {
             return false;
         }
         if let Some(lesson) = self.skills.as_ref().and_then(|skills| {
             let own = self.own_account_id.as_deref()?;
             skills.lessons.iter().find(|lesson| {
-                lesson.learner_account_id == own && lesson.teacher_account_id == target_account_id
+                lesson.learner_account_id == own
+                    && lesson.teacher_account_id == target_account_id
+                    && selected_skill_id.is_none_or(|skill_id| lesson.skill_id == skill_id)
             })
         }) {
             return super::queue::try_push(
@@ -512,7 +532,12 @@ impl Phase4Client {
         }
         let Some(skill) = self.skills.as_ref().and_then(|skills| {
             skills.skills.iter().find(|skill| {
-                skill.depth == 1 && skill.mastery >= 5 && skill.skill_id != "teaching"
+                selected_skill_id.is_none_or(|skill_id| skill.skill_id == skill_id)
+                    && skill.skill_id != "teaching"
+                    && ((skill.depth == 1 && skill.mastery >= 5)
+                        || (skill.depth > 1
+                            && skill.status == SkillStatus::Discovered
+                            && skill.usable))
             })
         }) else {
             return false;

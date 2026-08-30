@@ -21,6 +21,7 @@ impl Game {
             self.account_open,
             self.regional_inspection_open,
             self.skill_selection_open,
+            self.school_selection_open,
         ) {
             return;
         }
@@ -68,6 +69,7 @@ pub(super) fn keyboard_gameplay_blocked(
     account_open: bool,
     regional_inspection_open: bool,
     skill_selection_open: bool,
+    school_selection_open: bool,
 ) -> bool {
-    account_open || regional_inspection_open || skill_selection_open
+    account_open || regional_inspection_open || skill_selection_open || school_selection_open
 }

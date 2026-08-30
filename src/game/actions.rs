@@ -28,6 +28,7 @@ impl Game {
             if matches!(&self.mode, ClientMode::Online(_)) {
                 self.regional_inspection_open = false;
                 self.skill_selection_open = false;
+                self.school_selection_open = false;
                 self.chronicle_open = false;
                 self.account_open = !self.account_open;
             }
@@ -61,6 +62,7 @@ impl Game {
         if id == "region-details" {
             if matches!(&self.mode, ClientMode::Online(_)) {
                 self.skill_selection_open = false;
+                self.school_selection_open = false;
                 self.chronicle_open = false;
                 self.regional_inspection_open = !self.regional_inspection_open;
             }
@@ -70,10 +72,15 @@ impl Game {
             self.skill_selection_open = false;
             return;
         }
+        if id == "school-close" {
+            self.school_selection_open = false;
+            return;
+        }
         if id == "practice" {
             if matches!(&self.mode, ClientMode::Online(_)) {
                 self.regional_inspection_open = false;
                 self.skill_selection_open = true;
+                self.school_selection_open = false;
                 self.chronicle_open = false;
             }
             return;
@@ -82,6 +89,7 @@ impl Game {
             if matches!(&self.mode, ClientMode::Online(_)) {
                 self.regional_inspection_open = false;
                 self.skill_selection_open = false;
+                self.school_selection_open = false;
                 self.chronicle_open = !self.chronicle_open;
                 if self.chronicle_open {
                     if let ClientMode::Online(client) = &mut self.mode {
@@ -94,6 +102,7 @@ impl Game {
         if matches!(id, "logout" | "delete-account") {
             self.regional_inspection_open = false;
             self.skill_selection_open = false;
+            self.school_selection_open = false;
             self.chronicle_open = false;
             self.account_open = false;
         }
@@ -282,10 +291,19 @@ impl Game {
                         })
                         .map(|player| player.account_id.clone());
                     match target {
-                        Some(target) if client.queue_skill_teach(&target) => {}
-                        Some(_) => self.notifications.warning(
-                            "No mastered discipline is ready, or the school ledger is busy.",
-                        ),
+                        Some(target) if client.has_open_skill_lesson(&target) => {
+                            if !client.queue_skill_teach(&target) {
+                                self.notifications.warning(
+                                    "The open lesson is no longer ready; refresh the school ledger.",
+                                );
+                            }
+                        }
+                        Some(_) => {
+                            self.regional_inspection_open = false;
+                            self.skill_selection_open = false;
+                            self.school_selection_open = true;
+                            self.chronicle_open = false;
+                        }
                         None => self
                             .notifications
                             .warning("Another nearby player must be present for a school lesson."),

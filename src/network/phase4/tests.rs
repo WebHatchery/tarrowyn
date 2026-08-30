@@ -61,6 +61,7 @@ fn phase_four_reset_discards_cached_ledgers() {
             family: tarrowyn_protocol::SkillFamily::Gathering,
             depth: 1,
             mastery: 2,
+            usable: true,
             status: SkillStatus::Mastered,
             description: "Read water.".to_owned(),
             entry_hint: "Make a first catch.".to_owned(),
@@ -420,6 +421,7 @@ fn practice_button_queues_the_next_unstarted_root() {
             family: tarrowyn_protocol::SkillFamily::Gathering,
             depth: 1,
             mastery: 0,
+            usable: false,
             status: SkillStatus::Available,
             description: "Read water.".to_owned(),
             entry_hint: "Make a first catch.".to_owned(),
@@ -446,6 +448,7 @@ fn practice_choice_queues_the_selected_root() {
                 family: tarrowyn_protocol::SkillFamily::Gathering,
                 depth: 1,
                 mastery: 0,
+                usable: false,
                 status: SkillStatus::Available,
                 description: "Read water.".to_owned(),
                 entry_hint: "Make a first catch.".to_owned(),
@@ -456,6 +459,7 @@ fn practice_choice_queues_the_selected_root() {
                 family: tarrowyn_protocol::SkillFamily::Production,
                 depth: 1,
                 mastery: 1,
+                usable: true,
                 status: SkillStatus::Practising,
                 description: "Prepare useful food.".to_owned(),
                 entry_hint: "Complete a simple recipe.".to_owned(),
@@ -536,6 +540,38 @@ fn school_button_reports_a_full_command_queue() {
         client.commands.len(),
         super::super::queue::MAX_PENDING_COMMANDS
     );
+}
+
+#[test]
+fn school_can_select_a_ready_discovered_advanced_subject() {
+    let mut client = Phase4Client::new();
+    client.own_account_id = Some("teacher-1".to_owned());
+    client.skills = Some(SkillsResponse {
+        skills: vec![SkillView {
+            skill_id: "storm-magic".to_owned(),
+            name: "Storm Magic".to_owned(),
+            family: tarrowyn_protocol::SkillFamily::Magic,
+            depth: 2,
+            mastery: 0,
+            usable: true,
+            status: SkillStatus::Discovered,
+            description: "A deliberate storm working.".to_owned(),
+            entry_hint: "The three currents answer one another.".to_owned(),
+        }],
+        lessons: Vec::new(),
+        cursor: 4,
+    });
+
+    assert!(client.queue_school_for(
+        "school-advanced".to_owned(),
+        "learner-1".to_owned(),
+        Some("storm-magic"),
+    ));
+    let Some(Phase4Command::Skill(request)) = client.commands.pop_front() else {
+        panic!("the selected advanced subject should queue a lesson");
+    };
+    assert_eq!(request.action, SkillAction::BeginLesson);
+    assert_eq!(request.skill_id.as_deref(), Some("storm-magic"));
 }
 
 #[test]

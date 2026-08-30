@@ -1,6 +1,12 @@
 use super::*;
 use tarrowyn_protocol::{RegionSnapshot, RouteAction, RouteStatus, TravelStatus};
 
+#[path = "panels/school.rs"]
+mod school;
+pub use school::draw_school_selection;
+#[cfg(test)]
+pub use school::school_teaching_choice;
+
 pub fn draw_account(ctx: &UiContext<'_>, mouse: Vec2, actions: &mut Vec<UiAction>) {
     if !ctx.account_open {
         return;

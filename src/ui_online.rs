@@ -20,7 +20,8 @@ pub(crate) use controls::{
 };
 pub(super) use panels::{
     combat_side_control, draw_account, draw_button_row, draw_chronicle, draw_combat_status,
-    draw_regional_inspection, draw_skill_selection, frontier_threat_is_reachable,
+    draw_regional_inspection, draw_school_selection, draw_skill_selection,
+    frontier_threat_is_reachable,
 };
 
 #[cfg(test)]

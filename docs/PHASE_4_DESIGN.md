@@ -163,10 +163,12 @@ lessons and rejects another opening while every retained lesson is active. A
 root lesson starts one practice, while an advanced lesson grants only the
 discovery and leaves mastery and all personal requirements to the learner. The
 server accepts a mastered root or a discovered, directly teachable advanced
-skill from a teacher whose Teaching mastery reaches that skill's depth. The
-current client offers mastered roots through the visible School control and
-surfaces open lessons in the skill projection; the server remains the authority
-for future school membership, tuition, halls, and advanced lesson policy.
+skill whose own discovery requirements are complete, from a teacher whose
+Teaching mastery reaches that skill's depth. The skill projection carries a
+separate `usable` signal so discovery is not mistaken for readiness. The
+client offers mastered roots and ready discovered advanced arts through the
+visible School subject chooser, while the server remains the authority for
+future school membership, tuition, halls, and advanced lesson policy.
 
 Every depth-one catalogue entry also has a dependable first-practice path. A
 visible Practice control opens a touch chooser containing every available or

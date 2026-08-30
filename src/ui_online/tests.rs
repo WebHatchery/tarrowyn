@@ -91,6 +91,7 @@ fn skill_selection_keeps_roots_open_and_advanced_arts_hidden() {
         family: tarrowyn_protocol::SkillFamily::Gathering,
         depth: 1,
         mastery: 0,
+        usable: false,
         status: tarrowyn_protocol::SkillStatus::Available,
         description: "Read water.".to_owned(),
         entry_hint: "Make a first catch.".to_owned(),
@@ -98,16 +99,19 @@ fn skill_selection_keeps_roots_open_and_advanced_arts_hidden() {
     let practising = tarrowyn_protocol::SkillView {
         status: tarrowyn_protocol::SkillStatus::Practising,
         mastery: 2,
+        usable: true,
         ..available.clone()
     };
     let advanced = tarrowyn_protocol::SkillView {
         depth: 2,
         status: tarrowyn_protocol::SkillStatus::Resonating,
+        usable: false,
         ..available.clone()
     };
     let mastered = tarrowyn_protocol::SkillView {
         status: tarrowyn_protocol::SkillStatus::Mastered,
         mastery: 5,
+        usable: true,
         ..available
     };
     assert!(super::panels::skill_practice_choice(&practising));
@@ -123,6 +127,7 @@ fn advanced_skill_line_names_only_revealed_discovery_states() {
         family: tarrowyn_protocol::SkillFamily::Magic,
         depth: 2,
         mastery: 0,
+        usable: false,
         status: tarrowyn_protocol::SkillStatus::Available,
         description: "A secret pattern.".to_owned(),
         entry_hint: "Not yet.".to_owned(),
@@ -132,12 +137,14 @@ fn advanced_skill_line_names_only_revealed_discovery_states() {
         skill_id: "storm-magic".to_owned(),
         name: "Storm Magic".to_owned(),
         status: tarrowyn_protocol::SkillStatus::Resonating,
+        usable: false,
         ..hidden.clone()
     };
     let discovered = tarrowyn_protocol::SkillView {
         skill_id: "weapon-fighting".to_owned(),
         name: "Weapon Fighting".to_owned(),
         status: tarrowyn_protocol::SkillStatus::Discovered,
+        usable: true,
         ..hidden
     };
 
@@ -146,6 +153,28 @@ fn advanced_skill_line_names_only_revealed_discovery_states() {
         "Advanced arts in your ledger: Storm Magic (resonating) • Weapon Fighting (discovered)"
     );
     assert!(!super::panels::advanced_skill_line(&[hidden_available]).contains("Hidden Art"));
+}
+
+#[test]
+fn school_selection_accepts_ready_advanced_arts_but_not_discovery_alone() {
+    let advanced = tarrowyn_protocol::SkillView {
+        skill_id: "storm-magic".to_owned(),
+        name: "Storm Magic".to_owned(),
+        family: tarrowyn_protocol::SkillFamily::Magic,
+        depth: 2,
+        mastery: 0,
+        usable: true,
+        status: tarrowyn_protocol::SkillStatus::Discovered,
+        description: "A deliberate storm working.".to_owned(),
+        entry_hint: "The three currents answer one another.".to_owned(),
+    };
+    let not_ready = tarrowyn_protocol::SkillView {
+        usable: false,
+        ..advanced.clone()
+    };
+
+    assert!(super::panels::school_teaching_choice(&advanced));
+    assert!(!super::panels::school_teaching_choice(&not_ready));
 }
 
 #[test]

@@ -61,6 +61,8 @@ pub struct SkillView {
     pub family: SkillFamily,
     pub depth: u8,
     pub mastery: u8,
+    #[serde(default)]
+    pub usable: bool,
     pub status: SkillStatus,
     pub description: String,
     pub entry_hint: String,

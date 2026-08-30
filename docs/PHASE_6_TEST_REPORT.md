@@ -3143,3 +3143,17 @@ regression passes, along with server-package formatting and strict clippy.
 Windows/WebGL build, packaging, Preview deployment, and catalog-sync checks
 pass. No full workspace gate was repeated because this was a bounded school
 lesson correction, and no new external or deferred work was opened.
+
+Advanced skill discovery is now separate from actual usability. The server
+reuses one readiness predicate for discovery, advanced teaching, the Storm
+combat capability, and the serialized `SkillView.usable` signal; the client
+uses that signal to keep a taught-but-unready Storm art on the basic Spell
+control. The touch School control now opens a subject chooser for mastered
+roots and ready discovered advanced arts, while an existing learner lesson
+still joins directly. Focused protocol, server, client-network, combat, and
+UI regressions pass, and the server/client package formatting checks pass.
+The full workspace test/clippy gate, asset and source-size checks, and project
+publisher also pass: Windows/WebGL builds, packaging, Preview deployment,
+tracker recording, and catalog sync completed successfully. The remaining
+follow-up is player playtesting of advanced lesson pacing and Storm feedback,
+tracked in the Phase 6 register.
