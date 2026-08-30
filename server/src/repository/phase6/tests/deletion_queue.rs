@@ -145,3 +145,64 @@ fn completed_deletion_replays_after_the_identity_is_removed() {
     assert_eq!(coalesced_replay, coalesced);
     assert!(repository.state.lock().unwrap().identities.is_empty());
 }
+
+#[test]
+fn coalesced_deletion_replay_survives_a_restart_before_terminal_cleanup() {
+    let state_path = std::env::temp_dir().join(format!(
+        "tarrowyn-deletion-coalesced-replay-{}.json",
+        std::process::id()
+    ));
+    let config = ServerConfig {
+        persistence_path: Some(state_path.to_string_lossy().into_owned()),
+        ..ServerConfig::default()
+    };
+    let repository = WorldRepository::new(config.clone());
+    let guest = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("deletion-coalesced-restart".to_owned()),
+            reset: false,
+        })
+        .expect("guest session")
+        .data;
+    let linked = repository
+        .auth_link(
+            &guest.account_token,
+            AuthLinkRequest {
+                request_id: "deletion-coalesced-restart-link".to_owned(),
+                provider: "webhatchery-identity-oidc".to_owned(),
+                subject: "deletion-coalesced-restart-subject".to_owned(),
+                display_name: None,
+            },
+        )
+        .expect("linked session")
+        .data;
+    let coalesced_request = AccountDeletionRequest {
+        request_id: "deletion-coalesced-restart-retry".to_owned(),
+        account_id: linked.account_id.clone(),
+    };
+    repository
+        .account_delete(
+            &linked.session.account_token,
+            AccountDeletionRequest {
+                request_id: "deletion-coalesced-restart-first".to_owned(),
+                account_id: linked.account_id.clone(),
+            },
+        )
+        .expect("initial deletion request");
+    let coalesced = repository
+        .account_delete(&linked.session.account_token, coalesced_request.clone())
+        .expect("coalesced deletion request")
+        .data;
+    drop(repository);
+
+    let restored = WorldRepository::new(config);
+    restored.tick();
+    let replay = restored
+        .account_delete(&linked.session.account_token, coalesced_request)
+        .expect("coalesced terminal result should survive restart")
+        .data;
+
+    assert_eq!(replay, coalesced);
+    assert!(restored.state.lock().unwrap().identities.is_empty());
+    let _ = std::fs::remove_file(state_path);
+}

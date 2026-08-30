@@ -660,6 +660,7 @@ impl WorldRepository {
                 .phase6
                 .deletion_results
                 .insert(deletion_replay_key, response.clone());
+            self.persist(&state);
             return Ok(ApiResponse {
                 meta: meta(
                     state.tick,

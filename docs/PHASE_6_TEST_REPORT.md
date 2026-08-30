@@ -2494,3 +2494,12 @@ test passes; server-package formatting and clippy, `git diff --check`, and the
 Rust file-size scan pass. No full workspace gate was repeated because this was
 a bounded operator-readiness session correction, and no new external or
 deferred work was opened.
+
+Coalesced account-deletion requests now persist their terminal replay mapping
+before returning, so a second request ID remains replayable after a restart
+and after the queued deletion removes the identity. The focused
+`repository::phase6::tests::deletion_queue` filter passes three tests;
+server-package formatting and clippy, `git diff --check`, and the Rust
+file-size scan pass. No full workspace gate was repeated because this was a
+bounded deletion-replay durability correction, and no new external or
+deferred work was opened.
