@@ -178,8 +178,8 @@ fn replay_caches_ok(state: &RepositoryState, identity_accounts: &HashSet<&str>) 
             && state.identities.contains_key(identity_key)
             && phase6
                 .auth_link_results
-                .keys()
-                .any(|key| key.starts_with(&format!("{identity_key}:")))
+                .iter()
+                .any(|(key, response)| key == &format!("{identity_key}:{}", response.request_id))
     });
     let refresh_results_ok = phase6.auth_refresh_results.iter().all(|(key, response)| {
         bounded(key, MAX_CACHE_KEY_CHARS)

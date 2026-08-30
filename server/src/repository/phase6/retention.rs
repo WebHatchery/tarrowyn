@@ -7,8 +7,8 @@ pub(super) fn trim_auth_link_tokens(phase6: &mut Phase6State) {
     phase6.auth_link_tokens.retain(|_, identity_key| {
         phase6
             .auth_link_results
-            .keys()
-            .any(|key| key.starts_with(&format!("{identity_key}:")))
+            .iter()
+            .any(|(key, response)| key == &format!("{identity_key}:{}", response.request_id))
     });
     while phase6.auth_link_tokens.len() > MAX_REPLAY_CACHE {
         let Some(token) = phase6.auth_link_tokens.keys().next().cloned() else {

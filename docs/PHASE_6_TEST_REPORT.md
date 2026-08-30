@@ -798,3 +798,11 @@ idempotent response and removes the resetting guest's own revoke replay. The
 focused replay-cleanup regressions cover the boundary; server clippy, size,
 diff, formatting, and publisher checks are the validation scope for this Phase
 6 privacy-maintenance slice. No new external or deferred work was opened.
+
+Auth-link token retention and readiness validation now require the complete
+identity/request replay key, so another identity sharing a client-key prefix
+cannot make a missing link result appear healthy or keep its stale token alive.
+The focused replay-integrity regression covers detection and pruning; server
+clippy, size, diff, formatting, and publisher checks are the validation scope
+for this Phase 6 identity-maintenance slice. No new external or deferred work
+was opened.
