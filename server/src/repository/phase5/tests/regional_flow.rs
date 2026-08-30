@@ -1,4 +1,5 @@
 use super::*;
+use tarrowyn_protocol::Position;
 
 #[test]
 fn region_travel_recovery_and_market_settle_authoritatively() {
@@ -101,9 +102,18 @@ fn region_travel_recovery_and_market_settle_authoritatively() {
             .player_location_id,
         "saltmere"
     );
+    let carrier = guest(&repository, "phase5-market-carrier");
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state
+            .identities
+            .get_mut(&carrier.client_key)
+            .expect("carrier identity")
+            .position = Position { x: 3, y: 9 };
+    }
     let settled = repository
         .market_order(
-            &traveller.account_token,
+            &carrier.account_token,
             MarketOrderRequest {
                 request_id: "fulfil".to_owned(),
                 action: MarketOrderAction::Fulfil,

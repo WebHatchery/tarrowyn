@@ -18,6 +18,7 @@ fn create_request(request_id: &str) -> MarketOrderRequest {
 fn travelling_fallback_is_bounded_delayed_and_not_refunded() {
     let repository = WorldRepository::new(ServerConfig::default());
     let session = guest(&repository, "phase5-fallback");
+    let fulfiller = guest(&repository, "phase5-fallback-fulfiller");
     {
         let mut state = repository.state.lock().expect("repository lock");
         let identity = state
@@ -39,13 +40,13 @@ fn travelling_fallback_is_bounded_delayed_and_not_refunded() {
         let mut state = repository.state.lock().expect("repository lock");
         state
             .identities
-            .get_mut(&session.client_key)
+            .get_mut(&fulfiller.client_key)
             .expect("identity exists")
             .position = Position { x: 3, y: 9 };
     }
     let early = repository
         .market_order(
-            &session.account_token,
+            &fulfiller.account_token,
             MarketOrderRequest {
                 request_id: "fallback-early".to_owned(),
                 action: MarketOrderAction::Fulfil,
@@ -67,7 +68,7 @@ fn travelling_fallback_is_bounded_delayed_and_not_refunded() {
     repository.tick();
     let fulfilled = repository
         .market_order(
-            &session.account_token,
+            &fulfiller.account_token,
             MarketOrderRequest {
                 request_id: "fallback-fulfil".to_owned(),
                 action: MarketOrderAction::Fulfil,

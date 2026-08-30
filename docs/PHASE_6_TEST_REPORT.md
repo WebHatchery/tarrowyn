@@ -1209,3 +1209,10 @@ tests (2 passed), service-order retention tests (3 passed), and the two touched
 state-integrity regressions (1 passed each) pass with server clippy and direct
 formatting. No full workspace suite or publisher run was needed for this
 test-only maintenance slice. No new external or deferred work was opened.
+
+The Phase 5 market fixtures now use a separate carrier identity when settling a
+shipment at Saltmere, matching the live rule that an order owner cannot fulfil
+their own shipment. The focused fallback and regional-flow regressions (1
+passed each), server clippy, direct formatting, and diff checks pass. No full
+workspace suite or publisher run was needed for this test-only maintenance
+slice. No new external or deferred work was opened.
