@@ -69,3 +69,15 @@ fn regional_inspection_preserves_recovery_controls() {
     ));
     assert!(!regional_inspection_action_allowed(&UiAction::Move(1, 0)));
 }
+
+#[test]
+fn crafting_overlay_preserves_recovery_controls() {
+    assert!(crafting_action_allowed(&UiAction::Reconnect));
+    assert!(crafting_action_allowed(&UiAction::UseOffline));
+    assert!(crafting_action_allowed(&UiAction::Interact(
+        "crafting-timing".to_owned()
+    )));
+    assert!(!crafting_action_allowed(&UiAction::Interact(
+        "trade".to_owned()
+    )));
+}

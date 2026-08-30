@@ -58,8 +58,7 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
     ui_online::draw_chronicle(&ctx, mouse, &mut actions);
     if let Some(crafting) = ctx.crafting {
         ui_crafting::draw(crafting, mouse, &mut actions);
-        actions
-            .retain(|action| matches!(action, UiAction::Interact(id) if id == "crafting-timing"));
+        actions.retain(crafting_action_allowed);
     }
     draw_footer(&ctx);
 
@@ -106,6 +105,11 @@ fn regional_inspection_action_allowed(action: &UiAction) -> bool {
                     "region-details" | "route-repair" | "route-escort" | "route-improve"
                 )
         )
+        || is_recovery_action(action)
+}
+
+fn crafting_action_allowed(action: &UiAction) -> bool {
+    matches!(action, UiAction::Interact(id) if id == "crafting-timing")
         || is_recovery_action(action)
 }
 

@@ -2981,3 +2981,13 @@ file-size scan. The project `publish.ps1` Windows/WebGL build, packaging,
 Preview deployment, and catalog-sync checks pass. No full workspace gate was
 repeated because this was a bounded regional-modal touch-recovery correction,
 and no new external or deferred work was opened.
+
+The woodworking timing overlay now preserves the visible `Reconnect` and
+`Offline fixture` recovery actions alongside its timing button. A player can
+therefore leave the challenge through the touch recovery path instead of being
+trapped by the overlay's narrow action filter. The focused `ui::tests` slice
+passes (6 tests), along with client-package formatting and clippy. `git diff --check`
+and the Rust file-size scan pass. The project `publish.ps1` Windows/WebGL
+build, packaging, Preview deployment, and catalog-sync checks pass. No full
+workspace gate was repeated because this was a bounded crafting-overlay
+touch-recovery correction, and no new external or deferred work was opened.
