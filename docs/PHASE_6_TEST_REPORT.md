@@ -2857,3 +2857,13 @@ file-size scan pass. The project `publish.ps1` Windows/WebGL build, packaging,
 Preview deployment, and catalog-sync checks pass. No full workspace gate was
 repeated because this was a bounded JSON persistence durability correction, and no
 new external or deferred work was opened.
+
+Knocked-out movement input now stops at the client recovery boundary instead of
+sending a request that the server must reject. The status names the visible
+recovery prompt as the next action. The focused
+`network::tests::input_guards::knocked_out_input_waits_for_a_visible_recovery_prompt`
+test passes; client-package formatting and clippy, `git diff --check`, and the Rust
+file-size scan pass. The project `publish.ps1` Windows/WebGL build, packaging,
+Preview deployment, and catalog-sync checks pass. No full workspace gate was
+repeated because this was a bounded knockout-input correction, and no new
+external or deferred work was opened.

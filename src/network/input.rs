@@ -5,6 +5,15 @@ impl OnlineClient {
         if self.state != ConnectionState::Online {
             return;
         }
+        if self
+            .projection
+            .player
+            .as_ref()
+            .is_some_and(|player| player.knocked_out)
+        {
+            self.status_message = "Choose a recovery prompt before walking.".to_owned();
+            return;
+        }
         if self.projection.authoritative_player_position().is_none() {
             self.status_message =
                 "Your position is still loading; wait for the authoritative road snapshot."
