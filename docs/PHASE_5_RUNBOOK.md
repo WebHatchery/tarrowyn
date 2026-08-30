@@ -87,6 +87,8 @@ operator repair surface for stuck travel, inventory normalisation, and failed
 orders. Never include access or refresh tokens in an audit note.
 
 `GET /v1/ops/health` is safe for readiness checks. Authenticated operators may
-read `/v1/ops/metrics`. The backup record in the health response must show the
-last successful backup tick and path. Run `scripts/phase5_region_soak.ps1`
-after changing the route or interest-radius fixture.
+read `/v1/ops/metrics`. The health response shows the last successful backup
+tick; use the deployment-configured path when locating the backup because the
+public response intentionally does not echo filesystem paths. Run
+`scripts/phase5_region_soak.ps1` after changing the route or interest-radius
+fixture.
