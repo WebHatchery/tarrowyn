@@ -287,6 +287,12 @@ impl WorldProjection {
 
     pub(super) fn set_authoritative_player_position(&mut self, position: TilePos) {
         self.player_position = position;
+        if let Some(player) = self.player.as_mut() {
+            player.position = tarrowyn_protocol::Position {
+                x: position.x,
+                y: position.y,
+            };
+        }
         self.player_position_authoritative = true;
     }
 

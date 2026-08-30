@@ -2877,3 +2877,13 @@ Rust file-size scan pass. The project `publish.ps1` Windows/WebGL build,
 packaging, Preview deployment, and catalog-sync checks pass. No full workspace
 gate was repeated because this was a bounded production-session integrity
 correction, and no new external or deferred work was opened.
+
+Authoritative local presence and movement updates now keep the cached player
+projection's position synchronized with the map position, so account and combat
+surfaces do not briefly describe the previous tile after a confirmed move. The
+focused `network::tests::location_projection::authoritative_presence_keeps_player_projection_location_in_sync`
+test passes; client-package formatting and clippy, `git diff --check`, and the
+Rust file-size scan pass. The project `publish.ps1` Windows/WebGL build,
+packaging, Preview deployment, and catalog-sync checks pass. No full workspace
+gate was repeated because this was a bounded authoritative-position coherence
+correction, and no new external or deferred work was opened.
