@@ -2239,3 +2239,13 @@ standards, and the Rust file-size check pass, and `publish.ps1` passes
 Windows/WebGL builds, packaging, Preview deployment, and catalog sync. No full
 workspace gate was repeated because this was a bounded skill-control
 correction, and no new external or deferred work was opened.
+
+Local-fight and local combat action controls now close while a Phase 4 combat
+command is queued or in flight, preventing repeated Prepare or action requests
+before the encounter projection catches up. The focused combat filter passes
+seven related tests, including the existing authoritative action-window
+checks; client formatting, clippy, standards, and the Rust file-size check
+pass, and `publish.ps1` passes Windows/WebGL builds, packaging, Preview
+deployment, and catalog sync. No full workspace gate was repeated because
+this was a bounded local-combat-control correction, and no new external or
+deferred work was opened.

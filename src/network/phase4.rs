@@ -132,6 +132,10 @@ impl Phase4Client {
         if ((id == "town-hall" || id == "tax-rate") && self.governance_command_pending())
             || (id == "registry" && self.claim_command_pending())
             || (id == "practice" && self.skill_command_pending())
+            || (matches!(
+                id,
+                "local-fight" | "retreat" | "technique" | "guard" | "item" | "reposition" | "spell"
+            ) && self.combat_command_pending())
         {
             return false;
         }
@@ -181,6 +185,16 @@ impl Phase4Client {
                 .commands
                 .iter()
                 .any(|command| matches!(command, Phase4Command::Skill(_)))
+    }
+
+    pub(super) fn combat_command_pending(&self) -> bool {
+        self.in_flight_command
+            .as_ref()
+            .is_some_and(|command| matches!(command, Phase4Command::Combat(_)))
+            || self
+                .commands
+                .iter()
+                .any(|command| matches!(command, Phase4Command::Combat(_)))
     }
 
     fn queue_governance(&mut self, request_id: String) {

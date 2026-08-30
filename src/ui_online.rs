@@ -75,8 +75,10 @@ pub(super) fn draw_sidebar(
         frontier_threat_is_reachable(ctx.player_position, ctx.wilderness);
     let (combat_side_id, combat_side_label) =
         combat_side_control(ctx.combat, frontier_threat_reachable);
-    let local_combat_action_ready =
-        panels::local_combat_action_enabled(ctx.combat, ctx.server_tick);
+    let local_combat_action_ready = combat_control_enabled(
+        panels::local_combat_action_enabled(ctx.combat, ctx.server_tick),
+        ctx.combat_pending,
+    );
     let combat_side_enabled = match combat_side_id {
         "contract" => true,
         "frontier-retreat" => frontier_threat_reachable,
@@ -343,7 +345,8 @@ pub(super) fn draw_sidebar(
                     && !ctx.combat.is_some_and(|combat| {
                         combat.status == tarrowyn_protocol::LocalCombatStatus::Engaged
                             && combat.action_available_at_tick > ctx.server_tick
-                    }),
+                    })
+                    && !ctx.combat_pending,
                 ButtonTone::Secondary,
             ),
             (
@@ -585,6 +588,10 @@ fn governance_control_enabled(governance_pending: bool) -> bool {
 
 fn skill_control_enabled(available: bool, skill_pending: bool) -> bool {
     available && !skill_pending
+}
+
+fn combat_control_enabled(available: bool, combat_pending: bool) -> bool {
+    available && !combat_pending
 }
 
 pub(super) fn movement_enabled(ctx: &UiContext<'_>) -> bool {
