@@ -49,6 +49,7 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
         }
     }
     draw_sidebar(&ctx, mouse, &mut actions);
+    ui_online::draw_account(&ctx, mouse, &mut actions);
     ui_online::draw_regional_inspection(&ctx, mouse, &mut actions);
     ui_online::draw_skill_selection(&ctx, mouse, &mut actions);
     ui_online::draw_chronicle(&ctx, mouse, &mut actions);
@@ -88,6 +89,9 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
                 "chronicle-close" | "chronicle-search" | "chronicle-search-next"
             ) || id.starts_with("chronicle-key-"))
         });
+    }
+    if ctx.account_open {
+        actions.retain(|action| matches!(action, UiAction::Interact(id) if id == "account-close"));
     }
 
     actions

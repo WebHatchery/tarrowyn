@@ -155,6 +155,28 @@ pub(super) fn render(client: &Phase5Client) -> String {
     )
 }
 
+pub(super) fn account_details(client: &Phase5Client) -> String {
+    let Some(account) = client.account.as_ref() else {
+        return "The account boundary is still loading from the shared road.".to_owned();
+    };
+    let character = &account.character;
+    format!(
+        "Identity: {}\nProvider: {}\nAccount ID: {}\nCharacter ID: {}\nCharacter at ({}, {}) • Gold {} • Skill {} • Reputation {}\nSession valid through beat {}\nPrivacy policy: {} • History: {}",
+        account.display_name,
+        account.provider,
+        account.account_id,
+        account.character_id,
+        character.position.x,
+        character.position.y,
+        character.gold,
+        character.skill,
+        character.reputation,
+        account.session_expires_at_tick,
+        account.privacy_policy_version,
+        account.retention_note,
+    )
+}
+
 pub(super) fn inspection(client: &Phase5Client) -> String {
     let Some(region) = client.region.as_ref() else {
         return "Regional details are still loading.".to_owned();

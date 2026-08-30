@@ -441,6 +441,22 @@ fn account_and_law_reads_share_the_regional_cursor_boundary() {
 }
 
 #[test]
+fn account_summary_names_the_character_boundary_without_session_secrets() {
+    let mut client = Phase5Client::new();
+    client.account = Some(account_response(false));
+
+    let summary = client.account_details();
+
+    assert!(summary.contains("Identity: Linked traveller"));
+    assert!(summary.contains("Provider: webhatchery-identity-oidc"));
+    assert!(summary.contains("Account ID: account-1"));
+    assert!(summary.contains("Character ID: character-1"));
+    assert!(summary.contains("Session valid through beat 100"));
+    assert!(!summary.contains("refresh-secret"));
+    assert!(!summary.contains("account_token"));
+}
+
+#[test]
 fn regional_summary_shows_local_condition_and_recovery_signal() {
     let mut client = Phase5Client::new();
     client.region = Some(tarrowyn_protocol::RegionSnapshot {

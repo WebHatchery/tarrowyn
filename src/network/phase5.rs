@@ -485,6 +485,10 @@ impl Phase5Client {
         summary::render(self)
     }
 
+    pub(super) fn account_details(&self) -> String {
+        summary::account_details(self)
+    }
+
     pub(super) fn inspection(&self) -> String {
         summary::inspection(self)
     }
@@ -710,6 +714,10 @@ impl OnlineClient {
     }
     pub(crate) fn phase5_summary(&self) -> String {
         self.phase4.region_summary()
+    }
+
+    pub(crate) fn account_summary(&self) -> String {
+        self.phase4.account_summary()
     }
 
     pub(crate) fn phase5_travel_control(&self) -> (&'static str, bool, bool) {

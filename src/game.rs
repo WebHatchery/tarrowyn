@@ -48,6 +48,7 @@ pub struct Game {
     skill_selection_open: bool,
     chronicle_open: bool,
     chronicle_query: String,
+    account_open: bool,
 }
 
 impl Game {
@@ -110,6 +111,7 @@ impl Game {
             skill_selection_open: false,
             chronicle_open: false,
             chronicle_query: String::new(),
+            account_open: false,
         };
         game.refresh_save_state();
         game
@@ -257,6 +259,8 @@ impl Game {
                     account_deletion_armed: client.account_deletion_armed(),
                     account_deletion_available: client.account_deletion_available(),
                     account_link_available: client.account_link_available(),
+                    account_open: self.account_open && client.state == ConnectionState::Online,
+                    account_summary: &client.account_summary(),
                     crafting: client.crafting_view(),
                     combat: client.combat_state(),
                     storm_magic_unlocked: client.storm_magic_unlocked(),
@@ -345,6 +349,8 @@ impl Game {
                     account_deletion_armed: false,
                     account_deletion_available: false,
                     account_link_available: false,
+                    account_open: false,
+                    account_summary: "Account details belong to the shared road.",
                     crafting: None,
                     combat: None,
                     storm_magic_unlocked: false,
@@ -382,6 +388,7 @@ impl Game {
                 self.skill_selection_open = false;
                 self.chronicle_open = false;
                 self.chronicle_query.clear();
+                self.account_open = false;
                 self.chat_draft.clear();
                 self.sync_camera(TilePos::new(8, 6));
                 self.notifications
@@ -396,6 +403,7 @@ impl Game {
                 self.skill_selection_open = false;
                 self.chronicle_open = false;
                 self.chronicle_query.clear();
+                self.account_open = false;
                 self.chat_draft.clear();
                 self.sync_camera(TilePos::new(8, 6));
                 self.notifications.info("Connecting to the shared road…");
@@ -406,6 +414,7 @@ impl Game {
                     self.skill_selection_open = false;
                     self.chronicle_open = false;
                     self.chronicle_query.clear();
+                    self.account_open = false;
                     if !client.reconnect() {
                         self.notifications
                             .warning("Wait for the reconnect cooldown to finish.");
@@ -420,6 +429,7 @@ impl Game {
                     self.skill_selection_open = false;
                     self.chronicle_open = false;
                     self.chronicle_query.clear();
+                    self.account_open = false;
                     self.sync_camera(TilePos::new(8, 6));
                     self.notifications.info("Connecting to the shared road…");
                 }

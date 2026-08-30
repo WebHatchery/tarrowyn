@@ -75,6 +75,8 @@ pub struct UiContext<'a> {
     pub account_deletion_armed: bool,
     pub account_deletion_available: bool,
     pub account_link_available: bool,
+    pub account_open: bool,
+    pub account_summary: &'a str,
     pub crafting: Option<CraftingView>,
     pub combat: Option<&'a LocalCombatState>,
     pub storm_magic_unlocked: bool,

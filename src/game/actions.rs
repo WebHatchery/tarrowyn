@@ -20,6 +20,19 @@ impl Game {
             self.chronicle_open = false;
             return;
         }
+        if id == "account-close" {
+            self.account_open = false;
+            return;
+        }
+        if id == "account-details" {
+            if matches!(&self.mode, ClientMode::Online(_)) {
+                self.regional_inspection_open = false;
+                self.skill_selection_open = false;
+                self.chronicle_open = false;
+                self.account_open = !self.account_open;
+            }
+            return;
+        }
         if id == "chronicle-search" {
             let query = self.chronicle_query.trim().to_owned();
             self.chronicle_query = query.clone();
@@ -82,6 +95,7 @@ impl Game {
             self.regional_inspection_open = false;
             self.skill_selection_open = false;
             self.chronicle_open = false;
+            self.account_open = false;
         }
         if let ClientMode::Online(client) = &mut self.mode {
             match id {

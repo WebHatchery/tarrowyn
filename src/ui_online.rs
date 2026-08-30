@@ -4,7 +4,7 @@ use tarrowyn_protocol::{RouteStatus, TradeStatus};
 #[path = "ui_online/panels.rs"]
 mod panels;
 pub(super) use panels::{
-    combat_side_control, draw_button_row, draw_chronicle, draw_combat_status,
+    combat_side_control, draw_account, draw_button_row, draw_chronicle, draw_combat_status,
     draw_regional_inspection, draw_skill_selection,
 };
 
@@ -345,13 +345,13 @@ pub(super) fn draw_sidebar(
         mouse,
         &[
             (
-                "account",
                 if ctx.account_link_available {
-                    "Account"
+                    "account"
                 } else {
-                    "Linked"
+                    "account-details"
                 },
-                ctx.account_link_available,
+                "Account",
+                true,
                 ButtonTone::Secondary,
             ),
             ("logout", "Logout", true, ButtonTone::Secondary),

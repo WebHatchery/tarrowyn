@@ -48,6 +48,10 @@ impl Phase4Client {
         self.regional.summary()
     }
 
+    pub(crate) fn account_summary(&self) -> String {
+        self.regional.account_details()
+    }
+
     pub(crate) fn regional_travel_control(&self) -> (&'static str, bool, bool) {
         self.regional.travel_control()
     }

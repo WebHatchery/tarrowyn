@@ -1860,3 +1860,13 @@ file-size check pass, and `publish.ps1` passes Windows/WebGL builds, packaging,
 Preview deployment, and catalog sync. No full workspace gate was repeated
 because this was a bounded client touch-input slice. The follow-up register
 now leaves only playtest evidence for the search surface.
+
+Linked players can now open a read-only Account and character panel from the
+visible Account control. It names provider, account and character boundaries,
+character status, session expiry, privacy policy, and retention without
+exposing access or refresh credentials; guest players retain the Account link
+action. The focused account-summary secret-safety regression passes, client
+clippy and the Rust file-size check pass, and `publish.ps1` passes Windows/WebGL
+builds, packaging, Preview deployment, and catalog sync. No full workspace gate
+was repeated because this was a bounded client account-transparency slice. The
+follow-up register records only identity-surface playtest evidence.
