@@ -55,12 +55,26 @@ function Assert-RequiredRecordIds([string]$label, [object[]]$records, [string[]]
     }
 }
 
+function Test-SkillCycle([string]$skillId, [hashtable]$skills, [hashtable]$visiting, [hashtable]$visited) {
+    if ($visited.ContainsKey($skillId)) { return $false }
+    if ($visiting.ContainsKey($skillId)) { return $true }
+    $visiting[$skillId] = $true
+    foreach ($prerequisite in @($skills[$skillId].prerequisites)) {
+        if (Test-SkillCycle $prerequisite $skills $visiting $visited) { return $true }
+    }
+    [void]$visiting.Remove($skillId)
+    $visited[$skillId] = $true
+    return $false
+}
+
 function Assert-SkillRecords([object[]]$records) {
     $records = @($records)
     $skillIds = @($records | ForEach-Object { [string]$_.id })
+    $skills = @{}
     $families = @("combat", "magic", "gathering", "farming", "production", "social")
     foreach ($skill in $records) {
         $skillId = [string]$skill.id
+        $skills[$skillId] = $skill
         if ($families -notcontains [string]$skill.family) {
             throw "Skill $skillId must use a supported family."
         }
@@ -100,6 +114,13 @@ function Assert-SkillRecords([object[]]$records) {
             if ($qualifyingEvent -eq "weapon_defeats" -and [int]$skill.minimum_per_prerequisite -lt 1) {
                 throw "Advanced skill $skillId needs a positive minimum_per_prerequisite."
             }
+        }
+    }
+    $visiting = @{}
+    $visited = @{}
+    foreach ($skillId in $skillIds) {
+        if (Test-SkillCycle $skillId $skills $visiting $visited) {
+            throw "Skill $skillId participates in a prerequisite cycle."
         }
     }
 }

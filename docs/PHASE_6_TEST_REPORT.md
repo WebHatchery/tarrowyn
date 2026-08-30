@@ -1624,6 +1624,12 @@ future skills to be added. The focused `validate_content.ps1` run passes with
 the complete current catalogue; no Rust or workspace-wide gate was repeated
 because this was a stable-content-ID check.
 
+The skill content gate now also rejects prerequisite cycles using the same
+bounded graph rule enforced by server startup, keeping a malformed merger graph
+from reaching a release package. The focused `validate_content.ps1` run passes
+against the current catalogue; no Rust or workspace-wide gate was repeated
+because this was release-script-only validation.
+
 The online footer now surfaces the first pending direct trade's direction,
 neighbour, and exact offered/requested goods alongside the wallet, inventory,
 and presence ledger; terminal trade history remains out of the attention line.
