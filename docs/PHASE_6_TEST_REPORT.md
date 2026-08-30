@@ -1143,3 +1143,10 @@ formatting, diff, and Rust file-size checks pass. The publisher check passed
 the Windows and WebGL release builds, packaging, Preview deployment, and
 catalog sync. No full workspace gate was rerun because this is a bounded
 regional selector slice. No new external or deferred work was opened.
+
+The pioneer client now selects the first genuinely missing complementary role,
+including Scout, so a party announced under another role cannot become trapped
+in a Join/Launch cycle. The focused frontier role-selection regression passes;
+client clippy, direct formatting, diff, and size checks pass. No publisher run
+was needed because this is a client selector/test slice. No new external or
+deferred work was opened.

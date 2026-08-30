@@ -538,15 +538,14 @@ impl OnlineClient {
                     .iter()
                     .any(|member| Some(member.account_id.as_str()) == own)
                 {
-                    let role = if !expedition
-                        .members
-                        .iter()
-                        .any(|member| member.role == ExpeditionRole::Farmer)
-                    {
-                        ExpeditionRole::Farmer
-                    } else {
-                        ExpeditionRole::Builder
-                    };
+                    let role = [
+                        ExpeditionRole::Scout,
+                        ExpeditionRole::Farmer,
+                        ExpeditionRole::Builder,
+                    ]
+                    .into_iter()
+                    .find(|role| expedition.members.iter().all(|member| member.role != *role))
+                    .unwrap_or(ExpeditionRole::Builder);
                     (ExpeditionAction::Join, Some(role))
                 } else if expedition.food < 6
                     || expedition.tools < 3

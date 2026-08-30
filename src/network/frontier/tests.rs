@@ -42,6 +42,51 @@ fn finished_expedition_cycle_announces_a_new_party() {
 }
 
 #[test]
+fn expedition_cycle_chooses_the_missing_scout_role() {
+    let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
+    client.state = crate::network::ConnectionState::Online;
+    client.account = Some(tarrowyn_protocol::GuestSessionResponse {
+        client_key: "expedition-role-client".to_owned(),
+        account_id: "account-4".to_owned(),
+        character_id: "character-4".to_owned(),
+        display_name: "The traveller".to_owned(),
+        account_token: "token".to_owned(),
+        expires_in_seconds: 900,
+    });
+    client.projection.expedition = Some(tarrowyn_protocol::Expedition {
+        expedition_id: "pioneer-1".to_owned(),
+        outpost_name: "Lantern Rest".to_owned(),
+        leader_account_id: "account-1".to_owned(),
+        members: vec![
+            tarrowyn_protocol::ExpeditionMember {
+                account_id: "account-1".to_owned(),
+                display_name: "A farmer".to_owned(),
+                role: ExpeditionRole::Farmer,
+            },
+            tarrowyn_protocol::ExpeditionMember {
+                account_id: "account-2".to_owned(),
+                display_name: "A builder".to_owned(),
+                role: ExpeditionRole::Builder,
+            },
+        ],
+        food: 0,
+        tools: 0,
+        materials: 0,
+        safety: 0,
+        status: tarrowyn_protocol::ExpeditionStatus::Planning,
+        outcome: None,
+        outpost_position: tarrowyn_protocol::Position { x: 14, y: 8 },
+    });
+
+    client.queue_expedition_cycle();
+    let Some(FrontierCommand::Expedition(request)) = client.frontier.commands.pop_front() else {
+        panic!("a missing expedition role should queue a join request");
+    };
+    assert_eq!(request.action, ExpeditionAction::Join);
+    assert_eq!(request.role, Some(ExpeditionRole::Scout));
+}
+
+#[test]
 fn expedition_resolution_notice_explains_a_retreat() {
     let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
     let expedition = tarrowyn_protocol::Expedition {
