@@ -2640,3 +2640,14 @@ file-size scan pass. The project `publish.ps1` Windows/WebGL build, packaging,
 Preview deployment, and catalog-sync checks pass. No full workspace gate was
 repeated because this was a bounded guest-session expiry correction, and no
 new external or deferred work was opened.
+
+The online sidebar's “visible companions” count now excludes the local
+character plus offline and stale presence records, matching the map's existing
+stale-player treatment instead of counting historical entries as current
+companions. The focused binary test
+`ui::ui_online::tests::companion_count_ignores_own_stale_and_offline_presence`
+passes; client-package formatting and clippy, `git diff --check`, and the Rust
+file-size scan pass. The project `publish.ps1` Windows/WebGL build, packaging,
+Preview deployment, and catalog-sync checks pass. No full workspace gate was
+repeated because this was a bounded social-presence presentation correction,
+and no new external or deferred work was opened.

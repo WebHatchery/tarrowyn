@@ -356,6 +356,49 @@ fn walking_controls_wait_for_an_authoritative_connection() {
 }
 
 #[test]
+fn companion_count_ignores_own_stale_and_offline_presence() {
+    let players = vec![
+        RemotePlayer {
+            account_id: "self".to_owned(),
+            character_id: "self-character".to_owned(),
+            display_name: "Self".to_owned(),
+            position: TilePos::new(8, 6),
+            last_seen_tick: 22,
+            online: true,
+        },
+        RemotePlayer {
+            account_id: "active".to_owned(),
+            character_id: "active-character".to_owned(),
+            display_name: "Active".to_owned(),
+            position: TilePos::new(9, 6),
+            last_seen_tick: 22,
+            online: true,
+        },
+        RemotePlayer {
+            account_id: "offline".to_owned(),
+            character_id: "offline-character".to_owned(),
+            display_name: "Offline".to_owned(),
+            position: TilePos::new(7, 6),
+            last_seen_tick: 22,
+            online: false,
+        },
+        RemotePlayer {
+            account_id: "aged".to_owned(),
+            character_id: "aged-character".to_owned(),
+            display_name: "Aged".to_owned(),
+            position: TilePos::new(6, 6),
+            last_seen_tick: 1,
+            online: true,
+        },
+    ];
+
+    assert_eq!(
+        super::visible_companion_count(&players, Some("self"), 22),
+        1
+    );
+}
+
+#[test]
 fn recovery_controls_close_after_one_choice_is_pending() {
     assert!(!super::recovery_control_enabled(true, true));
     assert!(super::recovery_control_enabled(true, false));

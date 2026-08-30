@@ -29,10 +29,7 @@ pub(super) fn draw_sidebar(
             "{}\n{}  •  {} visible companions",
             ctx.identity_name.unwrap_or("Guest identity"),
             ctx.connection.label(),
-            ctx.remote_players
-                .iter()
-                .filter(|player| ctx.own_account_id != Some(player.account_id.as_str()))
-                .count()
+            visible_companion_count(ctx.remote_players, ctx.own_account_id, ctx.server_tick)
         ),
         content.x + 8.0,
         top + 13.0,
@@ -667,6 +664,19 @@ pub(super) fn movement_enabled(ctx: &UiContext<'_>) -> bool {
 
 fn walking_connection_enabled(connection: ConnectionState, offline_fixture: bool) -> bool {
     offline_fixture || connection == ConnectionState::Online
+}
+
+fn visible_companion_count(
+    players: &[RemotePlayer],
+    own_account_id: Option<&str>,
+    server_tick: u64,
+) -> usize {
+    players
+        .iter()
+        .filter(|player| {
+            own_account_id != Some(player.account_id.as_str()) && !player.stale(server_tick)
+        })
+        .count()
 }
 
 fn pioneer_status_line(
