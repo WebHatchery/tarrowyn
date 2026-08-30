@@ -158,6 +158,76 @@ fn expedition_announcement_emits_one_frontier_event() {
 }
 
 #[test]
+fn expedition_actions_reject_stale_selectors_without_mutating_the_registry() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let leader = guest(&repository);
+    let member = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("stale-expedition-selector-member".to_owned()),
+            reset: false,
+        })
+        .expect("guest member")
+        .data;
+    repository
+        .expedition(
+            &leader.account_token,
+            ExpeditionRequest {
+                request_id: "stale-selector-announce".to_owned(),
+                action: ExpeditionAction::Announce,
+                expedition_id: None,
+                role: Some(ExpeditionRole::Scout),
+                food: 0,
+                tools: 0,
+                materials: 0,
+                safety: 0,
+                outpost_name: None,
+            },
+        )
+        .expect("expedition announce");
+
+    for (request_id, action) in [
+        ("stale-selector-join", ExpeditionAction::Join),
+        ("stale-selector-supply", ExpeditionAction::Supply),
+        ("stale-selector-launch", ExpeditionAction::Launch),
+        ("stale-selector-resolve", ExpeditionAction::Resolve),
+    ] {
+        let response = repository
+            .expedition(
+                &member.account_token,
+                ExpeditionRequest {
+                    request_id: request_id.to_owned(),
+                    action,
+                    expedition_id: Some("pioneer-old".to_owned()),
+                    role: Some(ExpeditionRole::Builder),
+                    food: 6,
+                    tools: 3,
+                    materials: 8,
+                    safety: 3,
+                    outpost_name: None,
+                },
+            )
+            .expect("stale expedition selector should return a response")
+            .data;
+        assert!(!response.accepted);
+        assert_eq!(
+            response.reason.as_deref(),
+            Some("That expedition is no longer current.")
+        );
+    }
+
+    let expedition = repository
+        .world(&leader.account_token)
+        .expect("world projection")
+        .data
+        .expedition
+        .expect("current expedition");
+    assert_eq!(expedition.expedition_id, "pioneer-1");
+    assert_eq!(expedition.members.len(), 1);
+    assert_eq!(expedition.food, 0);
+    assert_eq!(expedition.status, ExpeditionStatus::Planning);
+}
+
+#[test]
 fn pioneer_expedition_keeps_its_durable_member_list_bounded() {
     let repository = WorldRepository::new(ServerConfig::default());
     let leader = guest(&repository);

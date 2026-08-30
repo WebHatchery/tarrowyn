@@ -8,6 +8,11 @@ use tarrowyn_protocol::{
 
 const MAX_OUTPOST_NAME_CHARS: usize = 80;
 const MAX_EXPEDITION_SUPPLY: u32 = 99;
+const PIONEER_EXPEDITION_ID: &str = "pioneer-1";
+
+fn expedition_selector_matches(requested_id: Option<&str>, expedition_id: &str) -> bool {
+    requested_id.is_none_or(|requested_id| requested_id == expedition_id)
+}
 
 fn validate_outpost_name(name: Option<&str>) -> Result<Option<String>, RepositoryError> {
     let Some(name) = name else {
@@ -185,7 +190,7 @@ impl WorldRepository {
         expire_sessions(&mut state, &self.config);
         let key = authenticate(&mut state, token, &self.config)?;
         validate_request_id(&request.request_id)?;
-        let _expedition_id = super::validate_optional_identifier(
+        let expedition_id = super::validate_optional_identifier(
             request.expedition_id.as_deref(),
             "invalid_expedition_id",
             "An expedition selector must be bounded and contain no control characters.",
@@ -215,7 +220,9 @@ impl WorldRepository {
         };
         match request.action {
             ExpeditionAction::Announce => {
-                if state.phase3.expedition.as_ref().is_some_and(|expedition| {
+                if !expedition_selector_matches(expedition_id.as_deref(), PIONEER_EXPEDITION_ID) {
+                    response.reason = Some("That expedition is no longer current.".to_owned());
+                } else if state.phase3.expedition.as_ref().is_some_and(|expedition| {
                     matches!(
                         expedition.status,
                         ExpeditionStatus::Planning | ExpeditionStatus::Launched
@@ -227,7 +234,7 @@ impl WorldRepository {
                     backfill_expedition_credentials(&mut state.phase3);
                     let role = request.role.unwrap_or(ExpeditionRole::Scout);
                     let expedition = Expedition {
-                        expedition_id: "pioneer-1".to_owned(),
+                        expedition_id: PIONEER_EXPEDITION_ID.to_owned(),
                         outpost_name: requested_outpost_name
                             .unwrap_or_else(|| "Lantern Rest".to_owned()),
                         leader_account_id: account_id.clone(),
@@ -283,7 +290,10 @@ impl WorldRepository {
                         data: response,
                     });
                 };
-                if expedition.status != ExpeditionStatus::Planning {
+                if !expedition_selector_matches(expedition_id.as_deref(), &expedition.expedition_id)
+                {
+                    response.reason = Some("That expedition is no longer current.".to_owned());
+                } else if expedition.status != ExpeditionStatus::Planning {
                     response.reason = Some("The pioneer party is no longer gathering.".to_owned());
                 } else if expedition
                     .members
@@ -319,7 +329,10 @@ impl WorldRepository {
                         data: response,
                     });
                 };
-                if expedition.status != ExpeditionStatus::Planning {
+                if !expedition_selector_matches(expedition_id.as_deref(), &expedition.expedition_id)
+                {
+                    response.reason = Some("That expedition is no longer current.".to_owned());
+                } else if expedition.status != ExpeditionStatus::Planning {
                     response.reason =
                         Some("Only a gathering expedition can receive supplies.".to_owned());
                 } else if expedition
@@ -357,7 +370,9 @@ impl WorldRepository {
                     && existing.tools >= self.config.expedition_min_tools
                     && existing.materials >= self.config.expedition_min_materials
                     && existing.safety >= self.config.expedition_min_safety;
-                if existing.status != ExpeditionStatus::Planning {
+                if !expedition_selector_matches(expedition_id.as_deref(), &existing.expedition_id) {
+                    response.reason = Some("That expedition is no longer current.".to_owned());
+                } else if existing.status != ExpeditionStatus::Planning {
                     response.reason =
                         Some("Only a gathering expedition can be launched.".to_owned());
                 } else if !ready {
@@ -392,7 +407,10 @@ impl WorldRepository {
                         data: response,
                     });
                 };
-                if existing.status != ExpeditionStatus::Launched {
+                if !expedition_selector_matches(expedition_id.as_deref(), &existing.expedition_id) {
+                    response.reason = Some("That expedition is no longer current.".to_owned());
+                    response.expedition = Some(existing.clone());
+                } else if existing.status != ExpeditionStatus::Launched {
                     response.reason =
                         Some("Launch a prepared expedition before resolving it.".to_owned());
                     response.expedition = Some(existing.clone());
