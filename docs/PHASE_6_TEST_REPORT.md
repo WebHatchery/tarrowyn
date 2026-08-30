@@ -3098,3 +3098,11 @@ client-package formatting and strict clippy. `git diff --check` and the Rust
 file-size scan pass. No publisher or full workspace gate was repeated because
 this was behavior-preserving ownership maintenance, and no new external or
 deferred work was opened.
+
+The Phase 4 local combat button and Storm Magic capability cases now live in
+`network/phase4/tests/combat_controls.rs`, reducing the Phase 4 test root from
+764 to 582 lines while keeping the combat controls together. The focused spell
+action regression passes, along with client-package formatting and strict
+clippy. `git diff --check` and the Rust file-size scan pass. No publisher or
+full workspace gate was repeated because this was test-only organization
+maintenance, and no new external or deferred work was opened.
