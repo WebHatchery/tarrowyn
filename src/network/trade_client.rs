@@ -99,12 +99,22 @@ impl OnlineClient {
         })
     }
 
+    pub(crate) fn trade_pending(&self) -> bool {
+        self.pending_trade.is_some() || !self.trade_queue.is_empty()
+    }
+
     pub fn queue_trade(&mut self, mut request: TradeRequest) {
         if self.state != ConnectionState::Online {
             return;
         }
         if request.request_id.trim().is_empty() {
             request.request_id = self.next_request_id("trade");
+        }
+        if self.trade_request_pending(&request) {
+            self.status_message =
+                "That trade action is already waiting for the ledger; wait for its result."
+                    .to_owned();
+            return;
         }
         if super::queue::try_push(&mut self.trade_queue, request) {
             self.status_message = "Trade command sent; waiting for the ledger…".to_owned();
@@ -202,6 +212,16 @@ impl OnlineClient {
         }
     }
 
+    fn trade_request_pending(&self, request: &TradeRequest) -> bool {
+        self.pending_trade
+            .as_ref()
+            .is_some_and(|pending| same_trade_target(&pending.request, request))
+            || self
+                .trade_queue
+                .iter()
+                .any(|queued| same_trade_target(queued, request))
+    }
+
     pub(super) fn dispatch_trade_requests(&mut self) {
         if self.state != ConnectionState::Online {
             return;
@@ -226,4 +246,13 @@ impl OnlineClient {
             }
         }
     }
+}
+
+fn same_trade_target(first: &TradeRequest, second: &TradeRequest) -> bool {
+    if let Some(trade_id) = first.trade_id.as_deref() {
+        return second.trade_id.as_deref() == Some(trade_id);
+    }
+    first.action == TradeAction::Create
+        && second.action == TradeAction::Create
+        && first.recipient_account_id == second.recipient_account_id
 }

@@ -41,6 +41,7 @@ pub struct UiContext<'a> {
     pub remote_players: &'a [RemotePlayer],
     pub farm_animals: &'a [tarrowyn_protocol::FarmAnimal],
     pub trades: &'a [TradeOffer],
+    pub trade_pending: bool,
     pub chat: &'a [ChatMessage],
     pub chat_draft: &'a str,
     pub server_tick: u64,

@@ -2219,3 +2219,14 @@ client formatting, clippy, standards, and the Rust file-size check pass, and
 `publish.ps1` passes Windows/WebGL builds, packaging, Preview deployment, and
 catalog sync. No full workspace gate was repeated because this was a bounded
 governance-control correction, and no new external or deferred work was opened.
+
+Trade, Accept, and Cancel controls now close while a trade command is queued
+or in flight, and same-target Create/Review/Accept/Cancel requests no longer
+duplicate the pending ledger action while preserving distinct queued trades.
+The focused trade filter passes nine related tests; the trade tests were split
+into `src/network/tests/trades.rs` to keep every Rust test file below 800 lines.
+Client formatting, clippy, standards, and the Rust file-size check pass, and
+`publish.ps1` passes Windows/WebGL builds, packaging, Preview deployment, and
+catalog sync. No full workspace gate was repeated because this was a bounded
+trade-control and test-ownership correction, and no new external or deferred
+work was opened.

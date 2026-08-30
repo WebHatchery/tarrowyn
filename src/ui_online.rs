@@ -97,19 +97,19 @@ pub(super) fn draw_sidebar(
             (
                 "trade",
                 if has_pending_trade { "Review" } else { "Trade" },
-                true,
+                trade_control_enabled(true, ctx.trade_pending),
                 ButtonTone::Positive,
             ),
             (
                 "accept-trade",
                 "Accept",
-                has_incoming_trade,
+                trade_control_enabled(has_incoming_trade, ctx.trade_pending),
                 ButtonTone::Positive,
             ),
             (
                 "cancel-trade",
                 "Cancel",
-                has_pending_trade,
+                trade_control_enabled(has_pending_trade, ctx.trade_pending),
                 ButtonTone::Secondary,
             ),
         ],
@@ -548,6 +548,10 @@ fn recovery_control_enabled(knocked_out: bool, recovery_pending: bool) -> bool {
 
 fn market_control_enabled(market_pending: bool) -> bool {
     !market_pending
+}
+
+fn trade_control_enabled(available: bool, trade_pending: bool) -> bool {
+    available && !trade_pending
 }
 
 fn cancel_market_control_enabled(has_open_market_order: bool, market_pending: bool) -> bool {
