@@ -2026,3 +2026,12 @@ and `publish.ps1` passes Windows/WebGL builds, packaging, Preview deployment,
 and catalog sync. No full workspace gate was repeated because this was a
 bounded touch-first input correction, and no new external or deferred work was
 opened.
+
+Accepted frontier recovery responses now update the client map position from
+the returned player projection, immediately placing a recovered traveller at
+the authoritative Hearth tile instead of leaving the map on the knockout
+location until a later refresh. The focused client recovery-position regression
+passes, client clippy and the Rust file-size check pass, and `publish.ps1`
+passes Windows/WebGL builds, packaging, Preview deployment, and catalog sync.
+No full workspace gate was repeated because this was a bounded recovery
+projection correction, and no new external or deferred work was opened.

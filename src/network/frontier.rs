@@ -546,7 +546,9 @@ fn apply_recovery(
     projection_current: bool,
 ) {
     if projection_current {
+        let position = response.player.position;
         projection.player = Some(response.player);
+        projection.player_position = macroquad_toolkit::grid::TilePos::new(position.x, position.y);
     }
     command_notice(
         response.accepted,

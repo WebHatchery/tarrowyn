@@ -447,6 +447,53 @@ fn recovery_buttons_queue_each_authoritative_choice() {
 }
 
 #[test]
+fn recovery_response_moves_the_map_to_the_hearth() {
+    let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
+    client.projection.player_position = macroquad_toolkit::grid::TilePos::new(14, 8);
+    let mut notices = Vec::new();
+
+    super::apply_recovery(
+        RecoveryResponse {
+            request_id: "recover-position".to_owned(),
+            accepted: true,
+            choice: RecoveryChoice::SelfRecover,
+            player: tarrowyn_protocol::PlayerProjection {
+                account_id: "account-1".to_owned(),
+                character_id: "character-1".to_owned(),
+                display_name: "Traveller".to_owned(),
+                position: tarrowyn_protocol::Position { x: 8, y: 5 },
+                gold: 8,
+                field_tool_condition: 3,
+                field_weather: tarrowyn_protocol::FieldWeather::Clear,
+                field_pest_pressure: 0,
+                animal_condition: 10,
+                animal_max_condition: 10,
+                skill: 1,
+                reputation: 0,
+                adventurer_rank: tarrowyn_protocol::AdventurerRank::Unproven,
+                adventurer_credentials: Vec::new(),
+                inventory: tarrowyn_protocol::Inventory::default(),
+                weapon: WeaponKind::IronSword,
+                knocked_out: false,
+                injuries: 0,
+                recovery_cost: 0,
+            },
+            consequence: "Recovered at the Hearth.".to_owned(),
+            reason: None,
+        },
+        &mut client.projection,
+        &mut notices,
+        true,
+    );
+
+    assert_eq!(
+        client.projection.player_position,
+        macroquad_toolkit::grid::TilePos::new(8, 5)
+    );
+    assert_eq!(notices.len(), 1);
+}
+
+#[test]
 fn abandoned_homestead_cycle_requests_a_new_lease() {
     let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
     client.state = crate::network::ConnectionState::Online;
