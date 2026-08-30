@@ -2712,3 +2712,13 @@ clippy, `git diff --check`, and the Rust file-size scan pass. The project
 catalog-sync checks pass. No full workspace gate was repeated because this was
 a bounded recovery-message correction, and no new external or deferred work
 was opened.
+
+The shared-road sidebar now uses the same state-specific movement guidance as
+the map tooltip, so disabled movement controls no longer invite a tap that
+cannot be accepted during connection, projection, knockout, or travel
+recovery. The focused movement-guidance regression passes; client-package
+formatting and clippy, `git diff --check`, and the Rust file-size scan pass.
+The project `publish.ps1` Windows/WebGL build, packaging, Preview deployment,
+and catalog-sync checks pass. No full workspace gate was repeated because this
+was a bounded touch-guidance presentation correction, and no new external or
+deferred work was opened.

@@ -41,7 +41,11 @@ pub(super) fn draw_sidebar(
     );
 
     draw_ui_text_ex(
-        "Tap a tile or use arrows to walk",
+        if movement_enabled(ctx) {
+            "Tap a tile or use arrows to walk"
+        } else {
+            movement_tooltip(ctx)
+        },
         content.x,
         top + 57.0,
         TextStyle::new(12.0, CREAM).params(),
