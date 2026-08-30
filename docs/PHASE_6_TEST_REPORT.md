@@ -1054,6 +1054,15 @@ diff, and Rust file-size checks pass. The publisher check remains the runtime
 validation path; no full workspace gate was rerun because this is a bounded
 Phase 4 farming authority slice. No new external or deferred work was opened.
 
+Movement now checks signed positions by converting the coordinate itself to an
+unsigned bound instead of casting configured world dimensions down to `i32`,
+so a wide configured world cannot falsely reject the positive coordinate edge.
+The focused movement validation tests (3 passed), server clippy, direct
+formatting, diff, and Rust file-size checks pass. The publisher check remains
+the runtime validation path; no full workspace gate was rerun because this is a
+bounded movement input-safety slice. No new external or deferred work was
+opened.
+
 The online sidebar now disables Plant, Tend, Harvest, and Care while the
 character is knocked out, matching the authoritative farming recovery boundary
 and keeping the visible touch surface from advertising unavailable work. The

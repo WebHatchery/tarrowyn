@@ -354,10 +354,8 @@ impl WorldRepository {
                     .to_owned(),
             );
         } else if let Some(next) = checked_step(current, &intent) {
-            if next.x < 0
-                || next.y < 0
-                || next.x >= self.config.world_width as i32
-                || next.y >= self.config.world_height as i32
+            if world::position_in_world(next, self.config.world_width, self.config.world_height)
+                .is_none()
             {
                 response.reason = Some("The settlement edge blocks that step.".to_owned());
             } else if state

@@ -115,22 +115,35 @@ pub(super) fn world_tiles(width: u32, height: u32) -> Vec<WorldTile> {
 }
 
 pub(super) fn tile_at(position: Position, width: u32, height: u32) -> TileKind {
-    let x = position.x as u32;
-    let y = position.y as u32;
+    let Some((x, y)) = position_in_world(position, width, height) else {
+        return TileKind::Water;
+    };
     if x >= width || y >= height {
         return TileKind::Water;
     }
     if (x <= 1 && y <= 4) || (x == 16 && (2..=8).contains(&y)) {
-        TileKind::Water
-    } else if ((12..=15).contains(&x) && y <= 4) || ((13..=16).contains(&x) && y >= 8) {
-        TileKind::Forest
-    } else if ((2..16).contains(&x) && y == 6) || (x == 8 && (4..7).contains(&y)) {
-        TileKind::Path
-    } else if crate::content::farm_plot_positions().contains(&position) {
-        TileKind::Field
-    } else if x == 10 && y == 3 {
-        TileKind::Stone
-    } else {
-        TileKind::Meadow
+        return TileKind::Water;
     }
+    if ((12..=15).contains(&x) && y <= 4) || ((13..=16).contains(&x) && y >= 8) {
+        return TileKind::Forest;
+    }
+    if ((2..16).contains(&x) && y == 6) || (x == 8 && (4..7).contains(&y)) {
+        return TileKind::Path;
+    }
+    if crate::content::farm_plot_positions().contains(&position) {
+        return TileKind::Field;
+    }
+    if x == 10 && y == 3 {
+        return TileKind::Stone;
+    }
+    TileKind::Meadow
+}
+
+pub(super) fn position_in_world(position: Position, width: u32, height: u32) -> Option<(u32, u32)> {
+    let x = u32::try_from(position.x).ok()?;
+    let y = u32::try_from(position.y).ok()?;
+    if x >= width || y >= height {
+        return None;
+    }
+    Some((x, y))
 }
