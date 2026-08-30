@@ -2541,3 +2541,14 @@ Rust file-size scan pass. The project `publish.ps1` Windows/WebGL build,
 packaging, Preview deployment, and catalog-sync checks pass. No full workspace
 gate was repeated because this was a bounded access-endpoint session-boundary
 correction, and no new external or deferred work was opened.
+
+The client now returns a loaded world to Online when a later readiness poll
+confirms that maintenance has cleared, resetting the state-refresh timer so
+authoritative projections resume without forcing a needless manual Reconnect.
+The pre-world case remains gated by the existing snapshot readiness decision.
+The focused binary test `network::maintenance::tests` passes four tests;
+client-package formatting and clippy, `git diff --check`, and the Rust
+file-size scan pass. The project `publish.ps1` Windows/WebGL build, packaging,
+Preview deployment, and catalog-sync checks pass. No full workspace gate was
+repeated because this was a bounded client readiness-recovery correction, and
+no new external or deferred work was opened.

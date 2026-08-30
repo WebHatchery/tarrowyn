@@ -23,6 +23,9 @@ fn apply_readiness(client: &mut OnlineClient, ready: bool, maintenance_message: 
     }
     if !ready {
         client.state = super::ConnectionState::Degraded;
+    } else if client.had_world && client.state == super::ConnectionState::Degraded {
+        client.state = super::ConnectionState::Online;
+        client.state_refresh = 0.0;
     }
 }
 
