@@ -1,19 +1,20 @@
 use super::{
-    is_transient_transport_error, NetworkNotice, OnlineClient, WorldProjection,
-    REQUEST_TIMEOUT_SECONDS,
+    is_transient_transport_error, NetworkNotice, WorldProjection, REQUEST_TIMEOUT_SECONDS,
 };
 use macroquad_toolkit::net::{HttpClient, Pending};
 use std::collections::VecDeque;
 use tarrowyn_protocol::{
     AdventurerContract, ApiResponse, ClaimAction, ClaimRequest, ClaimResponse, CombatAction,
     CombatRequest, CombatResponse, ContractAction, ContractRequest, ContractResponse,
-    ContractStatus, ContractsResponse, Expedition, ExpeditionAction, ExpeditionRequest,
-    ExpeditionResponse, ExpeditionRole, LandClaim, OpportunitiesResponse, RecoveryChoice,
-    RecoveryRequest, RecoveryResponse, WeaponKind,
+    ContractStatus, ContractsResponse, Expedition, ExpeditionRequest, ExpeditionResponse,
+    LandClaim, OpportunitiesResponse, RecoveryChoice, RecoveryRequest, RecoveryResponse,
+    WeaponKind,
 };
 
 const MAX_COMMAND_RETRIES: u8 = 3;
 const COMMAND_RETRY_DELAY_SECONDS: f32 = 1.0;
+
+mod online;
 
 fn contract_success_message(contract: &AdventurerContract) -> String {
     match contract.status {
@@ -341,6 +342,16 @@ impl FrontierClient {
                 .any(|command| matches!(command, FrontierCommand::Expedition(_)))
     }
 
+    pub(super) fn combat_command_pending(&self) -> bool {
+        self.in_flight_command
+            .as_ref()
+            .is_some_and(|command| matches!(command, FrontierCommand::Combat(_)))
+            || self
+                .commands
+                .iter()
+                .any(|command| matches!(command, FrontierCommand::Combat(_)))
+    }
+
     pub(super) fn queue_chronicle_search(&mut self, query: String, since: u64) {
         if self.pending_chronicle_search.is_none() {
             self.chronicle_search_request = Some((query, since));
@@ -373,6 +384,10 @@ impl FrontierClient {
         action: CombatAction,
         weapon: WeaponKind,
     ) -> bool {
+        if self.combat_command_pending() && self.commands.len() < super::queue::MAX_PENDING_COMMANDS
+        {
+            return false;
+        }
         super::queue::try_push(
             &mut self.commands,
             FrontierCommand::Combat(CombatRequest {
@@ -612,185 +627,6 @@ fn command_notice(
         notices.push(NetworkNotice::Warning(reason.unwrap_or_else(|| {
             "The frontier action was not accepted.".to_owned()
         })));
-    }
-}
-
-impl OnlineClient {
-    pub fn queue_contract_cycle(&mut self) {
-        let action = match self.frontier.contracts.first() {
-            Some(contract) if contract.status == ContractStatus::Cooldown => {
-                self.status_message =
-                    "The frontier contract is cooling down; return after its visible availability tick."
-                        .to_owned();
-                return;
-            }
-            Some(contract)
-                if contract.status == ContractStatus::Accepted && contract.progress < 3 =>
-            {
-                ContractAction::Progress
-            }
-            Some(contract) if contract.status == ContractStatus::Accepted => ContractAction::Report,
-            _ => ContractAction::Accept,
-        };
-        self.queue_contract(action);
-    }
-
-    pub fn queue_claim_cycle(&mut self) {
-        let action = if self.projection.claim.as_ref().is_some_and(|claim| {
-            self.account.as_ref().is_some_and(|account| {
-                claim.owner_account_id == account.account_id
-                    && claim.status == tarrowyn_protocol::ClaimStatus::Active
-            })
-        }) {
-            ClaimAction::Renew
-        } else {
-            ClaimAction::Request
-        };
-        self.queue_claim(action);
-    }
-
-    pub fn queue_expedition_cycle(&mut self) {
-        let (action, role) = match self.projection.expedition.as_ref() {
-            None => (ExpeditionAction::Announce, Some(ExpeditionRole::Scout)),
-            Some(expedition)
-                if expedition.status == tarrowyn_protocol::ExpeditionStatus::Launched =>
-            {
-                (ExpeditionAction::Resolve, None)
-            }
-            Some(expedition)
-                if matches!(
-                    expedition.status,
-                    tarrowyn_protocol::ExpeditionStatus::Succeeded
-                        | tarrowyn_protocol::ExpeditionStatus::Retreated
-                ) =>
-            {
-                (ExpeditionAction::Announce, Some(ExpeditionRole::Scout))
-            }
-            Some(expedition) => {
-                let requirements = self.projection.expedition_requirements;
-                let own = self
-                    .account
-                    .as_ref()
-                    .map(|account| account.account_id.as_str());
-                if !expedition
-                    .members
-                    .iter()
-                    .any(|member| Some(member.account_id.as_str()) == own)
-                {
-                    let role = [
-                        ExpeditionRole::Scout,
-                        ExpeditionRole::Farmer,
-                        ExpeditionRole::Builder,
-                    ]
-                    .into_iter()
-                    .find(|role| expedition.members.iter().all(|member| member.role != *role))
-                    .unwrap_or(ExpeditionRole::Builder);
-                    (ExpeditionAction::Join, Some(role))
-                } else if expedition.food < requirements.food
-                    || expedition.tools < requirements.tools
-                    || expedition.materials < requirements.materials
-                    || expedition.safety < requirements.safety
-                {
-                    (ExpeditionAction::Supply, None)
-                } else {
-                    (ExpeditionAction::Launch, None)
-                }
-            }
-        };
-        self.queue_expedition(action, role);
-    }
-
-    pub fn queue_contract(&mut self, action: ContractAction) {
-        if self.state == super::ConnectionState::Online {
-            let request_id = self.next_request_id("contract");
-            if !self.frontier.queue_contract(request_id, action) {
-                self.status_message =
-                    "That frontier action is not ready; wait for its ledger or queue to clear."
-                        .to_owned();
-            }
-        }
-    }
-
-    pub fn queue_combat(&mut self, action: CombatAction, weapon: WeaponKind) {
-        if self.state == super::ConnectionState::Online {
-            let request_id = self.next_request_id("combat");
-            if !self.frontier.queue_combat(request_id, action, weapon) {
-                self.status_message =
-                    "That frontier action is not ready; wait for its ledger or queue to clear."
-                        .to_owned();
-            }
-        }
-    }
-
-    pub fn queue_recovery(&mut self, choice: RecoveryChoice) {
-        if self.state == super::ConnectionState::Online {
-            let request_id = self.next_request_id("recovery");
-            if !self.frontier.queue_recovery(request_id, choice) {
-                self.status_message =
-                    "That frontier action is not ready; wait for its ledger or queue to clear."
-                        .to_owned();
-            }
-        }
-    }
-
-    pub(crate) fn recovery_pending(&self) -> bool {
-        self.frontier.recovery_command_pending()
-    }
-
-    pub(crate) fn contract_pending(&self) -> bool {
-        self.frontier.contract_command_pending()
-    }
-
-    pub(crate) fn expedition_pending(&self) -> bool {
-        self.frontier.expedition_command_pending()
-    }
-
-    pub fn queue_claim(&mut self, action: ClaimAction) {
-        if self.state == super::ConnectionState::Online {
-            let request_id = self.next_request_id("claim");
-            if !self.frontier.queue_claim(request_id, action) {
-                self.status_message =
-                    "That frontier action is not ready; wait for its ledger or queue to clear."
-                        .to_owned();
-            }
-        }
-    }
-
-    pub fn queue_expedition(&mut self, action: ExpeditionAction, role: Option<ExpeditionRole>) {
-        if self.state == super::ConnectionState::Online {
-            let request_id = self.next_request_id("expedition");
-            if !self.frontier.queue_expedition(ExpeditionRequest {
-                request_id,
-                action,
-                expedition_id: Some("pioneer-1".to_owned()),
-                role,
-                food: if action == ExpeditionAction::Supply {
-                    6
-                } else {
-                    0
-                },
-                tools: if action == ExpeditionAction::Supply {
-                    3
-                } else {
-                    0
-                },
-                materials: if action == ExpeditionAction::Supply {
-                    8
-                } else {
-                    0
-                },
-                safety: if action == ExpeditionAction::Supply {
-                    3
-                } else {
-                    0
-                },
-                outpost_name: Some("Lantern Rest".to_owned()),
-            }) {
-                self.status_message =
-                    "That frontier action is not ready; wait for its ledger or queue to clear."
-                        .to_owned();
-            }
-        }
     }
 }
 

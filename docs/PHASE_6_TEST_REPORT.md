@@ -2275,3 +2275,14 @@ standards, and the Rust file-size check pass, and `publish.ps1` passes
 Windows/WebGL builds, packaging, Preview deployment, and catalog sync. No full
 workspace gate was repeated because this was a bounded expedition-control
 correction, and no new external or deferred work was opened.
+
+Frontier reachable-threat retreat now closes while a frontier combat command is
+queued or in flight, preventing duplicate retreat requests while the wilderness
+projection catches up. The focused `frontier_combat` filter passes two tests;
+the frontier OnlineClient facade was split into
+`src/network/frontier/online.rs` after the standards gate found `frontier.rs`
+over the 800-line hard limit. Client formatting, clippy, standards, and the
+Rust file-size check pass, and `publish.ps1` passes Windows/WebGL builds,
+packaging, Preview deployment, and catalog sync. No full workspace gate was
+repeated because this was a bounded frontier-combat control and file-ownership
+correction, and no new external or deferred work was opened.

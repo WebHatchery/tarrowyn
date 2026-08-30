@@ -1,4 +1,6 @@
 use super::*;
+use crate::network::OnlineClient;
+use tarrowyn_protocol::{ExpeditionAction, ExpeditionRole};
 
 fn config() -> crate::data::GameConfig {
     crate::data::GameConfig {
@@ -367,6 +369,34 @@ fn expedition_controls_wait_for_one_queued_or_in_flight_command() {
     client.frontier.in_flight_command = Some(FrontierCommand::Expedition(request));
     assert!(client.expedition_pending());
     client.queue_expedition_cycle();
+    assert!(client.frontier.commands.is_empty());
+}
+
+#[test]
+fn frontier_combat_controls_wait_for_one_queued_or_in_flight_command() {
+    let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
+    client.state = crate::network::ConnectionState::Online;
+    let request = CombatRequest {
+        request_id: "frontier-combat-queued".to_owned(),
+        action: CombatAction::Retreat,
+        weapon: WeaponKind::IronSword,
+    };
+    client
+        .frontier
+        .commands
+        .push_back(FrontierCommand::Combat(request.clone()));
+
+    assert!(client.frontier_combat_pending());
+    client.queue_combat(CombatAction::Retreat, WeaponKind::IronSword);
+    assert_eq!(client.frontier.commands.len(), 1);
+    assert!(client
+        .status_message
+        .contains("frontier action is not ready"));
+
+    client.frontier.commands.clear();
+    client.frontier.in_flight_command = Some(FrontierCommand::Combat(request));
+    assert!(client.frontier_combat_pending());
+    client.queue_combat(CombatAction::Retreat, WeaponKind::IronSword);
     assert!(client.frontier.commands.is_empty());
 }
 

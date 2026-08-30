@@ -426,6 +426,13 @@ fn expedition_controls_wait_for_the_previous_frontier_command() {
 }
 
 #[test]
+fn frontier_combat_controls_wait_for_the_previous_threat_command() {
+    assert!(!super::frontier_combat_control_enabled(true, true));
+    assert!(super::frontier_combat_control_enabled(true, false));
+    assert!(!super::frontier_combat_control_enabled(false, false));
+}
+
+#[test]
 fn chronicle_panel_text_keeps_archive_context_and_recent_records() {
     let entries = vec![
         tarrowyn_protocol::ChronicleEntry {
