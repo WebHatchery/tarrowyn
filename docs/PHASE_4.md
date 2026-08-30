@@ -14,12 +14,12 @@ rules: players can maintain a settlement, hold responsibility for shared
 infrastructure, develop meaningful professions, and understand how land and
 services change over time.
 
-The phase must begin with a short design-lock pass. The GDD still leaves
+The design-lock pass for this bounded scope is complete. It resolved the
 governance, lease duration, skill specialisation, crafting interaction,
-household lifecycle, and knowledge transfer open. Implementation should not
-silently choose rules that would later invalidate player property or
-progression. Record each decision, its fallback behaviour, and the migration
-impact before adding durable state.
+household lifecycle, and knowledge-transfer choices in
+[`PHASE_4_DESIGN.md`](PHASE_4_DESIGN.md), including their fallback behaviour
+and migration impact. The scope below is retained as the historical contract
+for the completed implementation; larger systems remain explicitly deferred.
 
 ## Build scope
 
@@ -152,10 +152,15 @@ than being smuggled into ordinary defeat or household ageing.
 
 ## Exit artifacts
 
-- A short design decision record covering governance, taxation if selected,
-  leases, skills, crafting, knowledge, household lifecycle, and combat scope.
-- Storage migrations and repository fixtures for every new durable rule.
-- A human settlement playthrough report covering a new player and an
-  established player.
-- A `PHASE_4_RUNBOOK.md` with server start, migration, governance fixtures,
-  recovery checks, and visual touch-control verification.
+- Complete: [`PHASE_4_DESIGN.md`](PHASE_4_DESIGN.md) records the bounded
+  decisions for governance, taxation, leases, skills, crafting, knowledge,
+  household lifecycle, and combat.
+- Complete: storage migrations and repository fixtures cover the durable rules
+  in the bounded first-settlement scope.
+- Complete for automated evidence: [`PHASE_4_PLAYTHROUGH.md`](PHASE_4_PLAYTHROUGH.md)
+  records the deterministic two-character settlement pass. A human,
+  multi-session playthrough remains evidence still desired in the Phase 6
+  follow-up register.
+- Complete: [`PHASE_4_RUNBOOK.md`](PHASE_4_RUNBOOK.md) covers server start,
+  migration, governance fixtures, recovery checks, and visual touch-control
+  verification.
