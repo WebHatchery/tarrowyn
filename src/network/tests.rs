@@ -303,6 +303,20 @@ fn queued_general_mutation_blocks_phase_four_dispatch_until_its_turn() {
 }
 
 #[test]
+fn queued_frontier_mutation_blocks_phase_four_dispatch_until_its_turn() {
+    let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
+    client.state = ConnectionState::Online;
+    client.queue_knowledge_cycle(None);
+    client.queue_contract(tarrowyn_protocol::ContractAction::Accept);
+
+    client.update(0.0);
+
+    assert!(client.frontier.has_pending_command());
+    assert!(!client.phase4.command_request_pending_for_test());
+    assert!(client.phase4.knowledge_command_pending());
+}
+
+#[test]
 fn client_pending_queues_stop_at_the_backpressure_limit() {
     let mut queue = VecDeque::new();
     for value in 0..(super::queue::MAX_PENDING_COMMANDS + 4) {

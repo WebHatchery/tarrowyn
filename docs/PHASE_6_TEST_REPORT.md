@@ -808,6 +808,17 @@ regression covers that replay boundary; server clippy, size, diff, and publisher
 checks are the validation scope for this Phase 6 identity-maintenance slice. No
 new external or deferred work was opened.
 
+Queued frontier commands now count at the Phase 4 mutation boundary instead of
+being mistaken for an idle frontier because only the in-flight request was
+checked. The focused
+`queued_frontier_mutation_blocks_phase_four_dispatch_until_its_turn` filter
+passes one regression test, alongside the preceding general-queue regression;
+client formatting, clippy, standards, and the Rust file-size check pass, and
+`publish.ps1` passes Windows/WebGL builds, packaging, Preview deployment, and
+catalog sync. No full workspace gate was repeated because this was a bounded
+frontier-queue predicate correction, and no new external or deferred work was
+opened.
+
 Accepted Order responses now explain the authoritative service result when an
 order is posted, accepted, or completed: the service and gold reward, the
 named provider, completion quality, and the returned benefit. The focused

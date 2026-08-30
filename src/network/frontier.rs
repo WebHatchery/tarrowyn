@@ -310,6 +310,8 @@ impl FrontierClient {
 
     pub(super) fn has_pending_command(&self) -> bool {
         self.pending_command.is_some()
+            || self.in_flight_command.is_some()
+            || !self.commands.is_empty()
     }
 
     pub(super) fn recovery_command_pending(&self) -> bool {
