@@ -2663,3 +2663,14 @@ file-size scan pass. The project `publish.ps1` Windows/WebGL build, packaging,
 Preview deployment, and catalog-sync checks pass. No full workspace gate was
 repeated because this was a bounded recovery-input presentation correction,
 and no new external or deferred work was opened.
+
+The online footer's total-player summary now uses the same active, non-stale
+presence rule as the companion count, so cached departures no longer inflate
+the population shown to a player. The focused binary test
+`ui::ui_online::tests::companion_count_ignores_own_stale_and_offline_presence`
+passes for both summaries; client-package formatting and clippy,
+`git diff --check`, and the Rust file-size scan pass. The project
+`publish.ps1` Windows/WebGL build, packaging, Preview deployment, and
+catalog-sync checks pass. No full workspace gate was repeated because this was
+a bounded social-presence presentation correction, and no new external or
+deferred work was opened.

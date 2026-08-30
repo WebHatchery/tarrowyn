@@ -473,7 +473,7 @@ fn draw_footer(ctx: &UiContext<'_>) {
     } else {
         online_footer_detail(
             ctx.stats,
-            ctx.remote_players.len(),
+            ui_online::visible_player_count(ctx.remote_players, ctx.server_tick),
             pending_trade_detail(ctx.trades, ctx.own_account_id).as_deref(),
         )
     };

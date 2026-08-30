@@ -396,6 +396,7 @@ fn companion_count_ignores_own_stale_and_offline_presence() {
         super::visible_companion_count(&players, Some("self"), 22),
         1
     );
+    assert_eq!(super::visible_player_count(&players, 22), 2);
 }
 
 #[test]

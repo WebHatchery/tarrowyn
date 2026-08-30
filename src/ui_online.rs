@@ -679,6 +679,13 @@ fn visible_companion_count(
         .count()
 }
 
+pub(super) fn visible_player_count(players: &[RemotePlayer], server_tick: u64) -> usize {
+    players
+        .iter()
+        .filter(|player| !player.stale(server_tick))
+        .count()
+}
+
 fn pioneer_status_line(
     expedition: &tarrowyn_protocol::Expedition,
     requirements: tarrowyn_protocol::ExpeditionRequirements,
