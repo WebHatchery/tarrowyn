@@ -252,7 +252,7 @@ impl WorldRepository {
         token: &str,
     ) -> Result<ApiResponse<ContractsResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        expire_sessions(&mut state, &self.config);
+        self.expire_and_persist_sessions(&mut state);
         let key = authenticate(&mut state, token, &self.config)?;
         Ok(ApiResponse {
             meta: meta(state.tick, None, Some(state.cursor)),
@@ -269,7 +269,7 @@ impl WorldRepository {
         request: ContractRequest,
     ) -> Result<ApiResponse<ContractResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        expire_sessions(&mut state, &self.config);
+        self.expire_and_persist_sessions(&mut state);
         let key = authenticate(&mut state, token, &self.config)?;
         validate_request_id(&request.request_id)?;
         let contract_id = validate_bounded_text(
@@ -407,7 +407,7 @@ impl WorldRepository {
         request: CombatRequest,
     ) -> Result<ApiResponse<CombatResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        expire_sessions(&mut state, &self.config);
+        self.expire_and_persist_sessions(&mut state);
         let key = authenticate(&mut state, token, &self.config)?;
         validate_request_id(&request.request_id)?;
         let cache_key = cache_key(&key, &request.request_id);
@@ -524,7 +524,7 @@ impl WorldRepository {
         since: u64,
     ) -> Result<ApiResponse<ChronicleResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        expire_sessions(&mut state, &self.config);
+        self.expire_and_persist_sessions(&mut state);
         authenticate(&mut state, token, &self.config)?;
         super::validate_event_cursor(&state, since, "chronicle")?;
         Ok(ApiResponse {
@@ -548,7 +548,7 @@ impl WorldRepository {
         token: &str,
     ) -> Result<ApiResponse<OpportunitiesResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        expire_sessions(&mut state, &self.config);
+        self.expire_and_persist_sessions(&mut state);
         authenticate(&mut state, token, &self.config)?;
         Ok(ApiResponse {
             meta: meta(state.tick, None, Some(state.cursor)),

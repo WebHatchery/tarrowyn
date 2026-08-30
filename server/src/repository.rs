@@ -257,7 +257,7 @@ impl WorldRepository {
 
     pub fn world(&self, token: &str) -> Result<ApiResponse<WorldSnapshot>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        expire_sessions(&mut state, &self.config);
+        self.expire_and_persist_sessions(&mut state);
         authenticate(&mut state, token, &self.config)?;
         let players = sorted_presences(&state);
         Ok(ApiResponse {
@@ -268,7 +268,7 @@ impl WorldRepository {
 
     pub fn state(&self, token: &str) -> Result<ApiResponse<StateSnapshot>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        expire_sessions(&mut state, &self.config);
+        self.expire_and_persist_sessions(&mut state);
         let key = authenticate(&mut state, token, &self.config)?;
         let player = player_projection(&state, &key);
         let world = snapshot(&state, &self.config, sorted_presences(&state));
@@ -285,7 +285,7 @@ impl WorldRepository {
 
     pub fn inventory(&self, token: &str) -> Result<ApiResponse<PlayerProjection>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        expire_sessions(&mut state, &self.config);
+        self.expire_and_persist_sessions(&mut state);
         let key = authenticate(&mut state, token, &self.config)?;
         Ok(ApiResponse {
             meta: meta(state.tick, None, Some(state.cursor)),
@@ -299,7 +299,7 @@ impl WorldRepository {
         intent: MovementIntent,
     ) -> Result<ApiResponse<MovementResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        expire_sessions(&mut state, &self.config);
+        self.expire_and_persist_sessions(&mut state);
         let key = authenticate(&mut state, token, &self.config)?;
         validate_request_id(&intent.request_id)?;
         if let Some(previous) = state
@@ -429,7 +429,7 @@ impl WorldRepository {
         since: u64,
     ) -> Result<ApiResponse<EventsResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        expire_sessions(&mut state, &self.config);
+        self.expire_and_persist_sessions(&mut state);
         authenticate(&mut state, token, &self.config)?;
         validate_event_cursor(&state, since, "requested")?;
         let events = state
@@ -453,7 +453,7 @@ impl WorldRepository {
         token: &str,
     ) -> Result<ApiResponse<TavernFeedResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        expire_sessions(&mut state, &self.config);
+        self.expire_and_persist_sessions(&mut state);
         authenticate(&mut state, token, &self.config)?;
         Ok(ApiResponse {
             meta: meta(state.tick, None, Some(state.cursor)),
@@ -535,6 +535,12 @@ impl WorldRepository {
                     .lock()
                     .expect("persistence status lock poisoned") = true;
             }
+        }
+    }
+
+    fn expire_and_persist_sessions(&self, state: &mut RepositoryState) {
+        if expire_sessions(state, &self.config) {
+            self.persist(state);
         }
     }
 

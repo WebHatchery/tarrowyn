@@ -53,7 +53,7 @@ impl WorldRepository {
         request: RouteRequest,
     ) -> Result<ApiResponse<RouteResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        expire_sessions(&mut state, &self.config);
+        self.expire_and_persist_sessions(&mut state);
         let key = authenticate(&mut state, token, &self.config)?;
         validate_request_id(&request.request_id)?;
         let route_id = super::validate_bounded_text(
@@ -208,7 +208,7 @@ impl WorldRepository {
         request: TravelRequest,
     ) -> Result<ApiResponse<TravelResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        expire_sessions(&mut state, &self.config);
+        self.expire_and_persist_sessions(&mut state);
         let key = authenticate(&mut state, token, &self.config)?;
         validate_request_id(&request.request_id)?;
         let route_id = super::validate_optional_identifier(
@@ -428,7 +428,7 @@ impl WorldRepository {
 
     pub fn market(&self, token: &str) -> Result<ApiResponse<MarketSnapshot>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        expire_sessions(&mut state, &self.config);
+        self.expire_and_persist_sessions(&mut state);
         let key = authenticate(&mut state, token, &self.config)?;
         let location = player_location(&state, &key);
         Ok(ApiResponse {
@@ -448,7 +448,7 @@ impl WorldRepository {
         mut request: MarketOrderRequest,
     ) -> Result<ApiResponse<MarketOrderResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        expire_sessions(&mut state, &self.config);
+        self.expire_and_persist_sessions(&mut state);
         let key = authenticate(&mut state, token, &self.config)?;
         validate_request_id(&request.request_id)?;
         request.order_id = super::validate_optional_identifier(
@@ -525,7 +525,7 @@ impl WorldRepository {
         since: u64,
     ) -> Result<ApiResponse<RegionalEventsResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        expire_sessions(&mut state, &self.config);
+        self.expire_and_persist_sessions(&mut state);
         authenticate(&mut state, token, &self.config)?;
         super::validate_event_cursor(&state, since, "regional")?;
         if state.phase5.event_history_floor > since {
@@ -556,7 +556,7 @@ impl WorldRepository {
         request: RegionalEventRequest,
     ) -> Result<ApiResponse<RegionalEventResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        expire_sessions(&mut state, &self.config);
+        self.expire_and_persist_sessions(&mut state);
         let key = authenticate(&mut state, token, &self.config)?;
         validate_request_id(&request.request_id)?;
         let event_id = super::validate_optional_identifier(

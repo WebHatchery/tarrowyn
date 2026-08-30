@@ -181,7 +181,7 @@ impl WorldRepository {
         request: AuthLinkRequest,
     ) -> Result<ApiResponse<AuthLinkResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        expire_sessions(&mut state, &self.config);
+        self.expire_and_persist_sessions(&mut state);
         let (guest_key, replay_only) = match authenticate(&mut state, token, &self.config) {
             Ok(guest_key) => (guest_key, false),
             Err(error) => {

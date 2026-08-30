@@ -83,7 +83,7 @@ impl WorldRepository {
         request: ClaimRequest,
     ) -> Result<ApiResponse<ClaimResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        expire_sessions(&mut state, &self.config);
+        self.expire_and_persist_sessions(&mut state);
         let key = authenticate(&mut state, token, &self.config)?;
         validate_request_id(&request.request_id)?;
         let cache_key = cache_key(&key, &request.request_id);
@@ -206,7 +206,7 @@ impl WorldRepository {
         request: ExpeditionRequest,
     ) -> Result<ApiResponse<ExpeditionResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        expire_sessions(&mut state, &self.config);
+        self.expire_and_persist_sessions(&mut state);
         let key = authenticate(&mut state, token, &self.config)?;
         validate_request_id(&request.request_id)?;
         let expedition_id = super::validate_optional_identifier(

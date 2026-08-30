@@ -1,6 +1,6 @@
 use super::super::{
-    authenticate, expire_sessions, meta, models::RepositoryState, validate_bounded_text,
-    RepositoryError, WorldRepository, PROTOCOL_VERSION,
+    authenticate, meta, models::RepositoryState, validate_bounded_text, RepositoryError,
+    WorldRepository, PROTOCOL_VERSION,
 };
 use super::is_support_operator;
 use crate::config::ServerConfig;
@@ -120,7 +120,7 @@ impl WorldRepository {
 
     pub fn ops_health(&self) -> ApiResponse<OpsHealthResponse> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        expire_sessions(&mut state, &self.config);
+        self.expire_and_persist_sessions(&mut state);
         let persistence_failed = *self
             .persistence_failed
             .lock()
@@ -167,7 +167,7 @@ impl WorldRepository {
         token: &str,
     ) -> Result<ApiResponse<OpsMetricsResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        expire_sessions(&mut state, &self.config);
+        self.expire_and_persist_sessions(&mut state);
         let key = authenticate(&mut state, token, &self.config)?;
         let account = state
             .identities

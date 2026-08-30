@@ -2521,3 +2521,13 @@ server-package formatting and clippy, `git diff --check`, and the Rust
 file-size scan pass. No full workspace gate was repeated because this was a
 bounded skill-ledger retention correction, and no new external or deferred
 work was opened.
+
+Session expiry now persists its offline-presence event and cursor before any
+request can return an authentication error, so a read that discovers an idle
+credential cannot lose that world-history mutation on restart. The focused
+`repository::session::tests` filter passes three tests; server-package
+formatting and clippy, `git diff --check`, and the Rust file-size scan pass.
+The project `publish.ps1` Windows/WebGL build, packaging, Preview deployment,
+and catalog-sync checks pass. No full workspace gate was repeated because this
+was a bounded session-expiry persistence correction, and no new external or
+deferred work was opened.

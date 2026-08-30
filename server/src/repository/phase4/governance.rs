@@ -40,7 +40,7 @@ impl super::super::WorldRepository {
         request: GovernanceRequest,
     ) -> Result<ApiResponse<GovernanceResponse>, super::super::RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        super::super::expire_sessions(&mut state, &self.config);
+        self.expire_and_persist_sessions(&mut state);
         let key = super::super::authenticate(&mut state, token, &self.config)?;
         validate_request_id(&request.request_id)?;
         let office_id = validate_optional_identifier(
@@ -341,7 +341,7 @@ impl super::super::WorldRepository {
     ) -> Result<ApiResponse<tarrowyn_protocol::InfrastructureResponse>, super::super::RepositoryError>
     {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        super::super::expire_sessions(&mut state, &self.config);
+        self.expire_and_persist_sessions(&mut state);
         super::super::authenticate(&mut state, token, &self.config)?;
         Ok(ApiResponse {
             meta: super::super::meta(state.tick, None, Some(state.cursor)),

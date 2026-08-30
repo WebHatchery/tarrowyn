@@ -40,7 +40,9 @@ pub(super) fn authenticate(
     Ok(key)
 }
 
-pub(super) fn expire_sessions(state: &mut RepositoryState, config: &ServerConfig) {
+pub(super) fn expire_sessions(state: &mut RepositoryState, config: &ServerConfig) -> bool {
+    let sessions_before = state.sessions.len();
+    let phase6_sessions_before = state.phase6.sessions.len();
     let expired: Vec<String> = state
         .sessions
         .iter()
@@ -68,6 +70,7 @@ pub(super) fn expire_sessions(state: &mut RepositoryState, config: &ServerConfig
         state.sessions.contains_key(token)
             || (!session.revoked && session.refresh_expires_at_tick > state.tick)
     });
+    state.sessions.len() != sessions_before || state.phase6.sessions.len() != phase6_sessions_before
 }
 
 pub(super) fn sorted_presences(state: &RepositoryState) -> Vec<PlayerPresence> {

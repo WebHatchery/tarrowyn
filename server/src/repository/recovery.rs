@@ -1,7 +1,7 @@
 use super::phase3::{cache_key, record, Phase3Response};
 use super::{
-    authenticate, expire_sessions, meta, player_projection, presence, push_event,
-    record_command_outcome, RepositoryError, WorldEvent, WorldRepository,
+    authenticate, meta, player_projection, presence, push_event, record_command_outcome,
+    RepositoryError, WorldEvent, WorldRepository,
 };
 use tarrowyn_protocol::{ApiResponse, Position, RecoveryChoice, RecoveryRequest, RecoveryResponse};
 
@@ -12,7 +12,7 @@ impl WorldRepository {
         request: RecoveryRequest,
     ) -> Result<ApiResponse<RecoveryResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        expire_sessions(&mut state, &self.config);
+        self.expire_and_persist_sessions(&mut state);
         let key = authenticate(&mut state, token, &self.config)?;
         super::validate_request_id(&request.request_id)?;
         let cache_key = cache_key(&key, &request.request_id);

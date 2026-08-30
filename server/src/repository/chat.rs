@@ -7,7 +7,7 @@ impl WorldRepository {
         request: ChatRequest,
     ) -> Result<ApiResponse<ChatResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        expire_sessions(&mut state, &self.config);
+        self.expire_and_persist_sessions(&mut state);
         let key = authenticate(&mut state, token, &self.config)?;
         validate_request_id(&request.request_id)?;
         if let Some(previous) = state
