@@ -485,10 +485,7 @@ impl WorldRepository {
         let advanced_days = elapsed_days.min(u32::MAX as f32) as u32;
         if elapsed_days > 0.0 {
             state.clock.seconds = elapsed_seconds % day_length;
-            state.clock.day = state
-                .clock
-                .day
-                .saturating_add(advanced_days);
+            state.clock.day = state.clock.day.saturating_add(advanced_days);
         } else {
             state.clock.seconds = elapsed_seconds;
         }

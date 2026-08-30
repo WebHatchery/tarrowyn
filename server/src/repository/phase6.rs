@@ -585,7 +585,11 @@ impl WorldRepository {
             record_command_outcome(&mut state, false);
             self.persist(&state);
             return Ok(ApiResponse {
-                meta: meta(state.tick, Some(response.request_id.clone()), Some(state.cursor)),
+                meta: meta(
+                    state.tick,
+                    Some(response.request_id.clone()),
+                    Some(state.cursor),
+                ),
                 data: response,
             });
         }

@@ -428,6 +428,52 @@ fn account_link_preserves_phase4_and_skill_replay_idempotency() {
 }
 
 #[test]
+fn account_link_preserves_support_replay_idempotency() {
+    let repository = WorldRepository::new(ServerConfig {
+        support_operator_accounts: vec!["dev-account-1".to_owned(), "account-1".to_owned()],
+        ..ServerConfig::default()
+    });
+    let guest = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("support-replay-link".to_owned()),
+            reset: false,
+        })
+        .unwrap()
+        .data;
+    let repair_request = SupportRepairRequest {
+        request_id: "support-replay-link-request".to_owned(),
+        action: SupportRepairAction::NormalizeInventory,
+        account_id: None,
+        target_id: None,
+        note: "The support repair remains idempotent through identity linking.".to_owned(),
+    };
+    let original = repository
+        .support_repair(&guest.account_token, repair_request.clone())
+        .unwrap()
+        .data;
+    assert!(original.accepted);
+
+    let linked = repository
+        .auth_link(
+            &guest.account_token,
+            AuthLinkRequest {
+                request_id: "support-replay-link-auth".to_owned(),
+                provider: "webhatchery-identity-oidc".to_owned(),
+                subject: "support-replay-link-subject".to_owned(),
+                display_name: Some("Linked support operator".to_owned()),
+            },
+        )
+        .unwrap()
+        .data;
+    let replayed = repository
+        .support_repair(&linked.session.account_token, repair_request)
+        .unwrap()
+        .data;
+
+    assert_eq!(replayed.audit_id, original.audit_id);
+}
+
+#[test]
 fn account_lifecycle_updates_copied_settlement_history_names() {
     let repository = WorldRepository::new(ServerConfig::default());
     let guest = repository

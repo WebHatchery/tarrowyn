@@ -762,3 +762,10 @@ readiness integrity check degraded. The focused route-history regression covers
 cooldown expiry and cleanup; server clippy, size, diff, and publisher checks are
 the validation scope for this regional maintenance slice. No new external or
 deferred work was opened.
+
+Guest-to-production account linking now migrates account-scoped support-repair
+replay keys, preserving idempotency when a support operator retries the same
+request with the newly issued production session. The focused account-lifecycle
+regression covers that replay boundary; server clippy, size, diff, and publisher
+checks are the validation scope for this Phase 6 identity-maintenance slice. No
+new external or deferred work was opened.

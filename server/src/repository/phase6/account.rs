@@ -17,6 +17,7 @@ pub(super) fn migrate_guest_account_references(
 
     migrate_identity_replay_caches(state, old_account_id, new_account_id, new_display_name);
     migrate_phase4_replay_caches(state, old_account_id, new_account_id, new_display_name);
+    migrate_phase6_replay_caches(state, old_account_id, new_account_id);
     for trade in state.trades.values_mut() {
         migrate_trade(trade, old_account_id, new_account_id, new_display_name);
     }
@@ -54,6 +55,23 @@ pub(super) fn migrate_guest_account_references(
         replace_id(&mut audit.actor_account_id, old_account_id, new_account_id);
         replace_id(&mut audit.target, old_account_id, new_account_id);
     }
+}
+
+fn migrate_phase6_replay_caches(
+    state: &mut RepositoryState,
+    old_account_id: &str,
+    new_account_id: &str,
+) {
+    let prefix = format!("repair:{old_account_id}:");
+    let mut migrated = std::collections::HashMap::new();
+    for (key, response) in std::mem::take(&mut state.phase6.request_results) {
+        if let Some(request_id) = key.strip_prefix(&prefix) {
+            migrated.insert(format!("repair:{new_account_id}:{request_id}"), response);
+        } else {
+            migrated.insert(key, response);
+        }
+    }
+    state.phase6.request_results = migrated;
 }
 
 pub(super) fn is_phase4_replay_key_for_account(key: &str, account_id: &str) -> bool {
