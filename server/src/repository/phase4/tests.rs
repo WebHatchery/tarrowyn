@@ -243,6 +243,7 @@ fn land_rights_complete_the_lifecycle_without_touching_character_state() {
         .data
         .accepted
     );
+    repo.tick();
     let reclaimed = repo
         .claim_lifecycle(
             &two.account_token,

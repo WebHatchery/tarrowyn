@@ -1190,3 +1190,14 @@ workspace test then recorded 387 passing tests and 11 existing stale fixture or
 read-path failures outside this contract; the focused regressions remain green.
 Direct formatting of changed files, diff, and Rust file-size checks pass. No new
 external or deferred work was opened.
+
+The land registry now leaves abandoned and expired leases in their visible grace
+state until a later `Reclaim` action opens the plot, while still closing expired
+building access during the background tick. This matches the Phase 4 registry
+runbook and prevents an automatic tick from consuming the player's reclaim
+interaction. The focused claim-lifecycle suite (4 passed), the complete
+land-rights lifecycle regression (1 passed), server clippy, direct formatting,
+and diff checks pass. No full workspace suite was rerun because the milestone
+record still contains the unrelated formatter drift and the remaining stale
+fixture/read-path failures documented above. No new external or deferred work
+was opened.

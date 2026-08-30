@@ -423,7 +423,7 @@ pub(super) fn record(state: &mut RepositoryState, kind: &str, title: &str, text:
 pub(super) fn phase4_tick(state: &mut RepositoryState, config: &ServerConfig) -> Option<bool> {
     prune_school_lessons(state);
     governance::tick(state, config);
-    claims::tick(state, config);
+    claims::tick(state);
     households::tick(state, config);
     super::phase5::phase5_tick(state, config);
     super::phase6::phase6_tick(state, config)

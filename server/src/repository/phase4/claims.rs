@@ -15,7 +15,7 @@ impl super::super::WorldRepository {
         let mut state = self.state.lock().expect("world repository lock poisoned");
         super::super::expire_sessions(&mut state, &self.config);
         super::super::authenticate(&mut state, token, &self.config)?;
-        tick(&mut state, &self.config);
+        tick(&mut state);
         self.persist(&state);
         Ok(ApiResponse {
             meta: super::super::meta(state.tick, None, Some(state.cursor)),
@@ -52,7 +52,7 @@ impl super::super::WorldRepository {
                 data: response.clone(),
             });
         }
-        tick(&mut state, &self.config);
+        tick(&mut state);
         let mut response = ClaimLifecycleResponse {
             request_id: request.request_id.clone(),
             accepted: false,
@@ -492,7 +492,7 @@ fn abandonable_status(status: ClaimLifecycleStatus) -> bool {
     )
 }
 
-pub(super) fn tick(state: &mut super::super::models::RepositoryState, config: &ServerConfig) {
+pub(super) fn tick(state: &mut super::super::models::RepositoryState) {
     let now = super::unix_time_seconds();
     let mut expired = Vec::new();
     for claim in &mut state.phase4.claims {
@@ -514,31 +514,5 @@ pub(super) fn tick(state: &mut super::super::models::RepositoryState, config: &S
     }
     for claim_id in expired {
         record(state, "lease expired", "The registry closes an unattended building", &format!("Claim {claim_id} expired without deleting the character or protected stored goods."));
-    }
-    let mut reclaimed = Vec::new();
-    for claim in &mut state.phase4.claims {
-        if matches!(
-            claim.status,
-            ClaimLifecycleStatus::Abandoned | ClaimLifecycleStatus::Expired
-        ) && state.tick.saturating_sub(claim.last_active_tick)
-            >= config.claim_reclaim_grace_ticks
-        {
-            claim.status = ClaimLifecycleStatus::Reclaimed;
-            claim.owner_account_id = None;
-            claim.owner_name = None;
-            claim.building_access = false;
-            reclaimed.push((claim.claim_id.clone(), claim.position));
-        }
-    }
-    for (claim_id, position) in reclaimed {
-        if !state.phase4.available_plots.contains(&position) {
-            state.phase4.available_plots.push(position);
-        }
-        record(
-            state,
-            "lease reclaimed",
-            "The registry opens a path for a late player",
-            &format!("Claim {claim_id} is available again after its grace period."),
-        );
     }
 }
