@@ -370,6 +370,10 @@ fn farming_actions_choose_a_nearby_plot_matching_the_action() {
     );
 
     client.queue_farming(FarmingAction::Harvest);
+    assert!(client.farming_pending());
+    client.queue_farming(FarmingAction::Tend);
+    assert!(client.status_message.contains("already waiting"));
+    assert_eq!(client.farming_queue.len(), 1);
     assert_eq!(
         client.farming_queue.back().map(|request| request.position),
         Some(Position { x: 0, y: 1 })

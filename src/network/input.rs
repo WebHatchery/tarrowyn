@@ -59,6 +59,12 @@ impl OnlineClient {
         if self.state != ConnectionState::Online {
             return;
         }
+        if self.farming_pending() && self.farming_queue.len() < queue::MAX_PENDING_COMMANDS {
+            self.status_message =
+                "That farm action is already waiting for the ledger; wait for its result."
+                    .to_owned();
+            return;
+        }
         let target = if action == FarmingAction::TendAnimal {
             self.projection
                 .animals
@@ -133,5 +139,9 @@ impl OnlineClient {
                 "The settlement ledger is busy; wait for current actions before trying again."
                     .to_owned();
         }
+    }
+
+    pub(crate) fn farming_pending(&self) -> bool {
+        self.pending_farming.is_some() || !self.farming_queue.is_empty()
     }
 }

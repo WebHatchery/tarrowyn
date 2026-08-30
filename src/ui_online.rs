@@ -92,10 +92,30 @@ pub(super) fn draw_sidebar(
         23.0,
         mouse,
         &[
-            ("plant", "Plant", !ctx.knocked_out, ButtonTone::Positive),
-            ("tend", "Tend", !ctx.knocked_out, ButtonTone::Positive),
-            ("harvest", "Harvest", !ctx.knocked_out, ButtonTone::Positive),
-            ("animal", "Care", !ctx.knocked_out, ButtonTone::Positive),
+            (
+                "plant",
+                "Plant",
+                farming_control_enabled(!ctx.knocked_out, ctx.farming_pending),
+                ButtonTone::Positive,
+            ),
+            (
+                "tend",
+                "Tend",
+                farming_control_enabled(!ctx.knocked_out, ctx.farming_pending),
+                ButtonTone::Positive,
+            ),
+            (
+                "harvest",
+                "Harvest",
+                farming_control_enabled(!ctx.knocked_out, ctx.farming_pending),
+                ButtonTone::Positive,
+            ),
+            (
+                "animal",
+                "Care",
+                farming_control_enabled(!ctx.knocked_out, ctx.farming_pending),
+                ButtonTone::Positive,
+            ),
             (
                 "trade",
                 if has_pending_trade { "Review" } else { "Trade" },
@@ -560,6 +580,10 @@ fn market_control_enabled(market_pending: bool) -> bool {
 
 fn trade_control_enabled(available: bool, trade_pending: bool) -> bool {
     available && !trade_pending
+}
+
+fn farming_control_enabled(available: bool, farming_pending: bool) -> bool {
+    available && !farming_pending
 }
 
 fn cancel_market_control_enabled(has_open_market_order: bool, market_pending: bool) -> bool {

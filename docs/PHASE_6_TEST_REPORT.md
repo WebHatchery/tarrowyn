@@ -2249,3 +2249,11 @@ pass, and `publish.ps1` passes Windows/WebGL builds, packaging, Preview
 deployment, and catalog sync. No full workspace gate was repeated because
 this was a bounded local-combat-control correction, and no new external or
 deferred work was opened.
+
+Plant, Tend, Harvest, and Care controls now close while a farming request is
+queued or in flight, while full farming queues still report the established
+backpressure message. The focused farming filter passes six related tests;
+client formatting, clippy, standards, and the Rust file-size check pass, and
+`publish.ps1` passes Windows/WebGL builds, packaging, Preview deployment, and
+catalog sync. No full workspace gate was repeated because this was a bounded
+farming-control correction, and no new external or deferred work was opened.

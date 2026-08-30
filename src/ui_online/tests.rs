@@ -359,6 +359,13 @@ fn trade_controls_wait_for_the_previous_trade_command() {
 }
 
 #[test]
+fn farming_controls_wait_for_the_previous_field_command() {
+    assert!(!super::farming_control_enabled(true, true));
+    assert!(super::farming_control_enabled(true, false));
+    assert!(!super::farming_control_enabled(false, false));
+}
+
+#[test]
 fn event_controls_wait_for_the_previous_resolution_command() {
     assert!(!super::event_control_enabled(true));
     assert!(super::event_control_enabled(false));
