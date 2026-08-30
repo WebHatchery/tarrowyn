@@ -1928,3 +1928,12 @@ Rust file-size check pass, and `publish.ps1` passes Windows/WebGL builds,
 packaging, Preview deployment, and catalog sync. No full workspace gate was
 repeated because this was a bounded Phase 5 feedback correction, and no new
 external or deferred work was opened.
+
+The regional travel control now distinguishes an active journey from recovery
+in progress: only `Travelling` exposes the enabled Interrupt action, while
+`Recovering` is visibly unavailable until the authoritative journey advances.
+The focused travel-selector regression, client clippy, and Rust file-size check
+pass, and `publish.ps1` passes Windows/WebGL builds, packaging, Preview
+deployment, and catalog sync. No full workspace gate was repeated because this
+was a bounded Phase 5 recovery-control correction, and no new external or
+deferred work was opened.

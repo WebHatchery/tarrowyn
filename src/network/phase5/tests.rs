@@ -423,6 +423,42 @@ fn travel_control_waits_for_a_route_at_the_current_location() {
 }
 
 #[test]
+fn travel_control_does_not_offer_interrupt_during_recovery() {
+    let mut client = Phase5Client::new();
+    client.region = Some(tarrowyn_protocol::RegionSnapshot {
+        region_id: "hearthlands".to_owned(),
+        season: "thaw".to_owned(),
+        calendar_day: 1,
+        locations: Vec::new(),
+        routes: Vec::new(),
+        visible_settlements: Vec::new(),
+        player_location_id: "hearth".to_owned(),
+        travel: Some(tarrowyn_protocol::TravelState {
+            travel_id: "recovering-road".to_owned(),
+            route_id: "north-pack-road".to_owned(),
+            origin_location_id: "hearth".to_owned(),
+            destination_location_id: "saltmere".to_owned(),
+            departure_tick: 1,
+            eta_tick: 4,
+            progress: 35,
+            risk_percent: 18,
+            status: TravelStatus::Recovering,
+            interruption: None,
+            recovery_note: Some("The route crew is still working.".to_owned()),
+        }),
+        interest_radius: 12,
+        cursor: 0,
+    });
+
+    assert_eq!(
+        client.travel_control_details(),
+        ("Recovering", false, false)
+    );
+    assert!(!client.queue_cycle("travel"));
+    assert!(client.commands.is_empty());
+}
+
+#[test]
 fn older_regional_projection_cannot_replace_newer_command_state() {
     let mut cursor = 0;
 

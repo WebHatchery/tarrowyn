@@ -7,7 +7,8 @@ impl Phase5Client {
         };
         match region.travel.as_ref().map(|travel| travel.status) {
             Some(TravelStatus::Interrupted) => ("Travel", false, true),
-            Some(TravelStatus::Travelling | TravelStatus::Recovering) => ("Interrupt", true, false),
+            Some(TravelStatus::Travelling) => ("Interrupt", true, false),
+            Some(TravelStatus::Recovering) => ("Recovering", false, false),
             Some(TravelStatus::Idle | TravelStatus::Arrived) | None => {
                 ("Travel", has_travel_route(region), false)
             }
@@ -23,10 +24,11 @@ impl Phase5Client {
                 self.queue_travel_action(request_id, TravelAction::Recover);
                 return;
             }
-            Some(TravelStatus::Travelling | TravelStatus::Recovering) => {
+            Some(TravelStatus::Travelling) => {
                 self.queue_travel_action(request_id, TravelAction::Interrupt);
                 return;
             }
+            Some(TravelStatus::Recovering) => return,
             Some(TravelStatus::Idle | TravelStatus::Arrived) | None => {}
         }
         let route = region
