@@ -215,14 +215,17 @@ try {
     Invoke-ConcurrentSoak 20 3
     Write-Host "Phase 3 acceptance passed: threat ripple, contract, knockout recovery, household signal, chronicle, renewable claim, expedition outpost, cursor catch-up, restartable state, and concurrent 20-client polling." -ForegroundColor Green
 } finally {
-    if ($null -ne $server -and -not $server.HasExited) { Stop-Phase3Server $server }
-    foreach ($name in $environmentNames) {
-        $value = $previousEnvironment[$name]
-        if ($null -eq $value) {
-            Remove-Item "Env:$name" -ErrorAction SilentlyContinue
-        } else {
-            Set-Item -Path "Env:$name" -Value $value
+    try {
+        if ($null -ne $server -and -not $server.HasExited) { Stop-Phase3Server $server }
+    } finally {
+        foreach ($name in $environmentNames) {
+            $value = $previousEnvironment[$name]
+            if ($null -eq $value) {
+                Remove-Item "Env:$name" -ErrorAction SilentlyContinue
+            } else {
+                Set-Item -Path "Env:$name" -Value $value
+            }
         }
+        Remove-Item -LiteralPath $statePath -Force -ErrorAction SilentlyContinue
     }
-    Remove-Item -LiteralPath $statePath -Force -ErrorAction SilentlyContinue
 }

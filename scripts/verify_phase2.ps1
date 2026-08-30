@@ -139,14 +139,17 @@ try {
     Assert-True ($afterRestart.meta.server_tick -ge $beforeRestartTick) "world clock did not survive restart"
     Write-Host "Phase 2 acceptance passed: persistent farming, idempotent exchange, tavern feed, and restart recovery." -ForegroundColor Green
 } finally {
-    if ($null -ne $server -and -not $server.HasExited) { Stop-Phase2Server $server }
-    foreach ($name in $environmentNames) {
-        $value = $previousEnvironment[$name]
-        if ($null -eq $value) {
-            Remove-Item "Env:$name" -ErrorAction SilentlyContinue
-        } else {
-            Set-Item -Path "Env:$name" -Value $value
+    try {
+        if ($null -ne $server -and -not $server.HasExited) { Stop-Phase2Server $server }
+    } finally {
+        foreach ($name in $environmentNames) {
+            $value = $previousEnvironment[$name]
+            if ($null -eq $value) {
+                Remove-Item "Env:$name" -ErrorAction SilentlyContinue
+            } else {
+                Set-Item -Path "Env:$name" -Value $value
+            }
         }
+        Remove-Item -LiteralPath $statePath -Force -ErrorAction SilentlyContinue
     }
-    Remove-Item -LiteralPath $statePath -Force -ErrorAction SilentlyContinue
 }

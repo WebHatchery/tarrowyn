@@ -181,14 +181,17 @@ try {
 
     Write-Host "Phase 4 acceptance passed: three-role presence/chat, governance, infrastructure, lease lifecycle, profession order, knowledge transfer, animal care, complementary household, local combat, and restart." -ForegroundColor Green
 } finally {
-    if ($null -ne $server -and -not $server.HasExited) { Stop-Phase4Server $server }
-    foreach ($name in $environmentNames) {
-        $value = $previousEnvironment[$name]
-        if ($null -eq $value) {
-            Remove-Item "Env:$name" -ErrorAction SilentlyContinue
-        } else {
-            Set-Item -Path "Env:$name" -Value $value
+    try {
+        if ($null -ne $server -and -not $server.HasExited) { Stop-Phase4Server $server }
+    } finally {
+        foreach ($name in $environmentNames) {
+            $value = $previousEnvironment[$name]
+            if ($null -eq $value) {
+                Remove-Item "Env:$name" -ErrorAction SilentlyContinue
+            } else {
+                Set-Item -Path "Env:$name" -Value $value
+            }
         }
+        Remove-Item -LiteralPath $statePath -Force -ErrorAction SilentlyContinue
     }
-    Remove-Item -LiteralPath $statePath -Force -ErrorAction SilentlyContinue
 }
