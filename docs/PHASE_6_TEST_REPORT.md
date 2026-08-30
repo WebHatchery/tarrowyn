@@ -3163,3 +3163,9 @@ payloads default the new usability signal to false and that a teacher carrying
 only an advanced discovery cannot open a lesson until its own requirements are
 complete. These focused protocol and server regressions pass; no additional
 publisher or workspace-wide gate was repeated for this test-only correction.
+The advanced-arts line now distinguishes a ready discovered art from a
+learner-gated discovery, so the Practice ledger no longer presents both as
+equivalent states. The focused UI regression, client clippy, formatting,
+source-size and diff checks pass, and `publish.ps1` again passes the
+Windows/WebGL build, packaging, Preview deployment, tracker recording, and
+catalog sync. No new external or deferred work was opened.

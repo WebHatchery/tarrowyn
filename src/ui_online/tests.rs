@@ -145,12 +145,19 @@ fn advanced_skill_line_names_only_revealed_discovery_states() {
         name: "Weapon Fighting".to_owned(),
         status: tarrowyn_protocol::SkillStatus::Discovered,
         usable: true,
+        ..hidden.clone()
+    };
+    let taught = tarrowyn_protocol::SkillView {
+        skill_id: "storm-magic".to_owned(),
+        name: "Taught Storm Magic".to_owned(),
+        status: tarrowyn_protocol::SkillStatus::Discovered,
+        usable: false,
         ..hidden
     };
 
     assert_eq!(
-        super::panels::advanced_skill_line(&[resonating, discovered]),
-        "Advanced arts in your ledger: Storm Magic (resonating) • Weapon Fighting (discovered)"
+        super::panels::advanced_skill_line(&[resonating, discovered, taught]),
+        "Advanced arts in your ledger: Storm Magic (resonating) • Weapon Fighting (ready) • Taught Storm Magic (discovered)"
     );
     assert!(!super::panels::advanced_skill_line(&[hidden_available]).contains("Hidden Art"));
 }

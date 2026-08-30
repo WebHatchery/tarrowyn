@@ -554,6 +554,7 @@ pub fn advanced_skill_line(skills: &[tarrowyn_protocol::SkillView]) -> String {
         .map(|skill| {
             let status = match skill.status {
                 tarrowyn_protocol::SkillStatus::Resonating => "resonating",
+                tarrowyn_protocol::SkillStatus::Discovered if skill.usable => "ready",
                 tarrowyn_protocol::SkillStatus::Discovered => "discovered",
                 _ => "hidden",
             };
