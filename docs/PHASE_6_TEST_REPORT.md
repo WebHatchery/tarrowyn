@@ -2572,3 +2572,14 @@ file-size scan pass. The project `publish.ps1` Windows/WebGL build, packaging,
 Preview deployment, and catalog-sync checks pass. No full workspace gate was
 repeated because this was a bounded client cursor-recovery correction, and no
 new external or deferred work was opened.
+
+The map now draws the local character only from an authoritative player
+position, except for the explicitly local offline fixture. Startup, cursor
+reload, and failed snapshot states therefore no longer show a default or
+cleared account marker as if it were current. The focused binary test
+`ui::tests::map_player_marker_waits_for_authority_unless_using_the_offline_fixture`
+passes; client-package formatting and clippy, `git diff --check`, and the Rust
+file-size scan pass. The project `publish.ps1` Windows/WebGL build, packaging,
+Preview deployment, and catalog-sync checks pass. No full workspace gate was
+repeated because this was a bounded client projection-presentation correction,
+and no new external or deferred work was opened.

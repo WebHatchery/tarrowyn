@@ -38,6 +38,7 @@ pub struct UiContext<'a> {
     pub night: bool,
     pub stats: &'a str,
     pub own_account_id: Option<&'a str>,
+    pub player_position_authoritative: bool,
     pub remote_players: &'a [RemotePlayer],
     pub farm_animals: &'a [tarrowyn_protocol::FarmAnimal],
     pub trades: &'a [TradeOffer],

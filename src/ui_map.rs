@@ -49,7 +49,7 @@ pub(crate) fn draw_map(ctx: &UiContext<'_>, rect: Rect) {
     }
 
     ui_regional::draw_map_overlay(ctx, &view, rect);
-    if ctx.offline || ctx.own_account_id.is_some() {
+    if should_draw_player_marker(ctx.offline, ctx.player_position_authoritative) {
         draw_character(&view, ctx.player_position, CREAM, true);
     }
     for (index, player) in ctx.remote_players.iter().enumerate() {
@@ -58,6 +58,10 @@ pub(crate) fn draw_map(ctx: &UiContext<'_>, rect: Rect) {
         }
         draw_remote_character(&view, player, index, ctx.server_tick);
     }
+}
+
+pub(crate) fn should_draw_player_marker(offline: bool, authoritative: bool) -> bool {
+    offline || authoritative
 }
 
 fn draw_tile_detail(tile: TileKind, rect: Rect) {

@@ -221,6 +221,10 @@ impl Game {
                     night: client.projection.is_night(),
                     stats: &stats,
                     own_account_id,
+                    player_position_authoritative: client
+                        .projection
+                        .authoritative_player_position()
+                        .is_some(),
                     remote_players: &client.projection.players,
                     farm_animals: &client.projection.animals,
                     trades: &client.projection.trades,
@@ -330,6 +334,7 @@ impl Game {
                     night: session.is_night(&self.data.config),
                     stats: &stats,
                     own_account_id: None,
+                    player_position_authoritative: false,
                     remote_players: &[],
                     farm_animals: &[],
                     trades: &[],

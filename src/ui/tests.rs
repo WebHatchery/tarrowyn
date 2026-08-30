@@ -37,3 +37,10 @@ fn online_footer_exposes_pending_trade_terms_and_direction() {
         "Gold 12 • 2 players\nWheat 1\nTrade from Farmer: 1 seeds for 2 gold"
     );
 }
+
+#[test]
+fn map_player_marker_waits_for_authority_unless_using_the_offline_fixture() {
+    assert!(super::ui_map::should_draw_player_marker(true, false));
+    assert!(super::ui_map::should_draw_player_marker(false, true));
+    assert!(!super::ui_map::should_draw_player_marker(false, false));
+}
