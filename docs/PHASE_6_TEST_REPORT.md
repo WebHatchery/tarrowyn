@@ -1443,3 +1443,12 @@ regression passes (1), with server-package clippy, formatting, diff, and Rust
 file-size checks clean. No live MySQL assertion was claimed because the ignored
 preview credentials remain unavailable; no full workspace gate was repeated for
 this isolated persistence-integrity check.
+
+MySQL startup now also verifies that the transactional identity index contains
+exactly the account and character pairs represented by the loaded JSON world,
+including the empty-world case, and rejects orphaned or missing index rows.
+The focused MySQL filter passes (4 matching tests), with server-package
+clippy, formatting, diff, and Rust file-size checks clean. No live database
+assertion was claimed because the ignored preview credentials remain
+unavailable; no full workspace gate was repeated for this isolated integrity
+check.

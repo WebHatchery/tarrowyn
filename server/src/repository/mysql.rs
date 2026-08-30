@@ -65,8 +65,30 @@ impl MysqlStore {
                 PersistenceBackendError::new("the MySQL world snapshot could not be read")
             })?;
         let Some((storage_version, world_tick, event_cursor, state_json)) = snapshot else {
+            let index_count: Option<u64> = connection
+                .exec_first(
+                    "SELECT COUNT(*) FROM tarrowyn_identity_index WHERE state_id = 1",
+                    (),
+                )
+                .map_err(|_| {
+                    PersistenceBackendError::new("the MySQL identity index could not be read")
+                })?;
+            if index_count != Some(0) {
+                return Err(PersistenceBackendError::new(
+                    "the MySQL identity index does not match its world snapshot",
+                ));
+            }
             return Ok(None);
         };
+        let identity_index: Vec<(String, String)> = connection
+            .query(
+                "SELECT account_id, character_id
+                 FROM tarrowyn_identity_index WHERE state_id = 1
+                 ORDER BY account_id",
+            )
+            .map_err(|_| {
+                PersistenceBackendError::new("the MySQL identity index could not be read")
+            })?;
         let stored: StoredState = serde_json::from_str(&state_json).map_err(|_| {
             PersistenceBackendError::new("the MySQL world snapshot contains invalid state JSON")
         })?;
@@ -80,6 +102,11 @@ impl MysqlStore {
         if !snapshot_metadata_matches(storage_version, world_tick, event_cursor, &stored) {
             return Err(PersistenceBackendError::new(
                 "the MySQL world snapshot metadata does not match its JSON state",
+            ));
+        }
+        if !identity_index_matches(&stored, &identity_index) {
+            return Err(PersistenceBackendError::new(
+                "the MySQL identity index does not match its world snapshot",
             ));
         }
         Ok(Some(RepositoryState::from_stored(stored, config)))
@@ -244,6 +271,18 @@ fn snapshot_metadata_matches(
     storage_version == stored.storage_version
         && world_tick == stored.tick
         && event_cursor == stored.cursor
+}
+
+fn identity_index_matches(stored: &StoredState, identity_index: &[(String, String)]) -> bool {
+    let mut expected = stored
+        .identities
+        .values()
+        .map(|identity| (identity.account_id.clone(), identity.character_id.clone()))
+        .collect::<Vec<_>>();
+    expected.sort();
+    let mut actual = identity_index.to_vec();
+    actual.sort();
+    expected == actual
 }
 
 impl Drop for MysqlStore {
