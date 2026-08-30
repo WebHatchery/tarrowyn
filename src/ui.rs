@@ -348,16 +348,16 @@ fn draw_move_pad(x: f32, y: f32, mouse: Vec2, actions: &mut Vec<UiAction>, enabl
             mouse,
         ) {
             match label {
-                "U" => action.push(UiAction::Move(0, -1)),
-                "L" => action.push(UiAction::Move(-1, 0)),
-                "R" => action.push(UiAction::Move(1, 0)),
-                "D" => action.push(UiAction::Move(0, 1)),
+                "^" => action.push(UiAction::Move(0, -1)),
+                "<" => action.push(UiAction::Move(-1, 0)),
+                ">" => action.push(UiAction::Move(1, 0)),
+                "v" => action.push(UiAction::Move(0, 1)),
                 _ => {}
             }
         }
     };
-    button(x + size + gap, y, "U", actions);
-    button(x, y + size + gap, "L", actions);
+    button(x + size + gap, y, "^", actions);
+    button(x, y + size + gap, "<", actions);
     virtual_button(
         Rect::new(x + size + gap, y + size + gap, size, size),
         "•",
@@ -365,8 +365,8 @@ fn draw_move_pad(x: f32, y: f32, mouse: Vec2, actions: &mut Vec<UiAction>, enabl
         ButtonTone::Secondary,
         mouse,
     );
-    button(x + (size + gap) * 2.0, y + size + gap, "R", actions);
-    button(x + size + gap, y + (size + gap) * 2.0, "D", actions);
+    button(x + (size + gap) * 2.0, y + size + gap, ">", actions);
+    button(x + size + gap, y + (size + gap) * 2.0, "v", actions);
 }
 
 fn virtual_button(rect: Rect, label: &str, enabled: bool, tone: ButtonTone, mouse: Vec2) -> bool {

@@ -1542,3 +1542,11 @@ file-size checks pass, and `publish.ps1` passes its Windows/WebGL builds,
 packaging, Preview deployment, and catalog synchronization. No full workspace
 gate was repeated because this was a bounded client presentation slice, and no
 new external or deferred work was opened.
+
+The touch movement pad now uses font-safe directional symbols (`^`, `<`, `>`,
+`v`) instead of keyboard-looking `U/L/R/D` labels. The captured gameplay
+verification image renders all four controls correctly; the focused online UI
+tests (7), client-package clippy, formatting, diff, and Rust file-size checks
+pass, and `publish.ps1` refreshed the Windows/WebGL packages and Preview
+artifacts. No full workspace gate was repeated because this was a bounded
+touch-presentation slice, and no new external or deferred work was opened.
