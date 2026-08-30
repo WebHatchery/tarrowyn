@@ -238,6 +238,7 @@ impl Game {
                     phase4_summary: &client.phase4_summary(),
                     phase5_summary: &client.phase5_summary(),
                     account_deletion_armed: client.account_deletion_armed(),
+                    account_link_available: client.account_link_available(),
                     crafting: client.crafting_view(),
                     combat: client.combat_state(),
                     storm_magic_unlocked: client.storm_magic_unlocked(),
@@ -315,6 +316,7 @@ impl Game {
                     phase5_summary:
                         "Regional map and production account are available on the shared road.",
                     account_deletion_armed: false,
+                    account_link_available: false,
                     crafting: None,
                     combat: None,
                     storm_magic_unlocked: false,

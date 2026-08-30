@@ -271,6 +271,24 @@ fn guest_account_cannot_arm_deletion() {
 }
 
 #[test]
+fn linked_account_control_does_not_queue_a_second_link() {
+    let mut client = Phase5Client::new();
+    client.account = Some(account_response(false));
+
+    assert!(!client.account_link_available());
+    assert!(!client.queue_cycle("account"));
+    assert!(client.commands.is_empty());
+
+    client.account = Some(account_response(true));
+    assert!(client.account_link_available());
+    assert!(client.queue_cycle("account"));
+    assert!(matches!(
+        client.commands.front(),
+        Some(Phase5Command::Link(request)) if request.provider == "webhatchery-identity-oidc"
+    ));
+}
+
+#[test]
 fn account_deletion_response_selects_its_own_command_variant() {
     let response = serde_json::from_value::<Phase5CommandResponse>(serde_json::json!({
         "request_id": "delete-1",

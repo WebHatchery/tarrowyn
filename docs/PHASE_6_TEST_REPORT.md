@@ -628,6 +628,12 @@ future content additions do not push the catalog access module toward the
 workspace's 800-line Rust limit. The 37 content-focused tests and the project
 publisher both pass after the organization-only change.
 
+The player-facing Account control now remains linkable only while the current
+projection is a guest fixture; linked characters see a disabled Linked state
+and retain the Logout and deletion controls. The 13 focused client account-
+lifecycle tests, client clippy check, size audit, diff check, and project
+publisher pass after this recovery-path fix.
+
 Phase 6 audit and session helpers now live in a dedicated child module, keeping
 the repository coordinator below the workspace's 800-line Rust limit while
 preserving the existing behavior. The 43 Phase 6-focused tests, server-only

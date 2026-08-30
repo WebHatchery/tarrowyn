@@ -338,7 +338,16 @@ pub(super) fn draw_sidebar(
         22.0,
         mouse,
         &[
-            ("account", "Account", true, ButtonTone::Secondary),
+            (
+                "account",
+                if ctx.account_link_available {
+                    "Account"
+                } else {
+                    "Linked"
+                },
+                ctx.account_link_available,
+                ButtonTone::Secondary,
+            ),
             ("logout", "Logout", true, ButtonTone::Secondary),
             ("report", "Report", true, ButtonTone::Secondary),
             (

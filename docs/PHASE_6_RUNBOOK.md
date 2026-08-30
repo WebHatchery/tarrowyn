@@ -162,7 +162,9 @@ The client displays connection, maintenance, migration, rate-limit, and
 moderation responses in the visible notice area. The player should tap
 Reconnect, Recover, Account, Logout, or Report as named by the message. For
 privacy deletion, use the visible Delete control after Account shows a linked
-production account: tap Delete once to arm it, then tap the relabelled
+production account. Account is active only for a guest fixture, so an already-
+linked character cannot submit a second link request; tap Delete once to arm it,
+then tap the relabelled
 Tap again control to submit `/v1/account/delete`. The response is scheduled
 for the next authoritative tick; the client clears the session and exposes
 Reconnect so the player can return as a fresh guest. A development guest must

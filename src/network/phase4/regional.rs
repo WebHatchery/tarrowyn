@@ -10,6 +10,10 @@ impl Phase4Client {
         self.regional.auth_refresh_pending()
     }
 
+    pub(crate) fn account_link_available(&self) -> bool {
+        self.regional.account_link_available()
+    }
+
     pub(crate) fn queue_region_report(
         &mut self,
         request_id: String,

@@ -283,6 +283,13 @@ impl Phase5Client {
             "cancel-market" => self.queue_market_cancel(request_id),
             "region-event" => self.queue_event(request_id),
             "account" => {
+                if self
+                    .account
+                    .as_ref()
+                    .is_some_and(|account| !account.guest_fixture)
+                {
+                    return false;
+                }
                 let _ = super::queue::try_push(
                     &mut self.commands,
                     Phase5Command::Link(AuthLinkRequest {
@@ -365,6 +372,12 @@ impl Phase5Client {
 
     pub(super) fn travel_control(&self) -> (&'static str, bool, bool) {
         self.travel_control_details()
+    }
+
+    pub(super) fn account_link_available(&self) -> bool {
+        self.account
+            .as_ref()
+            .is_none_or(|account| account.guest_fixture)
     }
 
     pub(super) fn clear(&mut self) {
@@ -632,5 +645,9 @@ impl OnlineClient {
 
     pub(crate) fn account_deletion_armed(&self) -> bool {
         self.phase4.deletion_armed()
+    }
+
+    pub(crate) fn account_link_available(&self) -> bool {
+        self.phase4.account_link_available()
     }
 }
