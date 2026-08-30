@@ -26,6 +26,10 @@ pub const LOGICAL_HEIGHT: f32 = 720.0;
 mod ui_context;
 pub use ui_context::{UiAction, UiContext};
 
+#[cfg(test)]
+#[path = "ui/tests.rs"]
+mod tests;
+
 const PANEL: Color = Color::new(0.055, 0.075, 0.09, 0.97);
 const PANEL_LIGHT: Color = Color::new(0.08, 0.11, 0.13, 0.98);
 const LINE: Color = Color::new(0.32, 0.48, 0.50, 0.75);
@@ -441,19 +445,18 @@ fn draw_footer(ctx: &UiContext<'_>) {
         rect.y + 22.0,
         TextStyle::new(12.0, GOLD).params(),
     );
-    draw_text_block(
-        &format!(
-            "{}\n{} players • {} crop types • {} assets • {} saved slot(s)",
-            if ctx.offline {
-                "No online state is mixed into this fixture"
-            } else {
-                "Movement, clock, presence, and chat come from the server"
-            },
-            ctx.remote_players.len(),
+    let footer_detail = if ctx.offline {
+        format!(
+            "No online state is mixed into this fixture\n{} crop types • {} assets • {} saved slot(s)",
             ctx.data.crops.len(),
             ctx.loaded_assets,
             ctx.save_slots.len()
-        ),
+        )
+    } else {
+        online_footer_detail(ctx.stats, ctx.remote_players.len())
+    };
+    draw_text_block(
+        &footer_detail,
         rect.x + 600.0,
         rect.y + 38.0,
         rect.w - 616.0,
@@ -462,6 +465,13 @@ fn draw_footer(ctx: &UiContext<'_>) {
         2.0,
         dark::TEXT_DIM,
     );
+}
+
+fn online_footer_detail(stats: &str, visible_players: usize) -> String {
+    let mut lines = stats.lines();
+    let overview = lines.next().unwrap_or("Player ledger loading");
+    let inventory = lines.nth(2).unwrap_or("Inventory loading");
+    format!("{overview} • {visible_players} players\n{inventory}")
 }
 
 fn format_clock(minutes: u32) -> String {

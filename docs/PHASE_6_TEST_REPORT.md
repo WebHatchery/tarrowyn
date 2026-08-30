@@ -1558,3 +1558,13 @@ capture confirms the label in the rendered touch layout, and `publish.ps1`
 passes Windows/WebGL builds, packaging, Preview deployment, and catalog sync.
 No full workspace gate was repeated because this was a bounded social-copy
 presentation slice, and no new external or deferred work was opened.
+
+The online footer now exposes the compact authoritative wallet and inventory
+ledger beside visible-player count, so the persistent online character state is
+not hidden behind transient command notices. The focused footer-formatting
+regression passes (1), client-package clippy, formatting, diff, and Rust
+file-size checks pass, and the captured 1280x720 gameplay layout remains
+readable. `publish.ps1` passes Windows/WebGL builds, packaging, Preview
+deployment, and catalog sync. No full workspace gate was repeated because this
+was a bounded online-ledger presentation slice, and no new external or
+deferred work was opened.
