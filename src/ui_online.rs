@@ -71,10 +71,18 @@ pub(super) fn draw_sidebar(
                 .own_account_id
                 .is_some_and(|account_id| trade.recipient_account_id == account_id)
     });
-    let (combat_side_id, combat_side_label) = combat_side_control(
-        ctx.combat,
-        frontier_threat_is_reachable(ctx.player_position, ctx.wilderness),
-    );
+    let frontier_threat_reachable =
+        frontier_threat_is_reachable(ctx.player_position, ctx.wilderness);
+    let (combat_side_id, combat_side_label) =
+        combat_side_control(ctx.combat, frontier_threat_reachable);
+    let local_combat_action_ready =
+        panels::local_combat_action_enabled(ctx.combat, ctx.server_tick);
+    let combat_side_enabled = match combat_side_id {
+        "contract" => true,
+        "frontier-retreat" => frontier_threat_reachable,
+        "retreat" => local_combat_action_ready,
+        _ => false,
+    };
 
     draw_button_row(
         content,
@@ -192,13 +200,28 @@ pub(super) fn draw_sidebar(
                 (
                     combat_side_id,
                     combat_side_label,
-                    true,
+                    combat_side_enabled,
                     ButtonTone::Secondary,
                 ),
-                ("strike", "Strike", true, ButtonTone::Secondary),
-                ("technique", "Technique", true, ButtonTone::Secondary),
+                (
+                    "strike",
+                    "Strike",
+                    local_combat_action_ready,
+                    ButtonTone::Secondary,
+                ),
+                (
+                    "technique",
+                    "Technique",
+                    local_combat_action_ready,
+                    ButtonTone::Secondary,
+                ),
                 ("claim", "Claim", true, ButtonTone::Secondary),
-                ("item", "Bandage", true, ButtonTone::Secondary),
+                (
+                    "item",
+                    "Bandage",
+                    local_combat_action_ready,
+                    ButtonTone::Secondary,
+                ),
             ],
             ctx,
             actions,
@@ -217,7 +240,7 @@ pub(super) fn draw_sidebar(
                 } else {
                     "Spell"
                 },
-                !ctx.knocked_out,
+                local_combat_action_ready,
                 ButtonTone::Secondary,
             ),
             (
@@ -281,14 +304,23 @@ pub(super) fn draw_sidebar(
             (
                 "local-fight",
                 "Local fight",
-                !ctx.knocked_out,
+                !ctx.knocked_out
+                    && !ctx.combat.is_some_and(|combat| {
+                        combat.status == tarrowyn_protocol::LocalCombatStatus::Engaged
+                            && combat.action_available_at_tick > ctx.server_tick
+                    }),
                 ButtonTone::Secondary,
             ),
-            ("guard", "Guard", !ctx.knocked_out, ButtonTone::Secondary),
+            (
+                "guard",
+                "Guard",
+                local_combat_action_ready,
+                ButtonTone::Secondary,
+            ),
             (
                 "reposition",
                 "Reposition",
-                !ctx.knocked_out,
+                local_combat_action_ready,
                 ButtonTone::Secondary,
             ),
         ],

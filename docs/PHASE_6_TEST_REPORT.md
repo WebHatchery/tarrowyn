@@ -2109,3 +2109,13 @@ and `publish.ps1` passes Windows/WebGL builds, packaging, Preview deployment,
 and catalog sync. No full workspace gate was repeated because this was a
 bounded regional projection authority correction, and no new external or
 deferred work was opened.
+
+The online combat action bar now disables local encounter actions until an
+authoritative encounter is engaged and its server action window is open. This
+removes misleading Strike, Technique, Guard, Bandage, Reposition, and Spell
+requests while preserving Contract, reachable frontier retreat, and visible
+recovery controls. The focused UI action-window regression passes, client
+clippy, standards, and the Rust file-size check pass, and `publish.ps1` passes
+Windows/WebGL builds, packaging, Preview deployment, and catalog sync. No full
+workspace gate was repeated because this was a bounded combat presentation
+correction, and no new external or deferred work was opened.

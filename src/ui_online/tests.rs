@@ -235,6 +235,45 @@ fn travel_controls_close_while_knocked_out() {
 }
 
 #[test]
+fn local_combat_actions_wait_for_an_engaged_ready_encounter() {
+    let ready = tarrowyn_protocol::LocalCombatState {
+        encounter_id: "encounter".to_owned(),
+        enemy_name: "Brambleback scout".to_owned(),
+        enemy_health: 2,
+        player_health: 2,
+        turn: 0,
+        status: tarrowyn_protocol::LocalCombatStatus::Ready,
+        weapon: tarrowyn_protocol::WeaponKind::IronSword,
+        injury_limit: 3,
+        stored_property_safe: true,
+        carried_risk: "A seed may be risked.".to_owned(),
+        recovery_cost: 4,
+        action_available_at_tick: 0,
+        reposition_ready: false,
+        spell_ready: true,
+    };
+    let mut engaged = ready.clone();
+    engaged.status = tarrowyn_protocol::LocalCombatStatus::Engaged;
+    engaged.action_available_at_tick = 11;
+
+    assert!(!super::panels::local_combat_action_enabled(None, 10));
+    assert!(!super::panels::local_combat_action_enabled(
+        Some(&ready),
+        10
+    ));
+    assert!(!super::panels::local_combat_action_enabled(
+        Some(&engaged),
+        10
+    ));
+
+    engaged.action_available_at_tick = 10;
+    assert!(super::panels::local_combat_action_enabled(
+        Some(&engaged),
+        10
+    ));
+}
+
+#[test]
 fn chronicle_panel_text_keeps_archive_context_and_recent_records() {
     let entries = vec![
         tarrowyn_protocol::ChronicleEntry {

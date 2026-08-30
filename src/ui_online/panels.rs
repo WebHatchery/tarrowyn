@@ -256,6 +256,16 @@ pub fn combat_side_control(
     }
 }
 
+pub fn local_combat_action_enabled(
+    combat: Option<&tarrowyn_protocol::LocalCombatState>,
+    server_tick: u64,
+) -> bool {
+    combat.is_some_and(|combat| {
+        combat.status == tarrowyn_protocol::LocalCombatStatus::Engaged
+            && combat.action_available_at_tick <= server_tick
+    })
+}
+
 pub fn frontier_threat_is_reachable(
     player_position: TilePos,
     wilderness: Option<&tarrowyn_protocol::WildernessZone>,
