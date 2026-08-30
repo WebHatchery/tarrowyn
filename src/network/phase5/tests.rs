@@ -510,6 +510,27 @@ fn route_success_message_names_condition_and_risk() {
 }
 
 #[test]
+fn event_success_message_names_intervention_and_outcome() {
+    let mut event = regional_event(
+        "event-message",
+        tarrowyn_protocol::RegionalEventStage::Intervention,
+        1,
+    );
+    event.chosen_intervention = Some("protect grain stores".to_owned());
+    assert_eq!(
+        super::commands::event_success_message(Some(&event)),
+        "The thaw road recorded: protect grain stores."
+    );
+
+    event.stage = tarrowyn_protocol::RegionalEventStage::Resolution;
+    event.outcome = Some("The roads reopen before winter.".to_owned());
+    assert_eq!(
+        super::commands::event_success_message(Some(&event)),
+        "The thaw road resolved: The roads reopen before winter."
+    );
+}
+
+#[test]
 fn travel_success_message_explains_progress_and_risk() {
     let travel = tarrowyn_protocol::TravelState {
         travel_id: "travel-1".to_owned(),

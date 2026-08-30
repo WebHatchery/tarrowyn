@@ -1691,3 +1691,11 @@ file-size check pass, and `publish.ps1` passes Windows/WebGL builds, packaging,
 Preview deployment, and catalog sync. No full workspace gate was repeated
 because this was a bounded client route-feedback slice, and no new external or
 deferred work was opened.
+
+Accepted regional event responses now name the authoritative lifecycle result:
+the signal or escalation state, the selected intervention, or the resolution
+outcome. The focused event-detail regression passes, client clippy and the Rust
+file-size check pass, and `publish.ps1` passes Windows/WebGL builds, packaging,
+Preview deployment, and catalog sync. No full workspace gate was repeated
+because this was a bounded client event-feedback slice, and no new external or
+deferred work was opened.

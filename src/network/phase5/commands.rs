@@ -3,9 +3,9 @@ use serde::Deserialize;
 use tarrowyn_protocol::{
     AccountDeletionRequest, AccountDeletionResponse, AuthLinkRequest, AuthLinkResponse,
     AuthRevokeRequest, AuthRevokeResponse, MarketOrderRequest, MarketOrderResponse,
-    ModerationReportRequest, ModerationReportResponse, RegionalEventRequest, RegionalEventResponse,
-    RouteRecord, RouteRequest, RouteResponse, RouteStatus, TravelRequest, TravelResponse,
-    TravelState, TravelStatus,
+    ModerationReportRequest, ModerationReportResponse, RegionalEvent, RegionalEventRequest,
+    RegionalEventResponse, RegionalEventStage, RouteRecord, RouteRequest, RouteResponse,
+    RouteStatus, TravelRequest, TravelResponse, TravelState, TravelStatus,
 };
 
 pub(super) enum Phase5Command {
@@ -55,6 +55,41 @@ pub(super) fn route_success_message(route: &RouteRecord) -> String {
     )
 }
 
+pub(super) fn event_success_message(event: Option<&RegionalEvent>) -> String {
+    let Some(event) = event else {
+        return "The regional event ledger updated.".to_owned();
+    };
+    match event.stage {
+        RegionalEventStage::Signal => {
+            format!("{} is now signalled across the region.", event.title)
+        }
+        RegionalEventStage::Escalation => {
+            format!(
+                "{} has escalated; choose a visible intervention.",
+                event.title
+            )
+        }
+        RegionalEventStage::Intervention => format!(
+            "{} recorded: {}.",
+            event.title,
+            event
+                .chosen_intervention
+                .as_deref()
+                .unwrap_or("the selected response")
+        ),
+        RegionalEventStage::Resolution => format!(
+            "{} resolved: {}.",
+            event.title,
+            event
+                .outcome
+                .as_deref()
+                .unwrap_or("the outcome is recorded")
+                .trim_end_matches('.')
+        ),
+        RegionalEventStage::Aftermath => format!("{} aftermath is recorded.", event.title),
+    }
+}
+
 #[derive(Deserialize)]
 #[serde(untagged)]
 pub(super) enum Phase5CommandResponse {
@@ -99,12 +134,10 @@ impl Phase5Client {
                 ),
                 notices,
             ),
-            Phase5CommandResponse::Event(response) => phase5_notice(
-                response.accepted,
-                response.reason,
-                "The regional chronicle recorded the event intervention.",
-                notices,
-            ),
+            Phase5CommandResponse::Event(response) => {
+                let message = event_success_message(response.event.as_ref());
+                phase5_notice(response.accepted, response.reason, &message, notices);
+            }
             Phase5CommandResponse::Link(response) => {
                 api.set_bearer_token(Some(&response.session.account_token));
                 self.refresh_token = Some(response.session.refresh_token.clone());
