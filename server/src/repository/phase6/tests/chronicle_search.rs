@@ -58,6 +58,7 @@ fn chronicle_search_summarises_recent_matches_too() {
         .expect("chronicle search")
         .data;
     assert_eq!(search.entries.len(), 1);
+    assert!(search.next_cursor.is_none());
     let summary = search.summary.expect("recent match summary");
     assert_eq!(summary.entry_count, 1);
     assert_eq!(summary.from_cursor, search.entries[0].cursor);

@@ -338,11 +338,19 @@ impl WorldRepository {
         };
         let entries: Vec<_> = super::super::phase3::chronicle_entries(&state.phase3)
             .filter(matches)
-            .take(MAX_CHRONICLE_SEARCH_RESULTS)
+            .take(MAX_CHRONICLE_SEARCH_RESULTS + 1)
             .cloned()
             .collect();
+        let has_more = entries.len() > MAX_CHRONICLE_SEARCH_RESULTS;
+        let mut entries = entries;
+        if has_more {
+            entries.truncate(MAX_CHRONICLE_SEARCH_RESULTS);
+        }
         let summary = super::super::phase3::chronicle_summary(&entries, since);
-        let next_cursor = entries.last().map(|entry| entry.cursor);
+        let next_cursor = has_more
+            .then(|| entries.last())
+            .flatten()
+            .map(|entry| entry.cursor);
         Ok(ApiResponse {
             meta: meta(state.tick, None, Some(state.cursor)),
             data: ChronicleSearchResponse {

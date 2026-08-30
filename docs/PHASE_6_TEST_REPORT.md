@@ -760,6 +760,15 @@ catalog sync. No full workspace gate was repeated because this was a bounded
 client Town Hall-feedback slice, and no new external or deferred work was
 opened.
 
+Chronicle archive search now exposes a continuation cursor only when a
+sentinel result proves another bounded page exists, so a short result set no
+longer shows a misleading Next control or needs an empty follow-up request.
+The focused server chronicle-search suite passes all four tests, server clippy
+passes, and `publish.ps1` passes Windows/WebGL builds, packaging, Preview
+deployment, and catalog sync. No full workspace gate was repeated because
+this was a bounded server chronicle-pagination correction, and no new
+external or deferred work was opened.
+
 Accepted profession responses for capability learning now name the learned
 discipline and confirm that its credential entered the profession ledger;
 inspection responses also use a ledger-specific message. The focused
