@@ -790,3 +790,11 @@ discard another player's idempotent report response. The focused reset
 regression covers that privacy boundary; server clippy, size, diff, formatting,
 and publisher checks are the validation scope for this Phase 6 maintenance
 slice. No new external or deferred work was opened.
+
+Reset and account deletion now use complete cached request IDs when cleaning
+identity-scoped Phase 3, Phase 5, moderation, and revoke replay maps. This
+prevents a client-key prefix collision from discarding a neighbouring player's
+idempotent response and removes the resetting guest's own revoke replay. The
+focused replay-cleanup regressions cover the boundary; server clippy, size,
+diff, formatting, and publisher checks are the validation scope for this Phase
+6 privacy-maintenance slice. No new external or deferred work was opened.

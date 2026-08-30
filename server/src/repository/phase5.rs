@@ -30,8 +30,21 @@ pub(super) use state::{
 
 const INTEREST_RADIUS: u32 = 12;
 
-pub(super) fn is_request_cache_for_identity(key: &str, identity_key: &str) -> bool {
-    key.starts_with(&format!("phase5:{identity_key}:"))
+pub(super) fn is_exact_request_cache_for_identity(
+    key: &str,
+    identity_key: &str,
+    response: &Phase5Response,
+) -> bool {
+    key == format!("phase5:{identity_key}:{}", response_request_id(response))
+}
+
+fn response_request_id(response: &Phase5Response) -> &str {
+    match response {
+        Phase5Response::Travel(response) => &response.request_id,
+        Phase5Response::Route(response) => &response.request_id,
+        Phase5Response::Market(response) => &response.request_id,
+        Phase5Response::Event(response) => &response.request_id,
+    }
 }
 
 impl WorldRepository {

@@ -1,9 +1,9 @@
 use super::super::WorldRepository;
 use crate::ServerConfig;
 use tarrowyn_protocol::{
-    ClaimLifecycleAction, ClaimLifecycleRequest, GuestSessionRequest, MarketOrderAction,
-    MarketOrderRequest, ModerationReportRequest, ProfessionAction, ProfessionKind,
-    ProfessionRequest, TravelAction, TravelRequest,
+    AuthRevokeRequest, ClaimLifecycleAction, ClaimLifecycleRequest, GuestSessionRequest,
+    MarketOrderAction, MarketOrderRequest, ModerationReportRequest, ProfessionAction,
+    ProfessionKind, ProfessionRequest, TravelAction, TravelRequest,
 };
 
 #[test]
@@ -43,6 +43,10 @@ fn guest_reset_keeps_moderation_replays_for_identity_prefix_collisions() {
             reset: true,
         })
         .expect("guest reset");
+
+    let state = repository.state.lock().unwrap();
+    assert!(state.phase6.auth_revoke_results.is_empty());
+    drop(state);
 
     let replayed = repository
         .moderation_report(
@@ -137,6 +141,16 @@ fn guest_reset_replaces_private_state_and_releases_world_ownership() {
         .data;
     assert!(market.accepted);
 
+    repository
+        .auth_revoke(
+            &first.account_token,
+            AuthRevokeRequest {
+                request_id: "reset-revoke".to_owned(),
+                revoke_all: false,
+            },
+        )
+        .unwrap();
+
     let second = repository
         .guest_session(GuestSessionRequest {
             client_key: Some("reset-private-state".to_owned()),
@@ -172,6 +186,7 @@ fn guest_reset_replaces_private_state_and_releases_world_ownership() {
         .request_results
         .keys()
         .any(|key| key.starts_with(&format!("phase5:{}:", first.client_key))));
+    assert!(state.phase6.auth_revoke_results.is_empty());
     let claim = state
         .phase4
         .claims

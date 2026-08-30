@@ -555,6 +555,24 @@ pub(super) fn cache_key(account: &str, request_id: &str) -> String {
     format!("{account}:{request_id}")
 }
 
+pub(super) fn is_request_cache_for_identity(
+    key: &str,
+    identity_key: &str,
+    response: &Phase3Response,
+) -> bool {
+    key == format!("{identity_key}:{}", response_request_id(response))
+}
+
+fn response_request_id(response: &Phase3Response) -> &str {
+    match response {
+        Phase3Response::Contract(response) => &response.request_id,
+        Phase3Response::Combat(response) => &response.request_id,
+        Phase3Response::Recovery(response) => &response.request_id,
+        Phase3Response::Claim(response) => &response.request_id,
+        Phase3Response::Expedition(response) => &response.request_id,
+    }
+}
+
 fn projection_for(state: &RepositoryState, key: &str) -> PlayerProjection {
     super::player_projection(state, key)
 }

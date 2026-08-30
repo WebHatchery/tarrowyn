@@ -72,15 +72,18 @@ fn erase_account(state: &mut RepositoryState, request: &PendingAccountDeletion) 
         .phase3
         .expedition_credentials
         .retain(|account_id| account_id != &request.account_id);
-    state
-        .phase3
-        .request_results
-        .retain(|key, _| !key.starts_with(&format!("{}:", request.identity_key)));
+    state.phase3.request_results.retain(|key, response| {
+        !super::super::phase3::is_request_cache_for_identity(key, &request.identity_key, response)
+    });
     state.phase4.request_results.retain(|key, _| {
         !super::account::is_phase4_replay_key_for_account(key, &request.account_id)
     });
-    state.phase5.request_results.retain(|key, _| {
-        !super::super::phase5::is_request_cache_for_identity(key, &request.identity_key)
+    state.phase5.request_results.retain(|key, response| {
+        !super::super::phase5::is_exact_request_cache_for_identity(
+            key,
+            &request.identity_key,
+            response,
+        )
     });
 
     erase_private_phase4_state(state, request);
@@ -92,17 +95,16 @@ fn erase_account(state: &mut RepositoryState, request: &PendingAccountDeletion) 
 
     anonymize_public_history(state, request, &deleted_display_name);
     state.phase6.auth_link_results.retain(|key, response| {
-        !key.starts_with(&format!("{}:", request.identity_key))
+        key != &format!("{}:{}", request.identity_key, response.request_id)
             && response.account_id != request.account_id
     });
     state
         .phase6
         .auth_link_tokens
         .retain(|_, identity_key| identity_key != &request.identity_key);
-    state
-        .phase6
-        .auth_revoke_results
-        .retain(|key, _| !key.starts_with(&format!("{}:", request.identity_key)));
+    state.phase6.auth_revoke_results.retain(|key, response| {
+        key != &format!("{}:{}", request.identity_key, response.request_id)
+    });
     state.phase6.auth_refresh_results.retain(|key, response| {
         !deleted_refresh_replays.contains(key)
             && !deleted_tokens.contains(&response.session.account_token)

@@ -23,10 +23,9 @@ pub(super) fn reset_guest(state: &mut RepositoryState, identity_key: &str) {
         .phase3
         .expedition_credentials
         .retain(|account_id| account_id != &old_account_id);
-    state
-        .phase3
-        .request_results
-        .retain(|key, _| !key.starts_with(&format!("{identity_key}:")));
+    state.phase3.request_results.retain(|key, response| {
+        !super::phase3::is_request_cache_for_identity(key, identity_key, response)
+    });
     state.phase4.profiles.remove(identity_key);
     state.phase4.materials.remove(identity_key);
     state.phase4.credentials.remove(identity_key);
@@ -46,10 +45,9 @@ pub(super) fn reset_guest(state: &mut RepositoryState, identity_key: &str) {
         .any(|prefix| key.starts_with(prefix))
     });
     state.phase5.travel.remove(identity_key);
-    state
-        .phase5
-        .request_results
-        .retain(|key, _| !super::phase5::is_request_cache_for_identity(key, identity_key));
+    state.phase5.request_results.retain(|key, response| {
+        !super::phase5::is_exact_request_cache_for_identity(key, identity_key, response)
+    });
     state.trades.retain(|_, trade| {
         trade.creator_account_id != old_account_id && trade.recipient_account_id != old_account_id
     });
@@ -62,6 +60,10 @@ pub(super) fn reset_guest(state: &mut RepositoryState, identity_key: &str) {
     state.phase6.moderation_results.retain(|key, response| {
         key != &format!("moderation:{identity_key}:{}", response.request_id)
     });
+    state
+        .phase6
+        .auth_revoke_results
+        .retain(|key, response| key != &format!("{identity_key}:{}", response.request_id));
     state
         .phase6
         .moderation_last_report_ticks
