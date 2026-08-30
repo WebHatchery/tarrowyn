@@ -73,11 +73,25 @@ impl super::super::WorldRepository {
             .expect("identity exists")
             .position;
         let zone_position = state.phase3.zone.position;
+        let travel_locked = state.phase5.travel.get(&key).is_some_and(|travel| {
+            matches!(
+                travel.status,
+                tarrowyn_protocol::TravelStatus::Travelling
+                    | tarrowyn_protocol::TravelStatus::Interrupted
+                    | tarrowyn_protocol::TravelStatus::Recovering
+            )
+        });
         if combat.status == LocalCombatStatus::Engaged
             && position.manhattan_distance(zone_position) > 2
         {
             response.reason = Some(
                 "Return to Whisperwood Edge before continuing the local encounter.".to_owned(),
+            );
+            return finish_local_combat(self, &mut state, cache, response);
+        } else if travel_locked {
+            response.reason = Some(
+                "Your regional journey is underway; wait for arrival before entering a local encounter."
+                    .to_owned(),
             );
             return finish_local_combat(self, &mut state, cache, response);
         } else if combat.action_available_at_tick > state.tick {

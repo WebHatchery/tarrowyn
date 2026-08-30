@@ -439,6 +439,68 @@ fn knocked_out_local_player_cannot_reenter_before_recovery() {
 }
 
 #[test]
+fn local_combat_waits_for_a_regional_journey_to_arrive() {
+    let repo = WorldRepository::new(ServerConfig {
+        movement_cooldown_ticks: 0,
+        combat_action_cooldown_ticks: 0,
+        ..ServerConfig::default()
+    });
+    let session = guest(&repo, "phase4-travel-combat-boundary");
+
+    let northbound = repo
+        .travel(
+            &session.account_token,
+            TravelRequest {
+                request_id: "travel-combat-northbound".to_owned(),
+                action: TravelAction::Start,
+                route_id: Some("north-pack-road".to_owned()),
+                travel_id: None,
+            },
+        )
+        .unwrap()
+        .data;
+    assert!(northbound.accepted);
+    for _ in 0..6 {
+        repo.tick();
+    }
+
+    let onward = repo
+        .travel(
+            &session.account_token,
+            TravelRequest {
+                request_id: "travel-combat-onward".to_owned(),
+                action: TravelAction::Start,
+                route_id: Some("watch-trail".to_owned()),
+                travel_id: None,
+            },
+        )
+        .unwrap()
+        .data;
+    assert!(onward.accepted);
+
+    let blocked = repo
+        .local_combat(
+            &session.account_token,
+            LocalCombatRequest {
+                request_id: "travel-combat-blocked".to_owned(),
+                action: LocalCombatAction::Prepare,
+                weapon: WeaponKind::IronSword,
+            },
+        )
+        .unwrap()
+        .data;
+    assert!(!blocked.accepted);
+    assert_eq!(
+        blocked.combat.status,
+        tarrowyn_protocol::LocalCombatStatus::Ready
+    );
+    assert!(blocked
+        .reason
+        .as_deref()
+        .is_some_and(|reason| reason.contains("journey")));
+}
+
+#[test]
 fn recovery_without_a_carried_seed_stays_knocked_out() {
     let repo = WorldRepository::new(ServerConfig::default());
     let session = guest(&repo, "recovery-no-seed");

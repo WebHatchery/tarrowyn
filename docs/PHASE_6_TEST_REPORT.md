@@ -738,3 +738,8 @@ position rather than trusting the requested interaction tile. The focused
 farming regression covers a two-tile attempt through an adjacent spoofed tile;
 the test, server clippy, size, diff, and publisher checks pass. No new external
 or deferred work was opened.
+
+Local combat now waits until an active regional journey has arrived before
+accepting preparation. The focused combat regression covers the normal
+Whisperwood-to-Saltmere travel overlap; the test, server clippy, size, diff,
+and publisher checks pass. No new external or deferred work was opened.
