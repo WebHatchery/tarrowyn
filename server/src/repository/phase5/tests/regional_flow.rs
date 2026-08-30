@@ -57,11 +57,30 @@ fn region_travel_recovery_and_market_settle_authoritatively() {
         .unwrap()
         .data;
     assert!(recovered.accepted);
+    let cursor_before_arrival = repository
+        .world(&traveller.account_token)
+        .unwrap()
+        .data
+        .cursor;
     for _ in 0..4 {
         repository.tick();
     }
     let arrived = repository.region(&traveller.account_token).unwrap().data;
     assert_eq!(arrived.player_location_id, "whisperwood-outpost");
+    assert!(repository
+        .events(&traveller.account_token, cursor_before_arrival)
+        .unwrap()
+        .data
+        .events
+        .iter()
+        .any(|event| {
+            matches!(
+                &event.event,
+                tarrowyn_protocol::WorldEvent::Presence(presence)
+                    if presence.online
+                        && presence.position == Position { x: 12, y: 4 }
+            )
+        }));
 
     let order = repository
         .market_order(

@@ -355,8 +355,20 @@ pub(super) fn advance_travel(state: &mut RepositoryState) {
     }
     for (key, destination) in arrivals {
         let position = location_position(state, &destination);
-        if let Some(identity) = state.identities.get_mut(&key) {
+        let online = state
+            .sessions
+            .values()
+            .any(|session| session.identity_key == key);
+        let presence_event = if let Some(identity) = state.identities.get_mut(&key) {
             identity.position = position;
+            Some(tarrowyn_protocol::WorldEvent::Presence(
+                super::super::presence(identity, state.tick, online),
+            ))
+        } else {
+            None
+        };
+        if let Some(presence_event) = presence_event {
+            super::super::push_event(state, presence_event);
         }
         record_regional(
             state,

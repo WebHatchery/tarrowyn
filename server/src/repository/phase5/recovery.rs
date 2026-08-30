@@ -35,8 +35,20 @@ pub fn clear_stuck_travel(
     }
     let origin = travel.origin_location_id;
     let origin_position = location_position(state, &origin);
-    if let Some(identity) = state.identities.get_mut(&target_key) {
+    let online = state
+        .sessions
+        .values()
+        .any(|session| session.identity_key == target_key);
+    let presence_event = if let Some(identity) = state.identities.get_mut(&target_key) {
         identity.position = origin_position;
+        Some(tarrowyn_protocol::WorldEvent::Presence(
+            super::super::presence(identity, state.tick, online),
+        ))
+    } else {
+        None
+    };
+    if let Some(presence_event) = presence_event {
+        super::super::push_event(state, presence_event);
     }
     record_regional(
         state,

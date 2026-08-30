@@ -1,7 +1,8 @@
 use super::super::super::ServerConfig;
 use super::super::super::WorldRepository;
 use tarrowyn_protocol::{
-    GuestSessionRequest, SupportRepairAction, SupportRepairRequest, TravelAction, TravelRequest,
+    GuestSessionRequest, Position, SupportRepairAction, SupportRepairRequest, TravelAction,
+    TravelRequest, WorldEvent,
 };
 
 #[test]
@@ -54,11 +55,29 @@ fn support_repair_clears_stuck_travel_at_recorded_origin() {
         target_id: None,
         note: "Return the stuck scout to the journey's recorded origin.".to_owned(),
     };
+    let cursor_before_repair = repository
+        .world(&operator.account_token)
+        .unwrap()
+        .data
+        .cursor;
     let repaired = repository
         .support_repair(&operator.account_token, repair_request.clone())
         .unwrap()
         .data;
     assert!(repaired.accepted);
+    assert!(repository
+        .events(&operator.account_token, cursor_before_repair)
+        .unwrap()
+        .data
+        .events
+        .iter()
+        .any(|event| {
+            matches!(
+                &event.event,
+                WorldEvent::Presence(presence)
+                    if presence.online && presence.position == Position { x: 12, y: 4 }
+            )
+        }));
     {
         let state = repository.state.lock().unwrap();
         assert_ne!(
