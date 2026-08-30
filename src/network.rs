@@ -597,6 +597,8 @@ impl OnlineClient {
                 if state_snapshot_disposition(&self.projection, response.meta.server_tick, cursor)
                     == StateSnapshotDisposition::Reload
                 {
+                    self.state_reload_pending = true;
+                    self.projection.forget_authoritative_player_position();
                     self.state_refresh = 0.0;
                     self.pending_state = Some(self.api.get("/v1/state"));
                     return;

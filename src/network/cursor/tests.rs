@@ -1,5 +1,6 @@
 use super::*;
 use crate::data::GameConfig;
+use crate::network::ConnectionState;
 use crate::state::{CropKind, CropState};
 use macroquad_toolkit::grid::TilePos;
 use macroquad_toolkit::net::Pending;
@@ -48,6 +49,7 @@ fn cursor_boundary_detection_accepts_shared_api_and_native_status_shapes() {
 #[test]
 fn restore_recovery_discards_stale_history_and_schedules_state_reload() {
     let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
+    client.state = ConnectionState::Online;
     client.had_world = true;
     client.projection.cursor = 99;
     client.projection.server_tick = 44;
@@ -83,8 +85,13 @@ fn restore_recovery_discards_stale_history_and_schedules_state_reload() {
     );
     assert!(client.projection.world.reachable.is_empty());
     assert_eq!(client.state_refresh, 0.0);
+    assert!(client.state_reload_pending);
     assert!(!client.had_world);
     assert!(client.pending_state.is_none());
+    client.queue_chat("This must wait for the restored road snapshot");
+    assert!(client.chat_queue.is_empty());
+    client.dispatch_requests();
+    assert!(client.pending_state.is_some());
     assert!(client.pending_events.is_none());
     assert!(client.status_message.contains("reloading"));
     assert!(notices.iter().any(|notice| matches!(

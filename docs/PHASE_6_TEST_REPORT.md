@@ -2920,3 +2920,15 @@ file-size scan pass. The project `publish.ps1` Windows/WebGL build, packaging,
 Preview deployment, and catalog-sync checks pass. No full workspace gate was
 repeated because this was a bounded touch-recovery action-filter correction,
 and no new external or deferred work was opened.
+
+Cursor recovery and rejected older state snapshots now hold the client behind
+the same authoritative reload gate as maintenance recovery. The cached
+position is withdrawn and gameplay queues and subsystem dispatch remain closed
+until a current `/v1/state` response is accepted, so a restore boundary cannot
+invite actions against reset or stale projections. The focused
+`network::cursor::tests::restore_recovery_discards_stale_history_and_schedules_state_reload`
+test passes; client-package formatting and clippy, `git diff --check`, and the
+Rust file-size scan pass. The project `publish.ps1` Windows/WebGL build,
+packaging, Preview deployment, and catalog-sync checks pass. No full workspace
+gate was repeated because this was a bounded cursor-recovery authority
+correction, and no new external or deferred work was opened.
