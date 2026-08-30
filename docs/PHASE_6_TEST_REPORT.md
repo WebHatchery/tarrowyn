@@ -2082,14 +2082,6 @@ packaging, Preview deployment, and catalog sync. No full workspace gate was
 repeated because this was a bounded defeat presence correction, and no new
 external or deferred work was opened.
 
-Automatic regional arrival and support clearing of a stuck journey now publish
-the moved identity's authoritative presence through the shared event stream,
-with the correct online flag for active sessions. Focused server regressions
-cover both arrival and support-repair movement, server clippy and the Rust
-file-size check pass, and `publish.ps1` passes Windows/WebGL builds, packaging,
-Preview deployment, and catalog sync. No full workspace gate was repeated
-because this was a bounded regional movement presence correction, and no new
-external or deferred work was opened.
 
 The regional event stream now carries the traveller's move for automatic
 arrival and support-cleared travel, using the active-session state instead of
