@@ -52,7 +52,14 @@ impl GuestSessionRateLimiter {
                 < GUEST_SESSION_RATE_WINDOW
         });
         if !self.windows.contains_key(&source) && self.windows.len() >= MAX_TRACKED_GUEST_SOURCES {
-            return false;
+            let oldest_source = self
+                .windows
+                .iter()
+                .min_by_key(|(_, window)| window.started_at)
+                .map(|(source, _)| *source);
+            if let Some(oldest_source) = oldest_source {
+                self.windows.remove(&oldest_source);
+            }
         }
         let window = self
             .windows

@@ -121,3 +121,15 @@ fn guest_session_rate_limiter_does_not_block_unaddressed_fixture_clients() {
         assert!(limiter.allow_ip(None, now));
     }
 }
+
+#[test]
+fn guest_session_rate_limiter_keeps_source_table_bounded_without_global_lockout() {
+    let mut limiter = GuestSessionRateLimiter::default();
+    let now = Instant::now();
+
+    for source_id in 0..=MAX_TRACKED_GUEST_SOURCES {
+        let source = IpAddr::V6(std::net::Ipv6Addr::from(source_id as u128));
+        assert!(limiter.allow_ip(Some(source), now));
+    }
+    assert_eq!(limiter.windows.len(), MAX_TRACKED_GUEST_SOURCES);
+}

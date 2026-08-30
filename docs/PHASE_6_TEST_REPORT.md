@@ -1329,7 +1329,7 @@ publisher validation repeated. No new external or deferred work was opened.
 
 Guest-session admission now applies a bounded 32-attempt, 60-second per-source
 HTTP window before creating another durable development identity. The focused
-HTTP limiter regressions pass (2), server formatting and package clippy remain
+HTTP limiter regressions pass (3), server formatting and package clippy remain
 clean, and the 24-client target remains below the local window. The publisher
 check passes its Windows/WebGL builds, packaging, Preview deployment, and
 catalog sync; the existing `net2 v0.2.39` future-incompatibility warning is
