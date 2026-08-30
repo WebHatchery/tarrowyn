@@ -39,7 +39,7 @@ pub(super) fn render(client: &Phase4Client) -> String {
         .as_ref()
         .map(|knowledge| {
             format!(
-                "{} lessons known",
+                "{} knowledge records",
                 knowledge.knowledge.known_by_player.len()
             )
         })

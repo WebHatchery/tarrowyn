@@ -3195,3 +3195,12 @@ regression, client clippy, formatting, diff, and source-size checks pass, and
 `publish.ps1` passes the Windows/WebGL build, packaging, Preview deployment,
 tracker recording, and catalog synchronization. No full workspace gate is
 repeated for this bounded copy correction, and no new follow-up work is opened.
+
+The Phase 4 summary now calls discovered knowledge “knowledge records” instead
+of “lessons,” matching the server’s discover, archive, teach, and apply actions.
+The focused `network::phase4::summary::tests::knowledge_summary_names_discovered_records`
+regression passes, along with client-package clippy, formatting, `git diff
+--check`, and the Rust file-size scan. `publish.ps1` passes the Windows/WebGL
+build, packaging, Preview deployment, tracker recording, and catalog
+synchronization. No full workspace gate is repeated because this is a bounded
+summary-copy correction, and no new external or deferred work is opened.

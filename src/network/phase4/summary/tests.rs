@@ -66,3 +66,21 @@ fn lease_summary_keeps_reclamation_grace_pending_until_the_registry_opens() {
 
     assert!(render(&client).contains("lease abandoned; grace pending"));
 }
+
+#[test]
+fn knowledge_summary_names_discovered_records() {
+    let mut client = Phase4Client::new();
+    client.knowledge = Some(tarrowyn_protocol::KnowledgeResponse {
+        request_id: "knowledge-view".to_owned(),
+        accepted: true,
+        knowledge: tarrowyn_protocol::KnowledgeState {
+            items: Vec::new(),
+            known_by_player: vec!["moonberry-tending".to_owned()],
+            cursor: 4,
+        },
+        message: "The field notes are open.".to_owned(),
+        reason: None,
+    });
+
+    assert!(render(&client).contains("1 knowledge records"));
+}
