@@ -1617,3 +1617,9 @@ duplicates, advanced qualifying requirements, and practice-key references in
 addition to its existing text and ID checks. The focused `validate_content.ps1`
 run passes against the current catalogue, with no Rust or workspace-wide test
 gate repeated because this was a release-content validation slice.
+
+The same content gate now protects every named launch root from the GDD and
+the initial Weapon Fighting and Storm Magic discovery IDs, while still allowing
+future skills to be added. The focused `validate_content.ps1` run passes with
+the complete current catalogue; no Rust or workspace-wide gate was repeated
+because this was a stable-content-ID check.

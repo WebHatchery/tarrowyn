@@ -243,6 +243,13 @@ if ($duplicateSettlementLocations.Count -gt 0) {
 }
 $skillRecords = Get-Records $manifests["skills.json"] "skills" "skills"
 Assert-Records "skills" $skillRecords @("name", "family", "description", "entry_hint") @()
+Assert-RequiredRecordIds "Skills" $skillRecords @(
+    "unarmed-fighting", "sword-fighting", "axe-fighting", "spear-fighting", "bow-fighting", "shield-use",
+    "wind-magic", "water-magic", "electricity-magic", "fire-magic", "earth-magic", "restoration-magic",
+    "foraging", "forestry", "mining", "fishing", "hunting", "survival", "navigation",
+    "crop-tending", "animal-husbandry", "carpentry", "smithing", "tailoring", "cooking", "alchemy", "masonry", "general-crafting",
+    "trade", "teaching", "leadership", "weapon-fighting", "storm-magic"
+)
 Assert-SkillRecords $skillRecords
 $skillsVersion = $manifests["skills.json"].version
 if ($skillsVersion -lt 1) { throw "Skills manifest needs a positive version." }
