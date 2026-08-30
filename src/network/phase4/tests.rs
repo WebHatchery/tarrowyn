@@ -685,6 +685,24 @@ fn phase_four_error_summary_keeps_an_api_rejection_code() {
     );
 }
 
+#[test]
+fn older_phase_four_projection_cannot_replace_newer_command_state() {
+    let mut cursor = 0;
+
+    assert!(super::polling::accept_projection_cursor(
+        &mut cursor,
+        Some(12)
+    ));
+    assert!(!super::polling::accept_projection_cursor(
+        &mut cursor,
+        Some(11)
+    ));
+    assert!(super::polling::accept_projection_cursor(
+        &mut cursor,
+        Some(12)
+    ));
+}
+
 fn claim_for_test(
     claim_id: &str,
     owner_account_id: Option<&str>,

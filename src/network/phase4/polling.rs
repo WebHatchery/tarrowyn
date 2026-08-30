@@ -1,5 +1,16 @@
 use super::*;
 
+pub(super) fn accept_projection_cursor(current: &mut u64, incoming: Option<u64>) -> bool {
+    let Some(incoming) = incoming else {
+        return true;
+    };
+    if incoming < *current {
+        return false;
+    }
+    *current = incoming;
+    true
+}
+
 pub(super) fn poll_projection<T, F>(
     pending: &mut Option<Pending<ApiResponse<T>>>,
     dt: f32,

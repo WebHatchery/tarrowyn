@@ -963,3 +963,12 @@ regression, server clippy, direct formatting, diff, and Rust file-size checks
 pass. The publisher check also passes for this bounded Phase 4 audit
 maintenance slice; no full workspace gate is required.
 No new external or deferred work was opened.
+
+Phase 4 client ledger polling now keeps the newest response cursor and ignores
+older in-flight GET or command projections, preventing a delayed read from
+rewinding a just-confirmed command result. The focused client Phase 4 tests
+(28 passed), direct formatting, diff, Rust file-size, and client clippy checks
+pass. The publisher check remains the runtime validation path for this client
+network maintenance slice; no full workspace gate was rerun because the change
+is bounded to cursor ordering in the Phase 4 client. No new external or
+deferred work was opened.

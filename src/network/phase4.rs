@@ -25,7 +25,7 @@ mod summary;
 mod sync;
 
 use combat::advance_crafting;
-use polling::{phase4_notice, poll_projection, short_error};
+use polling::{accept_projection_cursor, phase4_notice, poll_projection, short_error};
 
 #[derive(Clone)]
 enum Phase4Command {
@@ -68,6 +68,7 @@ pub(super) struct Phase4Client {
     combat: Option<LocalCombatState>,
     crafting: Option<CraftingChallenge>,
     own_account_id: Option<String>,
+    projection_cursor: u64,
     command_retry_timer: f32,
     command_retry_count: u8,
     regional: Phase5Client,
@@ -110,6 +111,7 @@ impl Phase4Client {
             combat: None,
             crafting: None,
             own_account_id: None,
+            projection_cursor: 0,
             command_retry_timer: 0.0,
             command_retry_count: 0,
             regional: Phase5Client::new(),
@@ -501,10 +503,18 @@ impl Phase4Client {
         )
     }
 
-    fn apply_command(&mut self, response: Phase4CommandResponse, notices: &mut Vec<NetworkNotice>) {
+    fn apply_command(
+        &mut self,
+        response: Phase4CommandResponse,
+        response_cursor: Option<u64>,
+        notices: &mut Vec<NetworkNotice>,
+    ) {
+        let current = accept_projection_cursor(&mut self.projection_cursor, response_cursor);
         match response {
             Phase4CommandResponse::Governance(response) => {
-                self.governance = Some(response.governance);
+                if current {
+                    self.governance = Some(response.governance);
+                }
                 phase4_notice(
                     response.accepted,
                     response.reason,
@@ -513,7 +523,9 @@ impl Phase4Client {
                 );
             }
             Phase4CommandResponse::Claim(response) => {
-                self.claims = Some(response.claims);
+                if current {
+                    self.claims = Some(response.claims);
+                }
                 phase4_notice(
                     response.accepted,
                     response.reason,
@@ -522,7 +534,9 @@ impl Phase4Client {
                 );
             }
             Phase4CommandResponse::Profession(response) => {
-                self.professions = Some(response.professions);
+                if current {
+                    self.professions = Some(response.professions);
+                }
                 phase4_notice(
                     response.accepted,
                     response.reason,
@@ -531,7 +545,9 @@ impl Phase4Client {
                 );
             }
             Phase4CommandResponse::Knowledge(response) => {
-                self.knowledge = Some(response.clone());
+                if current {
+                    self.knowledge = Some(response.clone());
+                }
                 phase4_notice(
                     response.accepted,
                     response.reason,
@@ -540,7 +556,9 @@ impl Phase4Client {
                 );
             }
             Phase4CommandResponse::Combat(response) => {
-                self.combat = Some(response.combat);
+                if current {
+                    self.combat = Some(response.combat);
+                }
                 phase4_notice(
                     response.accepted,
                     response.reason,
@@ -550,7 +568,9 @@ impl Phase4Client {
             }
             Phase4CommandResponse::Skill(response) => {
                 let message = response.message.clone();
-                self.skills = Some(response.skills);
+                if current {
+                    self.skills = Some(response.skills);
+                }
                 phase4_notice(response.accepted, response.reason, &message, notices);
             }
         }

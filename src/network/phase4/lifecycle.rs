@@ -23,6 +23,7 @@ impl Phase4Client {
         self.combat = None;
         self.crafting = None;
         self.own_account_id = None;
+        self.projection_cursor = 0;
         self.regional.clear();
     }
 }

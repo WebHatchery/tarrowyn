@@ -22,6 +22,7 @@ impl Phase4Client {
         self.households = None;
         self.combat = None;
         self.crafting = None;
+        self.projection_cursor = 0;
         self.regional.reset_event_cursor();
     }
 }

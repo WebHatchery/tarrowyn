@@ -18,7 +18,9 @@ impl Phase4Client {
             &mut self.pending_governance,
             dt,
             |response| {
-                self.governance = Some(response.data.governance);
+                if accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor) {
+                    self.governance = Some(response.data.governance);
+                }
             },
             notices,
             "town hall",
@@ -27,7 +29,9 @@ impl Phase4Client {
             &mut self.pending_claims,
             dt,
             |response| {
-                self.claims = Some(response.data);
+                if accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor) {
+                    self.claims = Some(response.data);
+                }
             },
             notices,
             "land registry",
@@ -36,7 +40,9 @@ impl Phase4Client {
             &mut self.pending_professions,
             dt,
             |response| {
-                self.professions = Some(response.data);
+                if accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor) {
+                    self.professions = Some(response.data);
+                }
             },
             notices,
             "profession ledger",
@@ -45,7 +51,9 @@ impl Phase4Client {
             &mut self.pending_knowledge,
             dt,
             |response| {
-                self.knowledge = Some(response.data);
+                if accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor) {
+                    self.knowledge = Some(response.data);
+                }
             },
             notices,
             "knowledge archive",
@@ -54,7 +62,9 @@ impl Phase4Client {
             &mut self.pending_skills,
             dt,
             |response| {
-                self.skills = Some(response.data);
+                if accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor) {
+                    self.skills = Some(response.data);
+                }
             },
             notices,
             "skill ledger",
@@ -63,7 +73,9 @@ impl Phase4Client {
             &mut self.pending_households,
             dt,
             |response| {
-                self.households = Some(response.data);
+                if accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor) {
+                    self.households = Some(response.data);
+                }
             },
             notices,
             "household ledger",
@@ -72,7 +84,9 @@ impl Phase4Client {
             &mut self.pending_combat,
             dt,
             |response| {
-                self.combat = Some(response.data);
+                if accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor) {
+                    self.combat = Some(response.data);
+                }
             },
             notices,
             "local combat ledger",
@@ -88,7 +102,7 @@ impl Phase4Client {
                 Ok(response) => {
                     self.command_retry_timer = 0.0;
                     self.command_retry_count = 0;
-                    self.apply_command(response.data, notices);
+                    self.apply_command(response.data, response.meta.cursor, notices);
                 }
                 Err(error)
                     if is_transient_transport_error(&error)
