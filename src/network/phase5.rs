@@ -58,6 +58,7 @@ pub(super) struct Phase5Client {
     command_retry_timer: f32,
     command_retry_count: u8,
     next_request_id: u64,
+    projection_cursor: u64,
 }
 
 impl Phase5Client {
@@ -96,6 +97,7 @@ impl Phase5Client {
             command_retry_timer: 0.0,
             command_retry_count: 0,
             next_request_id: 1,
+            projection_cursor: 0,
         }
     }
 
@@ -125,28 +127,44 @@ impl Phase5Client {
         poll(
             &mut self.pending_region,
             dt,
-            |response| self.region = Some(response.data),
+            |response| {
+                if accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor) {
+                    self.region = Some(response.data);
+                }
+            },
             notices,
             "regional map",
         );
         poll(
             &mut self.pending_settlements,
             dt,
-            |response| self.settlements = Some(response.data),
+            |response| {
+                if accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor) {
+                    self.settlements = Some(response.data);
+                }
+            },
             notices,
             "settlements",
         );
         poll(
             &mut self.pending_households,
             dt,
-            |response| self.households = Some(response.data),
+            |response| {
+                if accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor) {
+                    self.households = Some(response.data);
+                }
+            },
             notices,
             "regional households",
         );
         poll(
             &mut self.pending_market,
             dt,
-            |response| self.market = Some(response.data),
+            |response| {
+                if accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor) {
+                    self.market = Some(response.data);
+                }
+            },
             notices,
             "market telemetry",
         );
@@ -178,6 +196,7 @@ impl Phase5Client {
                 Ok(response) => {
                     self.command_retry_timer = 0.0;
                     self.command_retry_count = 0;
+                    accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor);
                     self.apply_command(response.data, market_action, api, notices);
                 }
                 Err(error) if is_transient_transport_error(&error) => {
@@ -413,6 +432,7 @@ impl Phase5Client {
         self.refresh_retry_count = 0;
         self.command_retry_timer = 0.0;
         self.command_retry_count = 0;
+        self.projection_cursor = 0;
     }
 
     fn clear_cached_projections(&mut self) {
@@ -440,6 +460,7 @@ impl Phase5Client {
         self.refresh_timer = 0.0;
         self.command_retry_timer = 0.0;
         self.command_retry_count = 0;
+        self.projection_cursor = 0;
     }
 
     pub(super) fn take_linked_account(
@@ -508,6 +529,17 @@ fn refresh_delay(expires_in_seconds: u32) -> f32 {
     (expires_in_seconds as f32 * 0.75).max(1.0)
 }
 
+fn accept_projection_cursor(current: &mut u64, incoming: Option<u64>) -> bool {
+    let Some(incoming) = incoming else {
+        return true;
+    };
+    if incoming < *current {
+        return false;
+    }
+    *current = incoming;
+    true
+}
+
 fn poll<T, F>(
     pending: &mut Option<Pending<ApiResponse<T>>>,
     dt: f32,
@@ -542,7 +574,11 @@ impl Phase5Client {
         let Some(result) = result else { return };
         self.pending_events = None;
         match result {
-            Ok(response) => merge_regional_events(&mut self.events, response.data),
+            Ok(response) => {
+                if accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor) {
+                    merge_regional_events(&mut self.events, response.data);
+                }
+            }
             Err(error) if super::cursor::is_cursor_recovery_error(&error) => {
                 self.reset_event_cursor();
                 notices.push(NetworkNotice::Warning(

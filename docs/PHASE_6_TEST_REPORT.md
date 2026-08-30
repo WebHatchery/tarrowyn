@@ -972,3 +972,13 @@ pass. The publisher check remains the runtime validation path for this client
 network maintenance slice; no full workspace gate was rerun because the change
 is bounded to cursor ordering in the Phase 4 client. No new external or
 deferred work was opened.
+
+Phase 5 regional polling now keeps the newest server cursor across map,
+settlement, household, market, and event projections, so a delayed read cannot
+rewind a route or shipment state after a newer regional command. The cursor
+boundary resets on session and regional-history recovery. The focused client
+Phase 5 tests (28 passed), direct formatting, diff, Rust file-size, and client
+clippy checks pass. The publisher check remains the runtime validation path;
+no full workspace gate was rerun because this is a bounded continuation of the
+client cursor-ordering maintenance. No new external or deferred work was
+opened.

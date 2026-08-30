@@ -287,6 +287,15 @@ fn regional_cycle_reports_when_no_projection_action_is_ready() {
 }
 
 #[test]
+fn older_regional_projection_cannot_replace_newer_command_state() {
+    let mut cursor = 0;
+
+    assert!(super::accept_projection_cursor(&mut cursor, Some(12)));
+    assert!(!super::accept_projection_cursor(&mut cursor, Some(11)));
+    assert!(super::accept_projection_cursor(&mut cursor, Some(12)));
+}
+
+#[test]
 fn market_success_notice_describes_the_requested_action() {
     assert_eq!(
         super::market_success_message(Some(MarketOrderAction::Create), false),
