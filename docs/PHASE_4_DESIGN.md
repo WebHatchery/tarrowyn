@@ -103,6 +103,10 @@ persisted in the Phase 4 state. Its condition falls by one at each shared-day
 boundary unless cared for, making the visible Care control a repeatable choice;
 care restores the bounded condition and records Animal Husbandry practice. The
 animal appears in the world snapshot, client map, and farming response.
+Field work follows the same recovery boundary as local physical actions: while a
+character is knocked out, the server rejects Plant, Tend, Harvest, and Care
+requests until a recovery choice clears the state. The online touch sidebar
+disables those four controls while the recovery choices remain visible.
 Breeding, herd size, feed, and wider animal ecology remain documented follow-up
 work.
 
