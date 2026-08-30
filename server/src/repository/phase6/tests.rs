@@ -610,7 +610,10 @@ fn support_account_view_is_operator_only_and_secret_free() {
                 action: TradeAction::Create,
                 trade_id: None,
                 recipient_account_id: Some(operator.account_id.clone()),
-                offer: Some(TradeBundle::default()),
+                offer: Some(TradeBundle {
+                    seeds: 1,
+                    ..TradeBundle::default()
+                }),
                 request: Some(TradeBundle::default()),
             },
         )
@@ -675,7 +678,10 @@ fn player_social_economy_and_governance_commands_are_audited() {
                 action: TradeAction::Create,
                 trade_id: None,
                 recipient_account_id: Some(recipient.account_id.clone()),
-                offer: Some(TradeBundle::default()),
+                offer: Some(TradeBundle {
+                    seeds: 1,
+                    ..TradeBundle::default()
+                }),
                 request: Some(TradeBundle::default()),
             },
         )

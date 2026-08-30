@@ -141,6 +141,9 @@ fn create_trade(
     let Some(wanted) = request.request else {
         return rejected_trade(request, "The requested goods are missing.");
     };
+    if offer.is_empty() && wanted.is_empty() {
+        return rejected_trade(request, "A trade must exchange at least one good or gold.");
+    }
     if offer.item_count() > MAX_TRADE_ITEMS
         || wanted.item_count() > MAX_TRADE_ITEMS
         || offer.gold > 10_000

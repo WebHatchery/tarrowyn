@@ -34,6 +34,35 @@ fn trade_rejects_overflowing_item_totals_before_mutation() {
 }
 
 #[test]
+fn trade_rejects_an_empty_exchange_before_using_ledger_space() {
+    let repository = repo();
+    let creator = guest(&repository, "trade-empty-creator");
+    let recipient = guest(&repository, "trade-empty-recipient");
+
+    let response = repository
+        .trade(
+            &creator.account_token,
+            TradeRequest {
+                request_id: "trade-empty".to_owned(),
+                action: TradeAction::Create,
+                trade_id: None,
+                recipient_account_id: Some(recipient.account_id),
+                offer: Some(TradeBundle::default()),
+                request: Some(TradeBundle::default()),
+            },
+        )
+        .expect("empty trade should return a response")
+        .data;
+
+    assert!(!response.accepted);
+    assert!(response
+        .reason
+        .as_deref()
+        .is_some_and(|reason| reason.contains("at least one good or gold")));
+    assert!(repository.state.lock().unwrap().trades.is_empty());
+}
+
+#[test]
 fn accepted_trade_saturates_recipient_counters_at_their_numeric_ceiling() {
     let repository = repo();
     let creator = guest(&repository, "trade-saturating-creator");

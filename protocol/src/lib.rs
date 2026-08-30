@@ -477,6 +477,10 @@ impl TradeBundle {
             .saturating_add(self.moonberries)
             .saturating_add(self.seeds)
     }
+
+    pub fn is_empty(self) -> bool {
+        self.item_count() == 0 && self.gold == 0
+    }
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]

@@ -104,6 +104,7 @@ fn trade_ok(trade: &TradeOffer, state: &RepositoryState, account_ids: &HashSet<&
         && account_reference_ok(&trade.recipient_account_id, account_ids)
         && bounded(&trade.recipient_name, MAX_DISPLAY_NAME_CHARS)
         && trade.creator_account_id != trade.recipient_account_id
+        && !(trade.offer.is_empty() && trade.request.is_empty())
         && trade.offer.item_count() <= tarrowyn_protocol::MAX_TRADE_ITEMS
         && trade.request.item_count() <= tarrowyn_protocol::MAX_TRADE_ITEMS
         && trade.offer.gold <= 10_000

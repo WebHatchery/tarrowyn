@@ -45,7 +45,10 @@ fn trade_history_evicts_terminal_records_and_preserves_pending_work() {
                 action: TradeAction::Create,
                 trade_id: None,
                 recipient_account_id: Some(recipient.account_id.clone()),
-                offer: Some(TradeBundle::default()),
+                offer: Some(TradeBundle {
+                    seeds: 1,
+                    ..TradeBundle::default()
+                }),
                 request: Some(TradeBundle::default()),
             },
         )
@@ -78,7 +81,10 @@ fn trade_history_evicts_terminal_records_and_preserves_pending_work() {
                 action: TradeAction::Create,
                 trade_id: None,
                 recipient_account_id: Some(recipient.account_id),
-                offer: Some(TradeBundle::default()),
+                offer: Some(TradeBundle {
+                    seeds: 1,
+                    ..TradeBundle::default()
+                }),
                 request: Some(TradeBundle::default()),
             },
         )
@@ -109,7 +115,10 @@ fn trade_id_stays_at_the_numeric_ceiling() {
                 action: TradeAction::Create,
                 trade_id: None,
                 recipient_account_id: Some(recipient.account_id),
-                offer: Some(TradeBundle::default()),
+                offer: Some(TradeBundle {
+                    seeds: 1,
+                    ..TradeBundle::default()
+                }),
                 request: Some(TradeBundle::default()),
             },
         )

@@ -663,6 +663,12 @@ per configured regional decision interval. The focused route-history suite
 covers same-beat rejection and post-interval acceptance, while regional
 readiness validates cooldown keys against recorded routes.
 
+Direct trade creation now rejects an empty offer and empty request before
+allocating a ledger row, while preserving item-only and gold-only exchanges.
+The focused trade suites cover the rejection, retention, numeric-boundary, and
+completed-exchange paths, with protocol tests, server clippy, size, and diff
+checks passing for the changed boundary.
+
 Phase 6 audit and session helpers now live in a dedicated child module, keeping
 the repository coordinator below the workspace's 800-line Rust limit while
 preserving the existing behavior. The 43 Phase 6-focused tests, server-only

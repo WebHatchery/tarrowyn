@@ -48,8 +48,10 @@ maintenance readiness before it has an authenticated session.
 Every farming and trade command is idempotent per durable account and request
 ID. The server validates location, ownership, inventory, recipient, status,
 and expiry while holding the repository lock, then persists the resulting
-projection. A retry therefore returns the original accepted response instead
-of applying a second reward or exchange.
+projection. A create request must contain at least one item or gold across
+the two bundles, so empty requests cannot consume ledger capacity. A retry
+therefore returns the original accepted response instead of applying a second
+reward or exchange.
 
 ## Acceptance pass
 

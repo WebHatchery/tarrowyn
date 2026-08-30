@@ -34,6 +34,8 @@ The direct-trade ledger retains at most 128 offers. Pending offers remain
 addressable until they are accepted, cancelled, or expired; terminal history is
 evicted oldest-first when room is needed. If all retained offers are still
 pending, a new offer is rejected without changing either player's inventory.
+The server also rejects a create request whose offer and requested bundles are
+both empty; gold-only and item-only exchanges remain valid.
 
 The launch mayoral loop also posts a narrow public settlement tax. The default
 policy charges 5% of carried gold once per world day from recognised players
