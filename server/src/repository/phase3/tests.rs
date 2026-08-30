@@ -336,6 +336,18 @@ fn poorly_prepared_expedition_can_retreat_without_founding_an_outpost() {
         .data
         .outpost
         .is_none());
+    let chronicle = repository
+        .chronicle(&leader.account_token, 0)
+        .expect("retreat chronicle")
+        .data;
+    assert_eq!(
+        chronicle
+            .entries
+            .last()
+            .expect("retreat chronicle entry")
+            .title,
+        "The pioneer party returns before the outpost is founded"
+    );
 }
 
 #[test]

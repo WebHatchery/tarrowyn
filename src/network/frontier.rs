@@ -7,9 +7,9 @@ use std::collections::VecDeque;
 use tarrowyn_protocol::{
     AdventurerContract, ApiResponse, ClaimAction, ClaimRequest, ClaimResponse, CombatAction,
     CombatRequest, CombatResponse, ContractAction, ContractRequest, ContractResponse,
-    ContractStatus, ContractsResponse, ExpeditionAction, ExpeditionRequest, ExpeditionResponse,
-    ExpeditionRole, OpportunitiesResponse, RecoveryChoice, RecoveryRequest, RecoveryResponse,
-    WeaponKind,
+    ContractStatus, ContractsResponse, Expedition, ExpeditionAction, ExpeditionRequest,
+    ExpeditionResponse, ExpeditionRole, OpportunitiesResponse, RecoveryChoice, RecoveryRequest,
+    RecoveryResponse, WeaponKind,
 };
 
 const MAX_COMMAND_RETRIES: u8 = 3;
@@ -305,12 +305,7 @@ impl FrontierClient {
                 );
             }
             FrontierCommandResponse::Expedition(response) => {
-                command_notice(
-                    response.accepted,
-                    response.reason,
-                    "The pioneer registry updated.",
-                    notices,
-                );
+                expedition_notice(&response, notices);
                 if let Some(expedition) = response.expedition {
                     projection.expedition = Some(expedition.clone());
                     projection.outpost = (expedition.status
@@ -323,6 +318,50 @@ impl FrontierClient {
             }
         }
     }
+}
+
+fn expedition_notice(response: &ExpeditionResponse, notices: &mut Vec<NetworkNotice>) {
+    if !response.accepted {
+        if let Some(reason) = &response.reason {
+            notices.push(NetworkNotice::Warning(reason.clone()));
+        }
+        return;
+    }
+    let Some(expedition) = response.expedition.as_ref() else {
+        notices.push(NetworkNotice::Success(
+            "The pioneer registry updated.".to_owned(),
+        ));
+        return;
+    };
+    match expedition.status {
+        tarrowyn_protocol::ExpeditionStatus::Planning => notices.push(NetworkNotice::Success(
+            "The pioneer registry is gathering companions and supplies.".to_owned(),
+        )),
+        tarrowyn_protocol::ExpeditionStatus::Launched => notices.push(NetworkNotice::Success(
+            "The staffed pioneer party has left for the frontier.".to_owned(),
+        )),
+        tarrowyn_protocol::ExpeditionStatus::Succeeded => {
+            notices.push(NetworkNotice::Success(format!(
+                "{} is founded. {}",
+                expedition.outpost_name,
+                outcome_text(expedition)
+            )))
+        }
+        tarrowyn_protocol::ExpeditionStatus::Retreated => {
+            notices.push(NetworkNotice::Info(format!(
+                "The pioneer party retreated before founding {}. {}",
+                expedition.outpost_name,
+                outcome_text(expedition)
+            )))
+        }
+    }
+}
+
+fn outcome_text(expedition: &Expedition) -> &str {
+    expedition
+        .outcome
+        .as_deref()
+        .unwrap_or("The registry recorded the result.")
 }
 
 fn short_error(error: &str) -> String {

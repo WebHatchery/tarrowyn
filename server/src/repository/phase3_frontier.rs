@@ -394,8 +394,8 @@ impl WorldRepository {
                     record(
                         &mut state,
                         "expedition launched",
-                        "A prepared group leaves for the frontier",
-                        "Three complementary roles and the required supplies are on the road.",
+                        "A staffed group leaves for the frontier",
+                        "Three complementary roles are on the road; their supplies will decide whether the outpost can be founded.",
                     );
                 }
                 if !response.accepted {

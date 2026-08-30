@@ -42,6 +42,42 @@ fn finished_expedition_cycle_announces_a_new_party() {
 }
 
 #[test]
+fn expedition_resolution_notice_explains_a_retreat() {
+    let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
+    let expedition = tarrowyn_protocol::Expedition {
+        expedition_id: "pioneer-1".to_owned(),
+        outpost_name: "Lantern Rest".to_owned(),
+        leader_account_id: "account-1".to_owned(),
+        members: Vec::new(),
+        food: 0,
+        tools: 0,
+        materials: 0,
+        safety: 0,
+        status: tarrowyn_protocol::ExpeditionStatus::Retreated,
+        outcome: Some("Supplies failed the road.".to_owned()),
+        outpost_position: tarrowyn_protocol::Position { x: 14, y: 8 },
+    };
+    let mut notices = Vec::new();
+
+    client.frontier.apply_command(
+        FrontierCommandResponse::Expedition(ExpeditionResponse {
+            request_id: "retreat-notice".to_owned(),
+            accepted: true,
+            expedition: Some(expedition),
+            reason: None,
+        }),
+        &mut client.projection,
+        &mut notices,
+    );
+
+    assert!(matches!(
+        notices.first(),
+        Some(NetworkNotice::Info(message))
+            if message.contains("retreated") && message.contains("Supplies failed the road.")
+    ));
+}
+
+#[test]
 fn contract_cycle_waits_through_the_tavern_cooldown() {
     let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
     client.state = crate::network::ConnectionState::Online;

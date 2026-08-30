@@ -842,3 +842,11 @@ outpost or granting expedition credentials. Fully supplied parties retain the
 successful outpost path. The focused retreat regression passes; server clippy,
 rustfmt, size, diff, and publisher checks are the validation scope for this
 Phase 3 frontier-scope slice. No new external or deferred work was opened.
+
+Expedition launch history now distinguishes a staffed attempt from a fully
+prepared party, and the client notification names the authoritative outpost
+result, including the retreat explanation. The focused Phase 3 retreat and
+client notification regressions are the validation scope for this presentation
+and wording maintenance slice; no full workspace gate was rerun because the
+change stays within the established expedition boundary. No new external or
+deferred work was opened.
