@@ -135,6 +135,9 @@ fn connection_failure_exposes_recovery_and_reconnect_cooldown() {
     let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
     let mut notices = Vec::new();
 
+    assert!(!client.reconnect());
+    assert_eq!(client.state, ConnectionState::Connecting);
+
     client.connection_failed("server is unavailable".to_owned(), &mut notices);
     assert_eq!(client.state, ConnectionState::Offline);
     assert!(client.status_message.contains("unavailable"));

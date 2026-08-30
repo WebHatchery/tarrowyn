@@ -1912,6 +1912,15 @@ Windows/WebGL builds, packaging, Preview deployment, and catalog sync. No full
 workspace gate was repeated because this was a bounded account-feedback
 correction, and no new external or deferred work was opened.
 
+The reconnect control now stays closed while the guest session is still
+connecting, and the client rejects direct reconnect attempts while connecting
+or already online, so repeated taps cannot discard an in-progress identity
+request. The focused reconnect regressions pass, client clippy, standards, and
+the Rust file-size check pass, and `publish.ps1` passes Windows/WebGL builds,
+packaging, Preview deployment, and catalog sync. No full workspace gate was
+repeated because this was a bounded connection-control correction, and no new
+external or deferred work was opened.
+
 The client now keeps a completed state response behind the maintenance gate
 when the readiness probe has already reported an unavailable server, avoiding
 a one-frame return to online dispatch while maintenance is active. The

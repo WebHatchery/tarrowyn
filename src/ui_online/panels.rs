@@ -598,6 +598,13 @@ pub fn recovery_risk_label(carried_risk: &str) -> &'static str {
     }
 }
 
+pub fn reconnect_control_enabled(connection: ConnectionState) -> bool {
+    matches!(
+        connection,
+        ConnectionState::Degraded | ConnectionState::Offline
+    )
+}
+
 pub fn draw_button_row(
     content: Rect,
     y: f32,
@@ -612,7 +619,7 @@ pub fn draw_button_row(
         (content.w - gap * (entries.len().saturating_sub(1) as f32)) / entries.len().max(1) as f32;
     for (index, (id, label, active, tone)) in entries.iter().enumerate() {
         let enabled = match *id {
-            "reconnect" => ctx.connection != ConnectionState::Online,
+            "reconnect" => reconnect_control_enabled(ctx.connection),
             "offline" => true,
             _ => *active && ctx.connection == ConnectionState::Online,
         };

@@ -319,6 +319,22 @@ fn regional_journey_locks_walking_until_arrival_or_recovery() {
 }
 
 #[test]
+fn reconnect_control_waits_for_a_failed_connection() {
+    assert!(!super::panels::reconnect_control_enabled(
+        ConnectionState::Connecting
+    ));
+    assert!(!super::panels::reconnect_control_enabled(
+        ConnectionState::Online
+    ));
+    assert!(super::panels::reconnect_control_enabled(
+        ConnectionState::Degraded
+    ));
+    assert!(super::panels::reconnect_control_enabled(
+        ConnectionState::Offline
+    ));
+}
+
+#[test]
 fn chronicle_panel_text_keeps_archive_context_and_recent_records() {
     let entries = vec![
         tarrowyn_protocol::ChronicleEntry {

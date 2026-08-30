@@ -502,7 +502,12 @@ impl OnlineClient {
     }
 
     pub fn reconnect(&mut self) -> bool {
-        if self.retry_cooldown > 0.0 {
+        if self.retry_cooldown > 0.0
+            || matches!(
+                self.state,
+                ConnectionState::Connecting | ConnectionState::Online
+            )
+        {
             return false;
         }
         self.clear_session_state();
