@@ -79,6 +79,10 @@ pub(super) fn prune_moderation_cooldowns(state: &mut RepositoryState) {
     retention::prune_moderation_cooldowns(state);
 }
 
+pub(super) fn scheduled_backup(state: &mut RepositoryState, config: &ServerConfig) -> Option<bool> {
+    maintenance::backup_due(state, config).then(|| backup::write(state, config))
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub(super) struct ProductionAccount {
     pub(super) account_id: String,
@@ -683,8 +687,8 @@ impl WorldRepository {
     }
 }
 
-pub(super) fn phase6_tick(state: &mut RepositoryState, config: &ServerConfig) -> Option<bool> {
-    maintenance::run(state, config)
+pub(super) fn phase6_tick(state: &mut RepositoryState) {
+    maintenance::run(state);
 }
 
 fn is_support_operator(config: &ServerConfig, account_id: &str) -> bool {

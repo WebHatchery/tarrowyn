@@ -420,13 +420,13 @@ pub(super) fn record(state: &mut RepositoryState, kind: &str, title: &str, text:
     state.phase4.governance.cursor = state.cursor;
 }
 
-pub(super) fn phase4_tick(state: &mut RepositoryState, config: &ServerConfig) -> Option<bool> {
+pub(super) fn phase4_tick(state: &mut RepositoryState, config: &ServerConfig) {
     prune_school_lessons(state);
     governance::tick(state, config);
     claims::tick(state);
     households::tick(state, config);
     super::phase5::phase5_tick(state, config);
-    super::phase6::phase6_tick(state, config)
+    super::phase6::phase6_tick(state);
 }
 
 pub(super) fn day_rollover(state: &mut RepositoryState, elapsed_days: u32) {

@@ -205,6 +205,7 @@ fn replay_caches_are_trimmed_on_the_world_tick() {
     repository.tick();
 
     let state = repository.state.lock().unwrap();
+    let live_cursor = state.cursor;
     let identity = state.identities.get("replay-cache-limit").unwrap();
     assert!(identity.movement_results.len() <= 512);
     assert!(identity.chat_results.len() <= 512);
@@ -212,6 +213,7 @@ fn replay_caches_are_trimmed_on_the_world_tick() {
     drop(state);
     let backup: serde_json::Value =
         serde_json::from_slice(&std::fs::read(&backup_path).unwrap()).unwrap();
+    assert_eq!(backup["cursor"].as_u64(), Some(live_cursor));
     assert!(
         backup["identities"]["replay-cache-limit"]["movement_results"]
             .as_object()

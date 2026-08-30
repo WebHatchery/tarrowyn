@@ -498,15 +498,16 @@ impl WorldRepository {
         world::grow_plots(&mut state, &self.config);
         trades::expire_trades(&mut state);
         phase3::tick(&mut state, &self.config);
-        if let Some(backup_ok) = phase4::phase4_tick(&mut state, &self.config) {
+        phase4::phase4_tick(&mut state, &self.config);
+        let clock = state.clock.clone();
+        push_event(&mut state, WorldEvent::Clock(clock));
+        expire_sessions(&mut state, &self.config);
+        if let Some(backup_ok) = phase6::scheduled_backup(&mut state, &self.config) {
             *self
                 .backup_failed
                 .lock()
                 .expect("backup status lock poisoned") = !backup_ok;
         }
-        let clock = state.clock.clone();
-        push_event(&mut state, WorldEvent::Clock(clock));
-        expire_sessions(&mut state, &self.config);
         self.persist(&state);
         drop(state);
         self.record_tick_duration(started.elapsed());

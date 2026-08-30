@@ -1,11 +1,11 @@
 use super::super::models::{trim_replay_cache, RepositoryState};
 use super::{
-    backup, deletion, prune_moderation_cooldowns, trim_audits, trim_auth_link_tokens,
+    deletion, prune_moderation_cooldowns, trim_audits, trim_auth_link_tokens,
     trim_moderation_reports,
 };
 use crate::config::ServerConfig;
 
-pub(super) fn run(state: &mut RepositoryState, config: &ServerConfig) -> Option<bool> {
+pub(super) fn run(state: &mut RepositoryState) {
     deletion::process(state);
     trim_replay_cache(&mut state.phase6.auth_link_results);
     trim_auth_link_tokens(&mut state.phase6);
@@ -30,9 +30,8 @@ pub(super) fn run(state: &mut RepositoryState, config: &ServerConfig) -> Option<
         trim_replay_cache(&mut identity.chat_results);
     }
     trim_audits(&mut state.phase6.audits);
-    if config.backup_interval_ticks > 0 && state.tick.is_multiple_of(config.backup_interval_ticks) {
-        Some(backup::write(state, config))
-    } else {
-        None
-    }
+}
+
+pub(super) fn backup_due(state: &RepositoryState, config: &ServerConfig) -> bool {
+    config.backup_interval_ticks > 0 && state.tick.is_multiple_of(config.backup_interval_ticks)
 }

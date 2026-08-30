@@ -1428,3 +1428,10 @@ focused relative-path regression passes (1), exercising both state persistence
 and backup replacement, with server-package clippy, formatting, diff, and Rust
 file-size checks clean. No full workspace gate was repeated because this is an
 isolated path-handling fix; no new external or deferred work was opened.
+
+Scheduled backups now run after the authoritative tick appends its clock and
+session-expiry events, so the backup cursor matches the completed live state
+instead of stopping one mutation early. The focused backup/persistence tests
+pass (4 matching tests), with server-package clippy, formatting, diff, and Rust
+file-size checks clean. No full workspace gate was repeated because this is an
+isolated backup sequencing fix; no new external or deferred work was opened.
