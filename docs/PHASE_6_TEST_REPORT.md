@@ -863,3 +863,10 @@ the player-founded outpost name after success. The focused durable expedition
 flow, client UI checks, formatting, size, diff, and publisher checks are the
 validation scope for this cross-phase landmark correction; no new external or
 deferred work was opened.
+
+Support claim repair now removes a stale free-plot entry when restoring an
+active land right, and Phase 6 readiness rejects any non-reclaimed claim that
+is still listed as available. The focused support repair regression, server
+clippy, formatting, size, and diff checks pass; no full workspace gate was
+rerun because this is a bounded claim-recovery maintenance slice. No new
+external or deferred work was opened.

@@ -308,7 +308,10 @@ fn phase_three_claim_and_expedition_survive_as_durable_world_state() {
         .data;
     assert!(resolved.accepted);
     let expedition = resolved.expedition.expect("resolved expedition");
-    assert_eq!(expedition.status, tarrowyn_protocol::ExpeditionStatus::Succeeded);
+    assert_eq!(
+        expedition.status,
+        tarrowyn_protocol::ExpeditionStatus::Succeeded
+    );
     assert_eq!(
         expedition.outpost_position,
         crate::content::region_location_profile("whisperwood-outpost").position

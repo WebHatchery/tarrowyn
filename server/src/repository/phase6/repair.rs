@@ -215,8 +215,16 @@ pub(super) fn restore_claim(
             Some("The lease has expired; claim repair cannot extend its term.".to_owned()),
         );
     }
+    let position = state.phase4.claims[index].position;
+    let stale_available_plot = state.phase4.available_plots.contains(&position);
+    if stale_available_plot {
+        state
+            .phase4
+            .available_plots
+            .retain(|available| *available != position);
+    }
     let claim = &mut state.phase4.claims[index];
-    if claim.building_access {
+    if claim.building_access && !stale_available_plot {
         return (
             true,
             "The recognised claim already has consistent building access.".to_owned(),
@@ -225,20 +233,33 @@ pub(super) fn restore_claim(
     }
     claim.building_access = true;
     claim.last_active_tick = state.tick;
-    claim.inspection_note =
+    claim.inspection_note = if stale_available_plot {
+        "Support restored the active land right and removed its stale free-plot entry without extending the lease."
+            .to_owned()
+    } else {
         "Support restored access to an active recognised land right without extending its lease."
-            .to_owned();
+            .to_owned()
+    };
     super::super::phase3::record(
         state,
         "support claim repair",
         "The registry restored a recognised land right",
-        "Support repaired claim access without changing the lease term or protected goods policy.",
+        if stale_available_plot {
+            "Support repaired claim access and removed a duplicate free-plot entry without changing the lease term or protected goods policy."
+        } else {
+            "Support repaired claim access without changing the lease term or protected goods policy."
+        },
     );
     state.phase5.cursor = state.cursor;
     (
         true,
-        "Claim access was restored without extending the lease or changing protected goods."
-            .to_owned(),
+        if stale_available_plot {
+            "Claim access was restored and its stale free-plot entry was removed without extending the lease or changing protected goods."
+                .to_owned()
+        } else {
+            "Claim access was restored without extending the lease or changing protected goods."
+                .to_owned()
+        },
         None,
     )
 }

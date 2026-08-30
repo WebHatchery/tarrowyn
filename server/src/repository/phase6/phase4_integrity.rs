@@ -435,11 +435,13 @@ pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
             .available_plots
             .iter()
             .map(|position| (position.x, position.y)),
-    ) && state
-        .phase4
-        .available_plots
-        .iter()
-        .all(|position| position_in_world(*position, config));
+    ) && state.phase4.available_plots.iter().all(|position| {
+        position_in_world(*position, config)
+            && !state.phase4.claims.iter().any(|claim| {
+                claim.position == *position
+                    && claim.status != tarrowyn_protocol::ClaimLifecycleStatus::Reclaimed
+            })
+    });
 
     sequence_ok
         && governance_ok
