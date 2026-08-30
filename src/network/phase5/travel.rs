@@ -8,14 +8,9 @@ impl Phase5Client {
         match region.travel.as_ref().map(|travel| travel.status) {
             Some(TravelStatus::Interrupted) => ("Travel", false, true),
             Some(TravelStatus::Travelling | TravelStatus::Recovering) => ("Interrupt", true, false),
-            Some(TravelStatus::Idle | TravelStatus::Arrived) | None => (
-                "Travel",
-                region
-                    .routes
-                    .iter()
-                    .any(|route| route.status != tarrowyn_protocol::RouteStatus::Closed),
-                false,
-            ),
+            Some(TravelStatus::Idle | TravelStatus::Arrived) | None => {
+                ("Travel", has_travel_route(region), false)
+            }
         }
     }
 
@@ -38,13 +33,12 @@ impl Phase5Client {
             .routes
             .iter()
             .find(|route| {
-                route.origin_location_id == region.player_location_id
-                    && route.status != tarrowyn_protocol::RouteStatus::Closed
+                route.origin_location_id == region.player_location_id && route_is_open(route)
             })
             .or_else(|| {
                 region.routes.iter().find(|route| {
                     route.destination_location_id == region.player_location_id
-                        && route.status != tarrowyn_protocol::RouteStatus::Closed
+                        && route_is_open(route)
                 })
             });
         let Some(route) = route else {
@@ -77,4 +71,20 @@ impl Phase5Client {
             }),
         );
     }
+}
+
+fn has_travel_route(region: &RegionSnapshot) -> bool {
+    region
+        .routes
+        .iter()
+        .any(|route| route_is_travelable(route, &region.player_location_id))
+}
+
+fn route_is_travelable(route: &tarrowyn_protocol::RouteRecord, location_id: &str) -> bool {
+    (route.origin_location_id == location_id || route.destination_location_id == location_id)
+        && route_is_open(route)
+}
+
+fn route_is_open(route: &tarrowyn_protocol::RouteRecord) -> bool {
+    route.status != tarrowyn_protocol::RouteStatus::Closed
 }

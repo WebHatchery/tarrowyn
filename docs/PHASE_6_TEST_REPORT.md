@@ -772,7 +772,6 @@ regression covers that replay boundary; server clippy, size, diff, and publisher
 checks are the validation scope for this Phase 6 identity-maintenance slice. No
 new external or deferred work was opened.
 
-
 Chronicle search now rejects a cursor ahead of the authoritative world with the
 same structured `cursor_ahead` boundary used by the other history endpoints.
 The focused chronicle-search regression covers the invalid cursor response;
@@ -1136,3 +1135,11 @@ preserving its behavior. The focused Phase 5 client tests (31 passed), client
 clippy, direct formatting, diff, and Rust file-size checks pass. No publisher
 run was needed because this was a test-adjacent organization-only slice. No
 new external or deferred work was opened.
+
+The Travel control now enables itself only when an open route touches the
+player's current location, matching the route chosen by command dispatch. The
+focused disconnected-route regression (1 passed), client clippy, direct
+formatting, diff, and Rust file-size checks pass. The publisher check passed
+the Windows and WebGL release builds, packaging, Preview deployment, and
+catalog sync. No full workspace gate was rerun because this is a bounded
+regional selector slice. No new external or deferred work was opened.

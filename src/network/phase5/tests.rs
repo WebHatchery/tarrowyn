@@ -388,6 +388,40 @@ fn regional_cycle_reports_when_no_projection_action_is_ready() {
 }
 
 #[test]
+fn travel_control_waits_for_a_route_at_the_current_location() {
+    let mut client = Phase5Client::new();
+    client.region = Some(tarrowyn_protocol::RegionSnapshot {
+        region_id: "hearthlands".to_owned(),
+        season: "thaw".to_owned(),
+        calendar_day: 1,
+        locations: Vec::new(),
+        routes: vec![RouteRecord {
+            route_id: "saltmere-watch-trail".to_owned(),
+            name: "Saltmere Watch Trail".to_owned(),
+            origin_location_id: "saltmere".to_owned(),
+            destination_location_id: "whisperwood-outpost".to_owned(),
+            transport: "pack route".to_owned(),
+            length: 9,
+            risk_percent: 34,
+            condition: 55,
+            capacity: 1,
+            travel_ticks: 9,
+            repair_cost: 5,
+            status: RouteStatus::Operational,
+            last_action_tick: 0,
+            note: "The trail is open beyond the Hearth.".to_owned(),
+        }],
+        visible_settlements: Vec::new(),
+        player_location_id: "hearth".to_owned(),
+        travel: None,
+        interest_radius: 12,
+        cursor: 0,
+    });
+
+    assert_eq!(client.travel_control_details(), ("Travel", false, false));
+}
+
+#[test]
 fn older_regional_projection_cannot_replace_newer_command_state() {
     let mut cursor = 0;
 
