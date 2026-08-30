@@ -734,3 +734,11 @@ fn tavern_feed_line_prefers_recent_notice_and_falls_back_to_rumour() {
         Some("Tavern rumour: The road is quiet.".to_owned())
     );
 }
+
+#[test]
+fn quiet_chat_copy_matches_the_settlement_channel_used_by_outgoing_chat() {
+    assert_eq!(
+        super::quiet_chat_label(),
+        "The settlement channel is quiet."
+    );
+}

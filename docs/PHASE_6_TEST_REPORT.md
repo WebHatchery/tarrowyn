@@ -3187,3 +3187,11 @@ formatting, diff, and source-size checks pass; `publish.ps1` passes the
 Windows/WebGL build, packaging, Preview deployment, tracker recording, and
 catalog synchronization. No full workspace gate is repeated for this bounded
 layout correction, and no new follow-up work is opened.
+
+The empty online chat state now names the settlement channel consistently with
+the client request path; the previous wilderness-presence check mislabeled the
+shared chat even while the player stood at the Hearth. The focused chat-copy
+regression, client clippy, formatting, diff, and source-size checks pass, and
+`publish.ps1` passes the Windows/WebGL build, packaging, Preview deployment,
+tracker recording, and catalog synchronization. No full workspace gate is
+repeated for this bounded copy correction, and no new follow-up work is opened.

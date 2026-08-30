@@ -191,11 +191,7 @@ pub(super) fn draw_sidebar(
     }
     if ctx.chat.is_empty() && tavern_line.is_none() {
         draw_ui_text_ex(
-            if ctx.wilderness.is_some() {
-                "The frontier channel is quiet."
-            } else {
-                "The settlement channel is quiet."
-            },
+            quiet_chat_label(),
             content.x + 8.0,
             top + 191.0,
             TextStyle::new(10.0, dark::TEXT_DIM).params(),
@@ -643,4 +639,8 @@ fn compact_feed_text(text: &str) -> String {
     } else {
         compact
     }
+}
+
+pub(super) fn quiet_chat_label() -> &'static str {
+    "The settlement channel is quiet."
 }
