@@ -2342,3 +2342,12 @@ formatting, clippy, standards, and the Rust file-size check pass, and
 catalog sync. No full workspace gate was repeated because this was a bounded
 regional-market queue correction, and no new external or deferred work was
 opened.
+
+Regional events now accept only one cycle or selected intervention while an
+Event command is queued or in flight, preventing duplicate resolutions from a
+stale event projection. The focused `event_controls_wait` filter passes two
+related tests; client formatting, clippy, standards, and the Rust file-size
+check pass, and `publish.ps1` passes Windows/WebGL builds, packaging, Preview
+deployment, and catalog sync. No full workspace gate was repeated because this
+was a bounded regional-event queue correction, and no new external or deferred
+work was opened.

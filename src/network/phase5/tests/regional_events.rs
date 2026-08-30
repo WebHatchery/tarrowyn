@@ -48,6 +48,32 @@ fn event_button_uses_the_server_listed_intervention() {
 }
 
 #[test]
+fn event_controls_wait_for_one_queued_or_in_flight_command() {
+    let mut client = Phase5Client::new();
+    let request = tarrowyn_protocol::RegionalEventRequest {
+        request_id: "event-queued".to_owned(),
+        action: RegionalEventAction::Seed,
+        event_id: None,
+        intervention: None,
+    };
+    client
+        .commands
+        .push_back(Phase5Command::Event(request.clone()));
+
+    assert!(client.event_command_pending());
+    assert!(!client.queue_cycle("region-event"));
+    assert!(!client.queue_event_intervention(
+        "event-choice-duplicate".to_owned(),
+        "protect grain stores".to_owned(),
+    ));
+
+    client.commands.clear();
+    client.in_flight_command = Some(Phase5Command::Event(request));
+    assert!(client.event_command_pending());
+    assert!(!client.queue_cycle("region-event"));
+}
+
+#[test]
 fn selected_event_choice_queues_the_exact_visible_intervention() {
     let mut client = Phase5Client::new();
     let mut event = regional_event(

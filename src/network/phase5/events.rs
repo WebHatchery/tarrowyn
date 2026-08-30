@@ -2,6 +2,9 @@ use super::*;
 
 impl Phase5Client {
     pub(super) fn queue_event(&mut self, request_id: String) {
+        if self.event_command_pending() {
+            return;
+        }
         let event = self.active_event();
         let request = match event {
             None => RegionalEventRequest {
@@ -42,6 +45,9 @@ impl Phase5Client {
         request_id: String,
         intervention: String,
     ) -> bool {
+        if self.event_command_pending() {
+            return false;
+        }
         let Some(event) = self.active_event().filter(|event| {
             matches!(
                 event.stage,
