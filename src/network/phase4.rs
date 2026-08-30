@@ -654,6 +654,11 @@ impl Phase4Client {
     pub(super) fn summary(&self) -> String {
         summary::render(self)
     }
+
+    #[cfg(test)]
+    pub(super) fn command_request_pending_for_test(&self) -> bool {
+        self.pending_command.is_some()
+    }
 }
 
 #[cfg(test)]

@@ -285,6 +285,24 @@ fn authenticated_reads_wait_for_a_same_frame_refresh_boundary() {
 }
 
 #[test]
+fn queued_general_mutation_blocks_phase_four_dispatch_until_its_turn() {
+    let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
+    client.state = ConnectionState::Online;
+    client.queue_knowledge_cycle(None);
+    client.movement_queue.push_back(MovementIntent {
+        request_id: "movement-before-phase-four".to_owned(),
+        dx: 1,
+        dy: 0,
+    });
+
+    client.update(0.0);
+
+    assert!(client.pending_movement.is_some());
+    assert!(!client.phase4.command_request_pending_for_test());
+    assert!(client.phase4.knowledge_command_pending());
+}
+
+#[test]
 fn client_pending_queues_stop_at_the_backpressure_limit() {
     let mut queue = VecDeque::new();
     for value in 0..(super::queue::MAX_PENDING_COMMANDS + 4) {

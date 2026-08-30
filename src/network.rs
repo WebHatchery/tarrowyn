@@ -410,7 +410,11 @@ impl OnlineClient {
             || self.pending_movement.is_some()
             || self.pending_chat.is_some()
             || self.pending_farming.is_some()
-            || self.pending_trade.is_some();
+            || self.pending_trade.is_some()
+            || !self.movement_queue.is_empty()
+            || !self.chat_queue.is_empty()
+            || !self.farming_queue.is_empty()
+            || !self.trade_queue.is_empty();
         self.phase4.update(
             dt,
             &mut self.api,

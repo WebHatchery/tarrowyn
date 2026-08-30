@@ -2378,3 +2378,13 @@ command-hardening milestone passed the full workspace gate: 15 protocol tests,
 419 server tests, 199 client tests, asset registry, code standards, doc tests,
 and workspace clippy with warnings denied. The focused publisher checks for the
 latest slices also pass; no new external or deferred work was opened.
+
+General mutation queues now participate in the Phase 4 dispatch boundary:
+queued movement, chat, farming, or trade work is treated like an in-flight
+request before Phase 4 commands and regional refreshes are started. The focused
+`queued_general_mutation_blocks_phase_four_dispatch_until_its_turn` filter
+passes one regression test; client formatting, clippy, standards, and the Rust
+file-size check pass, and `publish.ps1` passes Windows/WebGL builds, packaging,
+Preview deployment, and catalog sync. No full workspace gate was repeated
+because this was a bounded mutation-dispatch coordination correction, and no
+new external or deferred work was opened.
