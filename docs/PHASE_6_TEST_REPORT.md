@@ -1224,3 +1224,11 @@ status values. This preserves the intentional read-only default projection of
 each), server clippy, direct formatting, and diff checks pass. No full workspace
 suite or publisher run was needed for this test-only maintenance slice. No new
 external or deferred work was opened.
+
+The adventurer-history fixture now gives expedition resolution the three real
+complementary participants and configured supplies required by the current
+frontier authority before asserting the Lantern Rest credential. The focused
+expedition-history regression passes (1), along with server clippy, direct
+formatting, and diff checks. No full workspace suite or publisher run was
+needed for this test-only maintenance slice. No new external or deferred work
+was opened.

@@ -78,21 +78,47 @@ fn expedition_completion_records_a_credential_beyond_the_current_expedition() {
         })
         .expect("guest session")
         .data;
+    let farmer = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("adventurer-expedition-farmer".to_owned()),
+            reset: false,
+        })
+        .expect("farmer session")
+        .data;
+    let builder = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("adventurer-expedition-builder".to_owned()),
+            reset: false,
+        })
+        .expect("builder session")
+        .data;
     {
         let mut state = repository.state.lock().expect("state lock");
         state.phase3.expedition = Some(Expedition {
             expedition_id: "history-expedition".to_owned(),
             outpost_name: "Lantern Rest".to_owned(),
             leader_account_id: session.account_id.clone(),
-            members: vec![ExpeditionMember {
-                account_id: session.account_id.clone(),
-                display_name: session.display_name.clone(),
-                role: ExpeditionRole::Scout,
-            }],
-            food: 0,
-            tools: 0,
-            materials: 0,
-            safety: 0,
+            members: vec![
+                ExpeditionMember {
+                    account_id: session.account_id.clone(),
+                    display_name: session.display_name.clone(),
+                    role: ExpeditionRole::Scout,
+                },
+                ExpeditionMember {
+                    account_id: farmer.account_id,
+                    display_name: farmer.display_name,
+                    role: ExpeditionRole::Farmer,
+                },
+                ExpeditionMember {
+                    account_id: builder.account_id,
+                    display_name: builder.display_name,
+                    role: ExpeditionRole::Builder,
+                },
+            ],
+            food: 6,
+            tools: 3,
+            materials: 8,
+            safety: 3,
             status: ExpeditionStatus::Launched,
             outcome: None,
             outpost_position: Position { x: 14, y: 8 },
