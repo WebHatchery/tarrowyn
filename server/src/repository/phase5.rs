@@ -699,6 +699,10 @@ impl WorldRepository {
 }
 
 pub(super) fn phase5_tick(state: &mut RepositoryState, config: &ServerConfig) {
+    state
+        .phase5
+        .route_action_available_at_tick
+        .retain(|_, available_at_tick| *available_at_tick > state.tick);
     advance_travel(state);
     if state
         .tick

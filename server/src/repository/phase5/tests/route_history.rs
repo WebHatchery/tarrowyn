@@ -130,6 +130,12 @@ fn route_logistics_accept_only_one_step_per_decision_interval() {
     for _ in 0..4 {
         repository.tick();
     }
+    let state = repository.state.lock().unwrap();
+    assert!(!state
+        .phase5
+        .route_action_available_at_tick
+        .contains_key("north-pack-road"));
+    drop(state);
     let after_interval = repository
         .route_action(
             &session.account_token,

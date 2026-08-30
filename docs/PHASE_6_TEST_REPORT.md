@@ -755,3 +755,10 @@ rejection metrics and persist that updated counter. The focused deletion-queue
 regression covers the full-queue response and rejection count; server clippy,
 size, and diff checks are the validation scope for this Phase 6 maintenance
 slice. No new external or deferred work was opened.
+
+Expired regional route-action cooldown entries are now pruned at the
+authoritative Phase 5 tick, so a route that is ready again cannot leave the
+readiness integrity check degraded. The focused route-history regression covers
+cooldown expiry and cleanup; server clippy, size, diff, and publisher checks are
+the validation scope for this regional maintenance slice. No new external or
+deferred work was opened.
