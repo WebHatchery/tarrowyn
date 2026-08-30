@@ -2834,3 +2834,16 @@ Rust file-size scan pass. The project `publish.ps1` Windows/WebGL build,
 packaging, Preview deployment, and catalog-sync checks pass. No full workspace
 gate was repeated because this was a bounded state-ordering correction, and no
 new external or deferred work was opened.
+
+Transport reconnect now recognizes a linked production session, retains its
+refresh credential in memory while clearing stale gameplay projections, and
+rotates the production session before requesting any state. A linked character
+can therefore return after a server restart without falling into guest login's
+production-identity boundary; explicit logout and failed refresh still clear
+the credential and use the fresh-guest recovery path. The focused
+`network::tests::reconnect_rotates_a_linked_session_before_guest_fallback` test
+passes; client-package formatting and clippy, `git diff --check`, and the Rust
+file-size scan pass. The project `publish.ps1` Windows/WebGL build, packaging,
+Preview deployment, and catalog-sync checks pass. No full workspace gate was
+repeated because this was a bounded production-session recovery correction,
+and no new external or deferred work was opened.

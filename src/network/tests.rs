@@ -175,6 +175,38 @@ fn connection_failure_exposes_recovery_and_reconnect_cooldown() {
 }
 
 #[test]
+fn reconnect_rotates_a_linked_session_before_guest_fallback() {
+    let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
+    client
+        .phase4
+        .prime_refresh_for_test(&mut client.api, &mut client.projection);
+    client.account = Some(tarrowyn_protocol::GuestSessionResponse {
+        client_key: "linked-client".to_owned(),
+        account_id: "account-1".to_owned(),
+        character_id: "character-1".to_owned(),
+        display_name: "Linked traveller".to_owned(),
+        account_token: "expired-access".to_owned(),
+        expires_in_seconds: 900,
+    });
+    client.state = ConnectionState::Degraded;
+    client.retry_cooldown = 0.0;
+
+    assert!(client.reconnect());
+    assert_eq!(client.state, ConnectionState::Online);
+    assert_eq!(
+        client
+            .account
+            .as_ref()
+            .map(|account| account.account_id.as_str()),
+        Some("account-1")
+    );
+    assert!(client.phase4.auth_refresh_pending());
+    assert!(client.pending_guest.is_none());
+    assert!(client.pending_state.is_none());
+    assert_eq!(client.projection.authoritative_player_position(), None);
+}
+
+#[test]
 fn session_reset_discards_world_and_frontier_projection_state() {
     let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
     client.account = Some(tarrowyn_protocol::GuestSessionResponse {

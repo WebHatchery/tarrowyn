@@ -518,13 +518,22 @@ impl OnlineClient {
         {
             return false;
         }
-        self.clear_session_state();
+        let production_reconnect = self.clear_session_state();
         self.retry_count = 0;
-        self.begin_guest(false);
+        if production_reconnect {
+            self.state = ConnectionState::Online;
+            self.status_message = "Restoring the production session…".to_owned();
+            self.pending_ops_health = Some(self.api.get("/v1/ops/health"));
+            self.phase4.begin_reconnect(&mut self.api);
+        } else {
+            self.begin_guest(false);
+        }
         true
     }
 
-    fn clear_session_state(&mut self) {
+    fn clear_session_state(&mut self) -> bool {
+        let production_reconnect = self.phase4.has_refresh_session();
+        let preserved_account = production_reconnect.then(|| self.account.take()).flatten();
         self.account = None;
         self.api.set_bearer_token(None);
         self.pending_guest = None;
@@ -539,7 +548,6 @@ impl OnlineClient {
         self.pending_trades = None;
         self.pending_trade = None;
         self.frontier.clear();
-        self.phase4.clear();
         self.movement_queue.clear();
         self.chat_queue.clear();
         self.farming_queue.clear();
@@ -551,6 +559,13 @@ impl OnlineClient {
         self.trades.clear();
         self.had_world = false;
         cursor::reset_projection_history(&mut self.projection);
+        if production_reconnect {
+            self.phase4.clear_for_reconnect();
+            self.account = preserved_account;
+        } else {
+            self.phase4.clear();
+        }
+        production_reconnect
     }
 
     fn clear_logged_out_session(&mut self) {

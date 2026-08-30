@@ -27,7 +27,7 @@ impl Phase4Client {
         self.regional.reset_identity_projections();
     }
 
-    pub(in crate::network) fn clear(&mut self) {
+    fn clear_local_state(&mut self) {
         self.pending_governance = None;
         self.pending_claims = None;
         self.pending_professions = None;
@@ -50,6 +50,15 @@ impl Phase4Client {
         self.crafting = None;
         self.own_account_id = None;
         self.projection_cursor = 0;
+    }
+
+    pub(in crate::network) fn clear(&mut self) {
+        self.clear_local_state();
         self.regional.clear();
+    }
+
+    pub(in crate::network) fn clear_for_reconnect(&mut self) {
+        self.clear_local_state();
+        self.regional.clear_for_reconnect();
     }
 }

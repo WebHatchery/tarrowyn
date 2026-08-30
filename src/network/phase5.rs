@@ -113,6 +113,15 @@ impl Phase5Client {
         self.pending_refresh.is_some() || self.in_flight_refresh.is_some()
     }
 
+    pub(super) fn has_refresh_session(&self) -> bool {
+        self.refresh_token.is_some()
+    }
+
+    pub(super) fn begin_reconnect(&mut self, api: &mut HttpClient) {
+        self.auth_refresh_timer = 0.0;
+        self.dispatch_refresh(api, false);
+    }
+
     pub(super) fn command_pending(&self) -> bool {
         self.pending_command.is_some()
             || self.in_flight_command.is_some()
@@ -457,6 +466,14 @@ impl Phase5Client {
         self.command_retry_timer = 0.0;
         self.command_retry_count = 0;
         self.projection_cursor = 0;
+    }
+
+    pub(super) fn clear_for_reconnect(&mut self) {
+        let refresh_token = self.refresh_token.clone();
+        self.clear();
+        self.refresh_token = refresh_token;
+        self.refresh_timer = f32::MAX;
+        self.auth_refresh_timer = 0.0;
     }
 
     fn clear_cached_projections(&mut self) {

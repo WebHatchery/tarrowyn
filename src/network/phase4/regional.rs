@@ -1,7 +1,6 @@
 use super::Phase4Client;
 #[cfg(test)]
 use crate::network::{NetworkNotice, WorldProjection};
-#[cfg(test)]
 use macroquad_toolkit::net::HttpClient;
 use tarrowyn_protocol::{AuthSession, GuestSessionResponse, SkillStatus};
 
@@ -24,6 +23,14 @@ impl Phase4Client {
 
     pub(crate) fn auth_refresh_pending(&self) -> bool {
         self.regional.auth_refresh_pending()
+    }
+
+    pub(crate) fn has_refresh_session(&self) -> bool {
+        self.regional.has_refresh_session()
+    }
+
+    pub(crate) fn begin_reconnect(&mut self, api: &mut HttpClient) {
+        self.regional.begin_reconnect(api);
     }
 
     pub(crate) fn account_link_available(&self) -> bool {
