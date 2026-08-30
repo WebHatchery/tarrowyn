@@ -3,9 +3,9 @@ use crate::config::ServerConfig;
 use tarrowyn_protocol::{
     ChatRequest, ClaimAction, ClaimRequest, ClaimStatus, CombatAction, CombatRequest,
     ContractAction, ContractRequest, CropKind, CropState, ExpeditionAction, ExpeditionRequest,
-    ExpeditionRole, FarmingAction, FarmingRequest, GuestSessionRequest, HouseholdStatus,
-    MovementIntent, Position, SupportRepairAction, SupportRepairRequest, TileKind, TradeAction,
-    TradeBundle, TradeRequest, TradeStatus, WeaponKind, WorldEvent,
+    ExpeditionRole, FarmingAction, FarmingRequest, FrontierEvent, GuestSessionRequest,
+    HouseholdStatus, MovementIntent, Position, SupportRepairAction, SupportRepairRequest, TileKind,
+    TradeAction, TradeBundle, TradeRequest, TradeStatus, WeaponKind, WorldEvent,
 };
 
 mod chat_validation;
@@ -607,6 +607,30 @@ fn legacy_regional_state_backfills_the_fallback_day_from_the_clock() {
         .unwrap()
         .remove("fallback_day");
     document["phase3"]["households"][0]["opportunity_score"] = serde_json::json!(-5);
+    document["cursor"] = serde_json::json!(5);
+    document["events"]
+        .as_array_mut()
+        .unwrap()
+        .push(serde_json::json!({
+            "cursor": 5,
+            "event": {
+                "kind": "Frontier",
+                "value": {
+                    "kind": "Opportunity",
+                    "value": {
+                        "household_id": "legacy-household",
+                        "household_name": "Legacy household",
+                        "members": [{"name": "Mira", "occupation": "mender"}],
+                        "occupation": "mender",
+                        "home_settlement": "Hearth",
+                        "opportunity_score": -5,
+                        "status": "departed",
+                        "service": "tool repair",
+                        "clue": "A legacy opportunity remains recorded."
+                    }
+                }
+            }
+        }));
     std::fs::write(&path, serde_json::to_vec_pretty(&document).unwrap()).unwrap();
 
     let migrated = WorldRepository::new(config);
@@ -630,6 +654,14 @@ fn legacy_regional_state_backfills_the_fallback_day_from_the_clock() {
         .audits
         .iter()
         .all(|audit| audit.actor_account_id == "former-resident"));
+    assert_eq!(
+        state.events.iter().find_map(|record| match &record.event {
+            WorldEvent::Frontier(FrontierEvent::Opportunity(opportunity)) if record.cursor == 5 =>
+                Some(opportunity.opportunity_score),
+            _ => None,
+        }),
+        Some(0)
+    );
 
     let _ = std::fs::remove_file(path);
 }
