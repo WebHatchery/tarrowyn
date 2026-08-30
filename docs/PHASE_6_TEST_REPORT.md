@@ -2790,3 +2790,14 @@ and the Rust file-size scan pass. The project `publish.ps1` Windows/WebGL
 build, packaging, Preview deployment, and catalog-sync checks pass. No full
 workspace gate was repeated because this was a bounded transport-recovery
 correction, and no new external or deferred work was opened.
+
+The Account link/details control remains available while the linked player's
+authoritative position is being reloaded. Gameplay buttons still wait for that
+position, but the session-level identity panel no longer becomes unreachable
+after identity recovery clears the player projection. The focused
+`ui::ui_online::tests::account_control_stays_available_during_player_projection_reload`
+regression passes; client-package formatting and clippy, `git diff --check`,
+and the Rust file-size scan pass. The project `publish.ps1` Windows/WebGL
+build, packaging, Preview deployment, and catalog-sync checks pass. No full
+workspace gate was repeated because this was a bounded account-recovery UI
+correction, and no new external or deferred work was opened.

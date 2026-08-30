@@ -446,6 +446,22 @@ fn online_buttons_wait_for_authoritative_player_projection() {
 }
 
 #[test]
+fn account_control_stays_available_during_player_projection_reload() {
+    assert!(super::panels::account_control_enabled(
+        true,
+        ConnectionState::Online
+    ));
+    assert!(!super::panels::account_control_enabled(
+        false,
+        ConnectionState::Online
+    ));
+    assert!(!super::panels::account_control_enabled(
+        true,
+        ConnectionState::Connecting
+    ));
+}
+
+#[test]
 fn recovery_controls_close_after_one_choice_is_pending() {
     assert!(!super::recovery_control_enabled(true, true));
     assert!(super::recovery_control_enabled(true, false));
