@@ -822,3 +822,16 @@ commands, while production authentication refresh state remains intact. The
 focused global, Phase 4, and regional cursor tests pass; client formatting,
 client clippy, size, diff, and publisher checks are the validation scope for
 this Phase 6 recovery slice. No new external or deferred work was opened.
+
+Expedition announcements now append one frontier event through the shared
+accepted-response path instead of duplicating the same planning event. The
+focused event-count regression passes; server clippy, formatting, size, diff,
+and publisher checks are the validation scope for this Phase 3 event-stream
+maintenance slice. No new external or deferred work was opened.
+
+Expedition actions now bind a supplied selector to the authoritative pioneer
+record, so stale Join, Supply, Launch, or Resolve requests cannot mutate the
+current expedition; omitted selectors remain compatible with the existing
+client. The focused stale-selector regression passes; server clippy, rustfmt,
+size, diff, and publisher checks are the validation scope for this Phase 3
+frontier maintenance slice. No new external or deferred work was opened.
