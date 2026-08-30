@@ -8,7 +8,10 @@ impl Phase5Client {
             return;
         }
         self.dispatch_refresh(api, another_mutation_pending);
-        if self.pending_refresh.is_none() && self.refresh_timer <= 0.0 {
+        if self.dispatch_blocked() {
+            return;
+        }
+        if self.refresh_timer <= 0.0 {
             if self.pending_region.is_none() {
                 self.pending_region = Some(api.get("/v1/region"));
             }

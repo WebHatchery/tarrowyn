@@ -115,6 +115,29 @@ fn transient_refresh_failure_retries_the_same_request() {
 }
 
 #[test]
+fn regional_reads_wait_during_the_refresh_retry_window() {
+    let mut client = Phase5Client::new();
+    client.in_flight_refresh = Some(tarrowyn_protocol::AuthRefreshRequest {
+        request_id: "refresh-window".to_owned(),
+        refresh_token: "refresh-secret".to_owned(),
+    });
+    client.refresh_retry_timer = 1.0;
+    client.refresh_timer = 0.0;
+
+    let mut api = HttpClient::new("https://example.test");
+    client.dispatch(&mut api, false);
+
+    assert!(client.pending_refresh.is_none());
+    assert!(client.pending_region.is_none());
+    assert!(client.pending_settlements.is_none());
+    assert!(client.pending_households.is_none());
+    assert!(client.pending_market.is_none());
+    assert!(client.pending_events.is_none());
+    assert!(client.pending_law.is_none());
+    assert!(client.pending_account.is_none());
+}
+
+#[test]
 fn refresh_waits_for_commands_and_blocks_new_dispatch_until_rotation_finishes() {
     let mut client = Phase5Client::new();
     client.refresh_token = Some("refresh-secret".to_owned());

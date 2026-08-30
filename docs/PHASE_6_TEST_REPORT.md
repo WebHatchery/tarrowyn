@@ -1474,3 +1474,12 @@ client-package clippy, formatting, diff, and Rust file-size checks clean.
 `publish.ps1` also passed the Windows and WebGL release builds, packaging,
 Preview deployment, and catalog synchronization. No full workspace gate was
 repeated because this was an isolated client dispatch-order fix.
+
+Regional dispatch now treats an in-flight refresh retry as a protected session
+boundary even while its retry timer is waiting, so it cannot start reads or
+mutations with the old bearer token. The focused retry-window regression passes
+(1 matching test), with client-package clippy, formatting, diff, and Rust
+file-size checks clean. `publish.ps1` again passed the Windows and WebGL
+release builds, packaging, Preview deployment, and catalog synchronization. No
+full workspace gate was repeated because this was an isolated refresh-recovery
+guard.
