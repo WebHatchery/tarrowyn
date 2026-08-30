@@ -893,3 +893,10 @@ The focused reset-history regression also verifies the resulting readiness
 projection; server clippy, formatting, size, and diff checks pass. No full
 workspace gate was rerun because this is a bounded development-identity cleanup
 slice. No new external or deferred work was opened.
+
+The persisted guest-revocation fingerprint cache now receives the same bounded
+trim during world loading as it does during tick maintenance. The focused
+persistence cache regression verifies both the backup and restart boundaries;
+server clippy, formatting, size, diff, and publisher checks pass. No full
+workspace gate was rerun because this is a bounded Phase 6 replay-retention
+maintenance slice. No new external or deferred work was opened.

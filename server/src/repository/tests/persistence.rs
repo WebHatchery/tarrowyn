@@ -160,6 +160,10 @@ fn replay_caches_are_trimmed_on_the_world_tick() {
                     reason: None,
                 },
             );
+            state
+                .phase6
+                .auth_revoke_guest_tokens
+                .insert(index, "replay-cache-limit".to_owned());
         }
     }
 
@@ -182,6 +186,13 @@ fn replay_caches_are_trimmed_on_the_world_tick() {
     );
     assert!(
         backup["phase6"]["request_results"]
+            .as_object()
+            .unwrap()
+            .len()
+            <= 512
+    );
+    assert!(
+        backup["phase6"]["auth_revoke_guest_tokens"]
             .as_object()
             .unwrap()
             .len()
@@ -218,6 +229,12 @@ fn replay_caches_are_trimmed_on_the_world_tick() {
             }),
         );
     }
+    let revoke_guest_tokens = oversized["phase6"]["auth_revoke_guest_tokens"]
+        .as_object_mut()
+        .unwrap();
+    for index in 0..513 {
+        revoke_guest_tokens.insert(index.to_string(), serde_json::json!("replay-cache-limit"));
+    }
     std::fs::write(&backup_path, serde_json::to_vec_pretty(&oversized).unwrap()).unwrap();
     let loaded = WorldRepository::new(ServerConfig {
         persistence_path: Some(backup_path.to_string_lossy().into_owned()),
@@ -227,6 +244,7 @@ fn replay_caches_are_trimmed_on_the_world_tick() {
     let loaded_identity = loaded_state.identities.get("replay-cache-limit").unwrap();
     assert!(loaded_identity.movement_results.len() <= 512);
     assert!(loaded_state.phase6.request_results.len() <= 512);
+    assert!(loaded_state.phase6.auth_revoke_guest_tokens.len() <= 512);
     drop(loaded_state);
     drop(loaded);
     let _ = session;

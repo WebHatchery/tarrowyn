@@ -207,6 +207,7 @@ impl RepositoryState {
             .auth_refresh_accounts
             .retain(|key, _| phase6.auth_refresh_results.contains_key(key));
         trim_replay_cache(&mut phase6.auth_revoke_results);
+        trim_replay_cache(&mut phase6.auth_revoke_guest_tokens);
         trim_replay_cache(&mut phase6.moderation_results);
         phase6
             .moderation_last_report_ticks
