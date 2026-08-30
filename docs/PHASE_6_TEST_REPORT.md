@@ -929,3 +929,13 @@ focused client summary regression, client clippy, formatting, size, diff, and
 publisher checks pass. No full workspace gate was rerun because this is a
 bounded Phase 4 presentation maintenance slice. No new external or deferred
 work was opened.
+
+Governance and knowledge inspection are now read-only at the repository
+boundary. Repeated same-beat inspection returns the current projection without
+replaying a stale response, adding an audit, or inflating command counters. The
+focused Phase 4 read-view regressions, server clippy, diff, Rust file-size, and
+publisher checks pass. The workspace formatter still reports pre-existing
+formatting differences in unrelated committed files; the edited files were
+formatted directly. No full workspace gate was rerun because this is a bounded
+Phase 4 read-path maintenance slice. No new external or deferred work was
+opened.

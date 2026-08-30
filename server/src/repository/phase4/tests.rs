@@ -13,6 +13,7 @@ mod knowledge;
 mod lesson_retention;
 mod numeric_boundaries;
 mod professions;
+mod read_views;
 mod service_order_retention;
 
 use tarrowyn_protocol::{

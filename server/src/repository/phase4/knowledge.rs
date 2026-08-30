@@ -23,6 +23,22 @@ impl super::super::WorldRepository {
             "invalid_target_account_id",
             "A target account selector must be bounded and contain no control characters.",
         )?;
+        if request.action == KnowledgeAction::Inspect {
+            return Ok(ApiResponse {
+                meta: super::super::meta(
+                    state.tick,
+                    Some(request.request_id.clone()),
+                    Some(state.cursor),
+                ),
+                data: KnowledgeResponse {
+                    request_id: request.request_id,
+                    accepted: true,
+                    knowledge: view(&state, &key),
+                    message: "The guild archive is open to inspection.".to_owned(),
+                    reason: None,
+                },
+            });
+        }
         let actor_id = account_id(&state, &key);
         let cache = cache_key(&actor_id, &request.request_id);
         if let Some(super::Phase4Response::Knowledge(response)) =
@@ -41,7 +57,7 @@ impl super::super::WorldRepository {
             reason: None,
         };
         match request.action {
-            KnowledgeAction::Inspect => response.accepted = true,
+            KnowledgeAction::Inspect => unreachable!("inspection returned before command handling"),
             KnowledgeAction::Discover => {
                 let Some(index) = item_index(&state, knowledge_id.as_deref()) else {
                     response.reason = Some(

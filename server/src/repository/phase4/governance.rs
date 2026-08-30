@@ -58,6 +58,21 @@ impl super::super::WorldRepository {
         } else {
             None
         };
+        if request.action == GovernanceAction::Inspect {
+            return Ok(ApiResponse {
+                meta: super::super::meta(
+                    state.tick,
+                    Some(request.request_id.clone()),
+                    Some(state.cursor),
+                ),
+                data: GovernanceResponse {
+                    request_id: request.request_id,
+                    accepted: true,
+                    governance: state.phase4.governance.clone(),
+                    reason: None,
+                },
+            });
+        }
         let cache = cache_key(&account_id(&state, &key), &request.request_id);
         if let Some(super::Phase4Response::Governance(response)) =
             state.phase4.request_results.get(&cache)
@@ -77,7 +92,9 @@ impl super::super::WorldRepository {
             reason: None,
         };
         match request.action {
-            GovernanceAction::Inspect => response.accepted = true,
+            GovernanceAction::Inspect => {
+                unreachable!("inspection returned before command handling")
+            }
             GovernanceAction::ClaimOffice => {
                 let office_id = office_id.as_deref().unwrap_or("steward").to_owned();
                 let tick = state.tick;
