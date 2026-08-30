@@ -319,6 +319,16 @@ fn linked_account_control_does_not_queue_a_second_link() {
 }
 
 #[test]
+fn account_link_stays_closed_while_the_linked_account_projection_loads() {
+    let mut client = Phase5Client::new();
+    client.refresh_token = Some("production-refresh".to_owned());
+
+    assert!(!client.account_link_available());
+    assert!(!client.queue_cycle("account"));
+    assert!(client.commands.is_empty());
+}
+
+#[test]
 fn account_deletion_response_selects_its_own_command_variant() {
     let response = serde_json::from_value::<Phase5CommandResponse>(serde_json::json!({
         "request_id": "delete-1",

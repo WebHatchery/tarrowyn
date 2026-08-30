@@ -293,11 +293,7 @@ impl Phase5Client {
             "cancel-market" => self.queue_market_cancel(request_id),
             "region-event" => self.queue_event(request_id),
             "account" => {
-                if self
-                    .account
-                    .as_ref()
-                    .is_some_and(|account| !account.guest_fixture)
-                {
+                if !self.account_link_available() {
                     return false;
                 }
                 let _ = super::queue::try_push(
@@ -385,9 +381,11 @@ impl Phase5Client {
     }
 
     pub(super) fn account_link_available(&self) -> bool {
-        self.account
-            .as_ref()
-            .is_none_or(|account| account.guest_fixture)
+        self.refresh_token.is_none()
+            && self
+                .account
+                .as_ref()
+                .is_none_or(|account| account.guest_fixture)
     }
 
     pub(super) fn account_deletion_available(&self) -> bool {

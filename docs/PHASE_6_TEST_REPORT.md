@@ -1871,6 +1871,14 @@ builds, packaging, Preview deployment, and catalog sync. No full workspace gate
 was repeated because this was a bounded client account-transparency slice. The
 follow-up register records only identity-surface playtest evidence.
 
+The account-link guard now stays closed during the short interval after a
+successful link when the production refresh token exists but the account
+projection has not returned, preventing a duplicate link request. The focused
+account lifecycle regression and existing linked-account guard pass, client
+clippy and the Rust file-size check pass, and `publish.ps1` passes Windows/WebGL
+builds, packaging, Preview deployment, and catalog sync. No full workspace gate
+was repeated because this was a bounded account-lifecycle correction.
+
 The Phase 6 player-facing readiness cluster reached its milestone gate on
 2026-08-30: `cargo test --workspace` passed 15 protocol tests, 416 server
 tests, 144 client tests, the asset registry check, the Rust file-size check,
