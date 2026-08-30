@@ -86,7 +86,7 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
             matches!(action, UiAction::Interact(id) if matches!(
                 id.as_str(),
                 "chronicle-close" | "chronicle-search" | "chronicle-search-next"
-            ))
+            ) || id.starts_with("chronicle-key-"))
         });
     }
 

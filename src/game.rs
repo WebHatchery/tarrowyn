@@ -24,6 +24,10 @@ mod actions;
 #[path = "game/input.rs"]
 mod input;
 
+#[cfg(test)]
+#[path = "game/tests.rs"]
+mod tests;
+
 enum ClientMode {
     Online(Box<OnlineClient>),
     Offline(GameSession),

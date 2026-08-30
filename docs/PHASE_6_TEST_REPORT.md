@@ -1851,3 +1851,12 @@ check pass, and `publish.ps1` passes Windows/WebGL builds, packaging, Preview
 deployment, and catalog sync. No full workspace gate was repeated because
 this was a bounded client chronicle-pagination slice. True touch text entry
 for arbitrary queries remains in the follow-up register.
+
+The Chronicle panel now includes a visible touch keyboard for arbitrary query
+entry, plus Space, Delete, and Clear controls; physical keyboard input remains
+an optional supplement. The focused chronicle query-edit regression and
+chronicle search presentation regression pass, client clippy and the Rust
+file-size check pass, and `publish.ps1` passes Windows/WebGL builds, packaging,
+Preview deployment, and catalog sync. No full workspace gate was repeated
+because this was a bounded client touch-input slice. The follow-up register
+now leaves only playtest evidence for the search surface.

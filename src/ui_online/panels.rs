@@ -52,11 +52,12 @@ pub fn draw_chronicle(ctx: &UiContext<'_>, mouse: Vec2, actions: &mut Vec<UiActi
         panel.x + 20.0,
         panel.y + 102.0,
         panel.w - 40.0,
-        286.0,
+        160.0,
         14.0,
         3.0,
         CREAM,
     );
+    draw_chronicle_keyboard(panel, mouse, actions);
     if virtual_button(
         Rect::new(panel.x + 20.0, panel.bottom() - 42.0, 106.0, 28.0),
         if ctx.chronicle_search_pending {
@@ -70,7 +71,11 @@ pub fn draw_chronicle(ctx: &UiContext<'_>, mouse: Vec2, actions: &mut Vec<UiActi
     ) {
         actions.push(UiAction::Interact("chronicle-search".to_owned()));
     }
-    if ctx.chronicle_search_next_cursor.is_some()
+    let can_advance_search = ctx.chronicle_search_next_cursor.is_some()
+        && ctx
+            .chronicle_search_query
+            .is_some_and(|query| query == ctx.chronicle_query);
+    if can_advance_search
         && virtual_button(
             Rect::new(panel.x + 134.0, panel.bottom() - 42.0, 106.0, 28.0),
             "Next",
@@ -89,6 +94,65 @@ pub fn draw_chronicle(ctx: &UiContext<'_>, mouse: Vec2, actions: &mut Vec<UiActi
         mouse,
     ) {
         actions.push(UiAction::Interact("chronicle-close".to_owned()));
+    }
+}
+
+fn draw_chronicle_keyboard(panel: Rect, mouse: Vec2, actions: &mut Vec<UiAction>) {
+    draw_ui_text_ex(
+        "Tap letters to refine the archive query.",
+        panel.x + 20.0,
+        panel.y + 281.0,
+        TextStyle::new(11.0, dark::TEXT_DIM).params(),
+    );
+    let rows = ["ABCDEFGHIJ", "KLMNOPQRST", "UVWXYZ"];
+    let gap = 4.0;
+    let columns = 10.0;
+    let width = (panel.w - 40.0 - gap * (columns - 1.0)) / columns;
+    let height = 23.0;
+    for (row, keys) in rows.iter().enumerate() {
+        for (column, key) in keys.chars().enumerate() {
+            if virtual_button(
+                Rect::new(
+                    panel.x + 20.0 + column as f32 * (width + gap),
+                    panel.y + 284.0 + row as f32 * (height + gap),
+                    width,
+                    height,
+                ),
+                &key.to_string(),
+                true,
+                ButtonTone::Secondary,
+                mouse,
+            ) {
+                actions.push(UiAction::Interact(format!("chronicle-key-{key}")));
+            }
+        }
+    }
+    if virtual_button(
+        Rect::new(panel.x + 20.0, panel.y + 365.0, 220.0, height),
+        "Space",
+        true,
+        ButtonTone::Secondary,
+        mouse,
+    ) {
+        actions.push(UiAction::Interact("chronicle-key-space".to_owned()));
+    }
+    if virtual_button(
+        Rect::new(panel.x + 244.0, panel.y + 365.0, 106.0, height),
+        "Delete",
+        true,
+        ButtonTone::Secondary,
+        mouse,
+    ) {
+        actions.push(UiAction::Interact("chronicle-key-delete".to_owned()));
+    }
+    if virtual_button(
+        Rect::new(panel.x + 354.0, panel.y + 365.0, 106.0, height),
+        "Clear",
+        true,
+        ButtonTone::Secondary,
+        mouse,
+    ) {
+        actions.push(UiAction::Interact("chronicle-key-clear".to_owned()));
     }
 }
 

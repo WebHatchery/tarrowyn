@@ -1,5 +1,19 @@
 use super::*;
 
+pub(super) fn apply_chronicle_key(query: &mut String, key: &str) {
+    match key {
+        "space" if query.chars().count() < 80 => query.push(' '),
+        "delete" => {
+            query.pop();
+        }
+        "clear" => query.clear(),
+        key if key.chars().count() == 1 && query.chars().count() < 80 => {
+            query.push(key.chars().next().expect("single-character chronicle key"));
+        }
+        _ => {}
+    }
+}
+
 impl Game {
     pub(super) fn interact(&mut self, id: &str) {
         if id == "chronicle-close" {
@@ -23,6 +37,10 @@ impl Game {
                     client.search_chronicle_page(&query, cursor);
                 }
             }
+            return;
+        }
+        if let Some(key) = id.strip_prefix("chronicle-key-") {
+            apply_chronicle_key(&mut self.chronicle_query, key);
             return;
         }
         if id == "region-details" {
