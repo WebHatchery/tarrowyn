@@ -1113,6 +1113,14 @@ runtime validation path; no full workspace gate was rerun because this is a
 bounded regional route-action contract slice. No new external or deferred work
 was opened.
 
+The near-limit combat and Phase 4 client test files were split along cohesive
+responsibilities into named child modules, keeping each Rust test file below
+800 lines without changing runtime behavior. The extracted server weapon
+experience test (1 passed) and client projection-ordering tests (3 passed),
+server and client all-target clippy, direct formatting, diff, and Rust
+file-size checks pass. No publisher run was needed because this was a
+test-organization-only slice. No new external or deferred work was opened.
+
 The online map tap and directional pad now stop emitting movement while the
 character is knocked out, and the map tooltip points to the visible recovery
 prompts instead. The focused online UI tests (4 passed), client clippy, direct
