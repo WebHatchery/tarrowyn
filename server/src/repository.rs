@@ -19,6 +19,13 @@ const MAX_TRADES: usize = 128;
 const MAX_CLIENT_KEY_CHARS: usize = 128;
 pub(super) const FIELD_TOOL_MAX_CONDITION: u8 = 3;
 
+fn checked_step(current: Position, intent: &MovementIntent) -> Option<Position> {
+    Some(Position {
+        x: current.x.checked_add(intent.dx)?,
+        y: current.y.checked_add(intent.dy)?,
+    })
+}
+
 mod adventurer;
 mod chat;
 mod farming;
@@ -346,11 +353,7 @@ impl WorldRepository {
                 "Your journey is on the regional ledger; tap Recover or wait for arrival before walking."
                     .to_owned(),
             );
-        } else {
-            let next = Position {
-                x: current.x + intent.dx,
-                y: current.y + intent.dy,
-            };
+        } else if let Some(next) = checked_step(current, &intent) {
             if next.x < 0
                 || next.y < 0
                 || next.x >= self.config.world_width as i32
@@ -405,6 +408,8 @@ impl WorldRepository {
                     data: response,
                 });
             }
+        } else {
+            response.reason = Some("The settlement edge blocks that step.".to_owned());
         }
         state
             .identities

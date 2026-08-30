@@ -1038,3 +1038,11 @@ Rust file-size, and client clippy checks pass. The publisher check remains the
 runtime validation path; no full workspace gate was rerun because this is a
 bounded continuation of client cursor-ordering maintenance. No new external or
 deferred work was opened.
+
+The movement boundary now uses checked coordinate addition before consulting
+the map, so a corrupted persisted position cannot panic the server on an
+otherwise cardinal step. The focused movement validation tests (2 passed),
+server clippy, direct formatting, diff, and Rust file-size checks pass. The
+publisher check remains the runtime validation path; no full workspace gate was
+rerun because this is a bounded server input-safety maintenance slice. No new
+external or deferred work was opened.
