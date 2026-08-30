@@ -623,6 +623,11 @@ Core trade readiness now rejects a direct-trade ledger above its existing
 128-record retention cap, with a focused trade-retention regression covering the
 same restored-state boundary.
 
+The content runtime now keeps manifest validation in its own child module so
+future content additions do not push the catalog access module toward the
+workspace's 800-line Rust limit. The 37 content-focused tests and the project
+publisher both pass after the organization-only change.
+
 The cross-layer persistence-readiness milestone passed the full release gate on
 2026-08-30 after the core and Phase 3-6 integrity additions: 14 protocol tests,
 282 server tests, and 93 client tests, followed by asset/code-standard checks,
