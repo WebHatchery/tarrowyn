@@ -341,27 +341,14 @@ impl WorldRepository {
             .take(MAX_CHRONICLE_SEARCH_RESULTS)
             .cloned()
             .collect();
-        let archived_matches: Vec<_> = state
-            .phase3
-            .chronicle_archive
-            .iter()
-            .filter(|entry| {
-                entry.cursor > since
-                    && (needle.is_empty()
-                        || format!("{} {} {}", entry.title, entry.text, entry.kind)
-                            .to_lowercase()
-                            .contains(&needle))
-            })
-            .take(MAX_CHRONICLE_SEARCH_RESULTS)
-            .cloned()
-            .collect();
+        let summary = super::super::phase3::chronicle_summary(&entries, since);
         let next_cursor = entries.last().map(|entry| entry.cursor);
         Ok(ApiResponse {
             meta: meta(state.tick, None, Some(state.cursor)),
             data: ChronicleSearchResponse {
                 query,
                 entries,
-                summary: super::super::phase3::chronicle_summary(&archived_matches, since),
+                summary,
                 next_cursor,
                 cursor: state.cursor,
             },

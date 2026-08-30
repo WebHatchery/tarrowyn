@@ -1886,3 +1886,12 @@ and all doc tests; `cargo clippy --workspace --all-targets --all-features --
 -D warnings` also passed. The focused chronicle and account checks and the
 publisher had already passed for the component slices. No target-environment
 gate was claimed by this local milestone run.
+
+Chronicle archive search now builds its matching summary from the same bounded
+result page returned to the client, including matches that are still in the
+recent window rather than only archived records. The focused server
+chronicle-search suite passes all four tests, server clippy passes, and
+`publish.ps1` passes Windows/WebGL builds, packaging, Preview deployment, and
+catalog sync. No full workspace gate was repeated because this was a bounded
+server chronicle-search correction, and no new external or deferred work was
+opened.

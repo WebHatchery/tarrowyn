@@ -34,6 +34,37 @@ fn chronicle_search_returns_a_bounded_page_with_a_continuation_cursor() {
 }
 
 #[test]
+fn chronicle_search_summarises_recent_matches_too() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("chronicle-search-recent-summary".to_owned()),
+            reset: false,
+        })
+        .expect("guest session")
+        .data;
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        super::super::super::phase3::record(
+            &mut state,
+            "recent signal",
+            "Only recent search match",
+            "The newest record still carries its archive summary.",
+        );
+    }
+
+    let search = repository
+        .chronicle_search(&session.account_token, "Only recent search match", 0)
+        .expect("chronicle search")
+        .data;
+    assert_eq!(search.entries.len(), 1);
+    let summary = search.summary.expect("recent match summary");
+    assert_eq!(summary.entry_count, 1);
+    assert_eq!(summary.from_cursor, search.entries[0].cursor);
+    assert_eq!(summary.to_cursor, search.entries[0].cursor);
+}
+
+#[test]
 fn chronicle_search_rejects_unbounded_or_controlled_queries() {
     let repository = WorldRepository::new(ServerConfig::default());
     let session = repository
