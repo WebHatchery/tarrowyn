@@ -123,7 +123,8 @@ impl WorldRepository {
             .backup_failed
             .lock()
             .expect("backup status lock poisoned");
-        let integrity_ok = integrity_ok(&state, &self.config);
+        let integrity_failures = integrity_failures(&state, &self.config);
+        let integrity_ok = integrity_failures.is_empty();
         let ready = integrity_ok && !persistence_failed && !backup_failed;
         ApiResponse {
             meta: meta(state.tick, None, Some(state.cursor)),
@@ -139,6 +140,7 @@ impl WorldRepository {
                 last_backup_tick: state.phase6.last_backup_tick,
                 last_backup_path: state.phase6.last_backup_path.clone(),
                 integrity_ok,
+                integrity_failures,
                 persistence_error: persistence_failed.then(|| {
                     "The latest authoritative persistence write failed; inspect server logs before admitting traffic."
                         .to_owned()
@@ -366,6 +368,10 @@ impl WorldRepository {
 }
 
 fn integrity_ok(state: &RepositoryState, config: &ServerConfig) -> bool {
+    integrity_failures(state, config).is_empty()
+}
+
+fn integrity_failures(state: &RepositoryState, config: &ServerConfig) -> Vec<String> {
     let account_ids: HashSet<&str> = state
         .identities
         .values()
@@ -524,45 +530,90 @@ fn integrity_ok(state: &RepositoryState, config: &ServerConfig) -> bool {
             .values()
             .map(|identity| identity.character_id.as_str()),
     );
-    identity_ids_ok
-        && super::phase4_integrity::ok(state, config)
-        && super::phase4_replay_integrity::ok(state)
-        && super::phase3_replay_integrity::ok(state)
-        && super::core_replay_integrity::ok(state)
-        && super::core_event_integrity::ok(state, config)
-        && super::core_session_integrity::ok(state, config)
-        && super::persistent_integrity::ok(state, config)
-        && super::production_integrity::ok(state)
-        && super::regional_integrity::ok(state, config)
-        && super::phase5_replay_integrity::ok(state)
-        && !state.phase5.locations.is_empty()
-        && !state.phase5.routes.is_empty()
-        && !state.phase5.settlements.is_empty()
-        && regional_topology_ok
-        && market_orders_ok
-        && travel_ids_ok
-        && events_ok
-        && households_ok
-        && stock_ok
-        && phase5_metadata_ok
-        && state.phase5.routes.iter().all(|route| {
-            route.length > 0
-                && route.risk_percent <= 100
-                && route.condition <= 100
-                && route.capacity > 0
-                && route.travel_ticks > 0
-                && route.repair_cost > 0
-        })
-        && state.phase5.settlements.iter().all(|settlement| {
-            settlement.population > 0
-                && settlement.food <= 100
-                && settlement.safety <= 100
-                && settlement.infrastructure <= 100
-                && settlement.industry <= 100
-                && settlement.governance <= 100
-                && settlement.player_activity <= 100
-                && settlement.price_index_percent > 0
-        })
+    let mut failures = Vec::new();
+    if !identity_ids_ok {
+        failures.push("identity_ids".to_owned());
+    }
+    if !super::phase4_integrity::ok(state, config) {
+        failures.push("phase4".to_owned());
+    }
+    if !super::phase4_replay_integrity::ok(state) {
+        failures.push("phase4_replay".to_owned());
+    }
+    if !super::phase3_replay_integrity::ok(state) {
+        failures.push("phase3_replay".to_owned());
+    }
+    if !super::core_replay_integrity::ok(state) {
+        failures.push("core_replay".to_owned());
+    }
+    if !super::core_event_integrity::ok(state, config) {
+        failures.push("core_event".to_owned());
+    }
+    if !super::core_session_integrity::ok(state, config) {
+        failures.push("core_session".to_owned());
+    }
+    if !super::persistent_integrity::ok(state, config) {
+        failures.push("persistent".to_owned());
+    }
+    if !super::production_integrity::ok(state) {
+        failures.push("production".to_owned());
+    }
+    if !super::regional_integrity::ok(state, config) {
+        failures.push("regional".to_owned());
+    }
+    if !super::phase5_replay_integrity::ok(state) {
+        failures.push("phase5_replay".to_owned());
+    }
+    if state.phase5.locations.is_empty()
+        || state.phase5.routes.is_empty()
+        || state.phase5.settlements.is_empty()
+    {
+        failures.push("regional_collections".to_owned());
+    }
+    if !regional_topology_ok {
+        failures.push("regional_topology".to_owned());
+    }
+    if !market_orders_ok {
+        failures.push("market_orders".to_owned());
+    }
+    if !travel_ids_ok {
+        failures.push("travel".to_owned());
+    }
+    if !events_ok {
+        failures.push("events".to_owned());
+    }
+    if !households_ok {
+        failures.push("households".to_owned());
+    }
+    if !stock_ok {
+        failures.push("stock".to_owned());
+    }
+    if !phase5_metadata_ok {
+        failures.push("phase5_metadata".to_owned());
+    }
+    if !state.phase5.routes.iter().all(|route| {
+        route.length > 0
+            && route.risk_percent <= 100
+            && route.condition <= 100
+            && route.capacity > 0
+            && route.travel_ticks > 0
+            && route.repair_cost > 0
+    }) {
+        failures.push("route_bounds".to_owned());
+    }
+    if !state.phase5.settlements.iter().all(|settlement| {
+        settlement.population > 0
+            && settlement.food <= 100
+            && settlement.safety <= 100
+            && settlement.infrastructure <= 100
+            && settlement.industry <= 100
+            && settlement.governance <= 100
+            && settlement.player_activity <= 100
+            && settlement.price_index_percent > 0
+    }) {
+        failures.push("settlement_bounds".to_owned());
+    }
+    failures
 }
 
 fn unique_non_empty<'a>(mut values: impl Iterator<Item = &'a str>) -> bool {

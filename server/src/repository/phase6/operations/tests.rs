@@ -50,3 +50,20 @@ fn operational_alerts_cover_tick_regional_and_economy_boundaries() {
     assert!(flags.iter().any(|flag| flag == "regional_event_backlog"));
     assert!(flags.iter().any(|flag| flag == "economy_anomaly"));
 }
+
+#[test]
+fn operational_health_names_the_failed_integrity_boundary() {
+    let repository = super::super::super::WorldRepository::new(ServerConfig::default());
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state.phase5.routes[0].condition = 101;
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+    assert!(health
+        .integrity_failures
+        .iter()
+        .any(|failure| failure == "route_bounds"));
+}

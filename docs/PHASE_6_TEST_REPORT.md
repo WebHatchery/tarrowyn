@@ -1263,3 +1263,12 @@ existing `net2 v0.2.39` future-incompatibility warning remains non-blocking. No
 full workspace suite was repeated because this was a focused
 persistence/runtime recovery slice; the complete milestone gate remains green
 in the preceding entry. No new external or deferred work was opened.
+
+The operations health response now reports fixed, non-sensitive integrity
+failure codes alongside its existing boolean readiness result, allowing an
+operator to identify a failed boundary without exposing ledger contents or
+secrets. The focused route-boundary regression passes (1), server clippy,
+direct formatting, and diff checks pass. The publisher check is required for
+this protocol/server runtime slice; no full workspace suite or release gate
+was repeated because this is not a major milestone. No new external or
+deferred work was opened.
