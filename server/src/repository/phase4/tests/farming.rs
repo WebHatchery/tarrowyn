@@ -141,6 +141,48 @@ fn animal_condition_survives_repository_restart() {
 }
 
 #[test]
+fn animal_care_requires_distance_to_the_actual_animal_position() {
+    let repo = WorldRepository::new(ServerConfig::default());
+    let session = guest(&repo, "phase4-animal-distance");
+    let animal_position = crate::content::farm_animal_position();
+    let request_position = tarrowyn_protocol::Position {
+        x: animal_position.x,
+        y: animal_position.y - 1,
+    };
+    {
+        let mut state = repo.state.lock().expect("repository lock");
+        state
+            .identities
+            .get_mut(&session.client_key)
+            .expect("guest identity")
+            .position = tarrowyn_protocol::Position {
+            x: animal_position.x,
+            y: animal_position.y - 2,
+        };
+        state.phase4.animals[0].condition = 1;
+    }
+
+    let response = repo
+        .farming(
+            &session.account_token,
+            FarmingRequest {
+                request_id: "animal-distance-boundary".to_owned(),
+                action: FarmingAction::TendAnimal,
+                position: request_position,
+            },
+        )
+        .unwrap()
+        .data;
+
+    assert!(!response.accepted);
+    assert!(response
+        .reason
+        .as_deref()
+        .is_some_and(|reason| reason.contains("beside the animal")));
+    assert_eq!(response.animal.expect("animal response").condition, 1);
+}
+
+#[test]
 fn legacy_bellweather_position_restores_beside_manifest_fields() {
     let restored = super::super::restore_animals(vec![tarrowyn_protocol::FarmAnimal {
         animal_id: "bellweather-goat".to_owned(),

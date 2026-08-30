@@ -732,3 +732,9 @@ Public-work completion now rejects a second commission of the fixed Hearth
 workshop record before charging the public treasury. The focused governance
 history test covers the stable infrastructure ID and unchanged funds; server
 clippy, size, diff, and publisher checks remain the validation scope.
+
+Animal care now measures the player's distance to Bellweather's authoritative
+position rather than trusting the requested interaction tile. The focused
+farming regression covers a two-tile attempt through an adjacent spoofed tile;
+the test, server clippy, size, diff, and publisher checks pass. No new external
+or deferred work was opened.

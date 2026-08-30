@@ -47,7 +47,7 @@ impl WorldRepository {
                 );
                 return self.store_farming_result(&mut state, identity_key, response);
             };
-            let distance = current.manhattan_distance(request.position);
+            let distance = current.manhattan_distance(state.phase4.animals[animal_index].position);
             if distance > 1 {
                 response.reason = Some("Stand beside the animal before caring for it.".to_owned());
                 response.animal = Some(state.phase4.animals[animal_index].clone());
