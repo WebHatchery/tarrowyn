@@ -1129,3 +1129,10 @@ the Windows and WebGL release builds, packaging, Preview deployment, and
 catalog sync. No full workspace gate was rerun because this is a bounded
 client recovery-affordance slice. No new external or deferred work was
 opened.
+
+The client regional transport module's command-dispatch responsibility moved
+into a named sync module, reducing the main file from 749 to 692 lines while
+preserving its behavior. The focused Phase 5 client tests (31 passed), client
+clippy, direct formatting, diff, and Rust file-size checks pass. No publisher
+run was needed because this was a test-adjacent organization-only slice. No
+new external or deferred work was opened.
