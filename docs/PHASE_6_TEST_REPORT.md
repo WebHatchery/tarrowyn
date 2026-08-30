@@ -1216,3 +1216,11 @@ their own shipment. The focused fallback and regional-flow regressions (1
 passed each), server clippy, direct formatting, and diff checks pass. No full
 workspace suite or publisher run was needed for this test-only maintenance
 slice. No new external or deferred work was opened.
+
+The Phase 4 combat-integrity fixtures now establish durable combat state through
+the mutating `Prepare` action at Whisperwood before injecting invalid health or
+status values. This preserves the intentional read-only default projection of
+`GET /combat/local`. The two focused combat-readiness regressions (1 passed
+each), server clippy, direct formatting, and diff checks pass. No full workspace
+suite or publisher run was needed for this test-only maintenance slice. No new
+external or deferred work was opened.

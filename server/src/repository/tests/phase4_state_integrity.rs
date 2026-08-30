@@ -1,11 +1,11 @@
 use super::super::{ServerConfig, WorldRepository};
-use tarrowyn_protocol::LocalCombatStatus;
 use tarrowyn_protocol::{ClaimLifecycleAction, ClaimLifecycleRequest};
 use tarrowyn_protocol::{GovernanceAction, GovernanceRequest, GuestSessionRequest, PublicAction};
 use tarrowyn_protocol::{
     GovernanceDecision, MaterialStock, ProfessionAction, ProfessionKind, ProfessionRequest,
     ServiceOrder, ServiceOrderStatus, SkillLesson, TaxCollection,
 };
+use tarrowyn_protocol::{LocalCombatAction, LocalCombatRequest, LocalCombatStatus, WeaponKind};
 
 fn seeded_phase4_claim(repository: &WorldRepository) {
     let session = repository
@@ -474,9 +474,31 @@ fn seeded_phase4_combat(repository: &WorldRepository) -> String {
         })
         .expect("guest session")
         .data;
+    let zone_position = repository
+        .state
+        .lock()
+        .expect("repository lock")
+        .phase3
+        .zone
+        .position;
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state
+            .identities
+            .get_mut(&session.client_key)
+            .expect("guest identity")
+            .position = zone_position;
+    }
     repository
-        .combat_status(&session.account_token)
-        .expect("combat status");
+        .local_combat(
+            &session.account_token,
+            LocalCombatRequest {
+                request_id: "phase4-combat-state-seed".to_owned(),
+                action: LocalCombatAction::Prepare,
+                weapon: WeaponKind::IronSword,
+            },
+        )
+        .expect("combat preparation");
     session.client_key
 }
 
