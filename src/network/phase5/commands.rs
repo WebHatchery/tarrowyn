@@ -238,12 +238,9 @@ impl Phase5Client {
                             .to_owned(),
                     ));
                 } else {
-                    phase5_notice(
-                        false,
-                        response.reason,
-                        "The account deletion request was accepted.",
-                        notices,
-                    );
+                    notices.push(NetworkNotice::Warning(response.reason.unwrap_or_else(
+                        || "The account deletion request was not accepted.".to_owned(),
+                    )));
                 }
             }
         }

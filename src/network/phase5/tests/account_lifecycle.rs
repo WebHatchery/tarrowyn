@@ -341,3 +341,26 @@ fn account_deletion_response_selects_its_own_command_variant() {
     .expect("account deletion response should decode");
     assert!(matches!(response, Phase5CommandResponse::Delete(_)));
 }
+
+#[test]
+fn rejected_account_deletion_without_a_reason_still_explains_the_outcome() {
+    let response = Phase5CommandResponse::Delete(tarrowyn_protocol::AccountDeletionResponse {
+        request_id: "delete-rejected".to_owned(),
+        account_id: "account-1".to_owned(),
+        character_id: "character-1".to_owned(),
+        accepted: false,
+        status: "blocked".to_owned(),
+        reason: None,
+    });
+    let mut client = Phase5Client::new();
+    let mut api = HttpClient::new("https://example.test");
+    let mut notices = Vec::new();
+
+    client.apply_command(response, None, &mut api, &mut notices);
+
+    assert!(matches!(
+        notices.first(),
+        Some(NetworkNotice::Warning(message))
+            if message == "The account deletion request was not accepted."
+    ));
+}
