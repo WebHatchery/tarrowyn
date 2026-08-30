@@ -1397,3 +1397,10 @@ regression passes, with server-package clippy, formatting, and diff checks
 clean. No full workspace or publisher gate was repeated because this is a
 narrow backup durability hardening; no new external or deferred work was
 opened.
+
+The Phase 6 security and recovery milestone then passed the full release gate:
+15 protocol tests, 410 server tests, 110 client tests, asset and Rust
+standards tests, doc tests, warning-denied workspace clippy, content validation,
+Windows and WebGL release builds, package creation, Preview deployment, and
+catalog sync. The existing `net2 v0.2.39` future-incompatibility warning
+remains non-blocking. No new external or deferred work was opened.
