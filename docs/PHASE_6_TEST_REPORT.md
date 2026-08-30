@@ -1008,3 +1008,12 @@ tests (29 passed), direct formatting, diff, Rust file-size, and client clippy
 checks pass. The publisher check remains the runtime validation path; no full
 workspace gate was rerun because this is a bounded Phase 5 client ordering
 maintenance slice. No new external or deferred work was opened.
+
+Frontier command responses now decide whether their player, claim, wilderness,
+and expedition fields are still current before mutating the root projection;
+late responses still retain their outcome notice without rewinding newer state.
+The focused frontier tests (8 passed), direct formatting, diff, Rust file-size,
+and client clippy checks pass. The publisher check remains the runtime
+validation path; no full workspace gate was rerun because this is a bounded
+frontier client ordering maintenance slice. No new external or deferred work
+was opened.

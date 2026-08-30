@@ -68,6 +68,7 @@ fn expedition_resolution_notice_explains_a_retreat() {
         }),
         &mut client.projection,
         &mut notices,
+        true,
     );
 
     assert!(matches!(

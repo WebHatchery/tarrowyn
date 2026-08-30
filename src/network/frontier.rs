@@ -156,9 +156,12 @@ impl FrontierClient {
                 Ok(response) => {
                     self.command_retry_timer = 0.0;
                     self.command_retry_count = 0;
+                    let cursor = response.meta.cursor.unwrap_or(projection.cursor);
+                    let projection_current =
+                        projection.response_is_current(response.meta.server_tick, cursor);
                     projection
                         .record_response_version(response.meta.server_tick, response.meta.cursor);
-                    self.apply_command(response.data, projection, notices);
+                    self.apply_command(response.data, projection, notices, projection_current);
                 }
                 Err(error)
                     if is_transient_transport_error(&error)
@@ -297,12 +300,15 @@ impl FrontierClient {
         response: FrontierCommandResponse,
         projection: &mut WorldProjection,
         notices: &mut Vec<NetworkNotice>,
+        projection_current: bool,
     ) {
         match response {
             FrontierCommandResponse::Contract(response) => {
                 if response.accepted {
-                    self.contracts = vec![response.contract];
-                    projection.player = Some(response.player);
+                    if projection_current {
+                        self.contracts = vec![response.contract];
+                        projection.player = Some(response.player);
+                    }
                     notices.push(NetworkNotice::Success(
                         "The tavern ledger accepted the frontier contract.".to_owned(),
                     ));
@@ -311,13 +317,15 @@ impl FrontierClient {
                 }
             }
             FrontierCommandResponse::Combat(response) => {
-                apply_combat(response, projection, notices)
+                apply_combat(response, projection, notices, projection_current)
             }
             FrontierCommandResponse::Recovery(response) => {
-                apply_recovery(response, projection, notices)
+                apply_recovery(response, projection, notices, projection_current)
             }
             FrontierCommandResponse::Claim(response) => {
-                projection.claim = response.claim;
+                if projection_current {
+                    projection.claim = response.claim;
+                }
                 command_notice(
                     response.accepted,
                     response.reason,
@@ -327,14 +335,16 @@ impl FrontierClient {
             }
             FrontierCommandResponse::Expedition(response) => {
                 expedition_notice(&response, notices);
-                if let Some(expedition) = response.expedition {
-                    projection.expedition = Some(expedition.clone());
-                    projection.outpost = (expedition.status
-                        == tarrowyn_protocol::ExpeditionStatus::Succeeded)
-                        .then_some(macroquad_toolkit::grid::TilePos::new(
-                            expedition.outpost_position.x,
-                            expedition.outpost_position.y,
-                        ));
+                if projection_current {
+                    if let Some(expedition) = response.expedition {
+                        projection.expedition = Some(expedition.clone());
+                        projection.outpost = (expedition.status
+                            == tarrowyn_protocol::ExpeditionStatus::Succeeded)
+                            .then_some(macroquad_toolkit::grid::TilePos::new(
+                                expedition.outpost_position.x,
+                                expedition.outpost_position.y,
+                            ));
+                    }
                 }
             }
         }
@@ -406,13 +416,16 @@ fn apply_combat(
     response: CombatResponse,
     projection: &mut WorldProjection,
     notices: &mut Vec<NetworkNotice>,
+    projection_current: bool,
 ) {
-    projection.player = Some(response.player);
-    projection.player_position = macroquad_toolkit::grid::TilePos::new(
-        projection.player.as_ref().unwrap().position.x,
-        projection.player.as_ref().unwrap().position.y,
-    );
-    projection.wilderness = Some(response.zone);
+    if projection_current {
+        projection.player = Some(response.player);
+        projection.player_position = macroquad_toolkit::grid::TilePos::new(
+            projection.player.as_ref().unwrap().position.x,
+            projection.player.as_ref().unwrap().position.y,
+        );
+        projection.wilderness = Some(response.zone);
+    }
     match response.outcome {
         Some(tarrowyn_protocol::CombatOutcome::Victory) => notices.push(NetworkNotice::Success(
             "The Brambleback falls; the north road is open.".to_owned(),
@@ -438,8 +451,11 @@ fn apply_recovery(
     response: RecoveryResponse,
     projection: &mut WorldProjection,
     notices: &mut Vec<NetworkNotice>,
+    projection_current: bool,
 ) {
-    projection.player = Some(response.player);
+    if projection_current {
+        projection.player = Some(response.player);
+    }
     command_notice(
         response.accepted,
         response.reason,
