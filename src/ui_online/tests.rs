@@ -399,6 +399,25 @@ fn companion_count_ignores_own_stale_and_offline_presence() {
 }
 
 #[test]
+fn online_buttons_wait_for_authoritative_player_projection() {
+    assert!(super::panels::button_enabled(
+        true,
+        ConnectionState::Online,
+        true
+    ));
+    assert!(!super::panels::button_enabled(
+        true,
+        ConnectionState::Online,
+        false
+    ));
+    assert!(!super::panels::button_enabled(
+        true,
+        ConnectionState::Degraded,
+        true
+    ));
+}
+
+#[test]
 fn recovery_controls_close_after_one_choice_is_pending() {
     assert!(!super::recovery_control_enabled(true, true));
     assert!(super::recovery_control_enabled(true, false));

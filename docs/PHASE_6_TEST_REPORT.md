@@ -2651,3 +2651,15 @@ file-size scan pass. The project `publish.ps1` Windows/WebGL build, packaging,
 Preview deployment, and catalog-sync checks pass. No full workspace gate was
 repeated because this was a bounded social-presence presentation correction,
 and no new external or deferred work was opened.
+
+Normal online action buttons now wait for an authoritative player projection
+after cursor or identity recovery, so cleared/default client state cannot
+queue gameplay commands while the replacement snapshot is loading. Reconnect
+and offline-fixture controls retain their dedicated availability rules. The
+focused binary test
+`ui::ui_online::tests::online_buttons_wait_for_authoritative_player_projection`
+passes; client-package formatting and clippy, `git diff --check`, and the Rust
+file-size scan pass. The project `publish.ps1` Windows/WebGL build, packaging,
+Preview deployment, and catalog-sync checks pass. No full workspace gate was
+repeated because this was a bounded recovery-input presentation correction,
+and no new external or deferred work was opened.

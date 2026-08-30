@@ -661,7 +661,7 @@ pub fn draw_button_row(
         let enabled = match *id {
             "reconnect" => reconnect_control_enabled(ctx.connection),
             "offline" => true,
-            _ => *active && ctx.connection == ConnectionState::Online,
+            _ => button_enabled(*active, ctx.connection, ctx.player_position_authoritative),
         };
         if virtual_button(
             Rect::new(content.x + index as f32 * (width + gap), y, width, height),
@@ -681,4 +681,12 @@ pub fn draw_button_row(
             }
         }
     }
+}
+
+pub fn button_enabled(
+    active: bool,
+    connection: ConnectionState,
+    player_position_authoritative: bool,
+) -> bool {
+    active && connection == ConnectionState::Online && player_position_authoritative
 }
