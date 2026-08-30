@@ -247,7 +247,6 @@ impl WorldRepository {
                     state.phase3.expedition = Some(expedition.clone());
                     response.expedition = Some(expedition.clone());
                     response.accepted = true;
-                    frontier_event(&mut state, FrontierEvent::Expedition(expedition));
                     record(
                         &mut state,
                         "expedition announced",

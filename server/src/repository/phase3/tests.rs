@@ -3,7 +3,7 @@ use crate::config::ServerConfig;
 use crate::repository::WorldRepository;
 use tarrowyn_protocol::{
     Expedition, ExpeditionAction, ExpeditionMember, ExpeditionRequest, ExpeditionRole,
-    ExpeditionStatus, GuestSessionRequest, Position,
+    ExpeditionStatus, FrontierEvent, GuestSessionRequest, Position, WorldEvent,
 };
 
 mod input_bounds;
@@ -115,6 +115,46 @@ fn expedition_rejects_unbounded_or_controlled_outpost_names() {
         assert_eq!(error.status, 400);
         assert_eq!(error.error.code, "invalid_outpost_name");
     }
+}
+
+#[test]
+fn expedition_announcement_emits_one_frontier_event() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = guest(&repository);
+
+    repository
+        .expedition(
+            &session.account_token,
+            ExpeditionRequest {
+                request_id: "single-announcement-event".to_owned(),
+                action: ExpeditionAction::Announce,
+                expedition_id: None,
+                role: Some(ExpeditionRole::Scout),
+                food: 0,
+                tools: 0,
+                materials: 0,
+                safety: 0,
+                outpost_name: None,
+            },
+        )
+        .expect("expedition announce");
+
+    let events = repository
+        .events(&session.account_token, 0)
+        .expect("world events")
+        .data
+        .events;
+    let expedition_events = events
+        .iter()
+        .filter(|event| {
+            matches!(
+                &event.event,
+                WorldEvent::Frontier(FrontierEvent::Expedition(expedition))
+                    if expedition.expedition_id == "pioneer-1"
+            )
+        })
+        .count();
+    assert_eq!(expedition_events, 1);
 }
 
 #[test]
