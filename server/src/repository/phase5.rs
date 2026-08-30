@@ -242,7 +242,10 @@ impl WorldRepository {
                 request,
                 current_travel,
                 false,
-                Some("You are knocked out; choose a recovery prompt before travelling.".to_owned()),
+                Some(
+                    "You are knocked out; tap Self, Rescuer, or Healer before travelling."
+                        .to_owned(),
+                ),
             );
             record_command_outcome(&mut state, false);
             self.persist(&state);

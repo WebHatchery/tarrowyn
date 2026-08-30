@@ -557,7 +557,7 @@ fn knocked_out_player_cannot_change_shared_fields_before_recovery() {
     assert!(response
         .reason
         .as_deref()
-        .is_some_and(|reason| reason.contains("recovery prompt")));
+        .is_some_and(|reason| reason.contains("tap Self, Rescuer, or Healer")));
     assert_eq!(response.player.inventory.seeds, seeds_before);
     assert_eq!(response.player.skill, skill_before);
     assert!(repository

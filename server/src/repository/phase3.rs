@@ -440,7 +440,7 @@ impl WorldRepository {
             .knocked_out;
         if knocked_out {
             response.reason =
-                Some("You are knocked out; choose a recovery prompt first.".to_owned());
+                Some("You are knocked out; tap Self, Rescuer, or Healer below.".to_owned());
         } else if position.manhattan_distance(state.phase3.zone.position) > 2 {
             response.reason =
                 Some("Stand near Whisperwood Edge before facing the threat.".to_owned());

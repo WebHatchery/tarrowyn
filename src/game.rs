@@ -194,7 +194,7 @@ impl Game {
                     .as_ref()
                     .is_some_and(|player| player.knocked_out)
                 {
-                    format!("{stats}\nKNOCKED OUT • choose Recover below")
+                    format!("{stats}\nKNOCKED OUT • tap Self, Rescuer, or Healer below")
                 } else if let Some(trade) = client.projection.trades.first() {
                     format!("{stats}\nTrade {}: {:?}", trade.trade_id, trade.status)
                 } else {

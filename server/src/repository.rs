@@ -365,7 +365,7 @@ impl WorldRepository {
                 .knocked_out
             {
                 response.reason =
-                    Some("You are knocked out; choose a recovery prompt first.".to_owned());
+                    Some("You are knocked out; tap Self, Rescuer, or Healer below.".to_owned());
             } else if phase3::movement_blocked(&state.phase3, next) {
                 response.reason = Some(
                     "The Brambleback has closed the north road; the tavern has posted a contract."

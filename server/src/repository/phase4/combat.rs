@@ -64,7 +64,7 @@ impl super::super::WorldRepository {
             .knocked_out
         {
             response.reason =
-                Some("You are knocked out; choose a recovery prompt first.".to_owned());
+                Some("You are knocked out; tap Self, Rescuer, or Healer below.".to_owned());
             return finish_local_combat(self, &mut state, cache, response);
         }
         let position = state

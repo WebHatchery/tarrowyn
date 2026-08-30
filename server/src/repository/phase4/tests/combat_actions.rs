@@ -375,7 +375,7 @@ fn knocked_out_local_player_cannot_reenter_before_recovery() {
     assert!(bypass
         .reason
         .as_deref()
-        .is_some_and(|reason| reason.contains("recovery")));
+        .is_some_and(|reason| reason.contains("tap Self, Rescuer, or Healer")));
 
     let travel_bypass = repo
         .travel(
@@ -393,7 +393,7 @@ fn knocked_out_local_player_cannot_reenter_before_recovery() {
     assert!(travel_bypass
         .reason
         .as_deref()
-        .is_some_and(|reason| reason.contains("recovery")));
+        .is_some_and(|reason| reason.contains("tap Self, Rescuer, or Healer")));
 
     let recovery = repo
         .recovery(

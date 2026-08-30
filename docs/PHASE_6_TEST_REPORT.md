@@ -1585,3 +1585,12 @@ layout remains readable, and `publish.ps1` passes Windows/WebGL builds,
 packaging, Preview deployment, and catalog sync. No full workspace gate was
 repeated because this was a bounded touch-copy slice, and no new external or
 deferred work was opened.
+
+Knockout guidance now names the visible `Self`, `Rescuer`, and `Healer` recovery
+controls in authoritative farming, combat, travel, and client ledger prompts.
+The focused recovery server filter passes (10), the changed server package
+clippy check and client online UI suite (8) pass, and the captured 1280x720
+layout remains readable. `publish.ps1` passes Windows/WebGL builds, packaging,
+Preview deployment, and catalog sync. No full workspace gate was repeated
+because this was a bounded recovery-guidance slice, and no new external or
+deferred work was opened.
