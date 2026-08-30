@@ -309,6 +309,34 @@ fn contract_cycle_waits_through_the_tavern_cooldown() {
 }
 
 #[test]
+fn contract_controls_wait_for_one_queued_or_in_flight_command() {
+    let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
+    client.state = crate::network::ConnectionState::Online;
+    let request = ContractRequest {
+        request_id: "contract-queued".to_owned(),
+        action: ContractAction::Accept,
+        contract_id: "brambleback-watch".to_owned(),
+    };
+    client
+        .frontier
+        .commands
+        .push_back(FrontierCommand::Contract(request.clone()));
+
+    assert!(client.contract_pending());
+    client.queue_contract_cycle();
+    assert_eq!(client.frontier.commands.len(), 1);
+    assert!(client
+        .status_message
+        .contains("frontier action is not ready"));
+
+    client.frontier.commands.clear();
+    client.frontier.in_flight_command = Some(FrontierCommand::Contract(request));
+    assert!(client.contract_pending());
+    client.queue_contract_cycle();
+    assert!(client.frontier.commands.is_empty());
+}
+
+#[test]
 fn chronicle_search_queues_the_latest_query_for_the_frontier_reader() {
     let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
     client.state = crate::network::ConnectionState::Online;

@@ -269,6 +269,7 @@ impl Game {
                     storm_magic_unlocked: client.storm_magic_unlocked(),
                     skill_pending: client.skill_pending(),
                     combat_pending: client.combat_pending(),
+                    contract_pending: client.contract_pending(),
                     knocked_out: client
                         .projection
                         .player
@@ -371,6 +372,7 @@ impl Game {
                     storm_magic_unlocked: false,
                     skill_pending: false,
                     combat_pending: false,
+                    contract_pending: false,
                     knocked_out: false,
                     recovery_pending: false,
                     has_open_market_order: false,

@@ -80,7 +80,7 @@ pub(super) fn draw_sidebar(
         ctx.combat_pending,
     );
     let combat_side_enabled = match combat_side_id {
-        "contract" => true,
+        "contract" => contract_control_enabled(true, ctx.contract_pending),
         "frontier-retreat" => frontier_threat_reachable,
         "retreat" => local_combat_action_ready,
         _ => false,
@@ -616,6 +616,10 @@ fn skill_control_enabled(available: bool, skill_pending: bool) -> bool {
 
 fn combat_control_enabled(available: bool, combat_pending: bool) -> bool {
     available && !combat_pending
+}
+
+fn contract_control_enabled(available: bool, contract_pending: bool) -> bool {
+    available && !contract_pending
 }
 
 pub(super) fn movement_enabled(ctx: &UiContext<'_>) -> bool {

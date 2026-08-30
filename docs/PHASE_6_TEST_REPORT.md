@@ -2257,3 +2257,12 @@ client formatting, clippy, standards, and the Rust file-size check pass, and
 `publish.ps1` passes Windows/WebGL builds, packaging, Preview deployment, and
 catalog sync. No full workspace gate was repeated because this was a bounded
 farming-control correction, and no new external or deferred work was opened.
+
+The tavern Contract control now closes while a frontier contract command is
+queued or in flight, and direct cycle attempts retain the established cooldown
+and full-queue feedback. The focused contract filter passes seven related
+tests; client formatting, clippy, standards, and the Rust file-size check pass,
+and `publish.ps1` passes Windows/WebGL builds, packaging, Preview deployment,
+and catalog sync. No full workspace gate was repeated because this was a
+bounded contract-control correction, and no new external or deferred work was
+opened.
