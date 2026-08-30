@@ -319,6 +319,9 @@ fn account_deletion_requires_two_taps_for_a_linked_account() {
         client.commands.front(),
         Some(Phase5Command::Delete(request)) if request.account_id == "account-1"
     ));
+    assert!(client.identity_command_pending());
+    assert!(!client.queue_cycle("logout"));
+    assert_eq!(client.commands.len(), 1);
 }
 
 #[test]

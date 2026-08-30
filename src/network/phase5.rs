@@ -21,6 +21,7 @@ mod events;
 mod location;
 mod market;
 mod online;
+mod pending;
 mod routes;
 mod summary;
 mod sync;
@@ -114,46 +115,6 @@ impl Phase5Client {
 
     pub(super) fn command_pending(&self) -> bool {
         self.pending_command.is_some()
-    }
-
-    pub(super) fn market_command_pending(&self) -> bool {
-        self.in_flight_command
-            .as_ref()
-            .is_some_and(|command| matches!(command, Phase5Command::Market(_)))
-            || self
-                .commands
-                .iter()
-                .any(|command| matches!(command, Phase5Command::Market(_)))
-    }
-
-    pub(super) fn event_command_pending(&self) -> bool {
-        self.in_flight_command
-            .as_ref()
-            .is_some_and(|command| matches!(command, Phase5Command::Event(_)))
-            || self
-                .commands
-                .iter()
-                .any(|command| matches!(command, Phase5Command::Event(_)))
-    }
-
-    pub(super) fn route_command_pending(&self) -> bool {
-        self.in_flight_command
-            .as_ref()
-            .is_some_and(|command| matches!(command, Phase5Command::Route(_)))
-            || self
-                .commands
-                .iter()
-                .any(|command| matches!(command, Phase5Command::Route(_)))
-    }
-
-    pub(super) fn travel_command_pending(&self) -> bool {
-        self.in_flight_command
-            .as_ref()
-            .is_some_and(|command| matches!(command, Phase5Command::Travel(_)))
-            || self
-                .commands
-                .iter()
-                .any(|command| matches!(command, Phase5Command::Travel(_)))
     }
 
     pub(super) fn dispatch_blocked(&self) -> bool {
@@ -357,6 +318,9 @@ impl Phase5Client {
                 );
             }
             "logout" => {
+                if self.identity_command_pending() {
+                    return false;
+                }
                 let _ = super::queue::try_push(
                     &mut self.commands,
                     Phase5Command::Revoke(tarrowyn_protocol::AuthRevokeRequest {
@@ -369,6 +333,9 @@ impl Phase5Client {
                 self.queue_report(request_id, None, None);
             }
             "delete-account" => {
+                if self.identity_command_pending() {
+                    return false;
+                }
                 let Some(account) = self
                     .account
                     .as_ref()

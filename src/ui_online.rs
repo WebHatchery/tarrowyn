@@ -414,16 +414,23 @@ pub(super) fn draw_sidebar(
                 true,
                 ButtonTone::Secondary,
             ),
-            ("logout", "Logout", true, ButtonTone::Secondary),
+            (
+                "logout",
+                "Logout",
+                identity_control_enabled(ctx.identity_pending),
+                ButtonTone::Secondary,
+            ),
             ("report", "Report", true, ButtonTone::Secondary),
             (
                 "delete-account",
-                if ctx.account_deletion_armed {
+                if ctx.identity_pending {
+                    "Pending"
+                } else if ctx.account_deletion_armed {
                     "Tap again"
                 } else {
                     "Delete"
                 },
-                ctx.account_deletion_available,
+                ctx.account_deletion_available && identity_control_enabled(ctx.identity_pending),
                 ButtonTone::Secondary,
             ),
         ],
@@ -534,6 +541,10 @@ fn cancel_market_control_enabled(has_open_market_order: bool, market_pending: bo
 
 fn event_control_enabled(event_pending: bool) -> bool {
     !event_pending
+}
+
+fn identity_control_enabled(identity_pending: bool) -> bool {
+    !identity_pending
 }
 
 fn route_control_enabled(route_available: bool, route_pending: bool) -> bool {

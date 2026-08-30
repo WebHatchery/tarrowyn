@@ -358,6 +358,12 @@ fn event_controls_wait_for_the_previous_resolution_command() {
 }
 
 #[test]
+fn identity_controls_wait_for_the_previous_account_command() {
+    assert!(!super::identity_control_enabled(true));
+    assert!(super::identity_control_enabled(false));
+}
+
+#[test]
 fn route_controls_wait_for_the_previous_logistics_command() {
     assert!(!super::route_control_enabled(true, true));
     assert!(super::route_control_enabled(true, false));

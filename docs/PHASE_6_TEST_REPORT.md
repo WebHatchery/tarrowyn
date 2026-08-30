@@ -1912,6 +1912,16 @@ Windows/WebGL builds, packaging, Preview deployment, and catalog sync. No full
 workspace gate was repeated because this was a bounded account-feedback
 correction, and no new external or deferred work was opened.
 
+Logout and account deletion controls now close while a link, revoke, or delete
+command is queued or in flight, and direct duplicate identity queue attempts
+are rejected. The account-focused filter passes 24 related tests; command
+pending projections now live in `src/network/phase5/pending.rs`, keeping
+`phase5.rs` below the 800-line hard limit. Client standards, clippy, file-size
+checks, and `publish.ps1` pass Windows/WebGL builds, packaging, Preview
+deployment, and catalog sync. No full workspace gate was repeated because this
+was a bounded identity-control and file-ownership correction, and no new
+external or deferred work was opened.
+
 Travel Start, Interrupt, and Recover controls now close while a travel command
 is queued or in flight, preventing duplicate journey mutations while the
 regional projection catches up. The focused travel filter passes, client

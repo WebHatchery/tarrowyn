@@ -76,6 +76,10 @@ impl Phase4Client {
         self.regional.travel_command_pending()
     }
 
+    pub(crate) fn identity_command_pending(&self) -> bool {
+        self.regional.identity_command_pending()
+    }
+
     pub(crate) fn regional_inspection(&self) -> String {
         self.regional.inspection()
     }
