@@ -3,12 +3,12 @@ use super::{is_transient_transport_error, NetworkNotice, REQUEST_TIMEOUT_SECONDS
 use macroquad_toolkit::net::{HttpClient, Pending};
 use std::collections::VecDeque;
 use tarrowyn_protocol::{
-    ApiResponse, ClaimLifecycleAction, ClaimLifecycleRequest, ClaimsResponse, GovernanceAction,
-    GovernanceRequest, GovernanceResponse, GovernanceState, HouseholdsResponse, KnowledgeAction,
-    KnowledgeRequest, KnowledgeResponse, LocalCombatAction, LocalCombatRequest,
-    LocalCombatResponse, LocalCombatState, ProfessionAction, ProfessionKind, ProfessionRequest,
-    ProfessionResponse, ProfessionsResponse, SkillAction, SkillRequest, SkillResponse, SkillStatus,
-    SkillsResponse, WeaponKind,
+    ApiResponse, ClaimLifecycleAction, ClaimLifecycleRequest, ClaimLifecycleStatus, ClaimRecord,
+    ClaimsResponse, GovernanceAction, GovernanceRequest, GovernanceResponse, GovernanceState,
+    HouseholdsResponse, KnowledgeAction, KnowledgeRequest, KnowledgeResponse, LocalCombatAction,
+    LocalCombatRequest, LocalCombatResponse, LocalCombatState, ProfessionAction, ProfessionKind,
+    ProfessionRequest, ProfessionResponse, ProfessionsResponse, SkillAction, SkillRequest,
+    SkillResponse, SkillStatus, SkillsResponse, WeaponKind,
 };
 
 const MAX_COMMAND_RETRIES: u8 = 3;
@@ -525,15 +525,11 @@ impl Phase4Client {
                 );
             }
             Phase4CommandResponse::Claim(response) => {
+                let message = claim_success_message(response.claim.as_ref());
                 if current {
                     self.claims = Some(response.claims);
                 }
-                phase4_notice(
-                    response.accepted,
-                    response.reason,
-                    "The land registry updated the lease lifecycle.",
-                    notices,
-                );
+                phase4_notice(response.accepted, response.reason, &message, notices);
             }
             Phase4CommandResponse::Profession(response) => {
                 if current {
@@ -580,6 +576,43 @@ impl Phase4Client {
 
     pub(super) fn summary(&self) -> String {
         summary::render(self)
+    }
+}
+
+fn claim_success_message(claim: Option<&ClaimRecord>) -> String {
+    let Some(claim) = claim else {
+        return "The land registry recorded the lease lifecycle.".to_owned();
+    };
+    let plot = format!("({}, {})", claim.position.x, claim.position.y);
+    match claim.status {
+        ClaimLifecycleStatus::Requested => {
+            format!("Lease requested for plot {plot}; approval remains with the Town hall.")
+        }
+        ClaimLifecycleStatus::Active => format!(
+            "Lease active at plot {plot}; building access is open for {} days.",
+            claim.lease_days
+        ),
+        ClaimLifecycleStatus::Renewed => format!(
+            "Lease renewed at plot {plot}; another {} days are recorded.",
+            claim.lease_days
+        ),
+        ClaimLifecycleStatus::Transferred => format!(
+            "Lease transferred to {}; plot {plot} keeps its recognised history.",
+            claim.owner_name.as_deref().unwrap_or("the receiving resident")
+        ),
+        ClaimLifecycleStatus::Inherited => format!(
+            "Lease inherited by {}; plot {plot} keeps its recognised history.",
+            claim.owner_name.as_deref().unwrap_or("the receiving resident")
+        ),
+        ClaimLifecycleStatus::Abandoned => format!(
+            "Lease abandoned at plot {plot}; use the Registry control to reclaim it after the grace period."
+        ),
+        ClaimLifecycleStatus::Expired => format!(
+            "Lease expired at plot {plot}; the registry is holding it through the reclamation grace period."
+        ),
+        ClaimLifecycleStatus::Reclaimed => format!(
+            "Lease reclaimed; plot {plot} is back in the available land ledger."
+        ),
     }
 }
 

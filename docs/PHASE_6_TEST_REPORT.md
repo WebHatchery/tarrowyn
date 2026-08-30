@@ -1699,3 +1699,13 @@ file-size check pass, and `publish.ps1` passes Windows/WebGL builds, packaging,
 Preview deployment, and catalog sync. No full workspace gate was repeated
 because this was a bounded client event-feedback slice, and no new external or
 deferred work was opened.
+
+Accepted Registry responses now explain the authoritative lease result: the
+plot coordinates and building-access duration for an active lease, the
+approval handoff for a request, the receiving resident for a transfer or
+inheritance, and the visible reclaim path for abandoned, expired, or reclaimed
+land. The focused claim-success-message regression passes, client clippy and
+the Rust file-size check pass, and `publish.ps1` passes Windows/WebGL builds,
+packaging, Preview deployment, and catalog sync. No full workspace gate was
+repeated because this was a bounded client Registry-feedback slice, and no
+new external or deferred work was opened.

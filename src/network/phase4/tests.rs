@@ -695,6 +695,29 @@ fn phase_four_error_summary_keeps_an_api_rejection_code() {
     );
 }
 
+#[test]
+fn claim_success_message_explains_status_and_recovery_path() {
+    let active = claim_for_test(
+        "active-lease",
+        Some("account-1"),
+        tarrowyn_protocol::ClaimLifecycleStatus::Active,
+    );
+    assert_eq!(
+        super::claim_success_message(Some(&active)),
+        "Lease active at plot (1, 1); building access is open for 90 days."
+    );
+
+    let abandoned = claim_for_test(
+        "abandoned-lease",
+        Some("account-1"),
+        tarrowyn_protocol::ClaimLifecycleStatus::Abandoned,
+    );
+    assert_eq!(
+        super::claim_success_message(Some(&abandoned)),
+        "Lease abandoned at plot (1, 1); use the Registry control to reclaim it after the grace period."
+    );
+}
+
 fn claim_for_test(
     claim_id: &str,
     owner_account_id: Option<&str>,
