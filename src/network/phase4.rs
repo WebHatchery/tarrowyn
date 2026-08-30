@@ -1,5 +1,6 @@
 use super::phase5::Phase5Client;
 use super::{is_transient_transport_error, NetworkNotice, REQUEST_TIMEOUT_SECONDS};
+use crate::network::WorldProjection;
 use macroquad_toolkit::net::{HttpClient, Pending};
 use std::collections::VecDeque;
 use tarrowyn_protocol::{
@@ -506,10 +507,14 @@ impl Phase4Client {
     fn apply_command(
         &mut self,
         response: Phase4CommandResponse,
+        projection: &WorldProjection,
+        response_server_tick: u64,
         response_cursor: Option<u64>,
         notices: &mut Vec<NetworkNotice>,
     ) {
-        let current = accept_projection_cursor(&mut self.projection_cursor, response_cursor);
+        let version_cursor = response_cursor.unwrap_or(projection.cursor);
+        let current = projection.response_is_current(response_server_tick, version_cursor)
+            && accept_projection_cursor(&mut self.projection_cursor, response_cursor);
         match response {
             Phase4CommandResponse::Governance(response) => {
                 if current {

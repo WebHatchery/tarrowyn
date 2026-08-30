@@ -113,7 +113,13 @@ impl Phase4Client {
                     self.command_retry_count = 0;
                     projection
                         .record_response_version(response.meta.server_tick, response.meta.cursor);
-                    self.apply_command(response.data, response.meta.cursor, notices);
+                    self.apply_command(
+                        response.data,
+                        projection,
+                        response.meta.server_tick,
+                        response.meta.cursor,
+                        notices,
+                    );
                 }
                 Err(error)
                     if is_transient_transport_error(&error)

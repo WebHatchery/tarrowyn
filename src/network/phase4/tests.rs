@@ -706,6 +706,50 @@ fn older_phase_four_projection_cannot_replace_newer_command_state() {
     ));
 }
 
+#[test]
+fn older_same_cursor_phase_four_command_cannot_replace_newer_ledger() {
+    let mut client = Phase4Client::new();
+    let current = ClaimsResponse {
+        claims: vec![claim_for_test(
+            "current-lease",
+            Some("account-1"),
+            tarrowyn_protocol::ClaimLifecycleStatus::Active,
+        )],
+        available_plots: Vec::new(),
+        lease_duration_days: 90,
+        cursor: 12,
+    };
+    client.claims = Some(current.clone());
+
+    let data = crate::data::GameData::load().expect("embedded game data should load");
+    let mut projection = WorldProjection::new(&data.config);
+    projection.server_tick = 8;
+    projection.cursor = 12;
+    let stale = ClaimsResponse {
+        claims: vec![claim_for_test(
+            "stale-lease",
+            Some("account-2"),
+            tarrowyn_protocol::ClaimLifecycleStatus::Requested,
+        )],
+        available_plots: Vec::new(),
+        lease_duration_days: 90,
+        cursor: 12,
+    };
+    let response = Phase4CommandResponse::Claim(tarrowyn_protocol::ClaimLifecycleResponse {
+        request_id: "stale-command".to_owned(),
+        accepted: true,
+        claim: None,
+        claims: stale,
+        reason: None,
+    });
+    let mut notices = Vec::new();
+
+    client.apply_command(response, &projection, 7, Some(12), &mut notices);
+
+    assert_eq!(client.claims, Some(current));
+    assert_eq!(notices.len(), 1);
+}
+
 fn claim_for_test(
     claim_id: &str,
     owner_account_id: Option<&str>,

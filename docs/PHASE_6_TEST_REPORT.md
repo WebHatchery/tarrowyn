@@ -1017,3 +1017,13 @@ and client clippy checks pass. The publisher check remains the runtime
 validation path; no full workspace gate was rerun because this is a bounded
 frontier client ordering maintenance slice. No new external or deferred work
 was opened.
+
+Phase 4 command responses now compare both server tick and event cursor against
+the root projection before replacing their bounded settlement ledgers. A late
+same-cursor command response can still show its outcome notice without
+rewinding a newer registry, governance, profession, knowledge, skill, or
+combat cache. The focused Phase 4 client tests (29 passed), direct formatting,
+diff, Rust file-size, and client clippy checks pass. The publisher check remains
+the runtime validation path; no full workspace gate was rerun because this is a
+bounded continuation of client cursor-ordering maintenance. No new external or
+deferred work was opened.
