@@ -1979,3 +1979,12 @@ regression passes, client clippy and the Rust file-size check pass, and
 catalog sync. No full workspace gate was repeated because this was a bounded
 frontier feedback correction, and no new external or deferred work was
 opened.
+
+The remaining frontier rejection branches now also leave visible fallback
+warnings: contract refusals identify the frontier contract, and pioneer
+refusals identify the pioneer action when no server reason is supplied. The
+focused client frontier rejection suite passes, client clippy and the Rust
+file-size check pass, and `publish.ps1` passes Windows/WebGL builds, packaging,
+Preview deployment, and catalog sync. No full workspace gate was repeated
+because this was a bounded frontier-feedback completion, and no new external
+or deferred work was opened.

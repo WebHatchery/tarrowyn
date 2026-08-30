@@ -186,6 +186,82 @@ fn frontier_rejection_without_a_reason_still_leaves_a_visible_notice() {
 }
 
 #[test]
+fn contract_rejection_without_a_reason_still_leaves_a_visible_notice() {
+    let contract = AdventurerContract {
+        contract_id: "brambleback-watch".to_owned(),
+        title: "Brambleback watch".to_owned(),
+        description: "A repeatable watch.".to_owned(),
+        target: tarrowyn_protocol::MonsterKind::Brambleback,
+        progress: 0,
+        required_progress: 3,
+        reward_gold: 8,
+        status: ContractStatus::Available,
+        completion_count: 0,
+        available_at_tick: 0,
+    };
+    let response = FrontierCommandResponse::Contract(ContractResponse {
+        request_id: "contract-rejected".to_owned(),
+        accepted: false,
+        contract,
+        player: tarrowyn_protocol::PlayerProjection {
+            account_id: "account-1".to_owned(),
+            character_id: "character-1".to_owned(),
+            display_name: "Traveller".to_owned(),
+            position: tarrowyn_protocol::Position { x: 8, y: 6 },
+            gold: 12,
+            field_tool_condition: 3,
+            field_weather: tarrowyn_protocol::FieldWeather::Clear,
+            field_pest_pressure: 0,
+            animal_condition: 10,
+            animal_max_condition: 10,
+            skill: 1,
+            reputation: 0,
+            adventurer_rank: tarrowyn_protocol::AdventurerRank::Unproven,
+            adventurer_credentials: Vec::new(),
+            inventory: tarrowyn_protocol::Inventory::default(),
+            weapon: WeaponKind::IronSword,
+            knocked_out: false,
+            injuries: 0,
+            recovery_cost: 0,
+        },
+        reason: None,
+    });
+    let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
+    let mut notices = Vec::new();
+
+    client
+        .frontier
+        .apply_command(response, &mut client.projection, &mut notices, true);
+
+    assert!(matches!(
+        notices.first(),
+        Some(NetworkNotice::Warning(message))
+            if message == "The frontier contract was not accepted."
+    ));
+}
+
+#[test]
+fn expedition_rejection_without_a_reason_still_leaves_a_visible_notice() {
+    let mut notices = Vec::new();
+
+    super::expedition_notice(
+        &ExpeditionResponse {
+            request_id: "expedition-rejected".to_owned(),
+            accepted: false,
+            expedition: None,
+            reason: None,
+        },
+        &mut notices,
+    );
+
+    assert!(matches!(
+        notices.first(),
+        Some(NetworkNotice::Warning(message))
+            if message == "The pioneer action was not accepted."
+    ));
+}
+
+#[test]
 fn homestead_success_message_explains_lease_state() {
     let claim = tarrowyn_protocol::LandClaim {
         claim_id: "homestead-1".to_owned(),

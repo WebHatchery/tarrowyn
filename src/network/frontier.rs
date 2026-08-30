@@ -383,8 +383,10 @@ impl FrontierClient {
                     notices.push(NetworkNotice::Success(contract_success_message(
                         &response.contract,
                     )));
-                } else if let Some(reason) = response.reason {
-                    notices.push(NetworkNotice::Warning(reason));
+                } else {
+                    notices.push(NetworkNotice::Warning(response.reason.unwrap_or_else(
+                        || "The frontier contract was not accepted.".to_owned(),
+                    )));
                 }
             }
             FrontierCommandResponse::Combat(response) => {
@@ -420,9 +422,12 @@ impl FrontierClient {
 
 fn expedition_notice(response: &ExpeditionResponse, notices: &mut Vec<NetworkNotice>) {
     if !response.accepted {
-        if let Some(reason) = &response.reason {
-            notices.push(NetworkNotice::Warning(reason.clone()));
-        }
+        notices.push(NetworkNotice::Warning(
+            response
+                .reason
+                .clone()
+                .unwrap_or_else(|| "The pioneer action was not accepted.".to_owned()),
+        ));
         return;
     }
     let Some(expedition) = response.expedition.as_ref() else {
