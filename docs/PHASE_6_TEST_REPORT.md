@@ -1452,3 +1452,15 @@ clippy, formatting, diff, and Rust file-size checks clean. No live database
 assertion was claimed because the ignored preview credentials remain
 unavailable; no full workspace gate was repeated for this isolated integrity
 check.
+
+The ignored local MySQL preview configuration was corrected from the stale
+`DB_USER` spelling to the documented `DB_USERNAME` key without changing its
+credential values. A password-safe `SELECT 1` succeeded, but the focused
+`scripts/verify_mysql.ps1` run stopped at readiness because the configured
+database contains legacy production refresh replay results without the current
+ownership mirror; the worker reported `production` integrity failure and failed
+closed as designed. No live persistence, restart, or restore assertion was
+claimed, and the configured database was not deleted or rewritten. A clean
+current snapshot or known-good restore remains required before rerunning the
+acceptance script; no full workspace gate was repeated for this configuration
+and environment-boundary check.
