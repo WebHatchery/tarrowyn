@@ -67,3 +67,16 @@ fn operational_health_names_the_failed_integrity_boundary() {
         .iter()
         .any(|failure| failure == "route_bounds"));
 }
+
+#[test]
+fn public_health_does_not_echo_the_backup_filesystem_path() {
+    let repository = super::super::super::WorldRepository::new(ServerConfig::default());
+    repository
+        .state
+        .lock()
+        .expect("repository lock")
+        .phase6
+        .last_backup_path = Some("C:\\private\\tarrowyn\\secret.backup".to_owned());
+
+    assert!(repository.ops_health().data.last_backup_path.is_none());
+}

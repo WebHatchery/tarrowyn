@@ -89,8 +89,10 @@ fails the drill.
    cross-references across the world, regional, and production-identity
    ledgers. When it is false, use the fixed, non-sensitive `integrity_failures`
    codes to identify the affected boundary before choosing restore or audited
-   support repair. Do not admit traffic while readiness is degraded, and do
-   not edit a live snapshot in place.
+   support repair. The public response intentionally omits the configured
+   backup filesystem path; use the deployment operator's configured path and
+   server logs when locating a backup. Do not admit traffic while readiness is
+   degraded, and do not edit a live snapshot in place.
 2. Check authenticated `/v1/ops/metrics` for the measured average and latest
    tick durations, `tick_drift_count`, regional event backlog, and
    `alert_flags`. Also watch average price index, scarce goods, NPC fallback

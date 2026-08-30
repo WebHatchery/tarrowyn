@@ -1342,3 +1342,11 @@ tests pass (2), including the exact-one-origin-header regression, and
 server-package clippy plus workspace formatting remain clean. No full
 workspace or publisher gate was repeated because this is an isolated HTTP
 header fix; no new external or deferred work was opened.
+
+The public readiness projection now omits the configured backup filesystem
+path while retaining the last successful backup tick; the client does not
+need deployment paths to show maintenance or recovery status. The focused
+operations regression passes (1), with server-package clippy, formatting, and
+diff checks clean. No full workspace or publisher gate was repeated because
+this is an isolated public-health privacy fix; no new external or deferred
+work was opened.

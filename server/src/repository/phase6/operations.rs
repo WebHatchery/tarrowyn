@@ -138,7 +138,9 @@ impl WorldRepository {
                 storage_version: super::super::STORAGE_VERSION,
                 protocol_version: PROTOCOL_VERSION.to_owned(),
                 last_backup_tick: state.phase6.last_backup_tick,
-                last_backup_path: state.phase6.last_backup_path.clone(),
+                // Readiness is public so clients can detect maintenance; do not
+                // disclose the deployment's configured filesystem path there.
+                last_backup_path: None,
                 integrity_ok,
                 integrity_failures,
                 persistence_error: persistence_failed.then(|| {

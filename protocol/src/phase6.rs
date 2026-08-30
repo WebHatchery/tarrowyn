@@ -157,6 +157,7 @@ pub struct OpsHealthResponse {
     pub storage_version: u32,
     pub protocol_version: String,
     pub last_backup_tick: Option<u64>,
+    /// Kept for wire compatibility; public readiness never echoes a filesystem path.
     pub last_backup_path: Option<String>,
     pub integrity_ok: bool,
     #[serde(default)]
