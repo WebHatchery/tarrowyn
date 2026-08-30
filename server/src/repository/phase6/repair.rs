@@ -18,6 +18,7 @@ impl WorldRepository {
         request: SupportRepairRequest,
     ) -> Result<ApiResponse<SupportRepairResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
+        self.expire_and_persist_sessions(&mut state);
         let actor_key = super::super::authenticate(&mut state, token, &self.config)?;
         validate_request_id(&request.request_id)?;
         let actor = state

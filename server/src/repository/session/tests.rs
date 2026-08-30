@@ -52,7 +52,7 @@ fn guest_session_expires_at_the_configured_tick_boundary() {
 }
 
 #[test]
-fn expired_read_persists_presence_before_rejecting_access() {
+fn expired_account_read_persists_presence_before_rejecting_access() {
     let path = std::env::temp_dir().join(format!(
         "tarrowyn-session-expiry-read-{}.json",
         std::process::id()
@@ -77,7 +77,7 @@ fn expired_read_persists_presence_before_rejecting_access() {
         state.tick = repository.config.session_ttl_ticks();
     }
 
-    let error = repository.world(&session.account_token).unwrap_err();
+    let error = repository.account(&session.account_token).unwrap_err();
     assert_eq!(error.status, 401);
     assert_eq!(error.error.code, "unauthorized");
 

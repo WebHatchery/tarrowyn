@@ -2531,3 +2531,13 @@ The project `publish.ps1` Windows/WebGL build, packaging, Preview deployment,
 and catalog-sync checks pass. No full workspace gate was repeated because this
 was a bounded session-expiry persistence correction, and no new external or
 deferred work was opened.
+
+All ordinary access-token endpoints now sweep expired sessions through the
+same change-aware persistence boundary, including the Account, support,
+chronicle-search, moderation, and support-repair surfaces that previously
+authenticated directly. The focused `repository::session::tests` filter passes
+three tests; server-package formatting and clippy, `git diff --check`, and the
+Rust file-size scan pass. The project `publish.ps1` Windows/WebGL build,
+packaging, Preview deployment, and catalog-sync checks pass. No full workspace
+gate was repeated because this was a bounded access-endpoint session-boundary
+correction, and no new external or deferred work was opened.

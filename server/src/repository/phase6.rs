@@ -575,6 +575,7 @@ impl WorldRepository {
 
     pub fn account(&self, token: &str) -> Result<ApiResponse<AccountResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
+        self.expire_and_persist_sessions(&mut state);
         let key = authenticate(&mut state, token, &self.config)?;
         let identity = state.identities.get(&key).expect("identity exists");
         let production = state.phase6.accounts.get(&identity.account_id);
@@ -593,6 +594,7 @@ impl WorldRepository {
         request: AccountDeletionRequest,
     ) -> Result<ApiResponse<AccountDeletionResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
+        self.expire_and_persist_sessions(&mut state);
         validate_request_id(&request.request_id)?;
         let requested_account_id = validate_bounded_text(
             &request.account_id,
