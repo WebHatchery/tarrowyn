@@ -450,6 +450,30 @@ fn regional_cycle_reports_when_no_projection_action_is_ready() {
 }
 
 #[test]
+fn travel_controls_wait_for_one_queued_or_in_flight_command() {
+    let mut client = Phase5Client::new();
+    let request = tarrowyn_protocol::TravelRequest {
+        request_id: "travel-queued".to_owned(),
+        action: TravelAction::Start,
+        route_id: Some("north-pack-road".to_owned()),
+        travel_id: None,
+    };
+    client
+        .commands
+        .push_back(Phase5Command::Travel(request.clone()));
+
+    assert!(client.travel_command_pending());
+    assert!(!client.queue_cycle("travel"));
+    client.queue_travel_action("travel-duplicate".to_owned(), TravelAction::Interrupt);
+    assert_eq!(client.commands.len(), 1);
+
+    client.commands.clear();
+    client.in_flight_command = Some(Phase5Command::Travel(request));
+    assert!(client.travel_command_pending());
+    assert!(!client.queue_cycle("recover-travel"));
+}
+
+#[test]
 fn travel_control_waits_for_a_route_at_the_current_location() {
     let mut client = Phase5Client::new();
     client.region = Some(tarrowyn_protocol::RegionSnapshot {

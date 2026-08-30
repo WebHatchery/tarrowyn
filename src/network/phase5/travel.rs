@@ -28,6 +28,9 @@ impl Phase5Client {
     }
 
     pub(super) fn queue_travel(&mut self, request_id: String) {
+        if self.travel_command_pending() {
+            return;
+        }
         let Some(region) = self.region.as_ref() else {
             return;
         };
@@ -70,6 +73,9 @@ impl Phase5Client {
     }
 
     pub(super) fn queue_travel_action(&mut self, request_id: String, action: TravelAction) {
+        if self.travel_command_pending() {
+            return;
+        }
         let travel_id = self
             .region
             .as_ref()
