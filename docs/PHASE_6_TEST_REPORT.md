@@ -914,3 +914,11 @@ claim-lifecycle regression verifies the too-early path; server clippy,
 formatting, size, diff, and publisher checks pass. No full workspace gate was
 rerun because this is a bounded Phase 4 lease-rule maintenance slice. No new
 external or deferred work was opened.
+
+The claim grace boundary is now enforced by the explicit lifecycle command as
+well as the authoritative tick path, so a reclaim request cannot make an
+expired or abandoned plot available before its recorded interval. The focused
+Phase 4 lifecycle regression, server clippy, formatting, size, diff, and
+publisher checks pass. No full workspace gate was rerun because this remains a
+bounded lease-lifecycle maintenance slice. No new external or deferred work
+was opened.
