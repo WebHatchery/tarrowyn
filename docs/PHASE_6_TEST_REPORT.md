@@ -769,3 +769,10 @@ request with the newly issued production session. The focused account-lifecycle
 regression covers that replay boundary; server clippy, size, diff, and publisher
 checks are the validation scope for this Phase 6 identity-maintenance slice. No
 new external or deferred work was opened.
+
+Chronicle search now rejects a cursor ahead of the authoritative world with the
+same structured `cursor_ahead` boundary used by the other history endpoints.
+The focused chronicle-search regression covers the invalid cursor response;
+server clippy, size, diff, formatting, and publisher checks are the validation
+scope for this Phase 6 history-maintenance slice. No new external or deferred
+work was opened.

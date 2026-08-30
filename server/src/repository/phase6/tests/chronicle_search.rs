@@ -52,3 +52,26 @@ fn chronicle_search_rejects_unbounded_or_controlled_queries() {
         assert_eq!(error.error.code, "invalid_chronicle_query");
     }
 }
+
+#[test]
+fn chronicle_search_rejects_a_cursor_ahead_of_the_authoritative_world() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("chronicle-search-ahead".to_owned()),
+            reset: false,
+        })
+        .expect("guest session")
+        .data;
+    let ahead = {
+        let state = repository.state.lock().expect("repository lock");
+        state.cursor.saturating_add(1)
+    };
+
+    let error = repository
+        .chronicle_search(&session.account_token, "", ahead)
+        .expect_err("an ahead chronicle cursor should be rejected");
+
+    assert_eq!(error.status, 409);
+    assert_eq!(error.error.code, "cursor_ahead");
+}

@@ -314,6 +314,7 @@ impl WorldRepository {
     ) -> Result<ApiResponse<ChronicleSearchResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
         authenticate(&mut state, token, &self.config)?;
+        super::super::validate_event_cursor(&state, since, "chronicle search")?;
         let trimmed_query = query.trim();
         if trimmed_query.chars().count() > 80 || query.chars().any(char::is_control) {
             return Err(RepositoryError::new(
