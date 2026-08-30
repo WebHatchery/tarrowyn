@@ -2972,3 +2972,12 @@ file-size scan. The project `publish.ps1` Windows/WebGL build, packaging,
 Preview deployment, and catalog-sync checks pass. No full workspace gate was
 repeated because this was a bounded offline-layout correction, and no new
 external or deferred work was opened.
+
+The regional inspection modal now preserves the visible `Reconnect` and
+`Offline fixture` recovery actions while filtering out unrelated map and
+sidebar commands. The focused `ui::tests` slice passes (5 tests), along with
+client-package formatting and clippy, `git diff --check`, and the Rust
+file-size scan. The project `publish.ps1` Windows/WebGL build, packaging,
+Preview deployment, and catalog-sync checks pass. No full workspace gate was
+repeated because this was a bounded regional-modal touch-recovery correction,
+and no new external or deferred work was opened.

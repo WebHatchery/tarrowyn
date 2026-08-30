@@ -64,20 +64,7 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
     draw_footer(&ctx);
 
     if ctx.regional_inspection.is_some() {
-        actions.retain(|action| {
-            matches!(action, UiAction::RegionalEvent(_))
-                || matches!(
-                    action,
-                    UiAction::Interact(id)
-                        if matches!(
-                            id.as_str(),
-                            "region-details"
-                                | "route-repair"
-                                | "route-escort"
-                                | "route-improve"
-                        )
-                )
-        });
+        actions.retain(regional_inspection_action_allowed);
     }
     if ctx.skill_selection_open {
         actions.retain(|action| {
@@ -107,6 +94,19 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
 
 fn is_recovery_action(action: &UiAction) -> bool {
     matches!(action, UiAction::Reconnect | UiAction::UseOffline)
+}
+
+fn regional_inspection_action_allowed(action: &UiAction) -> bool {
+    matches!(action, UiAction::RegionalEvent(_))
+        || matches!(
+            action,
+            UiAction::Interact(id)
+                if matches!(
+                    id.as_str(),
+                    "region-details" | "route-repair" | "route-escort" | "route-improve"
+                )
+        )
+        || is_recovery_action(action)
 }
 
 fn draw_header(ctx: &UiContext<'_>) {

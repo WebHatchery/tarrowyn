@@ -56,3 +56,16 @@ fn modal_filters_keep_recovery_controls_touchable() {
         "farming".to_owned()
     )));
 }
+
+#[test]
+fn regional_inspection_preserves_recovery_controls() {
+    assert!(regional_inspection_action_allowed(&UiAction::Reconnect));
+    assert!(regional_inspection_action_allowed(&UiAction::UseOffline));
+    assert!(regional_inspection_action_allowed(&UiAction::Interact(
+        "route-repair".to_owned()
+    )));
+    assert!(regional_inspection_action_allowed(
+        &UiAction::RegionalEvent("Repair the road".to_owned())
+    ));
+    assert!(!regional_inspection_action_allowed(&UiAction::Move(1, 0)));
+}
