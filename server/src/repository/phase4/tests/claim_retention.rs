@@ -98,6 +98,43 @@ fn claim_history_evicts_reclaimed_rows_before_requesting_new_land() {
 }
 
 #[test]
+fn rejected_claim_does_not_evict_history_when_no_plot_is_free() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = guest(&repository, "phase4-claim-rejected-history");
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state.phase4.claims = (0..super::super::MAX_CLAIMS).map(reclaimed_claim).collect();
+        state.phase4.available_plots.clear();
+    }
+
+    let rejected = repository
+        .claim_lifecycle(
+            &session.account_token,
+            ClaimLifecycleRequest {
+                request_id: "claim-rejected-history".to_owned(),
+                action: ClaimLifecycleAction::Request,
+                claim_id: None,
+                target_account_id: None,
+            },
+        )
+        .expect("missing plot should return a response")
+        .data;
+
+    assert!(!rejected.accepted);
+    assert!(rejected
+        .reason
+        .as_deref()
+        .is_some_and(|reason| reason.contains("No recognised plot is free")));
+    let state = repository.state.lock().expect("repository lock");
+    assert_eq!(state.phase4.claims.len(), super::super::MAX_CLAIMS);
+    assert!(state
+        .phase4
+        .claims
+        .iter()
+        .any(|claim| claim.claim_id == "reclaimed-claim-0"));
+}
+
+#[test]
 fn claim_id_stays_at_the_numeric_ceiling() {
     let repository = WorldRepository::new(ServerConfig::default());
     let session = guest(&repository, "claim-id-ceiling");

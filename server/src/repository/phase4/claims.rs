@@ -70,12 +70,26 @@ impl super::super::WorldRepository {
                 }
             }
             ClaimLifecycleAction::Request => {
-                if !claim_room(&mut state.phase4.claims) {
+                let claim_has_room = state.phase4.claims.len() < super::MAX_CLAIMS
+                    || state
+                        .phase4
+                        .claims
+                        .iter()
+                        .any(|claim| claim.status == ClaimLifecycleStatus::Reclaimed);
+                if !claim_has_room {
                     response.reason = Some(
                         "The claim ledger is full; wait for a reclaimed history row before requesting another plot."
                             .to_owned(),
                     );
-                } else if let Some(position) = state.phase4.available_plots.pop() {
+                } else if state.phase4.available_plots.is_empty() {
+                    response.reason = Some("No recognised plot is free; inspect abandoned opportunities or contribute to a public work.".to_owned());
+                } else {
+                    debug_assert!(claim_room(&mut state.phase4.claims));
+                    let position = state
+                        .phase4
+                        .available_plots
+                        .pop()
+                        .expect("available plot checked above");
                     let actor_name = account_name(&state, &key);
                     let claim = ClaimRecord {
                         claim_id: format!("lease-{}", state.phase4.next_claim_id),
@@ -112,8 +126,6 @@ impl super::super::WorldRepository {
                             actor_name
                         ),
                     );
-                } else {
-                    response.reason = Some("No recognised plot is free; inspect abandoned opportunities or contribute to a public work.".to_owned());
                 }
             }
             ClaimLifecycleAction::Approve => {

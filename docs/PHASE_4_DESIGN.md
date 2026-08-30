@@ -134,7 +134,8 @@ The land registry retains at most 128 claim records. Reclaimed claim history
 makes room for a new request, while active, requested, expired, and abandoned
 claims remain addressable until their lifecycle can safely continue. If every
 retained row is still live, a new request is rejected before a free plot is
-removed from the available-land ledger.
+removed from the available-land ledger. A request with no recognised plot
+available also leaves reclaimed history intact.
 
 The public decision and tax ledgers retain their newest 64 records, and the
 infrastructure view retains its newest 32 records, so a bounded projection

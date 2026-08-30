@@ -443,6 +443,11 @@ request therefore leaves the retained service ledger unchanged; the focused
 service-order retention suite covers that rejection beside the existing
 room-making and full-board paths.
 
+Claim creation now checks for a recognised free plot before evicting reclaimed
+history to make room. A failed no-plot request therefore leaves the land
+registry unchanged; the focused claim-retention suite covers that rejection
+beside reclaimed-history eviction and full-live-ledger blocking.
+
 Phase 4 land-registry integrity now also rejects claim and available-plot
 positions outside the configured world bounds, while retaining dynamic plot
 layouts for migration compatibility. Two focused regressions cover malformed
