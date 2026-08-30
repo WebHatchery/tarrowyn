@@ -13,6 +13,7 @@ pub(super) fn recover_from_cursor_boundary(
     client: &mut OnlineClient,
     notices: &mut Vec<NetworkNotice>,
 ) {
+    client.had_world = false;
     reset_projection_history(&mut client.projection);
     client.pending_state = None;
     client.pending_events = None;

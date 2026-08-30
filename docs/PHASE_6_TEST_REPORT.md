@@ -2562,3 +2562,13 @@ file-size scan pass. The project `publish.ps1` Windows/WebGL build, packaging,
 Preview deployment, and catalog-sync checks pass. No full workspace gate was
 repeated because this was a bounded client session-reset correction, and no
 new external or deferred work was opened.
+
+Cursor-restore recovery now clears the client’s loaded-world marker together
+with cursor-derived projections, so a failed replacement snapshot is shown as
+unavailable rather than as a degraded copy of cleared state. The focused binary
+test `network::cursor::tests::restore_recovery_discards_stale_history_and_schedules_state_reload`
+passes; client-package formatting and clippy, `git diff --check`, and the Rust
+file-size scan pass. The project `publish.ps1` Windows/WebGL build, packaging,
+Preview deployment, and catalog-sync checks pass. No full workspace gate was
+repeated because this was a bounded client cursor-recovery correction, and no
+new external or deferred work was opened.

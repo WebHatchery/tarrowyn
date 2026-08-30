@@ -46,6 +46,7 @@ fn cursor_boundary_detection_accepts_shared_api_and_native_status_shapes() {
 #[test]
 fn restore_recovery_discards_stale_history_and_schedules_state_reload() {
     let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
+    client.had_world = true;
     client.projection.cursor = 99;
     client.projection.server_tick = 44;
     client.projection.world.crops.set(
@@ -80,6 +81,7 @@ fn restore_recovery_discards_stale_history_and_schedules_state_reload() {
     );
     assert!(client.projection.world.reachable.is_empty());
     assert_eq!(client.state_refresh, 0.0);
+    assert!(!client.had_world);
     assert!(client.pending_state.is_none());
     assert!(client.pending_events.is_none());
     assert!(client.status_message.contains("reloading"));
