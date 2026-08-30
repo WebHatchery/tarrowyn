@@ -1988,3 +1988,13 @@ file-size check pass, and `publish.ps1` passes Windows/WebGL builds, packaging,
 Preview deployment, and catalog sync. No full workspace gate was repeated
 because this was a bounded frontier-feedback completion, and no new external
 or deferred work was opened.
+
+Successful account linking now invalidates every in-flight regional projection
+and clears cached guest regional data before the linked session refreshes. This
+prevents delayed guest market, map, household, event, settlement, law, or
+account reads from surviving the identity boundary, and schedules an immediate
+authoritative reload. The focused client account-lifecycle regression passes,
+client clippy and the Rust file-size check pass, and `publish.ps1` passes
+Windows/WebGL builds, packaging, Preview deployment, and catalog sync. No full
+workspace gate was repeated because this was a bounded regional identity-cache
+correction, and no new external or deferred work was opened.

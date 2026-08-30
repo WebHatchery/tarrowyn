@@ -176,7 +176,7 @@ impl Phase5Client {
                 self.refresh_retry_count = 0;
                 self.linked_account = Some(response.clone());
                 self.account = None;
-                self.pending_account = None;
+                self.reset_identity_projections();
                 notices.push(NetworkNotice::Success(
                     "Account linked; the character boundary and session are now production-ready."
                         .to_owned(),

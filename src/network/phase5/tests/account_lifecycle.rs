@@ -30,7 +30,20 @@ fn linked_production_session_replaces_the_guest_projection() {
 #[test]
 fn linking_discards_an_in_flight_guest_account_projection() {
     let mut client = Phase5Client::new();
+    client.pending_region = Some(Pending::failed("guest region still in flight"));
+    client.pending_settlements = Some(Pending::failed("guest settlements still in flight"));
+    client.pending_households = Some(Pending::failed("guest households still in flight"));
+    client.pending_market = Some(Pending::failed("guest market still in flight"));
+    client.pending_events = Some(Pending::failed("guest events still in flight"));
+    client.pending_law = Some(Pending::failed("guest law still in flight"));
     client.pending_account = Some(Pending::failed("guest account still in flight"));
+    client.market = Some(tarrowyn_protocol::MarketSnapshot {
+        orders: Vec::new(),
+        stock_notes: Vec::new(),
+        prices: Vec::new(),
+        cursor: 8,
+    });
+    client.refresh_timer = 4.0;
     let response = Phase5CommandResponse::Link(AuthLinkResponse {
         request_id: "link-race".to_owned(),
         provider: "webhatchery-identity-oidc".to_owned(),
@@ -50,8 +63,16 @@ fn linking_discards_an_in_flight_guest_account_projection() {
 
     client.apply_command(response, None, &mut api, &mut notices);
 
+    assert!(client.pending_region.is_none());
+    assert!(client.pending_settlements.is_none());
+    assert!(client.pending_households.is_none());
+    assert!(client.pending_market.is_none());
+    assert!(client.pending_events.is_none());
+    assert!(client.pending_law.is_none());
     assert!(client.pending_account.is_none());
     assert!(client.account.is_none());
+    assert!(client.market.is_none());
+    assert_eq!(client.refresh_timer, 0.0);
     assert_eq!(client.refresh_token.as_deref(), Some("prod-refresh-1"));
 }
 
