@@ -115,6 +115,28 @@ fn travel_success_message_explains_progress_and_risk() {
 }
 
 #[test]
+fn travel_success_message_keeps_the_recovery_note_after_resuming() {
+    let travel = tarrowyn_protocol::TravelState {
+        travel_id: "travel-recovered".to_owned(),
+        route_id: "north-pack-road".to_owned(),
+        origin_location_id: "hearth".to_owned(),
+        destination_location_id: "saltmere".to_owned(),
+        departure_tick: 4,
+        eta_tick: 8,
+        progress: 35,
+        risk_percent: 18,
+        status: TravelStatus::Travelling,
+        interruption: Some("A route warning stopped the caravan safely.".to_owned()),
+        recovery_note: Some("The route crew found a safe continuation.".to_owned()),
+    };
+
+    assert_eq!(
+        super::super::commands::travel_success_message(Some(&travel), "hearth"),
+        "Journey underway to saltmere • 35% complete • 18% risk. The route crew found a safe continuation."
+    );
+}
+
+#[test]
 fn travel_success_message_names_arrival_and_recovery_control() {
     let mut travel = tarrowyn_protocol::TravelState {
         travel_id: "travel-1".to_owned(),

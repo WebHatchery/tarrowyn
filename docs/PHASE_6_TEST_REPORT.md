@@ -1806,3 +1806,11 @@ check pass, and `publish.ps1` passes Windows/WebGL builds, packaging, Preview
 deployment, and catalog sync. No full workspace gate was repeated because
 this was a bounded client travel-recovery-feedback slice, and no new external
 or deferred work was opened.
+
+Resumed travel notices now preserve the authoritative recovery note, such as
+the route crew's safe continuation, alongside journey progress and risk. The
+focused resumed-travel regression passes, client clippy and the Rust file-size
+check pass, and `publish.ps1` passes Windows/WebGL builds, packaging, Preview
+deployment, and catalog sync. No full workspace gate was repeated because
+this was a bounded client travel-recovery-feedback slice, and no new external
+or deferred work was opened.

@@ -24,10 +24,19 @@ pub(super) fn travel_success_message(travel: Option<&TravelState>, location_id: 
         return format!("The journey ledger is ready at {location_id}.");
     };
     match travel.status {
-        TravelStatus::Travelling => format!(
-            "Journey underway to {} • {}% complete • {}% risk.",
-            travel.destination_location_id, travel.progress, travel.risk_percent
-        ),
+        TravelStatus::Travelling => {
+            let message = format!(
+                "Journey underway to {} • {}% complete • {}% risk.",
+                travel.destination_location_id, travel.progress, travel.risk_percent
+            );
+            travel
+                .recovery_note
+                .as_deref()
+                .map(|note| note.trim_end_matches('.'))
+                .filter(|note| !note.trim().is_empty())
+                .map(|note| format!("{message} {note}."))
+                .unwrap_or(message)
+        }
         TravelStatus::Interrupted => travel
             .interruption
             .as_deref()
