@@ -32,10 +32,7 @@ impl Phase5Client {
     }
 }
 
-fn route_action_selectable(
-    status: tarrowyn_protocol::RouteStatus,
-    action: RouteAction,
-) -> bool {
+fn route_action_selectable(status: tarrowyn_protocol::RouteStatus, action: RouteAction) -> bool {
     match action {
         RouteAction::Repair => status != tarrowyn_protocol::RouteStatus::Operational,
         RouteAction::Escort => true,
