@@ -44,15 +44,16 @@ online source of truth.
 
 ## Verify three clients
 
-The deterministic repository fixtures run with:
+At a major milestone, the complete deterministic repository suite runs with:
 
 ```powershell
 cargo test --workspace
 ```
 
-The HTTP acceptance pass starts one server, creates three guest identities,
-checks shared presence and server collision rejection, exchanges ordered chat,
-and confirms the world clock advances independently of request count:
+For this focused HTTP acceptance pass, use the harness below. It starts one
+server, creates three guest identities, checks shared presence and server
+collision rejection, exchanges ordered chat, and confirms the world clock
+advances independently of request count:
 
 ```powershell
 .\scripts\verify_three_clients.ps1
