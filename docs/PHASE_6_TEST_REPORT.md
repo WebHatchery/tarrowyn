@@ -1754,3 +1754,13 @@ the Rust file-size check pass, and `publish.ps1` passes Windows/WebGL builds,
 packaging, Preview deployment, and catalog sync. No full workspace gate was
 repeated because this was a bounded client Registry-feedback slice, and no
 new external or deferred work was opened.
+
+The completed interaction-feedback milestone received its full workspace gate.
+The first run exposed an outdated farming backpressure fixture that supplied
+fields without a growing crop for a Tend action; adding that valid crop kept
+the test aligned with the action-aware selector. The focused regression then
+passed, followed by `cargo test --workspace` with 15 protocol, 416 server, and
+133 client tests plus asset-registry, code-size, and doc tests all passing;
+`cargo clippy --workspace --all-targets --all-features -- -D warnings` also
+passed. This is the first full gate in the current feedback sweep; no new
+external or deferred work was opened.

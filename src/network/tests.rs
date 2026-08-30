@@ -455,6 +455,13 @@ fn farming_backpressure_does_not_claim_pending_confirmation() {
     client.state = ConnectionState::Online;
     client.projection.world.tiles = FlatGrid::new(3, 2, TileKind::Field);
     client.projection.player_position = TilePos::new(1, 1);
+    client.projection.world.crops.set(
+        TilePos::new(1, 0),
+        Some(crate::state::CropState {
+            kind: crate::state::CropKind::Turnip,
+            stage: 1,
+        }),
+    );
     for index in 0..super::queue::MAX_PENDING_COMMANDS {
         client.farming_queue.push_back(FarmingRequest {
             request_id: format!("queued-{index}"),
