@@ -149,6 +149,28 @@ function Assert-MySqlPrerequisites {
     )
     $result = Invoke-MySql $mysql $connectionArguments
     Assert-True (($result -join "").Trim() -eq "1") "the configured MySQL connection did not answer SELECT 1"
+    Assert-MySqlRestorePrivileges $mysql
+}
+
+function Assert-MySqlRestorePrivileges([string]$mysql) {
+    $probeDatabase = "tarrowyn_restore_probe_${PID}_$([guid]::NewGuid().ToString('N').Substring(0, 8))"
+    $connectionArguments = @(
+        "--host=$env:DB_HOST", "--port=$env:DB_PORT", "--user=$env:DB_USERNAME",
+        "--batch", "--skip-column-names", "--silent"
+    )
+    $created = $false
+    try {
+        try {
+            Invoke-MySql $mysql ($connectionArguments + "--execute=CREATE DATABASE IF NOT EXISTS $probeDatabase CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci") | Out-Null
+            $created = $true
+        } catch {
+            throw "MySQL acceptance failed: the configured account cannot provision the disposable restore database required by this acceptance script; grant CREATE/DROP DATABASE or provide an isolated restore target. $($_.Exception.Message)"
+        }
+    } finally {
+        if ($created) {
+            Invoke-MySql $mysql ($connectionArguments + "--execute=DROP DATABASE IF EXISTS $probeDatabase") | Out-Null
+        }
+    }
 }
 
 function Invoke-NativeDatabaseRestore([string]$temporaryRoot, [string]$nonce) {

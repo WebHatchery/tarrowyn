@@ -39,10 +39,11 @@ For a configured local MySQL preview, run:
 .\scripts\verify_mysql.ps1
 ```
 
-The checker first resolves `mysql.exe` and `mysqldump.exe` and runs a
-password-safe `SELECT 1` against the configured preview. Missing tools or
-rejected credentials fail before the preview server starts, so a readiness
-timeout does not conceal a local database dependency problem.
+The checker first resolves `mysql.exe` and `mysqldump.exe`, runs a password-safe
+`SELECT 1`, and probes creation and removal of one uniquely named disposable
+restore database. Missing tools, rejected credentials, or insufficient
+`CREATE/DROP DATABASE` permission fail before the preview server starts, so a
+readiness timeout does not conceal a local database dependency problem.
 
 The script uses a separate HTTP port and temporary JSON backup, adds uniquely
 named guest and linked production identities to the configured preview world,
