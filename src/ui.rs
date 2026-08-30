@@ -60,7 +60,13 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
                 || matches!(
                     action,
                     UiAction::Interact(id)
-                        if matches!(id.as_str(), "region-details" | "route-escort" | "route-improve")
+                        if matches!(
+                            id.as_str(),
+                            "region-details"
+                                | "route-repair"
+                                | "route-escort"
+                                | "route-improve"
+                        )
                 )
         });
     }

@@ -1,4 +1,5 @@
 use super::*;
+use tarrowyn_protocol::{RegionSnapshot, RouteStatus};
 
 pub fn combat_side_control(
     combat: Option<&tarrowyn_protocol::LocalCombatState>,
@@ -51,8 +52,18 @@ pub fn draw_regional_inspection(ctx: &UiContext<'_>, mouse: Vec2, actions: &mut 
         28.0,
         mouse,
         &[
-            ("route-escort", "Escort road", true, ButtonTone::Positive),
-            ("route-improve", "Improve road", true, ButtonTone::Primary),
+            (
+                "route-escort",
+                "Escort road",
+                has_open_local_route(ctx.regional_region),
+                ButtonTone::Positive,
+            ),
+            (
+                "route-improve",
+                "Improve road",
+                has_open_local_route(ctx.regional_region),
+                ButtonTone::Primary,
+            ),
         ],
         ctx,
         actions,
@@ -66,6 +77,16 @@ pub fn draw_regional_inspection(ctx: &UiContext<'_>, mouse: Vec2, actions: &mut 
     ) {
         actions.push(UiAction::Interact("region-details".to_owned()));
     }
+}
+
+pub(super) fn has_open_local_route(region: Option<&RegionSnapshot>) -> bool {
+    region.is_some_and(|region| {
+        region.routes.iter().any(|route| {
+            (route.origin_location_id == region.player_location_id
+                || route.destination_location_id == region.player_location_id)
+                && route.status != RouteStatus::Closed
+        })
+    })
 }
 
 fn draw_event_choices(panel: Rect, choices: &[String], mouse: Vec2, actions: &mut Vec<UiAction>) {

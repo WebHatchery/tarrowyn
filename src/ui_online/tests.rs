@@ -72,3 +72,36 @@ fn skill_selection_keeps_roots_open_and_advanced_arts_hidden() {
     assert!(!super::panels::skill_practice_choice(&advanced));
     assert!(!super::panels::skill_practice_choice(&mastered));
 }
+
+#[test]
+fn regional_route_actions_close_when_every_local_route_is_closed() {
+    let region = tarrowyn_protocol::RegionSnapshot {
+        region_id: "hearthlands".to_owned(),
+        season: "thaw".to_owned(),
+        calendar_day: 1,
+        locations: Vec::new(),
+        routes: vec![tarrowyn_protocol::RouteRecord {
+            route_id: "closed-road".to_owned(),
+            name: "Closed Road".to_owned(),
+            origin_location_id: "hearth".to_owned(),
+            destination_location_id: "saltmere".to_owned(),
+            transport: "caravan".to_owned(),
+            length: 4,
+            risk_percent: 60,
+            condition: 20,
+            capacity: 1,
+            travel_ticks: 4,
+            repair_cost: 8,
+            status: tarrowyn_protocol::RouteStatus::Closed,
+            last_action_tick: 0,
+            note: "The road is closed.".to_owned(),
+        }],
+        visible_settlements: Vec::new(),
+        player_location_id: "hearth".to_owned(),
+        travel: None,
+        interest_radius: 12,
+        cursor: 0,
+    };
+
+    assert!(!super::panels::has_open_local_route(Some(&region)));
+}

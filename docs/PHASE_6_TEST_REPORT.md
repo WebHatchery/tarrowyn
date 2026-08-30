@@ -1079,3 +1079,12 @@ formatting, diff, and Rust file-size checks pass. The publisher check remains
 the runtime validation path; no full workspace gate was rerun because this is a
 bounded Phase 5 client selector maintenance slice. No new external or deferred
 work was opened.
+
+Regional inspection now preserves the sidebar Repair action while its detail
+panel is open, and disables Escort and Improve when the player's local routes
+are all Closed. This keeps touch controls aligned with the client route
+selectors and the server's recovery boundary. The focused online UI tests (4
+passed), client clippy, direct formatting, diff, and Rust file-size checks pass.
+The publisher check remains the runtime validation path; no full workspace gate
+was rerun because this is a bounded regional inspection affordance slice. No
+new external or deferred work was opened.
