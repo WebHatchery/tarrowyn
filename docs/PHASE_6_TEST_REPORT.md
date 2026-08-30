@@ -1610,3 +1610,10 @@ filter passes (10), the client online UI suite passes (8), and `publish.ps1`
 passes Windows/WebGL builds, packaging, Preview deployment, and catalog sync.
 No full workspace gate was repeated because this was a bounded recovery-copy
 consistency slice, and no new external or deferred work was opened.
+
+The PowerShell content gate now validates the skill manifest's supported
+families, depth bounds, root practice paths, prerequisite references and
+duplicates, advanced qualifying requirements, and practice-key references in
+addition to its existing text and ID checks. The focused `validate_content.ps1`
+run passes against the current catalogue, with no Rust or workspace-wide test
+gate repeated because this was a release-content validation slice.

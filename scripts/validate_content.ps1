@@ -55,6 +55,55 @@ function Assert-RequiredRecordIds([string]$label, [object[]]$records, [string[]]
     }
 }
 
+function Assert-SkillRecords([object[]]$records) {
+    $records = @($records)
+    $skillIds = @($records | ForEach-Object { [string]$_.id })
+    $families = @("combat", "magic", "gathering", "farming", "production", "social")
+    foreach ($skill in $records) {
+        $skillId = [string]$skill.id
+        if ($families -notcontains [string]$skill.family) {
+            throw "Skill $skillId must use a supported family."
+        }
+        $depth = [int]$skill.depth
+        if ($depth -lt 1 -or $depth -gt 5) {
+            throw "Skill $skillId must use a depth from one through five."
+        }
+        $prerequisites = @($skill.prerequisites)
+        $prerequisiteIds = @($prerequisites | ForEach-Object { [string]$_ })
+        if (@($prerequisiteIds | Where-Object { [string]::IsNullOrWhiteSpace($_) }).Count -gt 0) {
+            throw "Skill $skillId cannot contain an empty prerequisite."
+        }
+        $duplicatePrerequisites = @($prerequisiteIds | Group-Object | Where-Object Count -gt 1)
+        if ($duplicatePrerequisites.Count -gt 0) {
+            throw "Skill $skillId cannot repeat a prerequisite: $($duplicatePrerequisites.Name -join ', ')."
+        }
+        foreach ($prerequisite in $prerequisiteIds) {
+            if ($skillIds -notcontains $prerequisite) {
+                throw "Skill $skillId names an unknown prerequisite: $prerequisite."
+            }
+        }
+
+        $practiceKey = [string]$skill.practice_key
+        if (-not [string]::IsNullOrWhiteSpace($practiceKey) -and $skillIds -notcontains $practiceKey) {
+            throw "Skill $skillId names an unknown practice_key: $practiceKey."
+        }
+        if ($depth -eq 1) {
+            if (-not [bool]$skill.directly_teachable -or $practiceKey -ne $skillId -or $prerequisiteIds.Count -ne 0) {
+                throw "Root skill $skillId needs a direct practice path and no prerequisites."
+            }
+        } else {
+            $qualifyingEvent = [string]$skill.qualifying_event
+            $qualifyingCount = [int]$skill.qualifying_count
+            if ($prerequisiteIds.Count -eq 0 -or [string]::IsNullOrWhiteSpace($qualifyingEvent) -or $qualifyingCount -lt 1) {
+                throw "Advanced skill $skillId needs prerequisites, a qualifying event, and a positive qualifying_count."
+            }
+            if ($qualifyingEvent -eq "weapon_defeats" -and [int]$skill.minimum_per_prerequisite -lt 1) {
+                throw "Advanced skill $skillId needs a positive minimum_per_prerequisite."
+            }
+        }
+    }
+}
+
 function Get-Records([object]$document, [string]$property, [string]$label) {
     if ([string]::IsNullOrEmpty($property)) {
         if ($document -isnot [array]) { throw "$label manifest must be an array." }
@@ -192,7 +241,9 @@ $duplicateSettlementLocations = @($settlementRecords | ForEach-Object { [string]
 if ($duplicateSettlementLocations.Count -gt 0) {
     throw "Settlements cannot share a regional location: $($duplicateSettlementLocations.Name -join ', ')."
 }
-Assert-Records "skills" (Get-Records $manifests["skills.json"] "skills" "skills") @("name", "family", "description", "entry_hint") @()
+$skillRecords = Get-Records $manifests["skills.json"] "skills" "skills"
+Assert-Records "skills" $skillRecords @("name", "family", "description", "entry_hint") @()
+Assert-SkillRecords $skillRecords
 $skillsVersion = $manifests["skills.json"].version
 if ($skillsVersion -lt 1) { throw "Skills manifest needs a positive version." }
 
