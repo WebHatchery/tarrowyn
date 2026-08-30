@@ -41,7 +41,11 @@ pub(super) fn draw_map_overlay(ctx: &UiContext<'_>, view: &MapView, rect: Rect) 
         }
     }
 
+    let founded_position = successful_expedition(ctx).map(|expedition| expedition.outpost_position);
     for location in &region.locations {
+        if founded_position == Some(location.position) {
+            continue;
+        }
         let tile = TilePos::new(location.position.x, location.position.y);
         if rect.overlaps(&view.tile_rect(tile)) {
             draw_landmark(view, tile, &location.name, location_color(location.kind));
@@ -50,11 +54,13 @@ pub(super) fn draw_map_overlay(ctx: &UiContext<'_>, view: &MapView, rect: Rect) 
     draw_expedition_outpost(ctx, view, rect);
 }
 
-fn draw_expedition_outpost(ctx: &UiContext<'_>, view: &MapView, rect: Rect) {
-    let Some(expedition) = ctx
-        .expedition
+fn successful_expedition<'a>(ctx: &UiContext<'a>) -> Option<&'a tarrowyn_protocol::Expedition> {
+    ctx.expedition
         .filter(|expedition| expedition.status == tarrowyn_protocol::ExpeditionStatus::Succeeded)
-    else {
+}
+
+fn draw_expedition_outpost(ctx: &UiContext<'_>, view: &MapView, rect: Rect) {
+    let Some(expedition) = successful_expedition(ctx) else {
         return;
     };
     let tile = TilePos::new(expedition.outpost_position.x, expedition.outpost_position.y);

@@ -261,7 +261,8 @@ impl WorldRepository {
                         safety: 0,
                         status: ExpeditionStatus::Planning,
                         outcome: None,
-                        outpost_position: Position { x: 14, y: 8 },
+                        outpost_position:
+                            crate::content::region_location_profile("whisperwood-outpost").position,
                     };
                     state.phase3.expedition = Some(expedition.clone());
                     response.expedition = Some(expedition.clone());

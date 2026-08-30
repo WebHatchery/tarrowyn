@@ -856,3 +856,10 @@ draws the founded outpost at its authoritative position, while retreated or
 planning expeditions remain absent from the landmark layer. Client clippy,
 formatting, size, diff, and publisher checks are the validation scope for this
 small Phase 3 presentation slice; no new external or deferred work was opened.
+
+The pioneer outpost now uses the validated Phase 5 region location for the
+Phase 3 frontier site, and the map replaces that static location label with
+the player-founded outpost name after success. The focused durable expedition
+flow, client UI checks, formatting, size, diff, and publisher checks are the
+validation scope for this cross-phase landmark correction; no new external or
+deferred work was opened.
