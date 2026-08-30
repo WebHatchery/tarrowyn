@@ -163,15 +163,33 @@ pub(super) fn draw_sidebar(
         &SurfaceStyle::new(Color::new(0.075, 0.105, 0.115, 1.0))
             .with_border(1.0, Color::new(0.32, 0.48, 0.50, 0.45)),
     );
-    for (index, message) in ctx.chat.iter().rev().take(2).enumerate() {
+    let tavern_line = tavern_feed_line(ctx.tavern_notices, ctx.tavern_rumours);
+    if let Some(line) = tavern_line.as_deref() {
+        draw_ui_text_ex(
+            line,
+            content.x + 8.0,
+            top + 182.0,
+            TextStyle::new(10.0, CREAM).params(),
+        );
+    }
+    let visible_chat_lines = if tavern_line.is_some() { 1 } else { 2 };
+    for (index, message) in ctx.chat.iter().rev().take(visible_chat_lines).enumerate() {
         draw_ui_text_ex(
             &format!("{}: {}", message.display_name, message.text),
             content.x + 8.0,
-            top + 182.0 + index as f32 * 13.0,
-            TextStyle::new(10.0, if index == 0 { CREAM } else { dark::TEXT_DIM }).params(),
+            top + 182.0 + (index + if tavern_line.is_some() { 1 } else { 0 }) as f32 * 13.0,
+            TextStyle::new(
+                10.0,
+                if index == 0 && tavern_line.is_none() {
+                    CREAM
+                } else {
+                    dark::TEXT_DIM
+                },
+            )
+            .params(),
         );
     }
-    if ctx.chat.is_empty() {
+    if ctx.chat.is_empty() && tavern_line.is_none() {
         draw_ui_text_ex(
             if ctx.wilderness.is_some() {
                 "The frontier channel is quiet."
@@ -553,8 +571,6 @@ pub(super) fn draw_sidebar(
                 })
         })
         .unwrap_or_else(|| "The frontier registry is listening.".to_owned());
-    let chronicle_line =
-        tavern_feed_line(ctx.tavern_notices, ctx.tavern_rumours).unwrap_or(chronicle_line);
     let phase_line = format!(
         "{} • {}",
         ctx.phase4_summary
@@ -621,7 +637,7 @@ pub(super) fn tavern_feed_line(
 
 fn compact_feed_text(text: &str) -> String {
     let mut chars = text.chars();
-    let compact: String = chars.by_ref().take(92).collect();
+    let compact: String = chars.by_ref().take(60).collect();
     if chars.next().is_some() {
         format!("{compact}…")
     } else {

@@ -3179,3 +3179,11 @@ regression passes, along with client-package clippy, formatting, `git diff
 packages, Preview deployment, tracker recording, and catalog synchronization.
 No full workspace gate is repeated because this is a bounded tavern-feed
 presentation change; no new external or deferred work is opened.
+
+The tavern signal now occupies the social feed area beside the newest chat line
+so active pioneer progress and chronicle context remain visible in their
+existing ledger line. The same focused tavern-feed regression, client clippy,
+formatting, diff, and source-size checks pass; `publish.ps1` passes the
+Windows/WebGL build, packaging, Preview deployment, tracker recording, and
+catalog synchronization. No full workspace gate is repeated for this bounded
+layout correction, and no new follow-up work is opened.
