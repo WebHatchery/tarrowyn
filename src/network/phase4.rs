@@ -129,6 +129,9 @@ impl Phase4Client {
     }
 
     pub(super) fn queue_cycle(&mut self, id: &str, request_id: String) -> bool {
+        if id == "registry" && self.claim_command_pending() {
+            return false;
+        }
         let queue_len = self.commands.len();
         let refresh_households = id == "households";
         match id {

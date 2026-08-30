@@ -284,17 +284,22 @@ pub(super) fn draw_sidebar(
         mouse,
         &[
             ("town-hall", "Town hall", true, ButtonTone::Primary),
-            ("registry", "Registry", true, ButtonTone::Secondary),
+            (
+                "registry",
+                "Registry",
+                claim_control_enabled(true, ctx.claim_pending),
+                ButtonTone::Secondary,
+            ),
             (
                 "abandon-claim",
                 "Abandon",
-                ctx.can_abandon_claim,
+                claim_control_enabled(ctx.can_abandon_claim, ctx.claim_pending),
                 ButtonTone::Secondary,
             ),
             (
                 "transfer-claim",
                 "Transfer",
-                ctx.can_transfer_claim,
+                claim_control_enabled(ctx.can_transfer_claim, ctx.claim_pending),
                 ButtonTone::Secondary,
             ),
             ("order", "Order", true, ButtonTone::Secondary),
@@ -545,6 +550,10 @@ fn event_control_enabled(event_pending: bool) -> bool {
 
 fn identity_control_enabled(identity_pending: bool) -> bool {
     !identity_pending
+}
+
+fn claim_control_enabled(claim_available: bool, claim_pending: bool) -> bool {
+    claim_available && !claim_pending
 }
 
 fn route_control_enabled(route_available: bool, route_pending: bool) -> bool {

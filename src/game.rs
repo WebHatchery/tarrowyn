@@ -282,6 +282,7 @@ impl Game {
                                 && !player.stale(client.projection.server_tick)
                                 && player.position == client.projection.player_position
                         }),
+                    claim_pending: client.claim_pending(),
                     knowledge_label: client.knowledge_cycle_label(
                         client.projection.players.iter().any(|player| {
                             Some(player.account_id.as_str()) != own_account_id
@@ -369,6 +370,7 @@ impl Game {
                     route_pending: false,
                     can_abandon_claim: false,
                     can_transfer_claim: false,
+                    claim_pending: false,
                     knowledge_label: "Knowledge",
                     travel_label: "Travel",
                     can_travel: false,

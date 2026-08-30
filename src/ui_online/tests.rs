@@ -364,6 +364,13 @@ fn identity_controls_wait_for_the_previous_account_command() {
 }
 
 #[test]
+fn claim_controls_wait_for_the_previous_lease_command() {
+    assert!(!super::claim_control_enabled(true, true));
+    assert!(super::claim_control_enabled(true, false));
+    assert!(!super::claim_control_enabled(false, false));
+}
+
+#[test]
 fn route_controls_wait_for_the_previous_logistics_command() {
     assert!(!super::route_control_enabled(true, true));
     assert!(super::route_control_enabled(true, false));

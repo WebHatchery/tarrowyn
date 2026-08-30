@@ -247,11 +247,19 @@ fn lease_controls_queue_abandon_and_visible_transfer_actions() {
     assert!(client.can_abandon_claim());
     assert!(client.can_transfer_claim());
     assert!(client.queue_claim_action("abandon-1".to_owned(), ClaimLifecycleAction::Abandon, None,));
+    assert!(client.claim_command_pending());
+    assert!(!client.queue_claim_action(
+        "abandon-duplicate".to_owned(),
+        ClaimLifecycleAction::Abandon,
+        None,
+    ));
+    assert_eq!(client.commands.len(), 1);
     let Some(Phase4Command::Claim(request)) = client.commands.pop_front() else {
         panic!("the abandon control should queue the owned lease");
     };
     assert_eq!(request.action, ClaimLifecycleAction::Abandon);
     assert_eq!(request.claim_id.as_deref(), Some("own-lease"));
+    assert!(!client.claim_command_pending());
 
     assert!(client.queue_claim_action(
         "transfer-1".to_owned(),

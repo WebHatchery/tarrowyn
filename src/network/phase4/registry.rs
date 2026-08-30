@@ -1,6 +1,16 @@
 use super::*;
 
 impl Phase4Client {
+    pub(crate) fn claim_command_pending(&self) -> bool {
+        self.in_flight_command
+            .as_ref()
+            .is_some_and(|command| matches!(command, Phase4Command::Claim(_)))
+            || self
+                .commands
+                .iter()
+                .any(|command| matches!(command, Phase4Command::Claim(_)))
+    }
+
     fn owned_claim(&self) -> Option<&tarrowyn_protocol::ClaimRecord> {
         let own_account_id = self.own_account_id.as_deref()?;
         self.claims
@@ -42,6 +52,9 @@ impl Phase4Client {
         action: ClaimLifecycleAction,
         target_account_id: Option<String>,
     ) -> bool {
+        if self.claim_command_pending() {
+            return false;
+        }
         let claim_id = self.owned_claim().map(|claim| claim.claim_id.clone());
         let eligible = match action {
             ClaimLifecycleAction::Abandon => self.can_abandon_claim(),

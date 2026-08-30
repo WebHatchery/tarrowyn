@@ -89,6 +89,7 @@ pub struct UiContext<'a> {
     pub route_pending: bool,
     pub can_abandon_claim: bool,
     pub can_transfer_claim: bool,
+    pub claim_pending: bool,
     pub knowledge_label: &'a str,
     pub travel_label: &'a str,
     pub can_travel: bool,

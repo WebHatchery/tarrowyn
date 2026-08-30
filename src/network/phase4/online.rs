@@ -133,6 +133,10 @@ impl OnlineClient {
         self.phase4.can_transfer_claim()
     }
 
+    pub(crate) fn claim_pending(&self) -> bool {
+        self.phase4.claim_command_pending()
+    }
+
     pub(crate) fn queue_claim_action(
         &mut self,
         action: ClaimLifecycleAction,

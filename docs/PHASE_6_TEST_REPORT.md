@@ -1912,6 +1912,14 @@ Windows/WebGL builds, packaging, Preview deployment, and catalog sync. No full
 workspace gate was repeated because this was a bounded account-feedback
 correction, and no new external or deferred work was opened.
 
+Registry, Abandon, and Transfer controls now close while a lease lifecycle
+command is queued or in flight, and direct duplicate claim mutations are
+rejected until the first response resolves. The focused lease-control test
+passes, client clippy, standards, and the Rust file-size check pass, and
+`publish.ps1` passes Windows/WebGL builds, packaging, Preview deployment, and
+catalog sync. No full workspace gate was repeated because this was a bounded
+claim-control correction, and no new external or deferred work was opened.
+
 Logout and account deletion controls now close while a link, revoke, or delete
 command is queued or in flight, and direct duplicate identity queue attempts
 are rejected. The account-focused filter passes 24 related tests; command
