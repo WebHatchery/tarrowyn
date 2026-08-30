@@ -337,6 +337,40 @@ fn contract_controls_wait_for_one_queued_or_in_flight_command() {
 }
 
 #[test]
+fn expedition_controls_wait_for_one_queued_or_in_flight_command() {
+    let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
+    client.state = crate::network::ConnectionState::Online;
+    let request = ExpeditionRequest {
+        request_id: "expedition-queued".to_owned(),
+        action: ExpeditionAction::Announce,
+        expedition_id: Some("pioneer-1".to_owned()),
+        role: Some(ExpeditionRole::Scout),
+        food: 0,
+        tools: 0,
+        materials: 0,
+        safety: 0,
+        outpost_name: Some("Lantern Rest".to_owned()),
+    };
+    client
+        .frontier
+        .commands
+        .push_back(FrontierCommand::Expedition(request.clone()));
+
+    assert!(client.expedition_pending());
+    client.queue_expedition_cycle();
+    assert_eq!(client.frontier.commands.len(), 1);
+    assert!(client
+        .status_message
+        .contains("frontier action is not ready"));
+
+    client.frontier.commands.clear();
+    client.frontier.in_flight_command = Some(FrontierCommand::Expedition(request));
+    assert!(client.expedition_pending());
+    client.queue_expedition_cycle();
+    assert!(client.frontier.commands.is_empty());
+}
+
+#[test]
 fn chronicle_search_queues_the_latest_query_for_the_frontier_reader() {
     let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
     client.state = crate::network::ConnectionState::Online;

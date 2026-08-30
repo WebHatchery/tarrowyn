@@ -283,7 +283,7 @@ pub(super) fn draw_sidebar(
             (
                 "expedition",
                 "Pioneer",
-                !ctx.knocked_out,
+                expedition_control_enabled(!ctx.knocked_out, ctx.expedition_pending),
                 ButtonTone::Primary,
             ),
             ("chronicle", "Chronicle", true, ButtonTone::Secondary),
@@ -620,6 +620,10 @@ fn combat_control_enabled(available: bool, combat_pending: bool) -> bool {
 
 fn contract_control_enabled(available: bool, contract_pending: bool) -> bool {
     available && !contract_pending
+}
+
+fn expedition_control_enabled(available: bool, expedition_pending: bool) -> bool {
+    available && !expedition_pending
 }
 
 pub(super) fn movement_enabled(ctx: &UiContext<'_>) -> bool {

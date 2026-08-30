@@ -86,6 +86,7 @@ pub struct UiContext<'a> {
     pub skill_pending: bool,
     pub combat_pending: bool,
     pub contract_pending: bool,
+    pub expedition_pending: bool,
     pub knocked_out: bool,
     pub recovery_pending: bool,
     pub has_open_market_order: bool,

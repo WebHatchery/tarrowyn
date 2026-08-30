@@ -331,6 +331,16 @@ impl FrontierClient {
                 .any(|command| matches!(command, FrontierCommand::Contract(_)))
     }
 
+    pub(super) fn expedition_command_pending(&self) -> bool {
+        self.in_flight_command
+            .as_ref()
+            .is_some_and(|command| matches!(command, FrontierCommand::Expedition(_)))
+            || self
+                .commands
+                .iter()
+                .any(|command| matches!(command, FrontierCommand::Expedition(_)))
+    }
+
     pub(super) fn queue_chronicle_search(&mut self, query: String, since: u64) {
         if self.pending_chronicle_search.is_none() {
             self.chronicle_search_request = Some((query, since));
@@ -388,6 +398,11 @@ impl FrontierClient {
     }
 
     pub(super) fn queue_expedition(&mut self, request: ExpeditionRequest) -> bool {
+        if self.expedition_command_pending()
+            && self.commands.len() < super::queue::MAX_PENDING_COMMANDS
+        {
+            return false;
+        }
         super::queue::try_push(&mut self.commands, FrontierCommand::Expedition(request))
     }
 
@@ -724,6 +739,10 @@ impl OnlineClient {
 
     pub(crate) fn contract_pending(&self) -> bool {
         self.frontier.contract_command_pending()
+    }
+
+    pub(crate) fn expedition_pending(&self) -> bool {
+        self.frontier.expedition_command_pending()
     }
 
     pub fn queue_claim(&mut self, action: ClaimAction) {

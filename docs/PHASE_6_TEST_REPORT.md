@@ -2266,3 +2266,12 @@ and `publish.ps1` passes Windows/WebGL builds, packaging, Preview deployment,
 and catalog sync. No full workspace gate was repeated because this was a
 bounded contract-control correction, and no new external or deferred work was
 opened.
+
+The Pioneer control now closes while an expedition command is queued or in
+flight, preventing repeated Join, Supply, Launch, Resolve, or Announce choices
+from being derived from the same stale expedition projection. The focused
+expedition filter passes six related tests; client formatting, clippy,
+standards, and the Rust file-size check pass, and `publish.ps1` passes
+Windows/WebGL builds, packaging, Preview deployment, and catalog sync. No full
+workspace gate was repeated because this was a bounded expedition-control
+correction, and no new external or deferred work was opened.
