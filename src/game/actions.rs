@@ -2,9 +2,14 @@ use super::*;
 
 impl Game {
     pub(super) fn interact(&mut self, id: &str) {
+        if id == "chronicle-close" {
+            self.chronicle_open = false;
+            return;
+        }
         if id == "region-details" {
             if matches!(&self.mode, ClientMode::Online(_)) {
                 self.skill_selection_open = false;
+                self.chronicle_open = false;
                 self.regional_inspection_open = !self.regional_inspection_open;
             }
             return;
@@ -17,12 +22,27 @@ impl Game {
             if matches!(&self.mode, ClientMode::Online(_)) {
                 self.regional_inspection_open = false;
                 self.skill_selection_open = true;
+                self.chronicle_open = false;
+            }
+            return;
+        }
+        if id == "chronicle" {
+            if matches!(&self.mode, ClientMode::Online(_)) {
+                self.regional_inspection_open = false;
+                self.skill_selection_open = false;
+                self.chronicle_open = !self.chronicle_open;
+                if self.chronicle_open {
+                    if let ClientMode::Online(client) = &mut self.mode {
+                        client.refresh_tavern();
+                    }
+                }
             }
             return;
         }
         if matches!(id, "logout" | "delete-account") {
             self.regional_inspection_open = false;
             self.skill_selection_open = false;
+            self.chronicle_open = false;
         }
         if let ClientMode::Online(client) = &mut self.mode {
             match id {
@@ -170,7 +190,6 @@ impl Game {
                     }
                 }
                 "expedition" => client.queue_expedition_cycle(),
-                "chronicle" => client.refresh_tavern(),
                 "report" => client.queue_report(),
                 "knowledge" => {
                     let own = client

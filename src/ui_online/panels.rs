@@ -1,6 +1,66 @@
 use super::*;
 use tarrowyn_protocol::{RegionSnapshot, RouteAction, RouteStatus};
 
+pub fn draw_chronicle(ctx: &UiContext<'_>, mouse: Vec2, actions: &mut Vec<UiAction>) {
+    if !ctx.chronicle_open {
+        return;
+    }
+    let panel = Rect::new(42.0, 126.0, 780.0, 438.0);
+    draw_surface_with_title(
+        panel,
+        Some("Chronicle archive"),
+        &SurfaceStyle::new(Color::new(0.055, 0.075, 0.09, 0.99))
+            .with_border(1.0, Color::new(0.50, 0.72, 0.62, 0.9))
+            .with_header(42.0, Color::new(0.09, 0.14, 0.15, 1.0))
+            .with_header_divider(1.0, Color::new(0.32, 0.48, 0.50, 0.75)),
+        TextStyle::new(17.0, CREAM),
+    );
+    draw_text_block(
+        &chronicle_panel_text(ctx.chronicle, ctx.chronicle_summary),
+        panel.x + 20.0,
+        panel.y + 70.0,
+        panel.w - 40.0,
+        318.0,
+        14.0,
+        3.0,
+        CREAM,
+    );
+    if virtual_button(
+        Rect::new(panel.right() - 126.0, panel.bottom() - 42.0, 106.0, 28.0),
+        "Close",
+        true,
+        ButtonTone::Secondary,
+        mouse,
+    ) {
+        actions.push(UiAction::Interact("chronicle-close".to_owned()));
+    }
+}
+
+pub fn chronicle_panel_text(
+    entries: &[tarrowyn_protocol::ChronicleEntry],
+    summary: Option<&tarrowyn_protocol::ChronicleSummary>,
+) -> String {
+    let mut lines = Vec::new();
+    if let Some(summary) = summary {
+        lines.push(format!(
+            "Archive: {} records across beats {}–{}.",
+            summary.entry_count, summary.from_tick, summary.to_tick
+        ));
+        if let Some(highlight) = summary.highlights.last() {
+            lines.push(format!("Last highlight: {highlight}"));
+        }
+    }
+    lines.push("Recent community records:".to_owned());
+    if entries.is_empty() {
+        lines.push("The chronicle is quiet; new shared-road moments will appear here.".to_owned());
+    } else {
+        for entry in entries.iter().rev().take(6) {
+            lines.push(format!("• {} — {}", entry.title, entry.text));
+        }
+    }
+    lines.join("\n")
+}
+
 pub fn combat_side_control(
     combat: Option<&tarrowyn_protocol::LocalCombatState>,
     frontier_threat_active: bool,

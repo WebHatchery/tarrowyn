@@ -60,6 +60,7 @@ pub struct UiContext<'a> {
     pub regional_event_choices: &'a [String],
     pub skills: &'a [tarrowyn_protocol::SkillView],
     pub skill_selection_open: bool,
+    pub chronicle_open: bool,
     pub chronicle: &'a [ChronicleEntry],
     pub chronicle_summary: Option<&'a ChronicleSummary>,
     pub opportunities: &'a [OpportunitySignal],

@@ -42,6 +42,7 @@ pub struct Game {
     chat_draft: String,
     regional_inspection_open: bool,
     skill_selection_open: bool,
+    chronicle_open: bool,
 }
 
 impl Game {
@@ -102,6 +103,7 @@ impl Game {
             chat_draft: String::new(),
             regional_inspection_open: false,
             skill_selection_open: false,
+            chronicle_open: false,
         };
         game.refresh_save_state();
         game
@@ -234,6 +236,7 @@ impl Game {
                     skills: client.phase4_skills(),
                     skill_selection_open: self.skill_selection_open
                         && client.state == ConnectionState::Online,
+                    chronicle_open: self.chronicle_open && client.state == ConnectionState::Online,
                     chronicle: &client.projection.chronicle,
                     chronicle_summary: client.projection.chronicle_summary.as_ref(),
                     opportunities: &client.projection.opportunities,
@@ -314,6 +317,7 @@ impl Game {
                     regional_event_choices: &[],
                     skills: &[],
                     skill_selection_open: false,
+                    chronicle_open: false,
                     chronicle: &[],
                     chronicle_summary: None,
                     opportunities: &[],
@@ -358,6 +362,7 @@ impl Game {
                 self.mode = ClientMode::Offline(GameSession::new(&self.data.config));
                 self.regional_inspection_open = false;
                 self.skill_selection_open = false;
+                self.chronicle_open = false;
                 self.chat_draft.clear();
                 self.sync_camera(TilePos::new(8, 6));
                 self.notifications
@@ -370,6 +375,7 @@ impl Game {
                 )));
                 self.regional_inspection_open = false;
                 self.skill_selection_open = false;
+                self.chronicle_open = false;
                 self.chat_draft.clear();
                 self.sync_camera(TilePos::new(8, 6));
                 self.notifications.info("Connecting to the shared road…");
@@ -378,6 +384,7 @@ impl Game {
                 ClientMode::Online(client) => {
                     self.regional_inspection_open = false;
                     self.skill_selection_open = false;
+                    self.chronicle_open = false;
                     if !client.reconnect() {
                         self.notifications
                             .warning("Wait for the reconnect cooldown to finish.");
@@ -390,6 +397,7 @@ impl Game {
                     )));
                     self.regional_inspection_open = false;
                     self.skill_selection_open = false;
+                    self.chronicle_open = false;
                     self.sync_camera(TilePos::new(8, 6));
                     self.notifications.info("Connecting to the shared road…");
                 }
@@ -413,6 +421,7 @@ impl Game {
             UiAction::Interact(id) => self.interact(&id),
             UiAction::Practice(skill_id) => {
                 self.skill_selection_open = false;
+                self.chronicle_open = false;
                 if let ClientMode::Online(client) = &mut self.mode {
                     client.queue_skill_practice(skill_id);
                 }

@@ -1822,3 +1822,13 @@ client clippy and the Rust file-size check pass, and `publish.ps1` passes
 Windows/WebGL builds, packaging, Preview deployment, and catalog sync. No
 full workspace gate was repeated because this was a bounded client
 moderation-feedback slice, and no new external or deferred work was opened.
+
+The Chronicle control now opens a touch-friendly archive panel with the
+authoritative archive range, latest highlight, and recent community records;
+the panel can be closed visibly without keyboard input. The focused chronicle
+panel formatter regression passes, client clippy and the Rust file-size check
+pass, and `publish.ps1` passes Windows/WebGL builds, packaging, Preview
+deployment, and catalog sync. No full workspace gate was repeated because
+this was a bounded client chronicle-presentation slice. Typed archive search
+remains a documented follow-up if the player-facing archive needs searching
+older than the cached recent window.

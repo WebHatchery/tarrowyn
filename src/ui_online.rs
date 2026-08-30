@@ -4,8 +4,8 @@ use tarrowyn_protocol::{RouteStatus, TradeStatus};
 #[path = "ui_online/panels.rs"]
 mod panels;
 pub(super) use panels::{
-    combat_side_control, draw_button_row, draw_combat_status, draw_regional_inspection,
-    draw_skill_selection,
+    combat_side_control, draw_button_row, draw_chronicle, draw_combat_status,
+    draw_regional_inspection, draw_skill_selection,
 };
 
 #[cfg(test)]

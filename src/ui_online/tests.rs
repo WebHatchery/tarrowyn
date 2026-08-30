@@ -202,3 +202,41 @@ fn travel_controls_close_while_knocked_out() {
     assert!(!super::travel_control_enabled(true, true));
     assert!(!super::travel_control_enabled(false, false));
 }
+
+#[test]
+fn chronicle_panel_text_keeps_archive_context_and_recent_records() {
+    let entries = vec![
+        tarrowyn_protocol::ChronicleEntry {
+            event_id: "old-event".to_owned(),
+            kind: "harvest".to_owned(),
+            title: "The first sheaf rises".to_owned(),
+            text: "A neighbour brought in wheat before dusk.".to_owned(),
+            created_tick: 3,
+            cursor: 1,
+        },
+        tarrowyn_protocol::ChronicleEntry {
+            event_id: "new-event".to_owned(),
+            kind: "storm".to_owned(),
+            title: "The storm answers".to_owned(),
+            text: "The eastern road glows under blue rain.".to_owned(),
+            created_tick: 9,
+            cursor: 2,
+        },
+    ];
+    let summary = tarrowyn_protocol::ChronicleSummary {
+        from_tick: 1,
+        to_tick: 9,
+        from_cursor: 1,
+        to_cursor: 2,
+        entry_count: 17,
+        kinds: vec!["harvest".to_owned(), "storm".to_owned()],
+        highlights: vec!["The eastern road glows.".to_owned()],
+    };
+
+    let text = super::panels::chronicle_panel_text(&entries, Some(&summary));
+
+    assert!(text.contains("Archive: 17 records across beats 1–9."));
+    assert!(text.contains("Last highlight: The eastern road glows."));
+    assert!(text.contains("The storm answers — The eastern road glows under blue rain."));
+    assert!(text.contains("The first sheaf rises — A neighbour brought in wheat before dusk."));
+}
