@@ -669,6 +669,12 @@ The focused trade suites cover the rejection, retention, numeric-boundary, and
 completed-exchange paths, with protocol tests, server clippy, size, and diff
 checks passing for the changed boundary.
 
+Regional market creation now checks player and fallback supply before evicting
+settled history to make room. A failed missing-supply request therefore leaves
+the retained order ledger unchanged; the focused market-retention suite covers
+that rejection beside the existing room-making and full-ledger paths, with
+server clippy, size, and diff checks passing.
+
 Phase 6 audit and session helpers now live in a dedicated child module, keeping
 the repository coordinator below the workspace's 800-line Rust limit while
 preserving the existing behavior. The 43 Phase 6-focused tests, server-only

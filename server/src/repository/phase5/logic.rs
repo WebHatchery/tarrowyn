@@ -534,6 +534,38 @@ pub(super) fn take_commodity(
     true
 }
 
+pub(super) fn commodity_available(
+    state: &RepositoryState,
+    key: &str,
+    location: &str,
+    commodity: CommodityKind,
+    quantity: u32,
+) -> bool {
+    let available = if matches!(
+        commodity,
+        CommodityKind::Timber | CommodityKind::Stone | CommodityKind::Bandages
+    ) {
+        state
+            .phase5
+            .stock
+            .get(&stock_key(location, commodity.label()))
+            .copied()
+            .unwrap_or(0)
+    } else {
+        let Some(identity) = state.identities.get(key) else {
+            return false;
+        };
+        match commodity {
+            CommodityKind::Wheat => identity.inventory.wheat,
+            CommodityKind::Turnips => identity.inventory.turnips,
+            CommodityKind::Moonberries => identity.inventory.moonberries,
+            CommodityKind::Seeds => identity.inventory.seeds,
+            _ => 0,
+        }
+    };
+    available >= quantity
+}
+
 pub(super) fn give_commodity(
     state: &mut RepositoryState,
     key: &str,

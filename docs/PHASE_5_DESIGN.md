@@ -64,7 +64,8 @@ regional-stock shipments.
 The regional market keeps at most 128 order records. Fulfilled and cancelled
 history makes room for new shipments, while open and failed orders remain
 addressable for fulfilment or support escrow recovery; creation fails closed if
-all retained records are still live.
+all retained records are still live. A rejected create request also leaves
+retained history unchanged when its requested goods are unavailable.
 
 The real-time calendar is locked before leases or crop promises depend on it:
 one game day is 80 real minutes. The 14-day season and four-season year (56

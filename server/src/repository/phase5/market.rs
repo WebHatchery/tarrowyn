@@ -83,21 +83,12 @@ pub(crate) fn create_order(
             Some("No open route carries that good from here.".to_owned()),
         );
     };
-    if !market_order_room(state) {
-        return (
-            false,
-            None,
-            Some("The regional market ledger is full; settle an existing shipment before adding another.".to_owned()),
-        );
-    }
-    let fallback_used = if take_commodity(state, key, origin, commodity, quantity) {
-        false
-    } else if fallback_eligible(commodity)
+    let player_supply = commodity_available(state, key, origin, commodity, quantity);
+    let fallback_supply = !player_supply
+        && fallback_eligible(commodity)
         && quantity <= FALLBACK_MAX_QUANTITY
-        && reserve_fallback(state)
-    {
-        true
-    } else {
+        && fallback_available(state);
+    if !player_supply && !fallback_supply {
         return (
             false,
             None,
@@ -106,6 +97,20 @@ pub(crate) fn create_order(
                 commodity.label()
             )),
         );
+    };
+    if !market_order_room(state) {
+        return (
+            false,
+            None,
+            Some("The regional market ledger is full; settle an existing shipment before adding another.".to_owned()),
+        );
+    }
+    let fallback_used = if player_supply {
+        debug_assert!(take_commodity(state, key, origin, commodity, quantity));
+        false
+    } else {
+        debug_assert!(reserve_fallback(state));
+        true
     };
     let unit_price = base_price(commodity)
         .saturating_add(u32::from(route.risk_percent / 10))
@@ -268,6 +273,15 @@ fn reserve_fallback(state: &mut RepositoryState) -> bool {
     }
     state.phase5.fallback_orders_today = state.phase5.fallback_orders_today.saturating_add(1);
     true
+}
+
+fn fallback_available(state: &RepositoryState) -> bool {
+    let orders_today = if state.phase5.fallback_day == state.clock.day {
+        state.phase5.fallback_orders_today
+    } else {
+        0
+    };
+    orders_today < FALLBACK_DAILY_CAPACITY
 }
 
 pub fn close_deleted_account_orders(state: &mut RepositoryState, account_id: &str) {

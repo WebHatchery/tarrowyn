@@ -90,6 +90,47 @@ fn market_order_history_evicts_settled_records_and_preserves_live_escrow() {
 }
 
 #[test]
+fn rejected_market_order_does_not_evict_settled_history() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = guest(&repository, "phase5-market-rejected-history");
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state.phase5.market_orders = (0..128)
+            .map(|index| market_order(index, MarketOrderStatus::Fulfilled))
+            .collect();
+        state.phase5.stock.insert("hearth:timber".to_owned(), 0);
+    }
+
+    let rejected = repository
+        .market_order(
+            &session.account_token,
+            MarketOrderRequest {
+                request_id: "market-rejected-history".to_owned(),
+                action: MarketOrderAction::Create,
+                order_id: None,
+                destination_location_id: Some("whisperwood-outpost".to_owned()),
+                commodity: Some(CommodityKind::Timber),
+                quantity: Some(1),
+            },
+        )
+        .expect("missing supply should return a response")
+        .data;
+
+    assert!(!rejected.accepted);
+    assert!(rejected
+        .reason
+        .as_deref()
+        .is_some_and(|reason| reason.contains("not enough timber")));
+    let state = repository.state.lock().expect("repository lock");
+    assert_eq!(state.phase5.market_orders.len(), 128);
+    assert!(state
+        .phase5
+        .market_orders
+        .iter()
+        .any(|order| order.order_id == "market-order-0"));
+}
+
+#[test]
 fn over_capacity_market_history_degrades_readiness() {
     let repository = WorldRepository::new(ServerConfig::default());
     let session = guest(&repository, "phase5-market-integrity");
