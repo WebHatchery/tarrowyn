@@ -273,7 +273,6 @@ pub struct OnlineClient {
     pub client_key: Option<String>,
     pub account: Option<GuestSessionResponse>,
     pending_guest: Option<Pending<ApiResponse<GuestSessionResponse>>>,
-    pending_world: Option<Pending<ApiResponse<WorldSnapshot>>>,
     pending_state: Option<Pending<ApiResponse<StateSnapshot>>>,
     pending_ops_health: Option<Pending<ApiResponse<OpsHealthResponse>>>,
     maintenance_status: Option<String>,
@@ -316,7 +315,6 @@ impl OnlineClient {
             client_key,
             account: None,
             pending_guest: None,
-            pending_world: None,
             pending_state: None,
             pending_ops_health: None,
             maintenance_status: None,
@@ -354,7 +352,6 @@ impl OnlineClient {
         self.state_refresh = (self.state_refresh - dt.max(0.0)).max(0.0);
         let mut notices = Vec::new();
         self.poll_guest(dt, &mut notices);
-        self.poll_world(dt, &mut notices);
         self.poll_state(dt, &mut notices);
         maintenance::poll_ops_health(self, dt);
         self.poll_events(dt, &mut notices);
@@ -433,7 +430,6 @@ impl OnlineClient {
         self.account = None;
         self.api.set_bearer_token(None);
         self.pending_guest = None;
-        self.pending_world = None;
         self.pending_state = None;
         self.pending_ops_health = None;
         self.maintenance_status = None;
@@ -530,39 +526,6 @@ impl OnlineClient {
                         "The settlement ledger is current.".to_owned(),
                     ));
                 }
-            }
-            Err(error) => self.connection_failed(error, notices),
-        }
-    }
-
-    fn poll_world(&mut self, dt: f32, notices: &mut Vec<NetworkNotice>) {
-        let result = self
-            .pending_world
-            .as_mut()
-            .and_then(|pending| pending.poll_timed(dt, REQUEST_TIMEOUT_SECONDS));
-        let Some(result) = result else { return };
-        self.pending_world = None;
-        match result {
-            Ok(response) => {
-                if let Some(account) = &self.account {
-                    let cursor = response.meta.cursor.unwrap_or(response.data.cursor);
-                    if self
-                        .projection
-                        .response_is_current(response.meta.server_tick, cursor)
-                    {
-                        self.projection.apply_snapshot(
-                            response.data,
-                            &account.account_id,
-                            response.meta.server_tick,
-                        );
-                    }
-                }
-                self.had_world = true;
-                self.state = ConnectionState::Online;
-                self.status_message = "The shared road is open.".to_owned();
-                notices.push(NetworkNotice::Success(
-                    "Connected to the shared road.".to_owned(),
-                ));
             }
             Err(error) => self.connection_failed(error, notices),
         }
