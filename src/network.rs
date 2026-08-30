@@ -545,6 +545,7 @@ impl OnlineClient {
         self.action_awaiting_confirmation = false;
         self.pending_trade_action = None;
         self.trades.clear();
+        self.had_world = false;
         cursor::reset_projection_history(&mut self.projection);
     }
 

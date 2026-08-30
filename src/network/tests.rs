@@ -173,6 +173,7 @@ fn session_reset_discards_world_and_frontier_projection_state() {
     client.projection.day = 9;
     client.projection.server_tick = 24;
     client.projection.cursor = 18;
+    client.had_world = true;
     client
         .frontier
         .contracts
@@ -214,6 +215,7 @@ fn session_reset_discards_world_and_frontier_projection_state() {
     assert_eq!(client.projection.day, 1);
     assert_eq!(client.projection.server_tick, 0);
     assert_eq!(client.projection.cursor, 0);
+    assert!(!client.had_world);
     assert!(client.frontier.contracts.is_empty());
     assert!(client.trades.is_empty());
 }

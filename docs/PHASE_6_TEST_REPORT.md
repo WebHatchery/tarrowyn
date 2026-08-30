@@ -2552,3 +2552,13 @@ file-size scan pass. The project `publish.ps1` Windows/WebGL build, packaging,
 Preview deployment, and catalog-sync checks pass. No full workspace gate was
 repeated because this was a bounded client readiness-recovery correction, and
 no new external or deferred work was opened.
+
+Clearing an online session now also clears the client’s loaded-world marker,
+so a fresh reconnect that fails cannot claim to display a retained world and a
+successful reconnect is treated as a first authoritative load. The focused
+binary test `network::tests::session_reset_discards_world_and_frontier_projection_state`
+passes; client-package formatting and clippy, `git diff --check`, and the Rust
+file-size scan pass. The project `publish.ps1` Windows/WebGL build, packaging,
+Preview deployment, and catalog-sync checks pass. No full workspace gate was
+repeated because this was a bounded client session-reset correction, and no
+new external or deferred work was opened.
