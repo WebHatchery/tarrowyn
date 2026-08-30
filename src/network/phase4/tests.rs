@@ -93,6 +93,33 @@ fn transient_phase_four_action_requeues_the_same_request() {
 }
 
 #[test]
+fn phase_four_mutation_waits_when_regional_refresh_becomes_due() {
+    let mut client = Phase4Client::new();
+    client.commands.push_back(Phase4Command::Knowledge(
+        tarrowyn_protocol::KnowledgeRequest {
+            request_id: "refresh-race".to_owned(),
+            action: KnowledgeAction::Inspect,
+            knowledge_id: None,
+            target_account_id: None,
+        },
+    ));
+    client.regional.prime_refresh_for_test();
+
+    let mut api = HttpClient::new("https://example.test");
+    let data = crate::data::GameData::load().expect("embedded game data should load");
+    let mut projection = WorldProjection::new(&data.config);
+    let mut notices = Vec::new();
+    client.update(0.0, &mut api, &mut projection, true, false, &mut notices);
+
+    assert!(client.pending_command.is_none());
+    assert!(matches!(
+        client.commands.front(),
+        Some(Phase4Command::Knowledge(request)) if request.request_id == "refresh-race"
+    ));
+    assert!(client.regional.refresh_request_pending_for_test());
+}
+
+#[test]
 fn crafting_tap_becomes_a_bounded_completion_request() {
     let mut client = Phase4Client::new();
     client.begin_crafting("service-order-2");

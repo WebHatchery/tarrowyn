@@ -1464,3 +1464,13 @@ claimed, and the configured database was not deleted or rewritten. A clean
 current snapshot or known-good restore remains required before rerunning the
 acceptance script; no full workspace gate was repeated for this configuration
 and environment-boundary check.
+
+The client now advances the nested regional session refresh before Phase 4
+dispatches its protected reads or mutations. A due refresh therefore blocks a
+same-frame governance, profession, knowledge, skill, or combat request, while
+regional commands and logout/session invalidation retain the same protection.
+The focused Phase 4 race regression passes (1 matching test), with
+client-package clippy, formatting, diff, and Rust file-size checks clean.
+`publish.ps1` also passed the Windows and WebGL release builds, packaging,
+Preview deployment, and catalog synchronization. No full workspace gate was
+repeated because this was an isolated client dispatch-order fix.

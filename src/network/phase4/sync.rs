@@ -159,7 +159,6 @@ impl Phase4Client {
                 }
             }
         }
-        self.dispatch(api, another_mutation_pending);
         self.regional.update(
             dt,
             api,
@@ -168,33 +167,39 @@ impl Phase4Client {
             self.pending_command.is_some() || another_mutation_pending,
             notices,
         );
+        self.dispatch(
+            api,
+            another_mutation_pending || self.regional.command_pending(),
+        );
     }
 
     fn dispatch(&mut self, api: &mut HttpClient, another_mutation_pending: bool) {
-        if self.pending_governance.is_none() {
-            self.pending_governance = Some(api.get("/v1/settlement/governance"));
-        }
-        if self.pending_claims.is_none() {
-            self.pending_claims = Some(api.get("/v1/claims"));
-        }
-        if self.pending_professions.is_none() {
-            self.pending_professions = Some(api.get("/v1/professions"));
-        }
-        if self.pending_knowledge.is_none() {
-            self.pending_knowledge = Some(api.get("/v1/knowledge"));
-        }
-        if self.pending_skills.is_none() {
-            self.pending_skills = Some(api.get("/v1/skills"));
-        }
-        if self.pending_households.is_none() {
-            self.pending_households = Some(api.get("/v1/households"));
-        }
-        if self.pending_combat.is_none() {
-            self.pending_combat = Some(api.get("/v1/combat/local"));
+        if !self.regional.dispatch_blocked() {
+            if self.pending_governance.is_none() {
+                self.pending_governance = Some(api.get("/v1/settlement/governance"));
+            }
+            if self.pending_claims.is_none() {
+                self.pending_claims = Some(api.get("/v1/claims"));
+            }
+            if self.pending_professions.is_none() {
+                self.pending_professions = Some(api.get("/v1/professions"));
+            }
+            if self.pending_knowledge.is_none() {
+                self.pending_knowledge = Some(api.get("/v1/knowledge"));
+            }
+            if self.pending_skills.is_none() {
+                self.pending_skills = Some(api.get("/v1/skills"));
+            }
+            if self.pending_households.is_none() {
+                self.pending_households = Some(api.get("/v1/households"));
+            }
+            if self.pending_combat.is_none() {
+                self.pending_combat = Some(api.get("/v1/combat/local"));
+            }
         }
         if self.pending_command.is_none()
             && !another_mutation_pending
-            && !self.regional.auth_refresh_pending()
+            && !self.regional.dispatch_blocked()
             && self.command_retry_timer <= 0.0
         {
             if let Some(command) = self.commands.pop_front() {

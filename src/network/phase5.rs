@@ -110,6 +110,25 @@ impl Phase5Client {
         self.pending_refresh.is_some() || self.in_flight_refresh.is_some()
     }
 
+    pub(super) fn command_pending(&self) -> bool {
+        self.pending_command.is_some()
+    }
+
+    pub(super) fn dispatch_blocked(&self) -> bool {
+        self.logged_out || self.auth_refresh_pending()
+    }
+
+    #[cfg(test)]
+    pub(super) fn prime_refresh_for_test(&mut self) {
+        self.refresh_token = Some("refresh-secret".to_owned());
+        self.auth_refresh_timer = 0.0;
+    }
+
+    #[cfg(test)]
+    pub(super) fn refresh_request_pending_for_test(&self) -> bool {
+        self.pending_refresh.is_some()
+    }
+
     pub(super) fn update(
         &mut self,
         dt: f32,

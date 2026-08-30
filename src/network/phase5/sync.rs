@@ -4,6 +4,9 @@ use super::*;
 
 impl Phase5Client {
     pub(super) fn dispatch(&mut self, api: &mut HttpClient, another_mutation_pending: bool) {
+        if self.logged_out {
+            return;
+        }
         self.dispatch_refresh(api, another_mutation_pending);
         if self.pending_refresh.is_none() && self.refresh_timer <= 0.0 {
             if self.pending_region.is_none() {
