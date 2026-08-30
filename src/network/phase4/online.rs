@@ -1,8 +1,13 @@
 use super::{CraftingView, Phase4Client};
 use crate::network::{ConnectionState, OnlineClient};
+use macroquad_toolkit::grid::TilePos;
 use tarrowyn_protocol::{ClaimLifecycleAction, LocalCombatState};
 
 impl Phase4Client {
+    pub(crate) fn sync_regional_player_location(&mut self, position: TilePos) {
+        self.regional.sync_player_location(position);
+    }
+
     pub(super) fn queue_region_intervention(
         &mut self,
         request_id: String,

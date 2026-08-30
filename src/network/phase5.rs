@@ -18,6 +18,7 @@ const REFRESH_RETRY_DELAY_SECONDS: f32 = 1.0;
 mod auth;
 mod commands;
 mod events;
+mod location;
 mod market;
 mod routes;
 mod summary;

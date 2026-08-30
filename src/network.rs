@@ -376,6 +376,8 @@ impl OnlineClient {
         if frontier_cursor_boundary {
             cursor::recover_from_cursor_boundary(self, &mut notices);
         }
+        self.phase4
+            .sync_regional_player_location(self.projection.player_position);
         let player_knocked_out = self
             .projection
             .player

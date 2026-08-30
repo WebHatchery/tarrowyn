@@ -2090,3 +2090,12 @@ regressions pass, server clippy and the Rust file-size check pass, and
 `publish.ps1` passes Windows/WebGL builds, packaging, Preview deployment, and
 catalog sync. No full workspace gate was repeated because this was a bounded
 regional presence correction, and no new external or deferred work was opened.
+
+The client now follows authoritative presence and movement changes in its
+cached regional location label immediately, keeping travel controls and
+regional telemetry aligned before the next scheduled region refresh. The
+focused client location-sync regression passes, client clippy and the Rust
+file-size check pass, and `publish.ps1` passes Windows/WebGL builds, packaging,
+Preview deployment, and catalog sync. No full workspace gate was repeated
+because this was a bounded regional projection correction, and no new external
+or deferred work was opened.

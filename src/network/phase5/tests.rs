@@ -7,6 +7,7 @@ mod account_fixture;
 use account_fixture::account_response;
 mod account_lifecycle;
 mod feedback;
+mod location_sync;
 mod regional_events;
 
 #[test]
