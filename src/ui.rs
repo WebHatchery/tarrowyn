@@ -258,12 +258,12 @@ fn draw_offline_sidebar(
     draw_ui_text_ex(
         "Walk",
         content.x,
-        429.0,
+        416.0,
         TextStyle::new(16.0, CREAM).params(),
     );
-    draw_move_pad(content.x + 77.0, 437.0, mouse, actions, true);
+    draw_move_pad(content.x + 77.0, 424.0, mouse, actions, true);
 
-    let save_y = 535.0;
+    let save_y = 520.0;
     let half = (content.w - 8.0) * 0.5;
     if virtual_button(
         Rect::new(content.x, save_y, half, 29.0),
@@ -284,7 +284,7 @@ fn draw_offline_sidebar(
         actions.push(UiAction::Load);
     }
     if virtual_button(
-        Rect::new(content.x, 570.0, half, 24.0),
+        Rect::new(content.x, 550.0, half, 22.0),
         "New evening",
         true,
         ButtonTone::Secondary,
@@ -293,7 +293,7 @@ fn draw_offline_sidebar(
         actions.push(UiAction::NewEvening);
     }
     if virtual_button(
-        Rect::new(content.x + half + 8.0, 570.0, half, 24.0),
+        Rect::new(content.x + half + 8.0, 550.0, half, 22.0),
         "Delete local save",
         ctx.save_exists,
         ButtonTone::Danger,
@@ -302,7 +302,7 @@ fn draw_offline_sidebar(
         actions.push(UiAction::DeleteSave);
     }
     if virtual_button(
-        Rect::new(content.x, 596.0, content.w, 22.0),
+        Rect::new(content.x, 576.0, content.w, 26.0),
         "Reconnect online",
         true,
         ButtonTone::Primary,

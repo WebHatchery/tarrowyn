@@ -2963,3 +2963,12 @@ Rust file-size scan pass. The project `publish.ps1` Windows/WebGL build,
 packaging, Preview deployment, and catalog-sync checks pass. No full workspace
 gate was repeated because this was a bounded account-link presence correction,
 and no new external or deferred work was opened.
+
+The offline development fixture now keeps its Walk pad and save, new-evening,
+delete, and reconnect controls inside the sidebar instead of letting the lower
+rows run into the footer. The focused `ui::tests` slice passes (4 tests), along
+with client-package formatting and clippy, `git diff --check`, and the Rust
+file-size scan. The project `publish.ps1` Windows/WebGL build, packaging,
+Preview deployment, and catalog-sync checks pass. No full workspace gate was
+repeated because this was a bounded offline-layout correction, and no new
+external or deferred work was opened.
