@@ -502,3 +502,22 @@ fn chronicle_search_panel_text_distinguishes_empty_results() {
     assert!(text.contains("Search results for “lost road”:"));
     assert!(text.contains("No matching records were found in the durable chronicle."));
 }
+
+#[test]
+fn chronicle_search_paging_survives_server_query_trimming() {
+    assert!(super::panels::chronicle_search_can_advance(
+        "storm magic ",
+        Some("storm magic"),
+        Some(128),
+    ));
+    assert!(!super::panels::chronicle_search_can_advance(
+        "storm magic",
+        Some("different search"),
+        Some(128),
+    ));
+    assert!(!super::panels::chronicle_search_can_advance(
+        "storm magic",
+        Some("storm magic"),
+        None,
+    ));
+}

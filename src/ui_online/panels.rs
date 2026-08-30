@@ -106,10 +106,11 @@ pub fn draw_chronicle(ctx: &UiContext<'_>, mouse: Vec2, actions: &mut Vec<UiActi
     ) {
         actions.push(UiAction::Interact("chronicle-search".to_owned()));
     }
-    let can_advance_search = ctx.chronicle_search_next_cursor.is_some()
-        && ctx
-            .chronicle_search_query
-            .is_some_and(|query| query == ctx.chronicle_query);
+    let can_advance_search = chronicle_search_can_advance(
+        ctx.chronicle_query,
+        ctx.chronicle_search_query,
+        ctx.chronicle_search_next_cursor,
+    );
     if can_advance_search
         && virtual_button(
             Rect::new(panel.x + 134.0, panel.bottom() - 42.0, 106.0, 28.0),
@@ -241,6 +242,14 @@ pub fn chronicle_search_panel_text(
         }
     }
     lines.join("\n")
+}
+
+pub fn chronicle_search_can_advance(
+    query: &str,
+    search_query: Option<&str>,
+    next_cursor: Option<u64>,
+) -> bool {
+    next_cursor.is_some_and(|_| search_query.is_some_and(|search| search.trim() == query.trim()))
 }
 
 pub fn combat_side_control(

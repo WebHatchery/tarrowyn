@@ -2449,3 +2449,11 @@ tests, including the post-removal replay of the coalesced request; formatting
 and `git diff --check` pass. No full workspace gate was repeated because this
 was a bounded deletion replay correction, and no new external or deferred
 work was opened.
+
+Chronicle paging now compares trimmed query values at the UI boundary, keeping
+the visible `Next` control available when a touch-entered query ends with a
+space and the server returns its canonical trimmed form. The focused binary
+test `ui::ui_online::tests::chronicle_search_paging_survives_server_query_trimming`
+passes; formatting, diff, and Rust file-size checks pass. No full workspace
+gate was repeated because this was a bounded touch-first chronicle presentation
+correction, and no new external or deferred work was opened.
