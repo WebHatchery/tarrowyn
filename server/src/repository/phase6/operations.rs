@@ -57,9 +57,14 @@ impl WorldRepository {
         let session_expires_at_tick = state
             .phase6
             .sessions
-            .values()
-            .filter(|session| session.account_id == target_account_id)
-            .map(|session| session.expires_at_tick)
+            .iter()
+            .filter(|(token, session)| {
+                state.sessions.contains_key(*token)
+                    && !session.revoked
+                    && session.expires_at_tick > state.tick
+                    && session.account_id == target_account_id
+            })
+            .map(|(_, session)| session.expires_at_tick)
             .max()
             .unwrap_or(0);
         let account = AccountResponse {

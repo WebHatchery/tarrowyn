@@ -2457,3 +2457,12 @@ test `ui::ui_online::tests::chronicle_search_paging_survives_server_query_trimmi
 passes; formatting, diff, and Rust file-size checks pass. No full workspace
 gate was repeated because this was a bounded touch-first chronicle presentation
 correction, and no new external or deferred work was opened.
+
+Support account views now report an expiry only for an active, unrevoked
+production access session still present in the authoritative session table;
+refresh-window mirrors and revoked credentials no longer appear as usable
+access. The focused `repository::phase6::tests::support_chronicle` filter
+passes two tests, server-package formatting and diff checks pass, and the Rust
+file-size scan is clean. No full workspace gate was repeated because this was
+a bounded operator-read-model correction, and no new external or deferred
+work was opened.
