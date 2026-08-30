@@ -1,9 +1,9 @@
 use super::*;
 use tarrowyn_protocol::{
-    AccountDeletionRequest, AuthLinkRequest, AuthRefreshRequest, ChronicleEntry,
+    AccountDeletionRequest, AuthLinkRequest, AuthRefreshRequest, ChatRequest, ChronicleEntry,
     ClaimLifecycleAction, ClaimLifecycleRequest, GuestSessionRequest, KnowledgeAction,
-    KnowledgeRequest, MarketOrderAction, MarketOrderRequest, ProfessionAction, ProfessionKind,
-    ProfessionRequest, SkillAction, SkillRequest,
+    KnowledgeRequest, MarketOrderAction, MarketOrderRequest, ModerationReportRequest,
+    ProfessionAction, ProfessionKind, ProfessionRequest, SkillAction, SkillRequest,
 };
 
 fn history_entry(name: &str) -> ChronicleEntry {
@@ -184,6 +184,86 @@ fn account_deletion_removes_phase4_and_phase5_replay_payloads() {
         .expedition_credentials
         .iter()
         .any(|id| id == &account_id));
+}
+
+#[test]
+fn account_deletion_anonymises_composite_moderation_targets() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let target_guest = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("moderation-target-deletion".to_owned()),
+            reset: false,
+        })
+        .unwrap()
+        .data;
+    let reporter = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("moderation-reporter-deletion".to_owned()),
+            reset: false,
+        })
+        .unwrap()
+        .data;
+    let target = repository
+        .auth_link(
+            &target_guest.account_token,
+            AuthLinkRequest {
+                request_id: "moderation-target-link".to_owned(),
+                provider: "webhatchery-identity-oidc".to_owned(),
+                subject: "moderation-target-subject".to_owned(),
+                display_name: Some("Report target".to_owned()),
+            },
+        )
+        .unwrap()
+        .data;
+    let message_id = repository
+        .chat(
+            &target.session.account_token,
+            ChatRequest {
+                request_id: "moderation-target-message".to_owned(),
+                channel: "settlement".to_owned(),
+                text: "A message remains as report evidence.".to_owned(),
+            },
+        )
+        .unwrap()
+        .data
+        .message
+        .expect("target message")
+        .message_id;
+    repository
+        .moderation_report(
+            &reporter.account_token,
+            ModerationReportRequest {
+                request_id: "moderation-target-report".to_owned(),
+                target_account_id: Some(target.account_id.clone()),
+                message_id: Some(message_id),
+                category: "harassment".to_owned(),
+                note: "The evidence should retain its report audit.".to_owned(),
+            },
+        )
+        .expect("moderation report");
+
+    repository
+        .account_delete(
+            &target.session.account_token,
+            AccountDeletionRequest {
+                request_id: "moderation-target-delete".to_owned(),
+                account_id: target.account_id.clone(),
+            },
+        )
+        .expect("account deletion");
+    repository.tick();
+
+    let state = repository.state.lock().unwrap();
+    assert!(state
+        .phase6
+        .audits
+        .iter()
+        .all(|audit| !audit.target.contains(&target.account_id)));
+    assert!(state
+        .phase6
+        .audits
+        .iter()
+        .any(|audit| { audit.target == format!("former-resident (message {message_id})") }));
 }
 
 #[test]

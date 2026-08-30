@@ -712,3 +712,8 @@ The cross-layer persistence-readiness milestone passed the full release gate on
 clippy, Windows and WebGL release builds, packaging, Preview deployment, and
 catalog synchronization. Future slices return to changed-subsystem tests
 unless they cross another major release boundary.
+
+Account deletion now anonymises composite moderation audit targets such as a
+deleted account paired with a retained message evidence ID, while preserving
+the report audit. The focused account-cleanup suite covers this target
+boundary; the next full workspace gate remains reserved for a major milestone.

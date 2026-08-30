@@ -126,6 +126,7 @@ fn erase_account(state: &mut RepositoryState, request: &PendingAccountDeletion) 
     state.phase6.audits.retain(|record| {
         record.actor_account_id != request.account_id && record.target != request.account_id
     });
+    anonymize_audit_targets(&mut state.phase6.audits, &request.account_id);
     super::audit(
         state,
         DELETED_ACCOUNT,
@@ -135,6 +136,18 @@ fn erase_account(state: &mut RepositoryState, request: &PendingAccountDeletion) 
         "Private account data was removed; public settlement history was anonymised.",
     );
     state.identities.remove(&request.identity_key);
+}
+
+fn anonymize_audit_targets(
+    audits: &mut std::collections::VecDeque<tarrowyn_protocol::AuditRecord>,
+    account_id: &str,
+) {
+    let prefix = format!("{account_id} (");
+    for audit in audits {
+        if let Some(suffix) = audit.target.strip_prefix(&prefix) {
+            audit.target = format!("{DELETED_ACCOUNT} ({suffix}");
+        }
+    }
 }
 
 fn erase_private_phase4_state(state: &mut RepositoryState, request: &PendingAccountDeletion) {
