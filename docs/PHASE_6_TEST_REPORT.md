@@ -2412,3 +2412,12 @@ client formatting, clippy, standards, and the Rust file-size check pass, and
 catalog sync. No full workspace gate was repeated because this was a bounded
 cross-phase dispatch-order correction, and no new external or deferred work was
 opened.
+
+Moderation report replay lookup now precedes historical chat-evidence lookup
+after the request fields are validated, so a retry keeps its accepted response
+even if the referenced chat message has left the retained history window. The
+focused `repository::phase6::tests::moderation_validation` filter passes five
+tests, including the retention-era replay regression; workspace formatting and
+`git diff --check` pass. No full workspace gate was repeated because this was
+a bounded moderation idempotency correction, and no new external or deferred
+work was opened.

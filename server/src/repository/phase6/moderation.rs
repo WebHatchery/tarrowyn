@@ -38,6 +38,13 @@ impl WorldRepository {
                 )
             })
             .transpose()?;
+        let cache = format!("moderation:{}:{}", key, request.request_id);
+        if let Some(previous) = state.phase6.moderation_results.get(&cache) {
+            return Ok(ApiResponse {
+                meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
+                data: previous.clone(),
+            });
+        }
         if let Some(message_id) = request.message_id {
             let Some(message) = state
                 .chat_history
@@ -60,13 +67,6 @@ impl WorldRepository {
                     "The reported chat message does not belong to the selected account.",
                 ));
             }
-        }
-        let cache = format!("moderation:{}:{}", key, request.request_id);
-        if let Some(previous) = state.phase6.moderation_results.get(&cache) {
-            return Ok(ApiResponse {
-                meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
-                data: previous.clone(),
-            });
         }
         if state
             .phase6

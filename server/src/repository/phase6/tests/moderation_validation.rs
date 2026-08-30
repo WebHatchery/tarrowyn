@@ -137,6 +137,63 @@ fn moderation_reports_reject_missing_or_mismatched_chat_evidence() {
 }
 
 #[test]
+fn moderation_report_replays_after_chat_evidence_is_retained_out() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let reporter = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("moderation-replay-after-retention".to_owned()),
+            reset: false,
+        })
+        .expect("reporter session")
+        .data;
+    let target = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("moderation-replay-retention-target".to_owned()),
+            reset: false,
+        })
+        .expect("target session")
+        .data;
+    let message_id = repository
+        .chat(
+            &target.account_token,
+            ChatRequest {
+                request_id: "moderation-replay-retention-chat".to_owned(),
+                channel: "settlement".to_owned(),
+                text: "The report evidence is initially available.".to_owned(),
+            },
+        )
+        .expect("chat evidence")
+        .data
+        .message
+        .expect("accepted chat evidence")
+        .message_id;
+    let request = ModerationReportRequest {
+        request_id: "moderation-replay-retention-report".to_owned(),
+        target_account_id: Some(target.account_id),
+        message_id: Some(message_id),
+        category: "harassment".to_owned(),
+        note: "The report should survive evidence retention.".to_owned(),
+    };
+    let original = repository
+        .moderation_report(&reporter.account_token, request.clone())
+        .expect("moderation report")
+        .data;
+    repository
+        .state
+        .lock()
+        .expect("repository state lock")
+        .chat_history
+        .clear();
+
+    let replay = repository
+        .moderation_report(&reporter.account_token, request)
+        .expect("the cached moderation response should replay")
+        .data;
+
+    assert_eq!(replay, original);
+}
+
+#[test]
 fn malformed_moderation_replay_key_degrades_readiness() {
     let repository = WorldRepository::new(ServerConfig::default());
     let session = repository
