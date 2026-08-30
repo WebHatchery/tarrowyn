@@ -299,6 +299,15 @@ impl super::super::WorldRepository {
                 ) {
                     response.reason =
                         Some("Only an expired or abandoned claim can be reclaimed.".to_owned());
+                } else if state
+                    .tick
+                    .saturating_sub(state.phase4.claims[index].last_active_tick)
+                    < self.config.claim_reclaim_grace_ticks
+                {
+                    response.reason = Some(
+                        "The registry keeps this plot protected until its reclamation grace period ends."
+                            .to_owned(),
+                    );
                 } else {
                     let position = state.phase4.claims[index].position;
                     let claim_snapshot = {

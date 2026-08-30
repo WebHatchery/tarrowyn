@@ -907,3 +907,10 @@ regression verifies the expired route boundary; server clippy, formatting, size,
 diff, and publisher checks pass. No full workspace gate was rerun because this
 is a bounded Phase 5 retention maintenance slice. No new external or deferred
 work was opened.
+
+Explicit claim reclamation now honours the configured grace interval instead of
+opening an expired or abandoned plot immediately to a new claimant. The focused
+claim-lifecycle regression verifies the too-early path; server clippy,
+formatting, size, diff, and publisher checks pass. No full workspace gate was
+rerun because this is a bounded Phase 4 lease-rule maintenance slice. No new
+external or deferred work was opened.
