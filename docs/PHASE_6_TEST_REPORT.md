@@ -1280,3 +1280,9 @@ diff checks clean. No server, client, workspace, or publisher validation was
 repeated because this follow-up changes only protocol test coverage; the
 runtime publisher result is recorded in the preceding entry. No new external
 or deferred work was opened.
+
+The restore-on-a-copy failure drill now also requires a healthy restored
+server to return an empty `integrity_failures` list, covering the new health
+diagnostic contract at the executable recovery boundary. The focused restore
+drill passes, with no runtime source changes and no workspace or publisher
+validation repeated. No new external or deferred work was opened.

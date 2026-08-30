@@ -81,6 +81,10 @@ try {
         $healthSummary = $health.data | ConvertTo-Json -Compress -Depth 8
         throw "Temporary restore server reported degraded readiness: $healthSummary"
     }
+    if ($null -eq $health.data.integrity_failures -or @($health.data.integrity_failures).Count -ne 0) {
+        $healthSummary = $health.data | ConvertTo-Json -Compress -Depth 8
+        throw "Temporary restore server reported unexpected integrity diagnostics: $healthSummary"
+    }
     $backupWritten = $false
     for ($attempt = 0; $attempt -lt 40; $attempt++) {
         if (Test-Path -LiteralPath $restoreBackupPath) {
