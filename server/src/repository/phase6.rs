@@ -571,19 +571,22 @@ impl WorldRepository {
             .character_id
             .clone();
         if state.phase6.deletion_requests.len() >= MAX_PENDING_DELETIONS {
+            let response = AccountDeletionResponse {
+                request_id: request.request_id,
+                account_id: account,
+                character_id,
+                accepted: false,
+                status: "blocked".to_owned(),
+                reason: Some(
+                    "The account-deletion queue is full; wait for the next authoritative tick before trying again."
+                        .to_owned(),
+                ),
+            };
+            record_command_outcome(&mut state, false);
+            self.persist(&state);
             return Ok(ApiResponse {
-                meta: meta(state.tick, Some(request.request_id.clone()), Some(state.cursor)),
-                data: AccountDeletionResponse {
-                    request_id: request.request_id,
-                    account_id: account,
-                    character_id,
-                    accepted: false,
-                    status: "blocked".to_owned(),
-                    reason: Some(
-                        "The account-deletion queue is full; wait for the next authoritative tick before trying again."
-                            .to_owned(),
-                    ),
-                },
+                meta: meta(state.tick, Some(response.request_id.clone()), Some(state.cursor)),
+                data: response,
             });
         }
         let pending = PendingAccountDeletion {

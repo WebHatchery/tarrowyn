@@ -80,4 +80,5 @@ fn deletion_queue_preserves_pending_work_and_coalesces_retries() {
         state.phase6.deletion_requests.len(),
         super::super::MAX_PENDING_DELETIONS
     );
+    assert_eq!(state.phase6.rejected_commands, 1);
 }

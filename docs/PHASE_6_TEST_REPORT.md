@@ -749,3 +749,9 @@ clock tick, including accelerated multi-day steps, while retaining the normal
 one-day behaviour. The focused multi-day and existing animal-care regressions,
 server clippy, size, diff, and publisher checks pass. No new external or
 deferred work was opened.
+
+Full account-deletion queues now count a blocked request in the operational
+rejection metrics and persist that updated counter. The focused deletion-queue
+regression covers the full-queue response and rejection count; server clippy,
+size, and diff checks are the validation scope for this Phase 6 maintenance
+slice. No new external or deferred work was opened.
