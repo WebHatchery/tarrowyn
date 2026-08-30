@@ -1,4 +1,4 @@
-use super::super::{ConnectionState, OnlineClient};
+use super::super::OnlineClient;
 use tarrowyn_protocol::{
     ClaimAction, CombatAction, ContractAction, ExpeditionAction, ExpeditionRequest, ExpeditionRole,
     RecoveryChoice, WeaponKind,
@@ -93,7 +93,7 @@ impl OnlineClient {
     }
 
     pub fn queue_contract(&mut self, action: ContractAction) {
-        if self.state == ConnectionState::Online {
+        if self.mutations_ready() {
             let request_id = self.next_request_id("contract");
             if !self.frontier.queue_contract(request_id, action) {
                 self.status_message =
@@ -104,7 +104,7 @@ impl OnlineClient {
     }
 
     pub fn queue_combat(&mut self, action: CombatAction, weapon: WeaponKind) {
-        if self.state == ConnectionState::Online {
+        if self.mutations_ready() {
             let request_id = self.next_request_id("combat");
             if !self.frontier.queue_combat(request_id, action, weapon) {
                 self.status_message =
@@ -115,7 +115,7 @@ impl OnlineClient {
     }
 
     pub fn queue_recovery(&mut self, choice: RecoveryChoice) {
-        if self.state == ConnectionState::Online {
+        if self.mutations_ready() {
             let request_id = self.next_request_id("recovery");
             if !self.frontier.queue_recovery(request_id, choice) {
                 self.status_message =
@@ -146,7 +146,7 @@ impl OnlineClient {
     }
 
     pub fn queue_claim(&mut self, action: ClaimAction) {
-        if self.state == ConnectionState::Online {
+        if self.mutations_ready() {
             let request_id = self.next_request_id("claim");
             if !self.frontier.queue_claim(request_id, action) {
                 self.status_message =
@@ -157,7 +157,7 @@ impl OnlineClient {
     }
 
     pub fn queue_expedition(&mut self, action: ExpeditionAction, role: Option<ExpeditionRole>) {
-        if self.state == ConnectionState::Online {
+        if self.mutations_ready() {
             let request_id = self.next_request_id("expedition");
             if !self.frontier.queue_expedition(ExpeditionRequest {
                 request_id,

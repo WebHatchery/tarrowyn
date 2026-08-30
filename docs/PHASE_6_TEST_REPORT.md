@@ -2897,3 +2897,26 @@ Rust file-size scan pass. The project `publish.ps1` Windows/WebGL build,
 packaging, Preview deployment, and catalog-sync checks pass. No full workspace
 gate was repeated because this was a bounded authoritative-position coherence
 correction, and no new external or deferred work was opened.
+
+Maintenance recovery now holds the client behind a fresh authoritative state
+snapshot: it withdraws the cached position, keeps chat and gameplay mutations
+from queuing or dispatching, and requests `/v1/state` before reopening the road.
+The focused
+`network::maintenance::tests::healthy_readiness_reopens_a_loaded_world_after_maintenance`
+test passes; client-package formatting and clippy, `git diff --check`, and the
+Rust file-size scan pass. The projection-version helpers were moved to
+`src/network/world.rs` to keep every Rust file below 800 lines. The project
+`publish.ps1` Windows/WebGL build, packaging, Preview deployment, and
+catalog-sync checks pass. No full workspace gate was repeated because this was
+a bounded maintenance-recovery authority correction, and no new external or
+deferred work was opened.
+
+Online modal action filters now preserve the visible `Reconnect` and `Offline
+fixture` recovery controls while continuing to reject unrelated sidebar
+actions. The focused
+`ui::tests::modal_filters_keep_recovery_controls_touchable` test passes;
+client-package formatting and clippy, `git diff --check`, and the Rust
+file-size scan pass. The project `publish.ps1` Windows/WebGL build, packaging,
+Preview deployment, and catalog-sync checks pass. No full workspace gate was
+repeated because this was a bounded touch-recovery action-filter correction,
+and no new external or deferred work was opened.

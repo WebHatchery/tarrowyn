@@ -1,5 +1,5 @@
 use super::{CraftingView, Phase4Client};
-use crate::network::{ConnectionState, OnlineClient};
+use crate::network::OnlineClient;
 use macroquad_toolkit::grid::TilePos;
 use tarrowyn_protocol::{ClaimLifecycleAction, LocalCombatState};
 
@@ -28,7 +28,7 @@ impl Phase4Client {
 
 impl OnlineClient {
     pub(crate) fn queue_phase4(&mut self, id: &str) {
-        if self.state == ConnectionState::Online {
+        if self.mutations_ready() {
             let request_id = self.next_request_id("phase4");
             if !self.phase4.queue_cycle(id, request_id) {
                 self.status_message =
@@ -39,7 +39,7 @@ impl OnlineClient {
     }
 
     pub(crate) fn queue_region_intervention(&mut self, intervention: String) {
-        if self.state == ConnectionState::Online {
+        if self.mutations_ready() {
             let request_id = self.next_request_id("event");
             if !self
                 .phase4
@@ -61,7 +61,7 @@ impl OnlineClient {
     }
 
     pub(crate) fn queue_knowledge_cycle(&mut self, target_account_id: Option<String>) {
-        if self.state == ConnectionState::Online {
+        if self.mutations_ready() {
             let request_id = self.next_request_id("knowledge");
             if !self.phase4.queue_knowledge(request_id, target_account_id) {
                 self.status_message =
@@ -71,7 +71,7 @@ impl OnlineClient {
     }
 
     pub(crate) fn queue_report(&mut self) {
-        if self.state != ConnectionState::Online {
+        if !self.mutations_ready() {
             return;
         }
         let own_account_id = self
@@ -162,7 +162,7 @@ impl OnlineClient {
         action: ClaimLifecycleAction,
         target_account_id: Option<String>,
     ) {
-        if self.state == ConnectionState::Online {
+        if self.mutations_ready() {
             let request_id = self.next_request_id("claim");
             if !self
                 .phase4
@@ -194,7 +194,7 @@ impl OnlineClient {
     }
 
     pub(crate) fn queue_crafting_timing(&mut self) {
-        if self.state != ConnectionState::Online {
+        if !self.mutations_ready() {
             return;
         }
         let request_id = self.next_request_id("craft");
@@ -209,7 +209,7 @@ impl OnlineClient {
     }
 
     pub(crate) fn queue_skill_teach(&mut self, target_account_id: &str) -> bool {
-        if self.state != ConnectionState::Online {
+        if !self.mutations_ready() {
             return false;
         }
         let request_id = self.next_request_id("school");
@@ -225,7 +225,7 @@ impl OnlineClient {
     }
 
     pub(crate) fn queue_skill_practice(&mut self, skill_id: String) {
-        if self.state != ConnectionState::Online {
+        if !self.mutations_ready() {
             return;
         }
         let request_id = self.next_request_id("practice");

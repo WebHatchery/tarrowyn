@@ -2,7 +2,7 @@ use super::*;
 
 impl OnlineClient {
     pub fn queue_movement(&mut self, dx: i32, dy: i32) {
-        if self.state != ConnectionState::Online {
+        if !self.mutations_ready() {
             return;
         }
         if self
@@ -48,7 +48,7 @@ impl OnlineClient {
     }
 
     pub fn queue_chat(&mut self, text: &str) {
-        if self.state != ConnectionState::Online {
+        if !self.mutations_ready() {
             return;
         }
         let text: String = text.chars().take(MAX_CHAT_MESSAGE_LENGTH).collect();
@@ -71,7 +71,7 @@ impl OnlineClient {
     }
 
     pub fn queue_farming(&mut self, action: FarmingAction) {
-        if self.state != ConnectionState::Online {
+        if !self.mutations_ready() {
             return;
         }
         if self.farming_pending() && self.farming_queue.len() < queue::MAX_PENDING_COMMANDS {

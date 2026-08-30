@@ -48,14 +48,24 @@ fn healthy_readiness_reopens_a_loaded_world_after_maintenance() {
     let mut client = OnlineClient::new("http://127.0.0.1:8787", &data.config);
     client.had_world = true;
     client.state = super::super::ConnectionState::Online;
+    client
+        .projection
+        .set_authoritative_player_position(macroquad_toolkit::grid::TilePos::new(8, 6));
 
     apply_readiness(&mut client, false, None);
     client.state_refresh = 12.0;
     apply_readiness(&mut client, true, None);
 
     assert!(!client.readiness_degraded);
-    assert_eq!(client.state, super::super::ConnectionState::Online);
+    assert_eq!(client.state, super::super::ConnectionState::Degraded);
+    assert!(client.state_reload_pending);
+    assert_eq!(client.projection.authoritative_player_position(), None);
     assert_eq!(client.state_refresh, 0.0);
+
+    client.queue_chat("This must wait for the fresh road snapshot");
+    assert!(client.chat_queue.is_empty());
+    client.dispatch_requests();
+    assert!(client.pending_state.is_some());
 }
 
 #[test]

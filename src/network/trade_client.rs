@@ -104,7 +104,7 @@ impl OnlineClient {
     }
 
     pub fn queue_trade(&mut self, mut request: TradeRequest) {
-        if self.state != ConnectionState::Online {
+        if !self.mutations_ready() {
             return;
         }
         if request.request_id.trim().is_empty() {
@@ -223,7 +223,7 @@ impl OnlineClient {
     }
 
     pub(super) fn dispatch_trade_requests(&mut self) {
-        if self.state != ConnectionState::Online {
+        if !self.mutations_ready() {
             return;
         }
         if self.phase4.auth_refresh_pending() {

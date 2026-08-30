@@ -239,6 +239,12 @@ impl OnlineClient {
     }
 
     pub(super) fn dispatch_requests(&mut self) {
+        if self.state_reload_pending {
+            if self.pending_state.is_none() {
+                self.pending_state = Some(self.api.get("/v1/state"));
+            }
+            return;
+        }
         if self.state != ConnectionState::Online {
             return;
         }

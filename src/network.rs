@@ -212,32 +212,6 @@ impl WorldProjection {
         self.cursor = self.cursor.max(response.cursor);
     }
 
-    pub(super) fn response_is_current(&self, server_tick: u64, cursor: u64) -> bool {
-        server_tick >= self.server_tick && cursor >= self.cursor
-    }
-
-    pub(super) fn response_is_newer(&self, server_tick: u64, cursor: u64) -> bool {
-        server_tick >= self.server_tick && cursor > self.cursor
-    }
-
-    pub(super) fn accept_response_version(
-        &mut self,
-        server_tick: u64,
-        cursor: Option<u64>,
-    ) -> bool {
-        let version_cursor = cursor.unwrap_or(self.cursor);
-        let current = self.response_is_current(server_tick, version_cursor);
-        self.record_response_version(server_tick, cursor);
-        current
-    }
-
-    pub(super) fn record_response_version(&mut self, server_tick: u64, cursor: Option<u64>) {
-        self.server_tick = self.server_tick.max(server_tick);
-        if let Some(cursor) = cursor {
-            self.cursor = self.cursor.max(cursor);
-        }
-    }
-
     fn apply_presence(&mut self, presence: PlayerPresence, own_account: &str) {
         let remote = remote_player(presence);
         if remote.account_id == own_account {
@@ -279,26 +253,6 @@ impl WorldProjection {
             self.chat.drain(0..keep_from);
         }
     }
-
-    pub(super) fn authoritative_player_position(&self) -> Option<TilePos> {
-        self.player_position_authoritative
-            .then_some(self.player_position)
-    }
-
-    pub(super) fn set_authoritative_player_position(&mut self, position: TilePos) {
-        self.player_position = position;
-        if let Some(player) = self.player.as_mut() {
-            player.position = tarrowyn_protocol::Position {
-                x: position.x,
-                y: position.y,
-            };
-        }
-        self.player_position_authoritative = true;
-    }
-
-    pub(super) fn forget_authoritative_player_position(&mut self) {
-        self.player_position_authoritative = false;
-    }
 }
 
 pub struct OnlineClient {
@@ -336,6 +290,7 @@ pub struct OnlineClient {
     pending_trade_action: Option<TradeAction>,
     frontier: FrontierClient,
     phase4: Phase4Client,
+    state_reload_pending: bool,
 }
 
 impl OnlineClient {
@@ -378,6 +333,7 @@ impl OnlineClient {
             pending_trade_action: None,
             frontier: FrontierClient::new(),
             phase4: Phase4Client::new(),
+            state_reload_pending: false,
         };
         client.begin_guest(false);
         client
@@ -395,12 +351,10 @@ impl OnlineClient {
         self.poll_chat(dt, &mut notices);
         self.poll_farming(dt, &mut notices);
         self.poll_trade_requests(dt, &mut notices);
-        let frontier_cursor_boundary = self.frontier.update(
-            &mut self.projection,
-            dt,
-            self.state == ConnectionState::Online,
-            &mut notices,
-        );
+        let mutations_ready = self.mutations_ready();
+        let frontier_cursor_boundary =
+            self.frontier
+                .update(&mut self.projection, dt, mutations_ready, &mut notices);
         if frontier_cursor_boundary {
             cursor::recover_from_cursor_boundary(self, &mut notices);
         }
@@ -420,11 +374,12 @@ impl OnlineClient {
             || self.general_mutation_pending()
             || self.pending_trade.is_some()
             || !self.trade_queue.is_empty();
+        let mutations_ready = self.mutations_ready();
         self.phase4.update(
             dt,
             &mut self.api,
             &mut self.projection,
-            self.state == ConnectionState::Online,
+            mutations_ready,
             other_mutation_pending,
             &mut notices,
         );
@@ -436,6 +391,9 @@ impl OnlineClient {
                 account.account_token = session.account_token;
                 account.expires_in_seconds = session.expires_in_seconds;
             }
+            self.state_reload_pending = true;
+            self.projection.forget_authoritative_player_position();
+            self.state_refresh = 0.0;
         }
         if self.phase4.take_logged_out() {
             self.clear_logged_out_session();
@@ -446,9 +404,10 @@ impl OnlineClient {
             || self.general_mutation_pending()
             || self.pending_trade.is_some()
             || !self.trade_queue.is_empty();
+        let mutations_ready = self.mutations_ready();
         self.frontier.dispatch(
             &mut self.api,
-            self.state == ConnectionState::Online,
+            mutations_ready,
             self.projection.cursor,
             self.phase4.auth_refresh_pending(),
             frontier_another_mutation_pending,
@@ -484,6 +443,7 @@ impl OnlineClient {
         self.projection.outpost = None;
         self.projection.expedition = None;
         self.state_refresh = 0.0;
+        self.state_reload_pending = true;
     }
 
     fn sync_regional_player_location(&mut self) {
@@ -491,6 +451,10 @@ impl OnlineClient {
             return;
         };
         self.phase4.sync_regional_player_location(position);
+    }
+
+    fn mutations_ready(&self) -> bool {
+        self.state == ConnectionState::Online && !self.state_reload_pending
     }
 
     pub fn refresh_tavern(&mut self) {
@@ -504,7 +468,7 @@ impl OnlineClient {
     }
 
     pub fn search_chronicle_page(&mut self, query: &str, since: u64) {
-        if self.state == ConnectionState::Online {
+        if self.mutations_ready() {
             self.frontier
                 .queue_chronicle_search(query.to_owned(), since);
             self.status_message = "Searching the durable chronicle…".to_owned();
@@ -564,6 +528,7 @@ impl OnlineClient {
         self.pending_trade_action = None;
         self.trades.clear();
         self.had_world = false;
+        self.state_reload_pending = false;
         cursor::reset_projection_history(&mut self.projection);
         if production_reconnect {
             self.phase4.clear_for_reconnect();
@@ -639,6 +604,7 @@ impl OnlineClient {
                 self.projection
                     .apply_state(response.data, response.meta.server_tick);
                 self.had_world = true;
+                self.state_reload_pending = false;
                 self.state = maintenance::state_after_snapshot(self.readiness_degraded);
                 self.retry_count = 0;
                 self.status_message = "The persistent settlement is open.".to_owned();
@@ -711,6 +677,7 @@ impl OnlineClient {
         self.pending_request_id = None;
         self.pending_trade_action = None;
         self.action_awaiting_confirmation = false;
+        self.state_reload_pending = false;
         let retry_message = if self.retry_count >= self.max_retry_count {
             "Retry limit reached; use Reconnect when the server is ready."
         } else {

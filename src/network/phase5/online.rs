@@ -2,7 +2,7 @@ use super::*;
 
 impl OnlineClient {
     pub(crate) fn queue_phase5(&mut self, id: &str) {
-        if self.state == super::ConnectionState::Online && !self.phase4.queue_region_cycle(id) {
+        if self.mutations_ready() && !self.phase4.queue_region_cycle(id) {
             self.status_message =
                 "That regional action is not ready; wait for its projection or queue to clear."
                     .to_owned();
