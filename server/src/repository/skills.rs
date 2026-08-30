@@ -35,10 +35,10 @@ impl WorldRepository {
     pub fn skills(&self, token: &str) -> Result<ApiResponse<SkillsResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
         expire_sessions(&mut state, &self.config);
-        super::phase4::prune_school_lessons(&mut state);
+        let lessons_pruned = super::phase4::prune_school_lessons(&mut state);
         let key = authenticate(&mut state, token, &self.config)?;
         let discovered = discover_eligible(&mut state, &key);
-        if discovered {
+        if discovered || lessons_pruned {
             self.persist(&state);
         }
         Ok(ApiResponse {

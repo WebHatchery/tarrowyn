@@ -439,8 +439,10 @@ pub(super) fn day_rollover(state: &mut RepositoryState, elapsed_days: u32) {
     }
 }
 
-pub(super) fn prune_school_lessons(state: &mut RepositoryState) {
+pub(super) fn prune_school_lessons(state: &mut RepositoryState) -> bool {
+    let lesson_count = state.phase4.lessons.len();
     trim_school_lessons(&mut state.phase4, state.tick);
+    state.phase4.lessons.len() != lesson_count
 }
 
 pub(super) fn school_lesson_room(state: &mut RepositoryState) -> bool {

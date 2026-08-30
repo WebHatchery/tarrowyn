@@ -2512,3 +2512,12 @@ server-package formatting and clippy, `git diff --check`, and the Rust
 file-size scan pass. No full workspace gate was repeated because this was a
 bounded settlement-snapshot consistency correction, and no new external or
 deferred work was opened.
+
+Skills reads now persist expired or over-cap school-lesson pruning, so a lesson
+removed from the authoritative view cannot return after a restart before the
+next mutation or tick. The focused
+`repository::phase4::tests::lesson_retention` filter passes two tests;
+server-package formatting and clippy, `git diff --check`, and the Rust
+file-size scan pass. No full workspace gate was repeated because this was a
+bounded skill-ledger retention correction, and no new external or deferred
+work was opened.
