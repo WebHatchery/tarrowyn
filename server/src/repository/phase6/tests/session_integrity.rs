@@ -331,3 +331,50 @@ fn malformed_cached_production_credentials_degrade_readiness() {
     assert!(!health.integrity_ok);
     assert!(!health.ready);
 }
+
+#[test]
+fn refresh_rejects_a_session_with_a_missing_identity_without_panicking() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let guest = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("session-missing-identity".to_owned()),
+            reset: false,
+        })
+        .expect("guest session")
+        .data;
+    let linked = repository
+        .auth_link(
+            &guest.account_token,
+            AuthLinkRequest {
+                request_id: "session-missing-identity-link".to_owned(),
+                provider: "webhatchery-identity-oidc".to_owned(),
+                subject: "session-missing-identity-subject".to_owned(),
+                display_name: None,
+            },
+        )
+        .expect("linked session")
+        .data;
+
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        let identity_key = state
+            .phase6
+            .accounts
+            .get(&linked.account_id)
+            .expect("production account")
+            .identity_key
+            .clone();
+        state.identities.remove(&identity_key);
+        state.sessions.remove(&linked.session.account_token);
+    }
+
+    let error = repository
+        .auth_refresh(AuthRefreshRequest {
+            request_id: "session-missing-identity-refresh".to_owned(),
+            refresh_token: linked.session.refresh_token,
+        })
+        .unwrap_err();
+
+    assert_eq!(error.status, 401);
+    assert_eq!(error.error.code, "invalid_refresh");
+}

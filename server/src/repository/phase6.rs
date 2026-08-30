@@ -408,6 +408,19 @@ impl WorldRepository {
                 "Sign in again; the refresh session has expired.",
             ));
         }
+        if !state.identities.contains_key(&old_session.identity_key)
+            || !state
+                .phase6
+                .accounts
+                .get(&old_session.account_id)
+                .is_some_and(|account| account.identity_key == old_session.identity_key)
+        {
+            return Err(RepositoryError::new(
+                401,
+                "invalid_refresh",
+                "That refresh session is no longer valid.",
+            ));
+        }
         let session_tokens = new_session_tokens().map_err(|_| session_unavailable())?;
         let access_was_expired = !state.sessions.contains_key(&old_token);
         if let Some(session) = state.phase6.sessions.get_mut(&old_token) {

@@ -2867,3 +2867,13 @@ file-size scan pass. The project `publish.ps1` Windows/WebGL build, packaging,
 Preview deployment, and catalog-sync checks pass. No full workspace gate was
 repeated because this was a bounded knockout-input correction, and no new
 external or deferred work was opened.
+
+The unauthenticated production refresh boundary now rejects a persisted session
+whose identity or account link has disappeared, instead of reaching an internal
+assumption while the repository is already degraded. The focused
+`repository::phase6::tests::session_integrity::refresh_rejects_a_session_with_a_missing_identity_without_panicking`
+test passes; server-package formatting and clippy, `git diff --check`, and the
+Rust file-size scan pass. The project `publish.ps1` Windows/WebGL build,
+packaging, Preview deployment, and catalog-sync checks pass. No full workspace
+gate was repeated because this was a bounded production-session integrity
+correction, and no new external or deferred work was opened.
