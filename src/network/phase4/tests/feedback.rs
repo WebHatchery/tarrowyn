@@ -185,6 +185,42 @@ fn governance_inspection_message_surfaces_the_public_ledger() {
     );
 }
 
+#[test]
+fn knowledge_discovery_notice_names_the_recorded_clue() {
+    let response = tarrowyn_protocol::KnowledgeResponse {
+        request_id: "knowledge-discover".to_owned(),
+        accepted: true,
+        knowledge: tarrowyn_protocol::KnowledgeState {
+            items: vec![tarrowyn_protocol::KnowledgeItem {
+                knowledge_id: "moonberry-tending".to_owned(),
+                title: "Moonberry trellis method".to_owned(),
+                kind: tarrowyn_protocol::KnowledgeKind::CropTechnique,
+                description: "Train the vines along a trellis.".to_owned(),
+                effect: "Moonberries gain quality when tended.".to_owned(),
+                teachable: true,
+                writable: true,
+                discovered_by: vec!["account-1".to_owned()],
+                stored_in: "Private field notes".to_owned(),
+            }],
+            known_by_player: vec!["moonberry-tending".to_owned()],
+            cursor: 4,
+        },
+        message: "Moonberries gain quality when tended.".to_owned(),
+        reason: None,
+    };
+    let request = tarrowyn_protocol::KnowledgeRequest {
+        request_id: "knowledge-discover".to_owned(),
+        action: tarrowyn_protocol::KnowledgeAction::Discover,
+        knowledge_id: Some("moonberry-tending".to_owned()),
+        target_account_id: None,
+    };
+
+    assert_eq!(
+        super::super::knowledge_success_message(&response, Some(&request)),
+        "Discovered Moonberry trellis method. Moonberries gain quality when tended."
+    );
+}
+
 fn service_order_for_test(
     status: tarrowyn_protocol::ServiceOrderStatus,
 ) -> tarrowyn_protocol::ServiceOrder {

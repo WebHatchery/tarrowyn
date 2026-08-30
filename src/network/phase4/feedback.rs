@@ -1,7 +1,7 @@
 use tarrowyn_protocol::{
     ClaimLifecycleStatus, ClaimRecord, GovernanceAction, GovernanceRequest, GovernanceResponse,
-    GovernanceState, ProfessionAction, ProfessionKind, ProfessionRequest, ProposalStatus,
-    ServiceOrder, ServiceOrderStatus,
+    GovernanceState, KnowledgeAction, KnowledgeRequest, KnowledgeResponse, ProfessionAction,
+    ProfessionKind, ProfessionRequest, ProposalStatus, ServiceOrder, ServiceOrderStatus,
 };
 
 pub(super) fn claim_success_message(claim: Option<&ClaimRecord>) -> String {
@@ -230,4 +230,36 @@ fn governance_inspection_message(governance: &GovernanceState) -> String {
         governance.public_treasury,
         governance.administration_quality,
     )
+}
+
+pub(super) fn knowledge_success_message(
+    response: &KnowledgeResponse,
+    request: Option<&KnowledgeRequest>,
+) -> String {
+    let Some(request) = request else {
+        return response.message.clone();
+    };
+    if request.action != KnowledgeAction::Discover {
+        return response.message.clone();
+    }
+    let title = request
+        .knowledge_id
+        .as_deref()
+        .and_then(|knowledge_id| {
+            response
+                .knowledge
+                .items
+                .iter()
+                .find(|item| item.knowledge_id == knowledge_id)
+        })
+        .or_else(|| response.knowledge.items.first())
+        .map(|item| item.title.as_str())
+        .filter(|title| !title.trim().is_empty())
+        .unwrap_or("the field clue");
+    let detail = response.message.trim_end_matches('.');
+    if detail.is_empty() {
+        format!("Discovered {title}.")
+    } else {
+        format!("Discovered {title}. {detail}.")
+    }
 }

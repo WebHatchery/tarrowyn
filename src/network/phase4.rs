@@ -26,7 +26,10 @@ mod summary;
 mod sync;
 
 use combat::advance_crafting;
-use feedback::{claim_success_message, governance_success_message, profession_success_message};
+use feedback::{
+    claim_success_message, governance_success_message, knowledge_success_message,
+    profession_success_message,
+};
 use polling::{accept_projection_cursor, phase4_notice, poll_projection, short_error};
 
 #[derive(Clone)]
@@ -546,15 +549,15 @@ impl Phase4Client {
                 phase4_notice(response.accepted, response.reason, &message, notices);
             }
             Phase4CommandResponse::Knowledge(response) => {
+                let request = command.and_then(|command| match command {
+                    Phase4Command::Knowledge(request) => Some(request),
+                    _ => None,
+                });
+                let message = knowledge_success_message(&response, request);
                 if current {
                     self.knowledge = Some(response.clone());
                 }
-                phase4_notice(
-                    response.accepted,
-                    response.reason,
-                    &response.message,
-                    notices,
-                );
+                phase4_notice(response.accepted, response.reason, &message, notices);
             }
             Phase4CommandResponse::Combat(response) => {
                 if current {
