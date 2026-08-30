@@ -35,3 +35,34 @@ fn local_household_status_is_visible_in_the_settlement_summary() {
         line.starts_with("Local life reduced service") && line.contains("72%")
     }));
 }
+
+#[test]
+fn lease_summary_keeps_reclamation_grace_pending_until_the_registry_opens() {
+    let mut client = Phase4Client::new();
+    client.own_account_id = Some("account-1".to_owned());
+    client.claims = Some(tarrowyn_protocol::ClaimsResponse {
+        claims: vec![tarrowyn_protocol::ClaimRecord {
+            claim_id: "lease-1".to_owned(),
+            plot_id: "plot-1".to_owned(),
+            owner_account_id: Some("account-1".to_owned()),
+            owner_name: Some("Guest".to_owned()),
+            position: tarrowyn_protocol::Position { x: 3, y: 4 },
+            lease_days: 90,
+            started_tick: 1,
+            expires_tick: 1,
+            started_at_unix_seconds: 0,
+            expires_at_unix_seconds: 0,
+            last_active_tick: 4,
+            status: tarrowyn_protocol::ClaimLifecycleStatus::Abandoned,
+            approved_by: None,
+            building_access: false,
+            protected_goods_policy: "Stored goods remain safe.".to_owned(),
+            inspection_note: "Grace is pending.".to_owned(),
+        }],
+        available_plots: Vec::new(),
+        lease_duration_days: 90,
+        cursor: 4,
+    });
+
+    assert!(render(&client).contains("lease abandoned; grace pending"));
+}

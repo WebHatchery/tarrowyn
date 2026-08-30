@@ -116,8 +116,8 @@ fn lease_registry_summary(client: &Phase4Client, claims: &ClaimsResponse) -> Str
                 | tarrowyn_protocol::ClaimLifecycleStatus::Renewed
                 | tarrowyn_protocol::ClaimLifecycleStatus::Transferred
                 | tarrowyn_protocol::ClaimLifecycleStatus::Inherited => "access open",
-                tarrowyn_protocol::ClaimLifecycleStatus::Abandoned => "abandoned; grace open",
-                tarrowyn_protocol::ClaimLifecycleStatus::Expired => "expired; grace open",
+                tarrowyn_protocol::ClaimLifecycleStatus::Abandoned => "abandoned; grace pending",
+                tarrowyn_protocol::ClaimLifecycleStatus::Expired => "expired; grace pending",
                 tarrowyn_protocol::ClaimLifecycleStatus::Reclaimed => "reclaimed",
             };
             if claim.expires_at_unix_seconds > 0

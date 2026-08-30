@@ -922,3 +922,10 @@ Phase 4 lifecycle regression, server clippy, formatting, size, diff, and
 publisher checks pass. No full workspace gate was rerun because this remains a
 bounded lease-lifecycle maintenance slice. No new external or deferred work
 was opened.
+
+Lease summaries now label abandoned and expired claims as “grace pending” until
+the registry interval actually opens, matching the protected server state. The
+focused client summary regression, client clippy, formatting, size, diff, and
+publisher checks pass. No full workspace gate was rerun because this is a
+bounded Phase 4 presentation maintenance slice. No new external or deferred
+work was opened.
