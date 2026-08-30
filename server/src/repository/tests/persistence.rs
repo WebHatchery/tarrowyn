@@ -50,6 +50,19 @@ fn mysql_backend_requires_a_password_before_connecting() {
 }
 
 #[test]
+fn mysql_backend_rejects_a_whitespace_only_password_before_connecting() {
+    let config = ServerConfig {
+        db_driver: "mysql".to_owned(),
+        db_database: "tarrowyn".to_owned(),
+        db_username: "tarrowyn".to_owned(),
+        db_password: "   ".to_owned(),
+        ..ServerConfig::default()
+    };
+    let error = WorldRepository::try_new(config).err().unwrap();
+    assert!(error.contains("DB_PASSWORD must be non-empty"));
+}
+
+#[test]
 fn corrupt_json_snapshot_fails_closed_without_overwriting_the_file() {
     let path = std::env::temp_dir().join(format!(
         "tarrowyn-corrupt-state-{}.json",

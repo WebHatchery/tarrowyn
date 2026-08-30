@@ -37,7 +37,7 @@ impl MysqlStore {
                 "DB_USERNAME must be non-empty when DB_DRIVER=mysql",
             ));
         }
-        if config.db_password.is_empty() {
+        if config.db_password.trim().is_empty() {
             return Err(PersistenceBackendError::new(
                 "DB_PASSWORD must be non-empty when DB_DRIVER=mysql",
             ));

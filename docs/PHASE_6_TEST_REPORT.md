@@ -1492,3 +1492,12 @@ server-package clippy, formatting, diff, and Rust file-size checks clean.
 deployment, and catalog synchronization. No full workspace gate was repeated
 because this was an isolated MySQL configuration-boundary check; the existing
 preview database was not changed.
+
+The MySQL password preflight now uses the same whitespace-only rejection as
+the acceptance script, while preserving non-empty password bytes for the
+driver. The focused `mysql_backend_` filter passes (4 matching tests), with
+server-package clippy, formatting, diff, and Rust file-size checks clean.
+`publish.ps1` passed the Windows and WebGL release builds, packaging, Preview
+deployment, and catalog synchronization. No full workspace gate was repeated
+because this was a one-condition consistency fix at the existing configuration
+boundary.
