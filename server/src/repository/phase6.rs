@@ -656,6 +656,10 @@ impl WorldRepository {
         {
             let mut response = deletion::scheduled_response(&pending);
             response.request_id = request.request_id;
+            state
+                .phase6
+                .deletion_results
+                .insert(deletion_replay_key, response.clone());
             return Ok(ApiResponse {
                 meta: meta(
                     state.tick,

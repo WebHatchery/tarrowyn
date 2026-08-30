@@ -114,6 +114,16 @@ fn completed_deletion_replays_after_the_identity_is_removed() {
         .account_delete(&linked.session.account_token, request.clone())
         .unwrap()
         .data;
+    let coalesced = repository
+        .account_delete(
+            &linked.session.account_token,
+            AccountDeletionRequest {
+                request_id: "deletion-terminal-coalesced".to_owned(),
+                account_id: linked.account_id.clone(),
+            },
+        )
+        .expect("the pending deletion should coalesce")
+        .data;
     repository.tick();
 
     let replay = repository
@@ -122,5 +132,16 @@ fn completed_deletion_replays_after_the_identity_is_removed() {
         .data;
 
     assert_eq!(replay, scheduled);
+    let coalesced_replay = repository
+        .account_delete(
+            &linked.session.account_token,
+            AccountDeletionRequest {
+                request_id: "deletion-terminal-coalesced".to_owned(),
+                account_id: linked.account_id,
+            },
+        )
+        .expect("the coalesced terminal deletion result should replay")
+        .data;
+    assert_eq!(coalesced_replay, coalesced);
     assert!(repository.state.lock().unwrap().identities.is_empty());
 }

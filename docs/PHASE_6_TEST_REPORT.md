@@ -2440,3 +2440,12 @@ filter passes six tests; formatting, diff, Rust file-size, and `publish.ps1`
 Windows/WebGL build, packaging, Preview deployment, and catalog-sync checks
 pass. No full workspace gate was repeated because this was a bounded session
 accounting correction, and no new external or deferred work was opened.
+
+Coalesced account-deletion requests now retain their own token-fingerprinted
+terminal replay response, so a second request ID received while deletion is
+queued remains recoverable after the authoritative tick removes the identity.
+The focused `repository::phase6::tests::deletion_queue` filter passes both
+tests, including the post-removal replay of the coalesced request; formatting
+and `git diff --check` pass. No full workspace gate was repeated because this
+was a bounded deletion replay correction, and no new external or deferred
+work was opened.
