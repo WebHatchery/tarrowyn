@@ -9,3 +9,27 @@ fn newer_schema_versions_fail_closed() {
         Some(2)
     );
 }
+
+#[test]
+fn snapshot_metadata_must_match_the_json_document() {
+    let stored = RepositoryState::fresh(&ServerConfig::default()).to_stored();
+
+    assert!(snapshot_metadata_matches(
+        stored.storage_version,
+        stored.tick,
+        stored.cursor,
+        &stored,
+    ));
+    assert!(!snapshot_metadata_matches(
+        stored.storage_version,
+        stored.tick.saturating_add(1),
+        stored.cursor,
+        &stored,
+    ));
+    assert!(!snapshot_metadata_matches(
+        stored.storage_version,
+        stored.tick,
+        stored.cursor.saturating_add(1),
+        &stored,
+    ));
+}

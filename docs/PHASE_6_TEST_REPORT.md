@@ -1435,3 +1435,11 @@ instead of stopping one mutation early. The focused backup/persistence tests
 pass (4 matching tests), with server-package clippy, formatting, diff, and Rust
 file-size checks clean. No full workspace gate was repeated because this is an
 isolated backup sequencing fix; no new external or deferred work was opened.
+
+MySQL snapshot loading now compares the indexed storage version, world tick,
+and event cursor with the values inside the authoritative JSON document, and
+fails closed when the denormalized row metadata disagrees. The focused metadata
+regression passes (1), with server-package clippy, formatting, diff, and Rust
+file-size checks clean. No live MySQL assertion was claimed because the ignored
+preview credentials remain unavailable; no full workspace gate was repeated for
+this isolated persistence-integrity check.

@@ -55,23 +55,31 @@ impl MysqlStore {
         config: &ServerConfig,
     ) -> Result<Option<RepositoryState>, PersistenceBackendError> {
         let mut connection = self.connection()?;
-        let state_json: Option<String> = connection
+        let snapshot: Option<(u32, u64, u64, String)> = connection
             .exec_first(
-                "SELECT state_json FROM tarrowyn_world_state WHERE id = 1",
+                "SELECT storage_version, world_tick, event_cursor, state_json
+                 FROM tarrowyn_world_state WHERE id = 1",
                 (),
             )
             .map_err(|_| {
                 PersistenceBackendError::new("the MySQL world snapshot could not be read")
             })?;
-        let Some(state_json) = state_json else {
+        let Some((storage_version, world_tick, event_cursor, state_json)) = snapshot else {
             return Ok(None);
         };
         let stored: StoredState = serde_json::from_str(&state_json).map_err(|_| {
             PersistenceBackendError::new("the MySQL world snapshot contains invalid state JSON")
         })?;
-        if stored.storage_version > super::STORAGE_VERSION {
+        if storage_version > super::STORAGE_VERSION
+            || stored.storage_version > super::STORAGE_VERSION
+        {
             return Err(PersistenceBackendError::new(
                 "the MySQL world snapshot was created by a newer server version",
+            ));
+        }
+        if !snapshot_metadata_matches(storage_version, world_tick, event_cursor, &stored) {
+            return Err(PersistenceBackendError::new(
+                "the MySQL world snapshot metadata does not match its JSON state",
             ));
         }
         Ok(Some(RepositoryState::from_stored(stored, config)))
@@ -225,6 +233,17 @@ fn unsupported_migration_version(versions: &[u32]) -> Option<u32> {
         .iter()
         .copied()
         .find(|version| *version > MIGRATION_VERSION)
+}
+
+fn snapshot_metadata_matches(
+    storage_version: u32,
+    world_tick: u64,
+    event_cursor: u64,
+    stored: &StoredState,
+) -> bool {
+    storage_version == stored.storage_version
+        && world_tick == stored.tick
+        && event_cursor == stored.cursor
 }
 
 impl Drop for MysqlStore {
