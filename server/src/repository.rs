@@ -462,7 +462,6 @@ impl WorldRepository {
         let started = Instant::now();
         let mut state = self.state.lock().expect("world repository lock poisoned");
         state.tick = state.tick.saturating_add(1);
-        let previous_day = state.clock.day;
         let day_length =
             if state.clock.day_length_seconds.is_finite() && state.clock.day_length_seconds > 0.0 {
                 state.clock.day_length_seconds
@@ -483,17 +482,18 @@ impl WorldRepository {
         };
         let elapsed_seconds = (current_seconds + tick_seconds).min(f32::MAX);
         let elapsed_days = (elapsed_seconds / day_length).floor();
+        let advanced_days = elapsed_days.min(u32::MAX as f32) as u32;
         if elapsed_days > 0.0 {
             state.clock.seconds = elapsed_seconds % day_length;
             state.clock.day = state
                 .clock
                 .day
-                .saturating_add(elapsed_days.min(u32::MAX as f32) as u32);
+                .saturating_add(advanced_days);
         } else {
             state.clock.seconds = elapsed_seconds;
         }
-        if state.clock.day != previous_day {
-            phase4::day_rollover(&mut state);
+        if advanced_days > 0 {
+            phase4::day_rollover(&mut state, advanced_days);
         }
         world::grow_plots(&mut state, &self.config);
         trades::expire_trades(&mut state);

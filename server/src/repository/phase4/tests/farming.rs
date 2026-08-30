@@ -141,6 +141,27 @@ fn animal_condition_survives_repository_restart() {
 }
 
 #[test]
+fn animal_condition_decays_for_each_elapsed_world_day() {
+    let repo = WorldRepository::new(ServerConfig {
+        day_length_seconds: 1.0,
+        world_seconds_per_tick: 3.0,
+        ..ServerConfig::default()
+    });
+    let _session = guest(&repo, "phase4-animal-multi-day");
+    {
+        let mut state = repo.state.lock().expect("repository lock");
+        state.phase4.animals[0].condition = 3;
+        state.phase4.animals[0].last_cared_day = state.clock.day;
+    }
+
+    repo.tick();
+
+    let state = repo.state.lock().expect("repository lock");
+    assert_eq!(state.clock.day, 4);
+    assert_eq!(state.phase4.animals[0].condition, 0);
+}
+
+#[test]
 fn animal_care_requires_distance_to_the_actual_animal_position() {
     let repo = WorldRepository::new(ServerConfig::default());
     let session = guest(&repo, "phase4-animal-distance");

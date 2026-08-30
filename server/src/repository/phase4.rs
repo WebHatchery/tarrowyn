@@ -391,10 +391,12 @@ pub(super) fn phase4_tick(state: &mut RepositoryState, config: &ServerConfig) ->
     super::phase6::phase6_tick(state, config)
 }
 
-pub(super) fn day_rollover(state: &mut RepositoryState) {
+pub(super) fn day_rollover(state: &mut RepositoryState, elapsed_days: u32) {
     for animal in &mut state.phase4.animals {
         if animal.last_cared_day < state.clock.day {
-            animal.condition = animal.condition.saturating_sub(1);
+            animal.condition = animal
+                .condition
+                .saturating_sub(elapsed_days.min(u32::from(animal.condition)) as u8);
         }
     }
 }
