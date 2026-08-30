@@ -335,13 +335,19 @@ pub fn draw_regional_inspection(ctx: &UiContext<'_>, mouse: Vec2, actions: &mut 
             (
                 "route-escort",
                 "Escort road",
-                has_local_route(ctx.regional_region, RouteAction::Escort),
+                route_control_enabled(
+                    has_local_route(ctx.regional_region, RouteAction::Escort),
+                    ctx.route_pending,
+                ),
                 ButtonTone::Positive,
             ),
             (
                 "route-improve",
                 "Improve road",
-                has_local_route(ctx.regional_region, RouteAction::Improve),
+                route_control_enabled(
+                    has_local_route(ctx.regional_region, RouteAction::Improve),
+                    ctx.route_pending,
+                ),
                 ButtonTone::Primary,
             ),
         ],
@@ -400,6 +406,10 @@ fn draw_event_choices(
             actions.push(UiAction::RegionalEvent((*choice).clone()));
         }
     }
+}
+
+fn route_control_enabled(route_available: bool, route_pending: bool) -> bool {
+    route_available && !route_pending
 }
 
 pub fn draw_skill_selection(ctx: &UiContext<'_>, mouse: Vec2, actions: &mut Vec<UiAction>) {

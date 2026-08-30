@@ -363,13 +363,16 @@ pub(super) fn draw_sidebar(
             (
                 "route-repair",
                 "Repair",
-                ctx.regional_region.is_some_and(|region| {
-                    region.routes.iter().any(|route| {
-                        (route.origin_location_id == region.player_location_id
-                            || route.destination_location_id == region.player_location_id)
-                            && route.status != RouteStatus::Operational
-                    })
-                }),
+                route_control_enabled(
+                    ctx.regional_region.is_some_and(|region| {
+                        region.routes.iter().any(|route| {
+                            (route.origin_location_id == region.player_location_id
+                                || route.destination_location_id == region.player_location_id)
+                                && route.status != RouteStatus::Operational
+                        })
+                    }),
+                    ctx.route_pending,
+                ),
                 ButtonTone::Positive,
             ),
             (
@@ -531,6 +534,10 @@ fn cancel_market_control_enabled(has_open_market_order: bool, market_pending: bo
 
 fn event_control_enabled(event_pending: bool) -> bool {
     !event_pending
+}
+
+fn route_control_enabled(route_available: bool, route_pending: bool) -> bool {
+    route_available && !route_pending
 }
 
 pub(super) fn movement_enabled(ctx: &UiContext<'_>) -> bool {

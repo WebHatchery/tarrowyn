@@ -120,6 +120,7 @@ fn route_repair_button_queues_an_authoritative_repair() {
     });
 
     client.queue_cycle("route-repair");
+    assert!(client.route_command_pending());
 
     assert!(matches!(
         client.commands.front(),
@@ -129,7 +130,9 @@ fn route_repair_button_queues_an_authoritative_repair() {
     ));
 
     client.commands.clear();
+    assert!(!client.route_command_pending());
     client.queue_cycle("route-escort");
+    assert!(client.route_command_pending());
     assert!(matches!(
         client.commands.front(),
         Some(Phase5Command::Route(request))
@@ -138,7 +141,9 @@ fn route_repair_button_queues_an_authoritative_repair() {
     ));
 
     client.commands.clear();
+    assert!(!client.route_command_pending());
     client.queue_cycle("route-improve");
+    assert!(client.route_command_pending());
     assert!(matches!(
         client.commands.front(),
         Some(Phase5Command::Route(request))
@@ -147,12 +152,14 @@ fn route_repair_button_queues_an_authoritative_repair() {
     ));
 
     client.commands.clear();
+    assert!(!client.route_command_pending());
     client
         .region
         .as_mut()
         .expect("regional projection")
         .player_location_id = "whisperwood-outpost".to_owned();
     client.queue_cycle("route-repair");
+    assert!(client.route_command_pending());
     assert!(matches!(
         client.commands.front(),
         Some(Phase5Command::Route(request))

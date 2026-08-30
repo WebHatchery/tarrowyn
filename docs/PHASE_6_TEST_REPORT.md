@@ -1912,6 +1912,16 @@ Windows/WebGL builds, packaging, Preview deployment, and catalog sync. No full
 workspace gate was repeated because this was a bounded account-feedback
 correction, and no new external or deferred work was opened.
 
+Route Repair, Escort road, and Improve road controls now close while a route
+logistics command is queued or in flight, preventing duplicate work orders
+before the authoritative route projection catches up. The focused route filter
+passes, and the OnlineClient regional facade remains split into
+`src/network/phase5/online.rs` so `phase5.rs` stays below the 800-line hard
+limit; client standards, clippy, file-size checks, and `publish.ps1` pass for
+the corrected layout. No full workspace gate was repeated because this was a
+bounded route-control and file-ownership correction, and no new external or
+deferred work was opened.
+
 Regional Event and intervention controls now close while an event command is
 queued or in flight, preventing a second event decision before the first
 authoritative response arrives. The focused event filter passes, and the
