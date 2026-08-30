@@ -2823,3 +2823,14 @@ file-size scan pass. The project `publish.ps1` Windows/WebGL build, packaging,
 Preview deployment, and catalog-sync checks pass. No full workspace gate was
 repeated because this was a bounded session-presence correction, and no new
 external or deferred work was opened.
+
+Older state snapshots are now rejected at the client readiness boundary and
+immediately followed by a fresh authoritative state request. A stale response
+can no longer mark a not-yet-loaded client as ready or postpone recovery while
+leaving its previous projection in place. The focused
+`network::tests::older_state_snapshot_is_reloaded_instead_of_opening_the_world`
+test passes; client-package formatting and clippy, `git diff --check`, and the
+Rust file-size scan pass. The project `publish.ps1` Windows/WebGL build,
+packaging, Preview deployment, and catalog-sync checks pass. No full workspace
+gate was repeated because this was a bounded state-ordering correction, and no
+new external or deferred work was opened.

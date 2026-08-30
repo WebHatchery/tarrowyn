@@ -608,13 +608,15 @@ impl OnlineClient {
             Ok(response) => {
                 let first_state = !self.had_world;
                 let cursor = response.meta.cursor.unwrap_or(response.data.cursor);
-                if self
-                    .projection
-                    .response_is_current(response.meta.server_tick, cursor)
+                if state_snapshot_disposition(&self.projection, response.meta.server_tick, cursor)
+                    == StateSnapshotDisposition::Reload
                 {
-                    self.projection
-                        .apply_state(response.data, response.meta.server_tick);
+                    self.state_refresh = 0.0;
+                    self.pending_state = Some(self.api.get("/v1/state"));
+                    return;
                 }
+                self.projection
+                    .apply_state(response.data, response.meta.server_tick);
                 self.had_world = true;
                 self.state = maintenance::state_after_snapshot(self.readiness_degraded);
                 self.retry_count = 0;
@@ -713,6 +715,24 @@ impl OnlineClient {
             || !self.movement_queue.is_empty()
             || !self.chat_queue.is_empty()
             || !self.farming_queue.is_empty()
+    }
+}
+
+#[derive(Debug, PartialEq, Eq)]
+enum StateSnapshotDisposition {
+    Apply,
+    Reload,
+}
+
+fn state_snapshot_disposition(
+    projection: &WorldProjection,
+    server_tick: u64,
+    cursor: u64,
+) -> StateSnapshotDisposition {
+    if projection.response_is_current(server_tick, cursor) {
+        StateSnapshotDisposition::Apply
+    } else {
+        StateSnapshotDisposition::Reload
     }
 }
 

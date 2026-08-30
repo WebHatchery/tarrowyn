@@ -133,6 +133,21 @@ fn projection_versions_accept_equal_state_but_reject_older_responses() {
 }
 
 #[test]
+fn older_state_snapshot_is_reloaded_instead_of_opening_the_world() {
+    let mut projection = WorldProjection::new(&config());
+    projection.record_response_version(12, Some(9));
+
+    assert_eq!(
+        state_snapshot_disposition(&projection, 11, 8),
+        StateSnapshotDisposition::Reload
+    );
+    assert_eq!(
+        state_snapshot_disposition(&projection, 12, 9),
+        StateSnapshotDisposition::Apply
+    );
+}
+
+#[test]
 fn connection_failure_exposes_recovery_and_reconnect_cooldown() {
     let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
     let mut notices = Vec::new();
