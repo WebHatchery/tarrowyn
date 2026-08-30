@@ -41,11 +41,11 @@ try {
     foreach ($session in $sessions) {
         $headers += @{ Authorization = "Bearer $($session.data.account_token)" }
     }
-    $worlds = @()
+    $states = @()
     foreach ($header in $headers) {
-        $worlds += Invoke-RestMethod -Method Get -Uri "http://127.0.0.1:8787/v1/world" -Headers $header
+        $states += Invoke-RestMethod -Method Get -Uri "http://127.0.0.1:8787/v1/state" -Headers $header
     }
-    Assert-True (($worlds | ForEach-Object { $_.data.players.Count } | Measure-Object -Minimum).Minimum -eq 3) "clients did not share one presence projection"
+    Assert-True (($states | ForEach-Object { $_.data.world.players.Count } | Measure-Object -Minimum).Minimum -eq 3) "clients did not share one presence projection"
 
     $moveBody = @{ request_id = "three-client-valid"; dx = 0; dy = 1 } | ConvertTo-Json
     $move = Invoke-RestMethod -Method Post -Uri "http://127.0.0.1:8787/v1/movement" -Headers $headers[0] -ContentType "application/json" -Body $moveBody
@@ -66,11 +66,11 @@ try {
     Assert-True ($chatTexts.Count -ge 3) "chat events were not visible to the second client"
     Assert-True (($chatTexts[-3..-1] -join "|") -eq ($messages -join "|")) "chat event order was not preserved"
 
-    $beforeTick = $worlds[0].meta.server_tick
+    $beforeTick = $states[0].meta.server_tick
     Start-Sleep -Milliseconds 700
-    $afterWorld = Invoke-RestMethod -Method Get -Uri "http://127.0.0.1:8787/v1/world" -Headers $headers[2]
-    Assert-True ($afterWorld.meta.server_tick -gt $beforeTick) "the server tick did not advance"
-    Write-Host "Three-client Phase 1 acceptance passed: identities, shared presence, authoritative movement, ordered chat, and one world clock." -ForegroundColor Green
+    $afterState = Invoke-RestMethod -Method Get -Uri "http://127.0.0.1:8787/v1/state" -Headers $headers[2]
+    Assert-True ($afterState.meta.server_tick -gt $beforeTick) "the server tick did not advance"
+    Write-Host "Three-client Phase 1 acceptance passed: identities, shared presence, authoritative movement, ordered chat, and one state-backed world clock." -ForegroundColor Green
 } finally {
     if ($null -ne $server -and -not $server.HasExited) {
         Stop-Process -Id $server.Id -Force
