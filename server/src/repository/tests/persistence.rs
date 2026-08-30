@@ -108,6 +108,41 @@ fn persistence_failure_degrades_operator_readiness() {
 }
 
 #[test]
+fn relative_json_paths_write_state_and_backup_files() {
+    let suffix = format!(
+        "{}-{}",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .expect("system clock should be after the Unix epoch")
+            .as_nanos()
+    );
+    let state_path = format!("tarrowyn-relative-state-{suffix}.json");
+    let backup_path = format!("tarrowyn-relative-backup-{suffix}.json");
+    let _ = std::fs::remove_file(&state_path);
+    let _ = std::fs::remove_file(&backup_path);
+    let repository = WorldRepository::new(ServerConfig {
+        persistence_path: Some(state_path.clone()),
+        backup_path: Some(backup_path.clone()),
+        backup_interval_ticks: 1,
+        ..ServerConfig::default()
+    });
+
+    repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some(format!("relative-path-{suffix}")),
+            reset: false,
+        })
+        .expect("relative state path should persist");
+    repository.tick();
+
+    assert!(std::path::Path::new(&state_path).is_file());
+    assert!(std::path::Path::new(&backup_path).is_file());
+    let _ = std::fs::remove_file(state_path);
+    let _ = std::fs::remove_file(backup_path);
+}
+
+#[test]
 fn replay_caches_are_trimmed_on_the_world_tick() {
     let backup_path = std::env::temp_dir().join(format!(
         "tarrowyn-replay-cache-backup-{}.json",

@@ -29,7 +29,10 @@ pub(super) fn write(state: &mut RepositoryState, config: &ServerConfig) -> bool 
         return false;
     };
     let path = Path::new(&backup_path);
-    if let Some(parent) = path.parent() {
+    if let Some(parent) = path
+        .parent()
+        .filter(|parent| !parent.as_os_str().is_empty())
+    {
         if fs::create_dir_all(parent).is_err() {
             state.phase6.last_backup_tick = previous_backup_tick;
             state.phase6.last_backup_path = previous_backup_path;

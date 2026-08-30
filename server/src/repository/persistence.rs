@@ -96,7 +96,10 @@ fn persist_json(
         PersistenceBackendError::new("the JSON world snapshot could not be encoded")
     })?;
     let path = Path::new(path);
-    if let Some(parent) = path.parent() {
+    if let Some(parent) = path
+        .parent()
+        .filter(|parent| !parent.as_os_str().is_empty())
+    {
         fs::create_dir_all(parent).map_err(|_| {
             PersistenceBackendError::new("the JSON world snapshot directory could not be created")
         })?;

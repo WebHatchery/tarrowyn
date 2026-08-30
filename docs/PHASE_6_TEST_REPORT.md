@@ -1421,3 +1421,10 @@ with server-package clippy, formatting, diff, and Rust file-size checks clean.
 No full workspace or publisher gate was repeated because this is an isolated
 backup metadata correctness change; no new external or deferred work was
 opened.
+
+JSON persistence and scheduled backups now accept valid filename-only relative
+paths by skipping directory creation when a path has no parent directory. The
+focused relative-path regression passes (1), exercising both state persistence
+and backup replacement, with server-package clippy, formatting, diff, and Rust
+file-size checks clean. No full workspace gate was repeated because this is an
+isolated path-handling fix; no new external or deferred work was opened.
