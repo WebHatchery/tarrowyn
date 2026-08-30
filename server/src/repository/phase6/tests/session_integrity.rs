@@ -137,7 +137,7 @@ fn account_link_emits_the_updated_online_presence_for_other_clients() {
             }
             _ => None,
         })
-        .last()
+        .next_back()
         .expect("linked character should have a presence event");
     assert!(latest.online);
     assert_eq!(latest.account_id, linked.account_id);

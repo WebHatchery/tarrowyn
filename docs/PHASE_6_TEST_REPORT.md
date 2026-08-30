@@ -3070,3 +3070,13 @@ reload regression passes, along with client-package formatting and clippy.
 Windows/WebGL build, packaging, Preview deployment, and catalog-sync checks
 pass. No full workspace gate was repeated because this was a bounded crafting
 recovery correction, and no new external or deferred work was opened.
+
+The Phase 6 persistence schemas now live in a dedicated `state.rs` child module,
+keeping the production repository authority below the 800-line Rust source
+limit without changing its serialized shape or behavior. The focused session
+refresh regression passes, along with server-package formatting and strict
+clippy. `git diff --check` and the Rust file-size scan pass. No publisher or
+full workspace gate was repeated because this was server-only ownership
+maintenance; the existing session-integrity test also replaced an iterator
+warning exposed by the package clippy gate, and no new external or deferred
+work was opened.

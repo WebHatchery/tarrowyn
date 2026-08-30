@@ -2,13 +2,11 @@
 
 use super::models::{RepositoryState, MAX_REPLAY_CACHE};
 use super::*;
-use crate::config::ServerConfig;
-use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::collections::{HashSet, VecDeque};
 use tarrowyn_protocol::{
     AccountDeletionRequest, AccountDeletionResponse, AccountResponse, ApiResponse, AuditRecord,
     AuthLinkRequest, AuthLinkResponse, AuthRefreshRequest, AuthRefreshResponse, AuthRevokeRequest,
-    AuthRevokeResponse, AuthSession, ModerationReportResponse, SupportRepairResponse, WorldEvent,
+    AuthRevokeResponse, AuthSession, SupportRepairResponse, WorldEvent,
 };
 
 mod account;
@@ -30,7 +28,9 @@ mod production_integrity;
 mod regional_integrity;
 mod repair;
 mod retention;
+mod state;
 
+pub(super) use state::{fresh, Phase6State, ProductionAccount, ProductionSession};
 pub(super) const MAX_AUDITS: usize = MAX_REPLAY_CACHE;
 
 use account::migrate_guest_account_references;
@@ -81,97 +81,6 @@ pub(super) fn prune_moderation_cooldowns(state: &mut RepositoryState) {
 
 pub(super) fn scheduled_backup(state: &mut RepositoryState, config: &ServerConfig) -> Option<bool> {
     maintenance::backup_due(state, config).then(|| backup::write(state, config))
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub(super) struct ProductionAccount {
-    pub(super) account_id: String,
-    pub(super) provider: String,
-    pub(super) subject: String,
-    pub(super) identity_key: String,
-    pub(super) guest_linked: bool,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub(super) struct ProductionSession {
-    pub(super) identity_key: String,
-    pub(super) account_id: String,
-    pub(super) refresh_token: String,
-    pub(super) expires_at_tick: u64,
-    pub(super) refresh_expires_at_tick: u64,
-    pub(super) revoked: bool,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub(super) struct Phase6State {
-    pub(super) next_account_id: u64,
-    pub(super) next_session_id: u64,
-    pub(super) next_audit_id: u64,
-    pub(super) accounts: HashMap<String, ProductionAccount>,
-    pub(super) sessions: HashMap<String, ProductionSession>,
-    #[serde(default)]
-    pub(super) auth_link_results: HashMap<String, AuthLinkResponse>,
-    #[serde(default)]
-    pub(super) auth_link_tokens: HashMap<String, String>,
-    #[serde(default)]
-    pub(super) auth_refresh_results: HashMap<String, AuthRefreshResponse>,
-    #[serde(default)]
-    pub(super) auth_refresh_accounts: HashMap<String, String>,
-    #[serde(default)]
-    pub(super) auth_revoke_results: HashMap<String, AuthRevokeResponse>,
-    #[serde(default)]
-    pub(super) auth_revoke_guest_tokens: HashMap<String, String>,
-    pub(super) audits: VecDeque<AuditRecord>,
-    pub(super) reports: HashMap<String, ModerationReportResponse>,
-    #[serde(default)]
-    pub(super) report_created_at: HashMap<String, u64>,
-    #[serde(default)]
-    pub(super) moderation_results: HashMap<String, ModerationReportResponse>,
-    #[serde(default)]
-    pub(super) moderation_last_report_ticks: HashMap<String, u64>,
-    pub(super) request_results: HashMap<String, SupportRepairResponse>,
-    #[serde(default)]
-    pub(super) deletion_requests: HashMap<String, PendingAccountDeletion>,
-    #[serde(default)]
-    pub(super) deletion_results: HashMap<String, AccountDeletionResponse>,
-    pub(super) last_backup_tick: Option<u64>,
-    pub(super) last_backup_path: Option<String>,
-    pub(super) rejected_commands: u64,
-    pub(super) completed_commands: u64,
-}
-
-impl Default for Phase6State {
-    fn default() -> Self {
-        fresh(&ServerConfig::default())
-    }
-}
-
-pub(super) fn fresh(_config: &ServerConfig) -> Phase6State {
-    Phase6State {
-        next_account_id: 1,
-        next_session_id: 1,
-        next_audit_id: 1,
-        accounts: HashMap::new(),
-        sessions: HashMap::new(),
-        auth_link_results: HashMap::new(),
-        auth_link_tokens: HashMap::new(),
-        auth_refresh_results: HashMap::new(),
-        auth_refresh_accounts: HashMap::new(),
-        auth_revoke_results: HashMap::new(),
-        auth_revoke_guest_tokens: HashMap::new(),
-        audits: VecDeque::new(),
-        reports: HashMap::new(),
-        report_created_at: HashMap::new(),
-        moderation_results: HashMap::new(),
-        moderation_last_report_ticks: HashMap::new(),
-        request_results: HashMap::new(),
-        deletion_requests: HashMap::new(),
-        deletion_results: HashMap::new(),
-        last_backup_tick: None,
-        last_backup_path: None,
-        rejected_commands: 0,
-        completed_commands: 0,
-    }
 }
 
 impl WorldRepository {
