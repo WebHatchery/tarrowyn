@@ -51,8 +51,18 @@ impl OnlineClient {
             self.pending_trades = None;
             match result {
                 Ok(response) => {
-                    self.trades = response.data.trades;
-                    self.projection.trades = self.trades.clone();
+                    let cursor = response.meta.cursor.unwrap_or(response.data.cursor);
+                    if self
+                        .projection
+                        .response_is_current(response.meta.server_tick, cursor)
+                    {
+                        self.projection.record_response_version(
+                            response.meta.server_tick,
+                            response.meta.cursor,
+                        );
+                        self.trades = response.data.trades;
+                        self.projection.trades = self.trades.clone();
+                    }
                 }
                 Err(error) => self.connection_failed(error, notices),
             }
@@ -82,6 +92,8 @@ impl OnlineClient {
         let trade_action = self.pending_trade_action;
         match result {
             Ok(response) => {
+                self.projection
+                    .record_response_version(response.meta.server_tick, response.meta.cursor);
                 self.pending_trade_action = None;
                 self.pending_request_id = None;
                 self.pending_request_type = None;

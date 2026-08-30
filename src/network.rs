@@ -197,6 +197,21 @@ impl WorldProjection {
         self.cursor = self.cursor.max(response.cursor);
     }
 
+    pub(super) fn response_is_current(&self, server_tick: u64, cursor: u64) -> bool {
+        server_tick >= self.server_tick && cursor >= self.cursor
+    }
+
+    pub(super) fn response_is_newer(&self, server_tick: u64, cursor: u64) -> bool {
+        server_tick >= self.server_tick && cursor > self.cursor
+    }
+
+    pub(super) fn record_response_version(&mut self, server_tick: u64, cursor: Option<u64>) {
+        self.server_tick = self.server_tick.max(server_tick);
+        if let Some(cursor) = cursor {
+            self.cursor = self.cursor.max(cursor);
+        }
+    }
+
     fn apply_presence(&mut self, presence: PlayerPresence, own_account: &str) {
         let remote = remote_player(presence);
         if remote.account_id == own_account {
@@ -482,8 +497,14 @@ impl OnlineClient {
         match result {
             Ok(response) => {
                 let first_state = !self.had_world;
-                self.projection
-                    .apply_state(response.data, response.meta.server_tick);
+                let cursor = response.meta.cursor.unwrap_or(response.data.cursor);
+                if self
+                    .projection
+                    .response_is_current(response.meta.server_tick, cursor)
+                {
+                    self.projection
+                        .apply_state(response.data, response.meta.server_tick);
+                }
                 self.had_world = true;
                 self.state = ConnectionState::Online;
                 self.retry_count = 0;
@@ -509,11 +530,17 @@ impl OnlineClient {
         match result {
             Ok(response) => {
                 if let Some(account) = &self.account {
-                    self.projection.apply_snapshot(
-                        response.data,
-                        &account.account_id,
-                        response.meta.server_tick,
-                    );
+                    let cursor = response.meta.cursor.unwrap_or(response.data.cursor);
+                    if self
+                        .projection
+                        .response_is_current(response.meta.server_tick, cursor)
+                    {
+                        self.projection.apply_snapshot(
+                            response.data,
+                            &account.account_id,
+                            response.meta.server_tick,
+                        );
+                    }
                 }
                 self.had_world = true;
                 self.state = ConnectionState::Online;
@@ -536,11 +563,17 @@ impl OnlineClient {
         match result {
             Ok(response) => {
                 if let Some(account) = &self.account {
-                    self.projection.apply_events(
-                        response.data,
-                        &account.account_id,
-                        response.meta.server_tick,
-                    );
+                    let cursor = response.meta.cursor.unwrap_or(response.data.cursor);
+                    if self
+                        .projection
+                        .response_is_newer(response.meta.server_tick, cursor)
+                    {
+                        self.projection.apply_events(
+                            response.data,
+                            &account.account_id,
+                            response.meta.server_tick,
+                        );
+                    }
                 }
             }
             Err(error) if cursor::is_cursor_recovery_error(&error) => {

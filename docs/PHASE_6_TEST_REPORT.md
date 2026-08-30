@@ -982,3 +982,12 @@ clippy checks pass. The publisher check remains the runtime validation path;
 no full workspace gate was rerun because this is a bounded continuation of the
 client cursor-ordering maintenance. No new external or deferred work was
 opened.
+
+Root client projection polling now orders full state, incremental events,
+movement, farming, chat, trade, and frontier responses by the authoritative
+server tick and event cursor. Delayed state or event responses can no longer
+rewind a newer world projection or confirmed movement. The focused client
+network regression, direct formatting, diff, Rust file-size, and client clippy
+checks pass. The publisher check remains the runtime validation path; no full
+workspace gate was rerun because this is a bounded continuation of client
+cursor-ordering maintenance. No new external or deferred work was opened.

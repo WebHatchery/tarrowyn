@@ -137,6 +137,8 @@ impl FrontierClient {
                 Ok(response) => {
                     self.command_retry_timer = 0.0;
                     self.command_retry_count = 0;
+                    projection
+                        .record_response_version(response.meta.server_tick, response.meta.cursor);
                     self.apply_command(response.data, projection, notices);
                 }
                 Err(error)

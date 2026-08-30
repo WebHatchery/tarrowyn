@@ -29,7 +29,15 @@ impl OnlineClient {
         match result {
             Ok(response) => {
                 let position = response.data.position;
-                self.projection.player_position = TilePos::new(position.x, position.y);
+                let cursor = response.meta.cursor.unwrap_or(self.projection.cursor);
+                let current = self
+                    .projection
+                    .response_is_current(response.meta.server_tick, cursor);
+                self.projection
+                    .record_response_version(response.meta.server_tick, response.meta.cursor);
+                if current {
+                    self.projection.player_position = TilePos::new(position.x, position.y);
+                }
                 if response.data.accepted {
                     notices.push(NetworkNotice::Info(
                         "The server accepted that step.".to_owned(),
@@ -83,6 +91,8 @@ impl OnlineClient {
         pending.pending = None;
         match result {
             Ok(response) => {
+                self.projection
+                    .record_response_version(response.meta.server_tick, response.meta.cursor);
                 self.action_awaiting_confirmation = false;
                 self.pending_request_type = None;
                 self.pending_request_id = None;
@@ -140,6 +150,11 @@ impl OnlineClient {
         pending.pending = None;
         match result {
             Ok(response) => {
+                let message_cursor = response.data.message.as_ref().map(|message| message.cursor);
+                self.projection.record_response_version(
+                    response.meta.server_tick,
+                    response.meta.cursor.or(message_cursor),
+                );
                 if response.data.accepted {
                     if let Some(message) = response.data.message {
                         self.projection.push_chat(message);
