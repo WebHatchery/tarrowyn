@@ -1998,3 +1998,12 @@ client clippy and the Rust file-size check pass, and `publish.ps1` passes
 Windows/WebGL builds, packaging, Preview deployment, and catalog sync. No full
 workspace gate was repeated because this was a bounded regional identity-cache
 correction, and no new external or deferred work was opened.
+
+Successful account linking now invalidates in-flight Phase 4 ledgers and
+clears cached guest skills, crafting state, ownership context, and queued
+actions before the next linked-account refresh. The focused client Phase 4
+account-lifecycle regression passes, client clippy and the Rust file-size check
+pass, and `publish.ps1` passes Windows/WebGL builds, packaging, Preview
+deployment, and catalog sync. No full workspace gate was repeated because this
+was a bounded Phase 4 identity-cache correction, and no new external or
+deferred work was opened.

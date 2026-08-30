@@ -129,6 +129,11 @@ impl Phase5Client {
         self.pending_refresh.is_some()
     }
 
+    #[cfg(test)]
+    pub(super) fn prime_linked_account_for_test(&mut self, response: AuthLinkResponse) {
+        self.linked_account = Some(response);
+    }
+
     pub(super) fn update(
         &mut self,
         dt: f32,

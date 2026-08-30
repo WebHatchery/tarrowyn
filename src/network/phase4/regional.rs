@@ -76,7 +76,11 @@ impl Phase4Client {
         &mut self,
         client_key: Option<&str>,
     ) -> Option<GuestSessionResponse> {
-        self.regional.take_linked_account(client_key)
+        let linked = self.regional.take_linked_account(client_key);
+        if linked.is_some() {
+            self.reset_identity_projections();
+        }
+        linked
     }
 
     pub(crate) fn take_logged_out(&mut self) -> bool {

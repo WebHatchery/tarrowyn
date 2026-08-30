@@ -6,6 +6,7 @@ use tarrowyn_protocol::{
     SkillView, SkillsResponse, WeaponKind,
 };
 
+mod account_lifecycle;
 mod feedback;
 mod projection_ordering;
 
