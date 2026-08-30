@@ -40,40 +40,46 @@ impl WorldRepository {
         if !is_knocked_out {
             response.reason = Some("There is no knockout to recover from.".to_owned());
         } else {
-            let identity = state.identities.get_mut(&key).expect("identity exists");
-            identity.knocked_out = false;
-            identity.position = Position { x: 8, y: 5 };
-            match request.choice {
-                RecoveryChoice::SelfRecover => {
-                    if identity.inventory.seeds == 0 {
-                        identity.knocked_out = true;
-                        response.reason = Some(
-                            "Self-recovery requires one carried seed; choose Rescuer or Healer."
-                                .to_owned(),
-                        );
-                    } else {
+            let recovery_available = {
+                let identity = state.identities.get(&key).expect("identity exists");
+                match request.choice {
+                    RecoveryChoice::SelfRecover => identity.inventory.seeds > 0,
+                    RecoveryChoice::AskRescuer => true,
+                    RecoveryChoice::PayHealer => identity.gold >= identity.recovery_cost,
+                }
+            };
+            if !recovery_available {
+                response.reason = Some(match request.choice {
+                    RecoveryChoice::SelfRecover => {
+                        "Self-recovery requires one carried seed; choose Rescuer or Healer."
+                            .to_owned()
+                    }
+                    RecoveryChoice::PayHealer => {
+                        "The healer requires the recovery cost shown in your ledger.".to_owned()
+                    }
+                    RecoveryChoice::AskRescuer => {
+                        unreachable!("rescuer recovery is always available")
+                    }
+                });
+            } else {
+                let identity = state.identities.get_mut(&key).expect("identity exists");
+                identity.knocked_out = false;
+                identity.position = Position { x: 8, y: 5 };
+                match request.choice {
+                    RecoveryChoice::SelfRecover => {
                         identity.injuries = identity.injuries.saturating_sub(1);
                         identity.inventory.seeds -= 1;
                         response.consequence =
                             "You recover alone; one carried seed is spent on the journey back."
                                 .to_owned();
                     }
-                }
-                RecoveryChoice::AskRescuer => {
-                    identity.reputation = identity.reputation.saturating_add(1);
-                    identity.injuries = identity.injuries.saturating_sub(1);
-                    response.consequence =
-                        "A Hearth rescuer brings you home; the settlement remembers the kindness."
+                    RecoveryChoice::AskRescuer => {
+                        identity.reputation = identity.reputation.saturating_add(1);
+                        identity.injuries = identity.injuries.saturating_sub(1);
+                        response.consequence = "A Hearth rescuer brings you home; the settlement remembers the kindness."
                             .to_owned();
-                }
-                RecoveryChoice::PayHealer => {
-                    if identity.gold < identity.recovery_cost {
-                        identity.knocked_out = true;
-                        response.reason = Some(
-                            "The healer requires the recovery cost shown in your ledger."
-                                .to_owned(),
-                        );
-                    } else {
+                    }
+                    RecoveryChoice::PayHealer => {
                         identity.gold -= identity.recovery_cost;
                         identity.injuries = 0;
                         response.consequence =
@@ -83,7 +89,11 @@ impl WorldRepository {
             }
             response.accepted = response.reason.is_none();
             if response.accepted {
-                identity.recovery_cost = 0;
+                state
+                    .identities
+                    .get_mut(&key)
+                    .expect("identity exists")
+                    .recovery_cost = 0;
                 record(
                     &mut state,
                     "recovery",

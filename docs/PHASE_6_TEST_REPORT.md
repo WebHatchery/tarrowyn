@@ -672,6 +672,11 @@ The support-account query now preserves malformed form encoding as a structured
 `invalid_query` response instead of silently converting it into an empty target
 account. The focused HTTP validation regression covers the shared parser.
 
+Recovery now validates a self-recovery seed or healer balance before clearing
+knockout state or moving the character home. The focused local-combat recovery
+regression confirms a rejected no-seed choice leaves the stranded position
+unchanged.
+
 The HTTP authentication boundary now accepts case-insensitive Bearer scheme
 names while requiring non-empty credentials without control characters. The
 focused HTTP suite passes 9 tests, with server clippy, size, diff, and publisher

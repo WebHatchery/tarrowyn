@@ -422,12 +422,14 @@ fn knocked_out_local_player_cannot_reenter_before_recovery() {
 fn recovery_without_a_carried_seed_stays_knocked_out() {
     let repo = WorldRepository::new(ServerConfig::default());
     let session = guest(&repo, "recovery-no-seed");
+    let stranded_position = tarrowyn_protocol::Position { x: 5, y: 5 };
     {
         let mut state = repo.state.lock().expect("repository lock");
         let identity = state
             .identities
             .get_mut(&session.client_key)
             .expect("guest identity");
+        identity.position = stranded_position;
         identity.knocked_out = true;
         identity.injuries = 2;
         identity.recovery_cost = 4;
@@ -447,6 +449,7 @@ fn recovery_without_a_carried_seed_stays_knocked_out() {
 
     assert!(!recovery.accepted);
     assert!(recovery.player.knocked_out);
+    assert_eq!(recovery.player.position, stranded_position);
     assert!(recovery
         .reason
         .as_deref()
