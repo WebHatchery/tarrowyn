@@ -46,6 +46,12 @@ external alert routing. Preview connection settings belong in the ignored
 Those are explicit remaining risks, not hidden behind the game client. Client
 connection-failure alerting remains deployment/client-owned because the server
 cannot observe a client after its connection disappears.
+The configured preview credentials pass password-safe `SELECT 1`, but the
+acceptance account cannot provision the disposable restore database
+(`ERROR 1044`), so no clean-schema MySQL migration, replay, restart, or native
+restore assertion is claimed. The configured legacy database remains
+untouched; the acceptance runner needs `CREATE/DROP DATABASE` permission and a
+clean current snapshot before that gate can run.
 The snapshot bridge now holds a process-lifetime MySQL authority lock, so an
 additional worker sharing the database fails closed at startup; this protects
 the one-worker contract but is not a substitute for the deferred multi-worker
