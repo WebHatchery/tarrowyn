@@ -1,8 +1,10 @@
 $ErrorActionPreference = "Stop"
 
 $gameDir = Split-Path $PSScriptRoot -Parent
+$statePath = Join-Path ([System.IO.Path]::GetTempPath()) ("tarrowyn-three-clients-" + [guid]::NewGuid().ToString("N") + ".json")
 $server = $null
 $oldDbDriver = $env:DB_DRIVER
+$oldStatePath = $env:TARROWYN_STATE_PATH
 
 function Assert-True([bool]$condition, [string]$message) {
     if (-not $condition) {
@@ -11,6 +13,7 @@ function Assert-True([bool]$condition, [string]$message) {
 }
 
 try {
+    $env:TARROWYN_STATE_PATH = $statePath
     $env:DB_DRIVER = "json"
     $server = Start-Process -FilePath "cargo.exe" `
         -ArgumentList @("run", "-p", "tarrowyn-server", "--quiet") `
@@ -76,4 +79,6 @@ try {
         Stop-Process -Id $server.Id -Force
     }
     if ($null -eq $oldDbDriver) { Remove-Item Env:DB_DRIVER -ErrorAction SilentlyContinue } else { $env:DB_DRIVER = $oldDbDriver }
+    if ($null -eq $oldStatePath) { Remove-Item Env:TARROWYN_STATE_PATH -ErrorAction SilentlyContinue } else { $env:TARROWYN_STATE_PATH = $oldStatePath }
+    Remove-Item -LiteralPath $statePath -Force -ErrorAction SilentlyContinue
 }
