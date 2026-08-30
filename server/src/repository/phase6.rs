@@ -8,7 +8,7 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use tarrowyn_protocol::{
     AccountDeletionRequest, AccountDeletionResponse, AccountResponse, ApiResponse, AuditRecord,
     AuthLinkRequest, AuthLinkResponse, AuthRefreshRequest, AuthRefreshResponse, AuthRevokeRequest,
-    AuthRevokeResponse, AuthSession, ModerationReportResponse, SupportRepairResponse,
+    AuthRevokeResponse, AuthSession, ModerationReportResponse, SupportRepairResponse, WorldEvent,
 };
 
 mod account;
@@ -409,6 +409,7 @@ impl WorldRepository {
             ));
         }
         let session_tokens = new_session_tokens().map_err(|_| session_unavailable())?;
+        let access_was_expired = !state.sessions.contains_key(&old_token);
         if let Some(session) = state.phase6.sessions.get_mut(&old_token) {
             session.revoked = true;
         }
@@ -420,6 +421,16 @@ impl WorldRepository {
             &old_session.account_id,
             session_tokens,
         );
+        if access_was_expired {
+            let event = {
+                let identity = state
+                    .identities
+                    .get(&old_session.identity_key)
+                    .expect("identity exists");
+                WorldEvent::Presence(super::presence(identity, state.tick, true))
+            };
+            super::push_event(&mut state, event);
+        }
         audit(
             &mut state,
             &old_session.account_id,

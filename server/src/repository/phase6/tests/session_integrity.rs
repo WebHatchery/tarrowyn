@@ -89,11 +89,18 @@ fn direct_refresh_persists_presence_when_access_has_expired() {
     );
 
     let state = repository.state.lock().expect("repository lock");
-    assert!(state.events.iter().any(|record| matches!(
-        &record.event,
-        WorldEvent::Presence(presence)
-            if !presence.online && presence.account_id == linked.account_id
-    )));
+    let presences = state
+        .events
+        .iter()
+        .filter_map(|record| match &record.event {
+            WorldEvent::Presence(presence) if presence.account_id == linked.account_id => {
+                Some(presence.online)
+            }
+            _ => None,
+        })
+        .collect::<Vec<_>>();
+    assert!(presences.contains(&false));
+    assert_eq!(presences.last(), Some(&true));
 }
 
 #[test]

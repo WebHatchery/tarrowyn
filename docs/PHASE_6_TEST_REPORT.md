@@ -2674,3 +2674,17 @@ passes for both summaries; client-package formatting and clippy,
 catalog-sync checks pass. No full workspace gate was repeated because this was
 a bounded social-presence presentation correction, and no new external or
 deferred work was opened.
+
+When a direct production refresh rotates an already-expired access session,
+the server now records both sides of the presence transition: durable offline
+departure from the expired credential followed by online presence for the
+replacement session. Refreshes before access expiry do not emit a duplicate
+presence event, and replayed refreshes still return their cached response. The
+focused binary test
+`repository::phase6::tests::session_integrity::direct_refresh_persists_presence_when_access_has_expired`
+passes with the final account presence online; server-package formatting and
+clippy, `git diff --check`, and the Rust file-size scan pass. The project
+`publish.ps1` Windows/WebGL build, packaging, Preview deployment, and
+catalog-sync checks pass. No full workspace gate was repeated because this was
+a bounded refresh-presence continuity correction, and no new external or
+deferred work was opened.
