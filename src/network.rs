@@ -541,7 +541,7 @@ impl OnlineClient {
                         .apply_state(response.data, response.meta.server_tick);
                 }
                 self.had_world = true;
-                self.state = ConnectionState::Online;
+                self.state = maintenance::state_after_snapshot(self.readiness_degraded);
                 self.retry_count = 0;
                 self.status_message = "The persistent settlement is open.".to_owned();
                 self.state_refresh = 1.0;

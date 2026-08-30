@@ -29,3 +29,15 @@ fn degraded_readiness_survives_a_later_connection_status_update() {
     );
     assert_eq!(client.state, super::super::ConnectionState::Degraded);
 }
+
+#[test]
+fn state_snapshot_does_not_reopen_a_maintenance_gate() {
+    assert_eq!(
+        state_after_snapshot(true),
+        super::super::ConnectionState::Degraded
+    );
+    assert_eq!(
+        state_after_snapshot(false),
+        super::super::ConnectionState::Online
+    );
+}

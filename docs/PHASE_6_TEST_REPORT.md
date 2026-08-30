@@ -1911,3 +1911,12 @@ client clippy, and Rust file-size check pass, and `publish.ps1` passes
 Windows/WebGL builds, packaging, Preview deployment, and catalog sync. No full
 workspace gate was repeated because this was a bounded account-feedback
 correction, and no new external or deferred work was opened.
+
+The client now keeps a completed state response behind the maintenance gate
+when the readiness probe has already reported an unavailable server, avoiding
+a one-frame return to online dispatch while maintenance is active. The
+focused maintenance suite passes all three tests, client clippy and the Rust
+file-size check pass, and `publish.ps1` passes Windows/WebGL builds, packaging,
+Preview deployment, and catalog sync. No full workspace gate was repeated
+because this was a bounded client readiness correction, and no new external
+or deferred work was opened.

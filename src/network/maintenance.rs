@@ -1,4 +1,4 @@
-use super::{OnlineClient, REQUEST_TIMEOUT_SECONDS};
+use super::{ConnectionState, OnlineClient, REQUEST_TIMEOUT_SECONDS};
 
 pub(super) fn poll_ops_health(client: &mut OnlineClient, dt: f32) {
     let result = client
@@ -23,6 +23,14 @@ fn apply_readiness(client: &mut OnlineClient, ready: bool, maintenance_message: 
     }
     if !ready {
         client.state = super::ConnectionState::Degraded;
+    }
+}
+
+pub(super) fn state_after_snapshot(readiness_degraded: bool) -> ConnectionState {
+    if readiness_degraded {
+        ConnectionState::Degraded
+    } else {
+        ConnectionState::Online
     }
 }
 
