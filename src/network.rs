@@ -673,9 +673,20 @@ impl OnlineClient {
         };
         self.retry_count = self.retry_count.saturating_add(1);
         self.retry_cooldown = 2.0;
+        self.pending_state = None;
+        self.pending_events = None;
+        self.pending_movement = None;
+        self.pending_chat = None;
+        self.pending_farming = None;
+        self.pending_trades = None;
+        self.pending_trade = None;
         self.movement_queue.clear();
         self.chat_queue.clear();
         self.farming_queue.clear();
+        self.trade_queue.clear();
+        self.pending_request_type = None;
+        self.pending_request_id = None;
+        self.pending_trade_action = None;
         self.action_awaiting_confirmation = false;
         let retry_message = if self.retry_count >= self.max_retry_count {
             "Retry limit reached; use Reconnect when the server is ready."

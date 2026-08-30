@@ -2779,3 +2779,14 @@ build, packaging, Preview deployment, and catalog-sync checks pass. No full
 workspace gate was repeated because this was a bounded cursor-recovery
 mutation-cancellation correction, and no new external or deferred work was
 opened.
+
+Transport failure handling now cancels in-flight movement, chat, farming, and
+trade requests as well as their queued follow-up work. Their pending UI
+indicators are cleared at the same boundary, so a late response from the
+degraded connection cannot mutate the recovered client. The focused
+`network::tests::connection_recovery::connection_failure_discards_in_flight_low_level_requests_and_indicators`
+regression passes; client-package formatting and clippy, `git diff --check`,
+and the Rust file-size scan pass. The project `publish.ps1` Windows/WebGL
+build, packaging, Preview deployment, and catalog-sync checks pass. No full
+workspace gate was repeated because this was a bounded transport-recovery
+correction, and no new external or deferred work was opened.

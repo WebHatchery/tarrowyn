@@ -8,6 +8,7 @@ use tarrowyn_protocol::{
 };
 
 mod account_lifecycle;
+mod connection_recovery;
 mod location_projection;
 mod movement_feedback;
 mod trades;
