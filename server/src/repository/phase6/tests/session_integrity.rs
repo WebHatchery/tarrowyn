@@ -1,5 +1,5 @@
 use super::super::super::{ServerConfig, WorldRepository};
-use tarrowyn_protocol::{AuthLinkRequest, GuestSessionRequest};
+use tarrowyn_protocol::{AuthLinkRequest, AuthRefreshRequest, GuestSessionRequest};
 
 #[test]
 fn production_session_refresh_window_covers_access_window() {
@@ -37,4 +37,55 @@ fn production_session_refresh_window_covers_access_window() {
     let health = repository.ops_health().data;
     assert!(!health.integrity_ok);
     assert!(!health.ready);
+}
+
+#[test]
+fn production_sessions_use_unpredictable_credentials() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let guest = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("session-credentials-integrity".to_owned()),
+            reset: false,
+        })
+        .expect("guest session")
+        .data;
+    let linked = repository
+        .auth_link(
+            &guest.account_token,
+            AuthLinkRequest {
+                request_id: "session-credentials-link".to_owned(),
+                provider: "webhatchery-identity-oidc".to_owned(),
+                subject: "session-credentials-subject".to_owned(),
+                display_name: None,
+            },
+        )
+        .expect("linked session")
+        .data;
+
+    assert!(linked.session.account_token.starts_with("prod-session-"));
+    assert!(linked.session.refresh_token.starts_with("prod-refresh-"));
+    assert_eq!(
+        linked.session.account_token.len(),
+        "prod-session-".len() + 64
+    );
+    assert_eq!(
+        linked.session.refresh_token.len(),
+        "prod-refresh-".len() + 64
+    );
+    assert_ne!(linked.session.account_token, "prod-session-1");
+    assert_ne!(linked.session.refresh_token, "prod-refresh-1");
+    assert_ne!(linked.session.account_token, linked.session.refresh_token);
+
+    let refreshed = repository
+        .auth_refresh(AuthRefreshRequest {
+            request_id: "session-credentials-refresh".to_owned(),
+            refresh_token: linked.session.refresh_token,
+        })
+        .expect("refreshed session")
+        .data
+        .session;
+    assert!(refreshed.account_token.starts_with("prod-session-"));
+    assert!(refreshed.refresh_token.starts_with("prod-refresh-"));
+    assert_ne!(refreshed.account_token, linked.session.account_token);
+    assert_ne!(refreshed.refresh_token, "prod-refresh-1");
 }

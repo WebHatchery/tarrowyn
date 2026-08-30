@@ -1363,3 +1363,11 @@ Windows and WebGL release builds, packaging, Preview deployment, catalog sync,
 and the existing non-blocking `net2 v0.2.39` future-incompatibility warning
 were observed as expected. No full workspace suite was repeated, and no new
 external or deferred work was opened.
+
+Production link and refresh sessions now use independent 32-byte operating
+system-random credentials instead of predictable session counters; development
+guest fixtures remain unchanged. The focused session-integrity tests pass (4
+including the existing core session checks), server-package clippy and
+formatting pass, and no full workspace or publisher gate was repeated because
+this is an isolated credential-issuance hardening change. No new external or
+deferred work was opened.

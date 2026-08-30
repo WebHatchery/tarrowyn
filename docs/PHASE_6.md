@@ -23,6 +23,9 @@ gates.
 - Replace development bearer-token assumptions with expiring sessions,
   refresh/revocation behaviour, server-side authorization, and secure secret
   handling.
+- Generate new production access and refresh credentials from the operating
+  system's secure random source; retain only bounded legacy session records
+  during their configured expiry window.
 - Add rate limits, request validation, replay protection, abuse controls,
   moderation tools, and audit records for chat, trades, claims, governance,
   and account actions.

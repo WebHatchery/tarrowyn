@@ -34,7 +34,9 @@ mod retention;
 pub(super) const MAX_AUDITS: usize = MAX_REPLAY_CACHE;
 
 use account::migrate_guest_account_references;
-pub(super) use audit_helpers::{audit, audit_command, issue_session, stable_fingerprint};
+pub(super) use audit_helpers::{
+    audit, audit_command, issue_session, new_session_tokens, stable_fingerprint,
+};
 use deletion::PendingAccountDeletion;
 
 const IDENTITY_PROVIDER: &str = "webhatchery-identity-oidc";
@@ -44,6 +46,14 @@ const MAX_REFRESH_TOKEN_CHARS: usize = 512;
 pub(super) const MAX_MODERATION_REPORTS: usize = 512;
 pub(super) const MODERATION_REPORT_RETENTION_SECONDS: u64 = 90 * 24 * 60 * 60;
 pub(super) const MAX_PENDING_DELETIONS: usize = 128;
+
+fn session_unavailable() -> RepositoryError {
+    RepositoryError::new(
+        503,
+        "session_unavailable",
+        "A secure session could not be issued; try again shortly.",
+    )
+}
 
 pub(super) fn is_support_replay_key_for_account(
     key: &str,
@@ -275,6 +285,7 @@ impl WorldRepository {
             .expect("identity exists")
             .display_name
             .clone();
+        let session_tokens = new_session_tokens().map_err(|_| session_unavailable())?;
         migrate_guest_account_references(
             &mut state,
             &old_account_id,
@@ -306,7 +317,13 @@ impl WorldRepository {
             .phase6
             .auth_link_tokens
             .insert(token.to_owned(), guest_key.clone());
-        let session = issue_session(&mut state, &self.config, &guest_key, &account_id);
+        let session = issue_session(
+            &mut state,
+            &self.config,
+            &guest_key,
+            &account_id,
+            session_tokens,
+        );
         audit(
             &mut state,
             &account_id,
@@ -383,6 +400,7 @@ impl WorldRepository {
                 "Sign in again; the refresh session has expired.",
             ));
         }
+        let session_tokens = new_session_tokens().map_err(|_| session_unavailable())?;
         if let Some(session) = state.phase6.sessions.get_mut(&old_token) {
             session.revoked = true;
         }
@@ -392,6 +410,7 @@ impl WorldRepository {
             &self.config,
             &old_session.identity_key,
             &old_session.account_id,
+            session_tokens,
         );
         audit(
             &mut state,

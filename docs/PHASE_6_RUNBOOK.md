@@ -14,6 +14,11 @@ the secret manager. Set `TARROWYN_SUPPORT_OPERATOR_ACCOUNTS` to a comma-separate
 allowlist of operator account IDs; an empty value fails closed. Keep development
 guests on a separate state path.
 
+New production access and refresh credentials are generated from the operating
+system's secure random source and are never derived from the session counter.
+Existing persisted counter-shaped credentials are legacy sessions; let their
+configured expiry elapse and revoke them if compromise is suspected.
+
 MySQL is the selected shared-world database. Local preview uses the ignored
 `.env.preview` file with `DB_DRIVER=mysql`, `DB_HOST`, `DB_PORT`,
 `DB_DATABASE`, `DB_USERNAME`, and `DB_PASSWORD`. Never commit that file or copy

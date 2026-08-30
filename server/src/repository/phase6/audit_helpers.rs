@@ -1,5 +1,7 @@
 use super::*;
 
+const SESSION_TOKEN_BYTES: usize = 32;
+
 pub fn audit_command(
     state: &mut RepositoryState,
     actor: &str,
@@ -27,16 +29,36 @@ pub fn stable_fingerprint(value: &str) -> u64 {
     hash
 }
 
+pub fn new_session_tokens() -> Result<(String, String), ()> {
+    let mut access_bytes = [0_u8; SESSION_TOKEN_BYTES];
+    let mut refresh_bytes = [0_u8; SESSION_TOKEN_BYTES];
+    getrandom::fill(&mut access_bytes).map_err(|_| ())?;
+    getrandom::fill(&mut refresh_bytes).map_err(|_| ())?;
+    Ok((
+        format!("prod-session-{}", hex_token(&access_bytes)),
+        format!("prod-refresh-{}", hex_token(&refresh_bytes)),
+    ))
+}
+
+fn hex_token(bytes: &[u8; SESSION_TOKEN_BYTES]) -> String {
+    const HEX: &[u8; 16] = b"0123456789abcdef";
+    let mut token = String::with_capacity(bytes.len() * 2);
+    for byte in bytes {
+        token.push(HEX[(byte >> 4) as usize] as char);
+        token.push(HEX[(byte & 0x0f) as usize] as char);
+    }
+    token
+}
+
 pub fn issue_session(
     state: &mut RepositoryState,
     config: &ServerConfig,
     identity_key: &str,
     account_id: &str,
+    tokens: (String, String),
 ) -> AuthSession {
-    let id = state.phase6.next_session_id;
     state.phase6.next_session_id = state.phase6.next_session_id.saturating_add(1);
-    let access = format!("prod-session-{id}");
-    let refresh = format!("prod-refresh-{id}");
+    let (access, refresh) = tokens;
     let expires = state
         .tick
         .saturating_add(config.production_session_ttl_ticks());
