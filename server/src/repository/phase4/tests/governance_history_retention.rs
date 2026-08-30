@@ -392,3 +392,85 @@ fn tax_collection_id_stays_at_the_numeric_ceiling() {
         .iter()
         .any(|receipt| receipt.collection_id == format!("tax-{}", u64::MAX)));
 }
+
+#[test]
+fn governance_audits_keep_each_command_on_its_own_target() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = guest(&repository, "governance-audit-targets");
+
+    let mut office = governance_request(GovernanceAction::ClaimOffice, "audit-target-office");
+    office.office_id = Some("steward".to_owned());
+    assert!(
+        repository
+            .governance(&session.account_token, office)
+            .unwrap()
+            .data
+            .accepted
+    );
+    {
+        let state = repository.state.lock().expect("repository lock");
+        assert_eq!(state.phase6.audits.back().unwrap().target, "steward");
+    }
+
+    let mut first = governance_request(GovernanceAction::Propose, "audit-target-first-propose");
+    first.public_action = Some(PublicAction::RepairRoad);
+    let first_id = repository
+        .governance(&session.account_token, first)
+        .unwrap()
+        .data
+        .governance
+        .proposals
+        .last()
+        .unwrap()
+        .proposal_id
+        .clone();
+    let mut second = governance_request(GovernanceAction::Propose, "audit-target-second-propose");
+    second.public_action = Some(PublicAction::RepairRoad);
+    assert!(
+        repository
+            .governance(&session.account_token, second)
+            .unwrap()
+            .data
+            .accepted
+    );
+
+    let mut approve = governance_request(GovernanceAction::Approve, "audit-target-approve");
+    approve.proposal_id = Some(first_id.clone());
+    assert!(
+        repository
+            .governance(&session.account_token, approve)
+            .unwrap()
+            .data
+            .accepted
+    );
+    {
+        let state = repository.state.lock().expect("repository lock");
+        assert_eq!(state.phase6.audits.back().unwrap().target, first_id);
+    }
+
+    let mut complete = governance_request(GovernanceAction::Complete, "audit-target-complete");
+    complete.proposal_id = Some(first_id.clone());
+    assert!(
+        repository
+            .governance(&session.account_token, complete)
+            .unwrap()
+            .data
+            .accepted
+    );
+    {
+        let state = repository.state.lock().expect("repository lock");
+        assert_eq!(state.phase6.audits.back().unwrap().target, first_id);
+    }
+
+    let mut tax = governance_request(GovernanceAction::SetTaxRate, "audit-target-tax");
+    tax.tax_rate_percent = Some(1);
+    assert!(
+        repository
+            .governance(&session.account_token, tax)
+            .unwrap()
+            .data
+            .accepted
+    );
+    let state = repository.state.lock().expect("repository lock");
+    assert_eq!(state.phase6.audits.back().unwrap().target, "tax-policy");
+}

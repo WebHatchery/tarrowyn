@@ -108,7 +108,7 @@ impl super::super::WorldRepository {
                     response.reason =
                         Some("That office is not recorded in the town hall.".to_owned());
                     response.governance = state.phase4.governance.clone();
-                    return finish(self, &mut state, cache, request.request_id, response);
+                    return finish(self, &mut state, cache, &request, response);
                 };
                 if office
                     .holder_account_id
@@ -136,7 +136,7 @@ impl super::super::WorldRepository {
                 let Some(rate) = request.tax_rate_percent else {
                     response.reason = Some("Name the new public tax rate.".to_owned());
                     response.governance = state.phase4.governance.clone();
-                    return finish(self, &mut state, cache, request.request_id, response);
+                    return finish(self, &mut state, cache, &request, response);
                 };
                 if !holds_office(&state, OfficeKind::Steward, &actor_id) {
                     response.reason = Some(
@@ -173,7 +173,7 @@ impl super::super::WorldRepository {
                     response.reason =
                         Some("Choose the bounded public action before proposing it.".to_owned());
                     response.governance = state.phase4.governance.clone();
-                    return finish(self, &mut state, cache, request.request_id, response);
+                    return finish(self, &mut state, cache, &request, response);
                 };
                 let cost = request.cost.unwrap_or_else(|| action.default_cost());
                 if cost == 0 || cost > state.phase4.governance.public_treasury {
@@ -216,7 +216,7 @@ impl super::super::WorldRepository {
                 let Some(proposal_id) = proposal_id.as_deref() else {
                     response.reason = Some("Name the proposal to approve.".to_owned());
                     response.governance = state.phase4.governance.clone();
-                    return finish(self, &mut state, cache, request.request_id, response);
+                    return finish(self, &mut state, cache, &request, response);
                 };
                 if !holds_office(&state, OfficeKind::Steward, &actor_id) {
                     response.reason =
@@ -252,7 +252,7 @@ impl super::super::WorldRepository {
                 let Some(proposal_id) = proposal_id.as_deref() else {
                     response.reason = Some("Name the approved proposal to complete.".to_owned());
                     response.governance = state.phase4.governance.clone();
-                    return finish(self, &mut state, cache, request.request_id, response);
+                    return finish(self, &mut state, cache, &request, response);
                 };
                 let Some(index) = state
                     .phase4
@@ -264,7 +264,7 @@ impl super::super::WorldRepository {
                     response.reason =
                         Some("That proposal is not in the town-hall ledger.".to_owned());
                     response.governance = state.phase4.governance.clone();
-                    return finish(self, &mut state, cache, request.request_id, response);
+                    return finish(self, &mut state, cache, &request, response);
                 };
                 let proposal = state.phase4.governance.proposals[index].clone();
                 if proposal.status != ProposalStatus::Approved {
@@ -332,7 +332,7 @@ impl super::super::WorldRepository {
             }
         }
         response.governance = state.phase4.governance.clone();
-        finish(self, &mut state, cache, request.request_id, response)
+        finish(self, &mut state, cache, &request, response)
     }
 
     pub fn infrastructure(
@@ -357,7 +357,7 @@ fn finish(
     repository: &super::super::WorldRepository,
     state: &mut super::super::models::RepositoryState,
     cache: String,
-    request_id: String,
+    request: &GovernanceRequest,
     response: GovernanceResponse,
 ) -> Result<ApiResponse<GovernanceResponse>, super::super::RepositoryError> {
     let actor = cache
@@ -366,12 +366,31 @@ fn finish(
         .map(|(account, _)| account)
         .unwrap_or("unknown-account")
         .to_owned();
-    let target = response
-        .governance
-        .proposals
-        .last()
-        .map(|proposal| proposal.proposal_id.clone())
-        .unwrap_or_else(|| request_id.clone());
+    let request_id = request.request_id.clone();
+    let target = match request.action {
+        GovernanceAction::ClaimOffice => request
+            .office_id
+            .as_deref()
+            .map(str::trim)
+            .filter(|office_id| !office_id.is_empty())
+            .unwrap_or("steward")
+            .to_owned(),
+        GovernanceAction::Approve | GovernanceAction::Complete => request
+            .proposal_id
+            .as_deref()
+            .map(str::trim)
+            .filter(|proposal_id| !proposal_id.is_empty())
+            .unwrap_or(request_id.as_str())
+            .to_owned(),
+        GovernanceAction::Propose => response
+            .accepted
+            .then(|| response.governance.proposals.last())
+            .flatten()
+            .map(|proposal| proposal.proposal_id.clone())
+            .unwrap_or_else(|| request_id.clone()),
+        GovernanceAction::SetTaxRate => "tax-policy".to_owned(),
+        GovernanceAction::Inspect => request_id.clone(),
+    };
     super::super::phase6::audit_command(
         state,
         &actor,

@@ -955,3 +955,11 @@ regression, server clippy, direct formatting, size, and diff checks pass. The
 publisher check also passes for this bounded Phase 4 selector maintenance
 slice; no full workspace gate is required. No new external or deferred work
 was opened.
+
+Governance audit targets now follow the command being recorded: approvals and
+completions retain their selected proposal, while office and tax actions no
+longer inherit an unrelated newest proposal. The focused Phase 4 audit-target
+regression, server clippy, direct formatting, diff, and Rust file-size checks
+pass. The publisher check also passes for this bounded Phase 4 audit
+maintenance slice; no full workspace gate is required.
+No new external or deferred work was opened.
