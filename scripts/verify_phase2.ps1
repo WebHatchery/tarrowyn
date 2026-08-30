@@ -3,6 +3,7 @@ $ErrorActionPreference = "Stop"
 $gameDir = Split-Path $PSScriptRoot -Parent
 $statePath = Join-Path ([System.IO.Path]::GetTempPath()) "tarrowyn-phase2-$PID.json"
 $server = $null
+$oldDbDriver = $env:DB_DRIVER
 
 function Assert-True([bool]$condition, [string]$message) {
     if (-not $condition) {
@@ -57,6 +58,7 @@ function Wait-Healthy {
 
 try {
     Remove-Item -LiteralPath $statePath -Force -ErrorAction SilentlyContinue
+    $env:DB_DRIVER = "json"
     $env:TARROWYN_STATE_PATH = $statePath
     $env:TARROWYN_MOVEMENT_COOLDOWN_TICKS = "0"
     $env:TARROWYN_TICK_MS = "50"
@@ -127,6 +129,7 @@ try {
     Write-Host "Phase 2 acceptance passed: persistent farming, idempotent exchange, tavern feed, and restart recovery." -ForegroundColor Green
 } finally {
     if ($null -ne $server -and -not $server.HasExited) { Stop-Phase2Server $server }
+    if ($null -eq $oldDbDriver) { Remove-Item Env:DB_DRIVER -ErrorAction SilentlyContinue } else { $env:DB_DRIVER = $oldDbDriver }
     Remove-Item Env:TARROWYN_STATE_PATH -ErrorAction SilentlyContinue
     Remove-Item Env:TARROWYN_MOVEMENT_COOLDOWN_TICKS -ErrorAction SilentlyContinue
     Remove-Item Env:TARROWYN_TICK_MS -ErrorAction SilentlyContinue

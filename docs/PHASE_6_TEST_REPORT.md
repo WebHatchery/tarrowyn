@@ -1301,3 +1301,22 @@ loaded MySQL credentials cannot silently redirect an isolated drill to the
 shared database. Both affected scripts pass when launched under an
 intentionally wrong ambient MySQL driver; no new external or deferred work was
 opened.
+
+The Phase 1, Phase 2, Phase 3, and Phase 4 JSON acceptance harnesses now force
+`DB_DRIVER=json` for their temporary workers and restore the caller's value on
+exit. Each affected script passes under an intentionally wrong ambient MySQL
+driver, preventing a shell-level database setting from redirecting historical
+acceptance fixtures. No new external or deferred work was opened.
+
+The Phase 3 cursor acceptance now tolerates legitimate clock events arriving
+between the cursor read and its follow-up request, while still rejecting any
+event at or before the accepted cursor and any backwards cursor movement. The
+affected Phase 3 harness passes under an intentionally wrong ambient MySQL
+driver; no new external or deferred work was opened.
+
+The Phase 4 lease acceptance now waits for the authoritative worker to advance
+past the configured reclamation grace interval before sending `Reclaim`, so
+the fixture exercises the current protected-grace rule instead of relying on a
+race between HTTP requests. The affected Phase 4 harness passes under an
+intentionally wrong ambient MySQL driver; no new external or deferred work was
+opened.

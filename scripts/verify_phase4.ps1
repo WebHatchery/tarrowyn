@@ -3,6 +3,7 @@ $ErrorActionPreference = "Stop"
 $gameDir = Split-Path $PSScriptRoot -Parent
 $statePath = Join-Path ([System.IO.Path]::GetTempPath()) "tarrowyn-phase4-$PID.json"
 $server = $null
+$oldDbDriver = $env:DB_DRIVER
 
 function Assert-True([bool]$condition, [string]$message) {
     if (-not $condition) { throw "Phase 4 acceptance failed: $message" }
@@ -54,6 +55,7 @@ function Wait-Healthy {
 
 try {
     Remove-Item -LiteralPath $statePath -Force -ErrorAction SilentlyContinue
+    $env:DB_DRIVER = "json"
     $env:TARROWYN_STATE_PATH = $statePath
     $env:TARROWYN_MOVEMENT_COOLDOWN_TICKS = "0"
     $env:TARROWYN_TICK_MS = "50"
@@ -96,6 +98,17 @@ try {
     $renewed = Post-Json "/v1/claims/lifecycle" @{ request_id = "lease-renew"; action = "renew"; claim_id = $claimId } $oneHeaders
     $transferred = Post-Json "/v1/claims/lifecycle" @{ request_id = "lease-transfer"; action = "transfer"; claim_id = $claimId; target_account_id = $two.data.account_id } $oneHeaders
     $abandoned = Post-Json "/v1/claims/lifecycle" @{ request_id = "lease-abandon"; action = "abandon"; claim_id = $claimId } $twoHeaders
+    $abandonTick = [uint64]$abandoned.data.claim.last_active_tick
+    $graceReached = $false
+    for ($attempt = 0; $attempt -lt 20; $attempt++) {
+        $currentHealth = Invoke-RestMethod -Method Get -Uri "http://127.0.0.1:8787/health"
+        if ([uint64]$currentHealth.meta.server_tick -ge $abandonTick + 2) {
+            $graceReached = $true
+            break
+        }
+        Start-Sleep -Milliseconds 50
+    }
+    Assert-True $graceReached "the lease reclamation grace interval did not advance"
     $reclaimed = Post-Json "/v1/claims/lifecycle" @{ request_id = "lease-reclaim"; action = "reclaim"; claim_id = $claimId } $twoHeaders
     Assert-True ($approved.data.accepted -and $renewed.data.accepted -and $transferred.data.accepted -and $abandoned.data.accepted -and $reclaimed.data.accepted) "the full lease lifecycle did not complete"
     $oneInventory = Invoke-RestMethod -Method Get -Uri "http://127.0.0.1:8787/v1/inventory" -Headers $oneHeaders
@@ -159,6 +172,7 @@ try {
     Write-Host "Phase 4 acceptance passed: three-role presence/chat, governance, infrastructure, lease lifecycle, profession order, knowledge transfer, animal care, complementary household, local combat, and restart." -ForegroundColor Green
 } finally {
     if ($null -ne $server -and -not $server.HasExited) { Stop-Phase4Server $server }
+    if ($null -eq $oldDbDriver) { Remove-Item Env:DB_DRIVER -ErrorAction SilentlyContinue } else { $env:DB_DRIVER = $oldDbDriver }
     Remove-Item Env:TARROWYN_STATE_PATH -ErrorAction SilentlyContinue
     Remove-Item Env:TARROWYN_MOVEMENT_COOLDOWN_TICKS -ErrorAction SilentlyContinue
     Remove-Item Env:TARROWYN_TICK_MS -ErrorAction SilentlyContinue

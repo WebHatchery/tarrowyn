@@ -3,6 +3,7 @@ $ErrorActionPreference = "Stop"
 $gameDir = Split-Path $PSScriptRoot -Parent
 $statePath = Join-Path ([System.IO.Path]::GetTempPath()) "tarrowyn-phase3-$PID.json"
 $server = $null
+$oldDbDriver = $env:DB_DRIVER
 
 function Assert-True([bool]$condition, [string]$message) {
     if (-not $condition) { throw "Phase 3 acceptance failed: $message" }
@@ -121,6 +122,7 @@ function Invoke-ConcurrentSoak([int]$clientCount, [int]$rounds) {
 
 try {
     Remove-Item -LiteralPath $statePath -Force -ErrorAction SilentlyContinue
+    $env:DB_DRIVER = "json"
     $env:TARROWYN_STATE_PATH = $statePath
     $env:TARROWYN_MOVEMENT_COOLDOWN_TICKS = "0"
     $env:TARROWYN_TICK_MS = "50"
@@ -181,7 +183,10 @@ try {
 
     $eventCursor = (Invoke-RestMethod -Method Get -Uri "http://127.0.0.1:8787/v1/events?since=0" -Headers $headers[1]).data.cursor
     $gap = Invoke-RestMethod -Method Get -Uri "http://127.0.0.1:8787/v1/events?since=$eventCursor" -Headers $headers[1]
-    Assert-True ($gap.data.events.Count -eq 0) "event cursor replay was not empty at the accepted cursor"
+    $replayedEvents = @($gap.data.events)
+    $duplicateEvents = @($replayedEvents | Where-Object { [uint64]$_.cursor -le [uint64]$eventCursor })
+    Assert-True ($duplicateEvents.Count -eq 0) "event cursor replay returned an event at or before the accepted cursor"
+    Assert-True ([uint64]$gap.data.cursor -ge [uint64]$eventCursor) "event cursor replay moved the accepted cursor backwards"
 
     $characterBeforeRestart = $sessions[0].data.character_id
     Stop-Phase3Server $server
@@ -200,6 +205,7 @@ try {
     Write-Host "Phase 3 acceptance passed: threat ripple, contract, knockout recovery, household signal, chronicle, renewable claim, expedition outpost, cursor catch-up, restartable state, and concurrent 20-client polling." -ForegroundColor Green
 } finally {
     if ($null -ne $server -and -not $server.HasExited) { Stop-Phase3Server $server }
+    if ($null -eq $oldDbDriver) { Remove-Item Env:DB_DRIVER -ErrorAction SilentlyContinue } else { $env:DB_DRIVER = $oldDbDriver }
     Remove-Item Env:TARROWYN_STATE_PATH -ErrorAction SilentlyContinue
     Remove-Item Env:TARROWYN_MOVEMENT_COOLDOWN_TICKS -ErrorAction SilentlyContinue
     Remove-Item Env:TARROWYN_TICK_MS -ErrorAction SilentlyContinue

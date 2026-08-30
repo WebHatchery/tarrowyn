@@ -1,11 +1,8 @@
 $ErrorActionPreference = "Stop"
 
 $gameDir = Split-Path $PSScriptRoot -Parent
-$server = Start-Process -FilePath "cargo.exe" `
-    -ArgumentList @("run", "-p", "tarrowyn-server", "--quiet") `
-    -WorkingDirectory $gameDir `
-    -WindowStyle Hidden `
-    -PassThru
+$server = $null
+$oldDbDriver = $env:DB_DRIVER
 
 function Assert-True([bool]$condition, [string]$message) {
     if (-not $condition) {
@@ -14,6 +11,12 @@ function Assert-True([bool]$condition, [string]$message) {
 }
 
 try {
+    $env:DB_DRIVER = "json"
+    $server = Start-Process -FilePath "cargo.exe" `
+        -ArgumentList @("run", "-p", "tarrowyn-server", "--quiet") `
+        -WorkingDirectory $gameDir `
+        -WindowStyle Hidden `
+        -PassThru
     $health = $null
     for ($attempt = 0; $attempt -lt 40 -and $null -eq $health; $attempt++) {
         try {
@@ -72,4 +75,5 @@ try {
     if ($null -ne $server -and -not $server.HasExited) {
         Stop-Process -Id $server.Id -Force
     }
+    if ($null -eq $oldDbDriver) { Remove-Item Env:DB_DRIVER -ErrorAction SilentlyContinue } else { $env:DB_DRIVER = $oldDbDriver }
 }
