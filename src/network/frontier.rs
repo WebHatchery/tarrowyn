@@ -461,8 +461,12 @@ impl FrontierClient {
             FrontierCommandResponse::Contract(response) => {
                 if response.accepted {
                     if projection_current {
+                        let position = response.player.position;
                         self.contracts = vec![response.contract.clone()];
                         projection.player = Some(response.player);
+                        projection.set_authoritative_player_position(
+                            macroquad_toolkit::grid::TilePos::new(position.x, position.y),
+                        );
                     }
                     notices.push(NetworkNotice::Success(contract_success_message(
                         &response.contract,

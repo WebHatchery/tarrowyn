@@ -2722,3 +2722,14 @@ The project `publish.ps1` Windows/WebGL build, packaging, Preview deployment,
 and catalog-sync checks pass. No full workspace gate was repeated because this
 was a bounded touch-guidance presentation correction, and no new external or
 deferred work was opened.
+
+Accepted current frontier contract responses now restore the authoritative
+player-position marker along with the returned player projection. This keeps
+walking controls closed only until a current server response supplies a real
+position after cursor recovery. The focused
+`network::frontier::tests::accepted_contract_response_restores_authoritative_player_position`
+regression passes; client-package formatting and clippy, `git diff --check`,
+and the Rust file-size scan pass. The project `publish.ps1` Windows/WebGL
+build, packaging, Preview deployment, and catalog-sync checks pass. No full
+workspace gate was repeated because this was a bounded frontier projection
+consistency correction, and no new external or deferred work was opened.
