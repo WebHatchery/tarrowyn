@@ -8,8 +8,8 @@ use tarrowyn_protocol::{
     AdventurerContract, ApiResponse, ClaimAction, ClaimRequest, ClaimResponse, CombatAction,
     CombatRequest, CombatResponse, ContractAction, ContractRequest, ContractResponse,
     ContractStatus, ContractsResponse, Expedition, ExpeditionAction, ExpeditionRequest,
-    ExpeditionResponse, ExpeditionRole, OpportunitiesResponse, RecoveryChoice, RecoveryRequest,
-    RecoveryResponse, WeaponKind,
+    ExpeditionResponse, ExpeditionRole, LandClaim, OpportunitiesResponse, RecoveryChoice,
+    RecoveryRequest, RecoveryResponse, WeaponKind,
 };
 
 const MAX_COMMAND_RETRIES: u8 = 3;
@@ -343,15 +343,11 @@ impl FrontierClient {
                 apply_recovery(response, projection, notices, projection_current)
             }
             FrontierCommandResponse::Claim(response) => {
+                let message = homestead_success_message(response.claim.as_ref());
                 if projection_current {
                     projection.claim = response.claim;
                 }
-                command_notice(
-                    response.accepted,
-                    response.reason,
-                    "The homestead ledger updated.",
-                    notices,
-                );
+                command_notice(response.accepted, response.reason, &message, notices);
             }
             FrontierCommandResponse::Expedition(response) => {
                 expedition_notice(&response, notices);
@@ -413,6 +409,26 @@ fn outcome_text(expedition: &Expedition) -> &str {
         .outcome
         .as_deref()
         .unwrap_or("The registry recorded the result.")
+}
+
+fn homestead_success_message(claim: Option<&LandClaim>) -> String {
+    let Some(claim) = claim else {
+        return "The homestead ledger updated.".to_owned();
+    };
+    let plot = format!("({}, {})", claim.position.x, claim.position.y);
+    match claim.status {
+        tarrowyn_protocol::ClaimStatus::Active => format!(
+            "Homestead lease active at plot {plot}; {}-day access is recognised.",
+            claim.lease_days
+        ),
+        tarrowyn_protocol::ClaimStatus::Abandoned => format!(
+            "Homestead lease abandoned at plot {plot}; reclamation opens after {} inactive beats.",
+            claim.reclaim_after_ticks
+        ),
+        tarrowyn_protocol::ClaimStatus::Reclaimed => {
+            "Homestead lease reclaimed; tap Claim to request a new lease.".to_owned()
+        }
+    }
 }
 
 fn short_error(error: &str) -> String {

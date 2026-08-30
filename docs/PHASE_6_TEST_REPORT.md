@@ -760,6 +760,15 @@ catalog sync. No full workspace gate was repeated because this was a bounded
 client Town Hall-feedback slice, and no new external or deferred work was
 opened.
 
+Accepted frontier homestead responses now explain the returned lease state:
+the plot and recognised access duration while active, the inactivity window
+before abandoned land can be reclaimed, and the visible Claim path after
+reclamation. The focused homestead-success-message regression passes, client
+clippy and the Rust file-size check pass, and `publish.ps1` passes Windows/WebGL
+builds, packaging, Preview deployment, and catalog sync. No full workspace gate
+was repeated because this was a bounded client homestead-feedback slice, and
+no new external or deferred work was opened.
+
 Accepted direct-trade responses now explain the returned exchange: the other
 resident and the exact give/receive bundles, while retaining the existing
 action fallback when no offer record is present. The focused trade-success

@@ -173,6 +173,31 @@ fn expedition_resolution_notice_explains_a_retreat() {
 }
 
 #[test]
+fn homestead_success_message_explains_lease_state() {
+    let claim = tarrowyn_protocol::LandClaim {
+        claim_id: "homestead-1".to_owned(),
+        owner_account_id: "account-1".to_owned(),
+        owner_name: "The traveller".to_owned(),
+        position: tarrowyn_protocol::Position { x: 10, y: 8 },
+        lease_days: 3,
+        last_active_tick: 4,
+        reclaim_after_ticks: 20,
+        status: tarrowyn_protocol::ClaimStatus::Active,
+    };
+    assert_eq!(
+        super::homestead_success_message(Some(&claim)),
+        "Homestead lease active at plot (10, 8); 3-day access is recognised."
+    );
+
+    let mut abandoned = claim;
+    abandoned.status = tarrowyn_protocol::ClaimStatus::Abandoned;
+    assert_eq!(
+        super::homestead_success_message(Some(&abandoned)),
+        "Homestead lease abandoned at plot (10, 8); reclamation opens after 20 inactive beats."
+    );
+}
+
+#[test]
 fn contract_cycle_waits_through_the_tavern_cooldown() {
     let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
     client.state = crate::network::ConnectionState::Online;
