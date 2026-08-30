@@ -1404,3 +1404,11 @@ standards tests, doc tests, warning-denied workspace clippy, content validation,
 Windows and WebGL release builds, package creation, Preview deployment, and
 catalog sync. The existing `net2 v0.2.39` future-incompatibility warning
 remains non-blocking. No new external or deferred work was opened.
+
+The Phase 6 design record now distinguishes the deliberate authenticated
+link/refresh credential handoff from support/player projections and audit
+records, and records that production credentials use the operating system's
+secure random source. This documentation-only consistency fix required no
+additional runtime tests; the already-passing full milestone gate remains the
+authoritative validation for the implementation. No new external or deferred
+work was opened.

@@ -7,8 +7,11 @@ the `webhatchery-identity-oidc` provider contract. The server stores a trimmed,
 bounded provider subject mapping with no control characters, never a provider
 credential. A guest fixture may be
 linked to that subject once; the character ID remains the durable character
-boundary. Production access tokens are opaque, short-lived, rotated on refresh,
-and revocable. Refresh tokens are stored only as server-side session records.
+boundary. Production access tokens are opaque, short-lived, generated from the
+operating system's secure random source, rotated on refresh, and revocable.
+Refresh tokens are stored only as server-side session records apart from the
+authenticated link/refresh response that hands the current credential to the
+client.
 The unauthenticated development-guest endpoint admits at most 32 attempts per
 source in a 60-second HTTP window, with a bounded source table; deployment
 proxies must add their own rate and identity controls for public traffic.
@@ -48,7 +51,9 @@ selectors, regional route, travel, market, and event selectors, event
 intervention text, plus moderation target IDs and notes,
 support account and repair selector IDs, and operator notes, use the same
 bounded control-free audit boundary. Refresh tokens use a separate bounded
-secret boundary and are never copied into responses or audit records. Chat
+secret boundary and are never copied into support/player projections or audit
+records; the link and refresh responses are the deliberate authenticated
+credential handoff. Chat
 also has length and per-tick limits, and chronicle search accepts only bounded
 control-free queries while preserving an empty query for browsing;
 chat metadata, trades, claims, governance, moderation, and support repairs are
