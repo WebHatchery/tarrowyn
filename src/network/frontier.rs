@@ -431,9 +431,9 @@ fn apply_combat(
             "The Brambleback falls; the north road is open.".to_owned(),
         )),
         Some(tarrowyn_protocol::CombatOutcome::KnockedOut) => notices.push(NetworkNotice::Danger(
-            response
-                .recovery_prompt
-                .unwrap_or_else(|| "You were knocked out; choose recovery.".to_owned()),
+            response.recovery_prompt.unwrap_or_else(|| {
+                "You were knocked out; tap Self, Rescuer, or Healer to recover.".to_owned()
+            }),
         )),
         Some(tarrowyn_protocol::CombatOutcome::Retreated) => notices.push(NetworkNotice::Info(
             "You retreat to the Hearth before the threat closes in.".to_owned(),

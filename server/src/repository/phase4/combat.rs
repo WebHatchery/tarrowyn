@@ -302,7 +302,7 @@ impl super::super::WorldRepository {
                                 identity.inventory.seeds -= 1;
                             }
                             response.accepted = true;
-                            response.prompt = "Knockout. Choose the visible recovery action; carried risk is one seed at most and stored property is safe.".to_owned();
+                            response.prompt = "Knockout. Tap Self, Rescuer, or Healer; carried risk is one seed at most and stored property is safe.".to_owned();
                             record(&mut state, "combat knockout", "A bounded local defeat sends a traveller home", "The improvised weapon could not finish the encounter; only the displayed carried risk applies.");
                         } else {
                             response.accepted = true;

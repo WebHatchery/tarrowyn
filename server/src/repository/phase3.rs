@@ -487,7 +487,7 @@ impl WorldRepository {
                     }
                     response.outcome = Some(CombatOutcome::KnockedOut);
                     response.recovery_prompt = Some(
-                        "You were knocked out. Tap a recovery choice; stored goods remain safe."
+                        "You were knocked out. Tap Self, Rescuer, or Healer; stored goods remain safe."
                             .to_owned(),
                     );
                     record(

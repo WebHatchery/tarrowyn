@@ -1602,3 +1602,11 @@ formatting and diff checks are clean, and `publish.ps1` passes Windows/WebGL
 builds, packaging, Preview deployment, and catalog sync. No full workspace gate
 was repeated because this was a bounded combat-guidance slice, and no new
 external or deferred work was opened.
+
+The remaining Brambleback and local-combat knockout notices now name the same
+visible `Self`, `Rescuer`, and `Healer` recovery controls, including the client
+fallback when an older response omits its prompt. The focused recovery server
+filter passes (10), the client online UI suite passes (8), and `publish.ps1`
+passes Windows/WebGL builds, packaging, Preview deployment, and catalog sync.
+No full workspace gate was repeated because this was a bounded recovery-copy
+consistency slice, and no new external or deferred work was opened.
