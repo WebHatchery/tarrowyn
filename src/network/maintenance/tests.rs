@@ -57,3 +57,18 @@ fn healthy_readiness_reopens_a_loaded_world_after_maintenance() {
     assert_eq!(client.state, super::super::ConnectionState::Online);
     assert_eq!(client.state_refresh, 0.0);
 }
+
+#[test]
+fn healthy_readiness_does_not_reopen_a_transport_failure() {
+    let data = crate::data::GameData::load().expect("embedded client data");
+    let mut client = OnlineClient::new("http://127.0.0.1:8787", &data.config);
+    client.had_world = true;
+    client.state = super::super::ConnectionState::Degraded;
+    client.state_refresh = 12.0;
+
+    apply_readiness(&mut client, true, None);
+
+    assert!(!client.readiness_degraded);
+    assert_eq!(client.state, super::super::ConnectionState::Degraded);
+    assert_eq!(client.state_refresh, 12.0);
+}

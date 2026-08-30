@@ -2801,3 +2801,14 @@ and the Rust file-size scan pass. The project `publish.ps1` Windows/WebGL
 build, packaging, Preview deployment, and catalog-sync checks pass. No full
 workspace gate was repeated because this was a bounded account-recovery UI
 correction, and no new external or deferred work was opened.
+
+Healthy readiness responses now reopen only clients that were actually held by
+the maintenance gate. A transport-degraded client remains in its explicit
+Reconnect path instead of allowing an older pending request to resume merely
+because a health response arrived later. The focused
+`network::maintenance::tests` module passes all five tests; client-package
+formatting and clippy, `git diff --check`, and the Rust file-size scan pass.
+The project `publish.ps1` Windows/WebGL build, packaging, Preview deployment,
+and catalog-sync checks pass. No full workspace gate was repeated because this
+was a bounded readiness-recovery correction, and no new external or deferred
+work was opened.

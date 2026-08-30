@@ -16,6 +16,7 @@ pub(super) fn poll_ops_health(client: &mut OnlineClient, dt: f32) {
 }
 
 fn apply_readiness(client: &mut OnlineClient, ready: bool, maintenance_message: Option<&str>) {
+    let was_readiness_degraded = client.readiness_degraded;
     client.readiness_degraded = !ready;
     client.maintenance_status = maintenance_status_message(ready, maintenance_message);
     if let Some(message) = client.maintenance_status.clone() {
@@ -23,7 +24,10 @@ fn apply_readiness(client: &mut OnlineClient, ready: bool, maintenance_message: 
     }
     if !ready {
         client.state = super::ConnectionState::Degraded;
-    } else if client.had_world && client.state == super::ConnectionState::Degraded {
+    } else if was_readiness_degraded
+        && client.had_world
+        && client.state == super::ConnectionState::Degraded
+    {
         client.state = super::ConnectionState::Online;
         client.state_refresh = 0.0;
     }
