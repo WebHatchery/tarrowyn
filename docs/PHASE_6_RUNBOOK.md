@@ -87,8 +87,10 @@ fails the drill.
 1. Check `/v1/ops/health`, the last backup tick, `persistence_error`, and
    `backup_error`; the `integrity_ok` field also covers durable
    cross-references across the world, regional, and production-identity
-   ledgers. Do not admit traffic while readiness is degraded; use the restore
-   or audited support repair path instead of editing a live snapshot in place.
+   ledgers. When it is false, use the fixed, non-sensitive `integrity_failures`
+   codes to identify the affected boundary before choosing restore or audited
+   support repair. Do not admit traffic while readiness is degraded, and do
+   not edit a live snapshot in place.
 2. Check authenticated `/v1/ops/metrics` for the measured average and latest
    tick durations, `tick_drift_count`, regional event backlog, and
    `alert_flags`. Also watch average price index, scarce goods, NPC fallback
