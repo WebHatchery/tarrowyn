@@ -107,6 +107,84 @@ fn governance_success_message_explains_completed_public_action() {
     );
 }
 
+#[test]
+fn governance_inspection_message_surfaces_the_public_ledger() {
+    let governance = tarrowyn_protocol::GovernanceState {
+        settlement_id: "hearth".to_owned(),
+        offices: vec![
+            tarrowyn_protocol::OfficeRecord {
+                office_id: "steward".to_owned(),
+                kind: tarrowyn_protocol::OfficeKind::Steward,
+                title: "Settlement Steward".to_owned(),
+                authority: "public spending".to_owned(),
+                holder_account_id: Some("account-1".to_owned()),
+                holder_name: Some("Resident".to_owned()),
+                last_active_tick: 2,
+                vacant: false,
+                vacancy_reason: None,
+            },
+            tarrowyn_protocol::OfficeRecord {
+                office_id: "registrar".to_owned(),
+                kind: tarrowyn_protocol::OfficeKind::Registrar,
+                title: "Registrar".to_owned(),
+                authority: "land records".to_owned(),
+                holder_account_id: None,
+                holder_name: None,
+                last_active_tick: 0,
+                vacant: true,
+                vacancy_reason: Some("awaiting a resident".to_owned()),
+            },
+        ],
+        proposals: vec![tarrowyn_protocol::PublicProposal {
+            proposal_id: "public-work-1".to_owned(),
+            proposer_account_id: "account-1".to_owned(),
+            proposer_name: "Resident".to_owned(),
+            action: tarrowyn_protocol::PublicAction::RepairRoad,
+            target: "North road".to_owned(),
+            cost: 8,
+            status: tarrowyn_protocol::ProposalStatus::Approved,
+            created_tick: 1,
+            approved_by: Some("account-1".to_owned()),
+            completed_tick: None,
+        }],
+        decisions: Vec::new(),
+        public_treasury: 18,
+        administration_quality: 73,
+        service_funding_until_tick: 0,
+        taxation: Some(tarrowyn_protocol::TaxPolicy {
+            payer: "nearby residents".to_owned(),
+            recipient: "Hearth treasury".to_owned(),
+            rate_percent: 4,
+            exemptions: Vec::new(),
+            accounting_note: "public ledger".to_owned(),
+            recovery_path: "Town hall".to_owned(),
+        }),
+        tax_ledger: Vec::new(),
+        cursor: 3,
+    };
+    let response = tarrowyn_protocol::GovernanceResponse {
+        request_id: "governance-inspect".to_owned(),
+        accepted: true,
+        governance,
+        reason: None,
+    };
+    let request = tarrowyn_protocol::GovernanceRequest {
+        request_id: "governance-inspect".to_owned(),
+        action: tarrowyn_protocol::GovernanceAction::Inspect,
+        office_id: None,
+        proposal_id: None,
+        public_action: None,
+        target: None,
+        cost: None,
+        tax_rate_percent: None,
+    };
+
+    assert_eq!(
+        super::super::governance_success_message(&response, Some(&request)),
+        "Town hall ledger: 1/2 offices filled • 1 proposals in progress • treasury 18 gold • tax 4% • administration 73%."
+    );
+}
+
 fn service_order_for_test(
     status: tarrowyn_protocol::ServiceOrderStatus,
 ) -> tarrowyn_protocol::ServiceOrder {

@@ -1780,3 +1780,12 @@ regression passes, client clippy and the Rust file-size check pass, and
 catalog sync. No full workspace gate was repeated because this was a bounded
 client movement-feedback slice, and no new external or deferred work was
 opened.
+
+The Town hall Inspect response now names the authoritative public ledger
+instead of only confirming that the action was recorded: filled offices,
+proposals in progress, treasury, tax rate, and administration quality are
+visible in the client notice. The focused governance-inspection regression
+passes, client clippy and the Rust file-size check pass, and `publish.ps1`
+passes Windows/WebGL builds, packaging, Preview deployment, and catalog sync.
+No full workspace gate was repeated because this was a bounded client
+governance-feedback slice, and no new external or deferred work was opened.

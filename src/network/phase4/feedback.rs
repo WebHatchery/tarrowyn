@@ -1,6 +1,7 @@
 use tarrowyn_protocol::{
     ClaimLifecycleStatus, ClaimRecord, GovernanceAction, GovernanceRequest, GovernanceResponse,
-    ProfessionAction, ProfessionKind, ProfessionRequest, ServiceOrder, ServiceOrderStatus,
+    GovernanceState, ProfessionAction, ProfessionKind, ProfessionRequest, ProposalStatus,
+    ServiceOrder, ServiceOrderStatus,
 };
 
 pub(super) fn claim_success_message(claim: Option<&ClaimRecord>) -> String {
@@ -198,6 +199,35 @@ pub(super) fn governance_success_message(
                 )
             })
             .unwrap_or_else(|| "The town-hall ledger recorded the public action.".to_owned()),
-        GovernanceAction::Inspect => "The town-hall ledger recorded the public action.".to_owned(),
+        GovernanceAction::Inspect => governance_inspection_message(&response.governance),
     }
+}
+
+fn governance_inspection_message(governance: &GovernanceState) -> String {
+    let filled_offices = governance
+        .offices
+        .iter()
+        .filter(|office| !office.vacant)
+        .count();
+    let open_proposals = governance
+        .proposals
+        .iter()
+        .filter(|proposal| {
+            matches!(
+                proposal.status,
+                ProposalStatus::Proposed | ProposalStatus::Approved
+            )
+        })
+        .count();
+    let tax_rate = governance
+        .taxation
+        .as_ref()
+        .map(|policy| policy.rate_percent)
+        .unwrap_or(0);
+    format!(
+        "Town hall ledger: {filled_offices}/{} offices filled • {open_proposals} proposals in progress • treasury {} gold • tax {tax_rate}% • administration {}%.",
+        governance.offices.len(),
+        governance.public_treasury,
+        governance.administration_quality,
+    )
 }
