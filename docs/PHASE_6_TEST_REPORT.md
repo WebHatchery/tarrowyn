@@ -2214,6 +2214,18 @@ builds, packaging, Preview deployment, and catalog sync. No full workspace gate
 was repeated because this was a bounded travel-input presentation correction,
 and no new external or deferred work was opened.
 
+Visible walking controls now require an Online connection for the shared road,
+while the explicitly local fixture remains walkable. Direction-pad taps and map
+targets no longer advertise movement during Connecting, Degraded, or Offline
+online-client states when the request layer would silently discard them. The
+focused binary test
+`ui::ui_online::tests::walking_controls_wait_for_an_authoritative_connection`
+passes; client-package formatting and clippy, `git diff --check`, and the Rust
+file-size scan pass. The project `publish.ps1` Windows/WebGL build, packaging,
+Preview deployment, and catalog-sync checks pass. No full workspace gate was
+repeated because this was a bounded touch-control availability correction, and
+no new external or deferred work was opened.
+
 The guest Account link control now closes as soon as a link command is queued
 or in flight, preventing repeated taps from creating duplicate link requests
 while the production identity boundary is resolving. The existing focused

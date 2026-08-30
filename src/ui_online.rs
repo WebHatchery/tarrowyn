@@ -661,7 +661,12 @@ fn frontier_combat_control_enabled(reachable: bool, combat_pending: bool) -> boo
 
 pub(super) fn movement_enabled(ctx: &UiContext<'_>) -> bool {
     !ctx.knocked_out
-        && (ctx.offline || !panels::regional_travel_blocks_movement(ctx.regional_region))
+        && walking_connection_enabled(ctx.connection, ctx.offline)
+        && !panels::regional_travel_blocks_movement(ctx.regional_region)
+}
+
+fn walking_connection_enabled(connection: ConnectionState, offline_fixture: bool) -> bool {
+    offline_fixture || connection == ConnectionState::Online
 }
 
 fn pioneer_status_line(

@@ -336,6 +336,26 @@ fn reconnect_control_waits_for_a_failed_connection() {
 }
 
 #[test]
+fn walking_controls_wait_for_an_authoritative_connection() {
+    assert!(super::walking_connection_enabled(
+        ConnectionState::Online,
+        false
+    ));
+    assert!(super::walking_connection_enabled(
+        ConnectionState::Offline,
+        true
+    ));
+    assert!(!super::walking_connection_enabled(
+        ConnectionState::Connecting,
+        false
+    ));
+    assert!(!super::walking_connection_enabled(
+        ConnectionState::Degraded,
+        false
+    ));
+}
+
+#[test]
 fn recovery_controls_close_after_one_choice_is_pending() {
     assert!(!super::recovery_control_enabled(true, true));
     assert!(super::recovery_control_enabled(true, false));
