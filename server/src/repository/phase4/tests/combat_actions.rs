@@ -342,6 +342,7 @@ fn knocked_out_local_player_cannot_reenter_before_recovery() {
         },
     )
     .unwrap();
+    let cursor_before_knockout = repo.world(&session.account_token).unwrap().data.cursor;
     let knockout = repo
         .local_combat(
             &session.account_token,
@@ -358,6 +359,19 @@ fn knocked_out_local_player_cannot_reenter_before_recovery() {
         tarrowyn_protocol::LocalCombatStatus::KnockedOut
     );
     assert!(knockout.player.knocked_out);
+    assert!(repo
+        .events(&session.account_token, cursor_before_knockout)
+        .unwrap()
+        .data
+        .events
+        .iter()
+        .any(|event| {
+            matches!(
+                &event.event,
+                WorldEvent::Presence(presence)
+                    if presence.online && presence.position == Position { x: 8, y: 5 }
+            )
+        }));
 
     let bypass = repo
         .local_combat(

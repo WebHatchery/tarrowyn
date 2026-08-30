@@ -2072,3 +2072,12 @@ stream regression passes, server clippy and the Rust file-size check pass, and
 `publish.ps1` passes Windows/WebGL builds, packaging, Preview deployment, and
 catalog sync. No full workspace gate was repeated because this was a bounded
 recovery presence correction, and no new external or deferred work was opened.
+
+Both frontier and local-combat knockouts now broadcast an online Hearth
+presence event after moving the identity, so connected clients see the defeat
+location change through the normal event stream as well as the command
+response. Focused server regressions cover both defeat paths, server clippy and
+the Rust file-size check pass, and `publish.ps1` passes Windows/WebGL builds,
+packaging, Preview deployment, and catalog sync. No full workspace gate was
+repeated because this was a bounded defeat presence correction, and no new
+external or deferred work was opened.

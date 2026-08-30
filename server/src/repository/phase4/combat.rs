@@ -304,6 +304,13 @@ impl super::super::WorldRepository {
                             response.accepted = true;
                             response.prompt = "Knockout. Tap Self, Rescuer, or Healer; carried risk is one seed at most and stored property is safe.".to_owned();
                             record(&mut state, "combat knockout", "A bounded local defeat sends a traveller home", "The improvised weapon could not finish the encounter; only the displayed carried risk applies.");
+                            let presence_event = {
+                                let identity = state.identities.get(&key).expect("identity exists");
+                                tarrowyn_protocol::WorldEvent::Presence(super::super::presence(
+                                    identity, state.tick, true,
+                                ))
+                            };
+                            super::super::push_event(&mut state, presence_event);
                         } else {
                             response.accepted = true;
                             response.prompt = "The threat answered. Your bounded injury is visible; STRIKE again or RETREAT.".to_owned();

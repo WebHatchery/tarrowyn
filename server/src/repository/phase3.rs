@@ -496,6 +496,11 @@ impl WorldRepository {
                         "The Brambleback sends a traveller back to the Hearth",
                         "The road is still dangerous; a small carried loss marks the retreat.",
                     );
+                    let presence_event = {
+                        let identity = state.identities.get(&key).expect("identity exists");
+                        WorldEvent::Presence(presence(identity, state.tick, true))
+                    };
+                    push_event(&mut state, presence_event);
                 }
             }
         }
