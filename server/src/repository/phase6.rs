@@ -525,6 +525,21 @@ impl WorldRepository {
                 .auth_revoke_guest_tokens
                 .insert(stable_fingerprint(&guest_token), key.clone());
         }
+        let revoked_refresh_replays: HashSet<String> = state
+            .phase6
+            .auth_refresh_accounts
+            .iter()
+            .filter(|(_, account_id)| *account_id == &account)
+            .map(|(cache_key, _)| cache_key.clone())
+            .collect();
+        state
+            .phase6
+            .auth_refresh_results
+            .retain(|cache_key, _| !revoked_refresh_replays.contains(cache_key));
+        state
+            .phase6
+            .auth_refresh_accounts
+            .retain(|cache_key, _| !revoked_refresh_replays.contains(cache_key));
         audit(
             &mut state,
             &account,

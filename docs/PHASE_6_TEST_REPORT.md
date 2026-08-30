@@ -1953,3 +1953,12 @@ clippy and the Rust file-size check pass, and `publish.ps1` passes Windows/WebGL
 builds, packaging, Preview deployment, and catalog sync. No full workspace
 gate was repeated because this was a bounded account-projection ordering
 correction, and no new external or deferred work was opened.
+
+Account revocation now removes that account's cached refresh responses before
+the revoke result is persisted, so replaying an old refresh request cannot
+return credentials after logout. The focused server session-integrity
+regression passes, server clippy and the Rust file-size check pass, and
+`publish.ps1` passes Windows/WebGL builds, packaging, Preview deployment, and
+catalog sync. No full workspace gate was repeated because this was a bounded
+refresh-revocation correction, and no new external or deferred work was
+opened.

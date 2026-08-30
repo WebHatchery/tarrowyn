@@ -1,5 +1,7 @@
 use super::super::super::{ServerConfig, WorldRepository};
-use tarrowyn_protocol::{AuthLinkRequest, AuthRefreshRequest, GuestSessionRequest};
+use tarrowyn_protocol::{
+    AuthLinkRequest, AuthRefreshRequest, AuthRevokeRequest, GuestSessionRequest,
+};
 
 #[test]
 fn production_session_refresh_window_covers_access_window() {
@@ -88,6 +90,55 @@ fn production_sessions_use_unpredictable_credentials() {
     assert!(refreshed.refresh_token.starts_with("prod-refresh-"));
     assert_ne!(refreshed.account_token, linked.session.account_token);
     assert_ne!(refreshed.refresh_token, "prod-refresh-1");
+}
+
+#[test]
+fn revocation_removes_refresh_replay_credentials() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let guest = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("revoke-refresh-replay".to_owned()),
+            reset: false,
+        })
+        .expect("guest session")
+        .data;
+    let linked = repository
+        .auth_link(
+            &guest.account_token,
+            AuthLinkRequest {
+                request_id: "revoke-refresh-link".to_owned(),
+                provider: "webhatchery-identity-oidc".to_owned(),
+                subject: "revoke-refresh-subject".to_owned(),
+                display_name: None,
+            },
+        )
+        .expect("linked session")
+        .data;
+    let refresh_request = AuthRefreshRequest {
+        request_id: "revoke-refresh-request".to_owned(),
+        refresh_token: linked.session.refresh_token,
+    };
+    let refreshed = repository
+        .auth_refresh(refresh_request.clone())
+        .expect("refreshed session")
+        .data;
+
+    repository
+        .auth_revoke(
+            &refreshed.session.account_token,
+            AuthRevokeRequest {
+                request_id: "revoke-refresh".to_owned(),
+                revoke_all: true,
+            },
+        )
+        .expect("revoked sessions");
+
+    let error = repository.auth_refresh(refresh_request).unwrap_err();
+    assert_eq!(error.status, 401);
+    assert_eq!(error.error.code, "invalid_refresh");
+    let state = repository.state.lock().expect("repository lock");
+    assert!(state.phase6.auth_refresh_results.is_empty());
+    assert!(state.phase6.auth_refresh_accounts.is_empty());
 }
 
 #[test]
