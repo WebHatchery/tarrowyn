@@ -131,6 +131,7 @@ impl Phase4Client {
     pub(super) fn queue_cycle(&mut self, id: &str, request_id: String) -> bool {
         if ((id == "town-hall" || id == "tax-rate") && self.governance_command_pending())
             || (id == "registry" && self.claim_command_pending())
+            || (id == "practice" && self.skill_command_pending())
         {
             return false;
         }
@@ -170,6 +171,16 @@ impl Phase4Client {
                 .commands
                 .iter()
                 .any(|command| matches!(command, Phase4Command::Governance(_)))
+    }
+
+    pub(super) fn skill_command_pending(&self) -> bool {
+        self.in_flight_command
+            .as_ref()
+            .is_some_and(|command| matches!(command, Phase4Command::Skill(_)))
+            || self
+                .commands
+                .iter()
+                .any(|command| matches!(command, Phase4Command::Skill(_)))
     }
 
     fn queue_governance(&mut self, request_id: String) {
@@ -438,6 +449,9 @@ impl Phase4Client {
     }
 
     pub(super) fn queue_school(&mut self, request_id: String, target_account_id: String) -> bool {
+        if self.skill_command_pending() {
+            return false;
+        }
         if let Some(lesson) = self.skills.as_ref().and_then(|skills| {
             let own = self.own_account_id.as_deref()?;
             skills.lessons.iter().find(|lesson| {
@@ -498,6 +512,9 @@ impl Phase4Client {
         request_id: String,
         skill_id: String,
     ) -> bool {
+        if self.skill_command_pending() {
+            return false;
+        }
         let valid_choice = self.skills.as_ref().is_some_and(|skills| {
             skills.skills.iter().any(|skill| {
                 skill.skill_id == skill_id

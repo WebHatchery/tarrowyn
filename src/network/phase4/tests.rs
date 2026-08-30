@@ -436,6 +436,8 @@ fn practice_choice_queues_the_selected_root() {
         cursor: 0,
     });
     assert!(client.queue_skill_practice_for("practice-2".to_owned(), "cooking".to_owned()));
+    assert!(client.skill_command_pending());
+    assert!(!client.queue_skill_practice_for("practice-duplicate".to_owned(), "cooking".to_owned()));
     let Some(Phase4Command::Skill(request)) = client.commands.pop_front() else {
         panic!("selected practice should queue a skill request");
     };

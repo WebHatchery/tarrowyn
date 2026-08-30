@@ -442,6 +442,14 @@ pub fn draw_skill_selection(ctx: &UiContext<'_>, mouse: Vec2, actions: &mut Vec<
         panel.y + 131.0,
         TextStyle::new(10.0, MINT).params(),
     );
+    if ctx.skill_pending {
+        draw_ui_text_ex(
+            "The skill ledger is settling; wait for its response before choosing another discipline.",
+            panel.x + 20.0,
+            panel.y + 145.0,
+            TextStyle::new(11.0, dark::TEXT_DIM).params(),
+        );
+    }
     let choices: Vec<_> = ctx
         .skills
         .iter()
@@ -465,7 +473,7 @@ pub fn draw_skill_selection(ctx: &UiContext<'_>, mouse: Vec2, actions: &mut Vec<
             panel.y + 133.0,
             TextStyle::new(11.0, MINT).params(),
         );
-        draw_skill_choices(panel, &choices, mouse, actions);
+        draw_skill_choices(panel, &choices, ctx.skill_pending, mouse, actions);
     }
     if virtual_button(
         Rect::new(panel.right() - 126.0, panel.bottom() - 42.0, 106.0, 28.0),
@@ -481,6 +489,7 @@ pub fn draw_skill_selection(ctx: &UiContext<'_>, mouse: Vec2, actions: &mut Vec<
 fn draw_skill_choices(
     panel: Rect,
     choices: &[&tarrowyn_protocol::SkillView],
+    skill_pending: bool,
     mouse: Vec2,
     actions: &mut Vec<UiAction>,
 ) {
@@ -499,7 +508,7 @@ fn draw_skill_choices(
                 height,
             ),
             &skill.name,
-            true,
+            !skill_pending,
             ButtonTone::Primary,
             mouse,
         ) {

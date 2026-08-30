@@ -2230,3 +2230,12 @@ Client formatting, clippy, standards, and the Rust file-size check pass, and
 catalog sync. No full workspace gate was repeated because this was a bounded
 trade-control and test-ownership correction, and no new external or deferred
 work was opened.
+
+Practice and School controls now close while a skill command is queued or in
+flight, and the discipline picker disables its choices while the skill ledger
+settles. The focused Practice filter passes the two affected Phase 4 tests,
+with the UI skill-control regression included; client formatting, clippy,
+standards, and the Rust file-size check pass, and `publish.ps1` passes
+Windows/WebGL builds, packaging, Preview deployment, and catalog sync. No full
+workspace gate was repeated because this was a bounded skill-control
+correction, and no new external or deferred work was opened.

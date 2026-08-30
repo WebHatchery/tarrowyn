@@ -266,6 +266,7 @@ impl Game {
                     crafting: client.crafting_view(),
                     combat: client.combat_state(),
                     storm_magic_unlocked: client.storm_magic_unlocked(),
+                    skill_pending: client.skill_pending(),
                     knocked_out: client
                         .projection
                         .player
@@ -365,6 +366,7 @@ impl Game {
                     crafting: None,
                     combat: None,
                     storm_magic_unlocked: false,
+                    skill_pending: false,
                     knocked_out: false,
                     recovery_pending: false,
                     has_open_market_order: false,

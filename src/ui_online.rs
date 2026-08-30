@@ -266,11 +266,16 @@ pub(super) fn draw_sidebar(
             ),
             ("chronicle", "Chronicle", true, ButtonTone::Secondary),
             ("say-hello", "Meet", true, ButtonTone::Secondary),
-            ("school", "School", !ctx.knocked_out, ButtonTone::Primary),
+            (
+                "school",
+                "School",
+                skill_control_enabled(!ctx.knocked_out, ctx.skill_pending),
+                ButtonTone::Primary,
+            ),
             (
                 "practice",
                 "Practice",
-                !ctx.knocked_out,
+                skill_control_enabled(!ctx.knocked_out, ctx.skill_pending),
                 ButtonTone::Positive,
             ),
         ],
@@ -576,6 +581,10 @@ fn route_control_enabled(route_available: bool, route_pending: bool) -> bool {
 
 fn governance_control_enabled(governance_pending: bool) -> bool {
     !governance_pending
+}
+
+fn skill_control_enabled(available: bool, skill_pending: bool) -> bool {
+    available && !skill_pending
 }
 
 pub(super) fn movement_enabled(ctx: &UiContext<'_>) -> bool {

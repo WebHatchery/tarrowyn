@@ -82,6 +82,7 @@ pub struct UiContext<'a> {
     pub crafting: Option<CraftingView>,
     pub combat: Option<&'a LocalCombatState>,
     pub storm_magic_unlocked: bool,
+    pub skill_pending: bool,
     pub knocked_out: bool,
     pub recovery_pending: bool,
     pub has_open_market_order: bool,
