@@ -135,6 +135,30 @@ fn refresh_failure_discards_authenticated_projections() {
 }
 
 #[test]
+fn refreshed_session_requests_a_fresh_account_projection() {
+    let mut client = Phase5Client::new();
+    client.refresh_timer = 8.0;
+    client.refresh_token = Some("old-refresh".to_owned());
+    let mut api = HttpClient::new("https://example.test");
+    let mut notices = Vec::new();
+
+    client.apply_refresh(
+        tarrowyn_protocol::AuthSession {
+            account_token: "new-access".to_owned(),
+            refresh_token: "new-refresh".to_owned(),
+            expires_in_seconds: 900,
+            expires_at_tick: 3600,
+        },
+        &mut api,
+        &mut notices,
+    );
+    client.dispatch(&mut api, false);
+
+    assert!(client.pending_account.is_some());
+    assert_eq!(client.refresh_timer, 1.5);
+}
+
+#[test]
 fn transient_refresh_failure_retries_the_same_request() {
     let mut client = Phase5Client::new();
     let request = tarrowyn_protocol::AuthRefreshRequest {

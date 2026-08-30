@@ -66,7 +66,7 @@ impl Phase5Client {
         }
     }
 
-    fn apply_refresh(
+    pub(super) fn apply_refresh(
         &mut self,
         session: tarrowyn_protocol::AuthSession,
         api: &mut HttpClient,
@@ -75,6 +75,7 @@ impl Phase5Client {
         api.set_bearer_token(Some(&session.account_token));
         self.refresh_token = Some(session.refresh_token.clone());
         self.auth_refresh_timer = refresh_delay(session.expires_in_seconds);
+        self.refresh_timer = 0.0;
         self.refresh_retry_timer = 0.0;
         self.refresh_retry_count = 0;
         self.refreshed_session = Some(session);

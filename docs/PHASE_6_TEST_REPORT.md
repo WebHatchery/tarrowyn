@@ -2475,3 +2475,13 @@ server-package formatting and clippy, `git diff --check`, and the Rust
 file-size scan pass. No full workspace gate was repeated because this was a
 bounded operator-session metrics correction, and no new external or deferred
 work was opened.
+
+Production session refresh now forces the client to request a fresh Account
+projection immediately, so the visible session-expiry beat follows the newly
+rotated credential instead of waiting for the periodic regional refresh. The
+focused client lifecycle test
+`network::phase5::tests::account_lifecycle::refreshed_session_requests_a_fresh_account_projection`
+passes; client-package formatting and clippy, `git diff --check`, and the Rust
+file-size scan pass. No full workspace gate was repeated because this was a
+bounded authenticated-session presentation correction, and no new external or
+deferred work was opened.
