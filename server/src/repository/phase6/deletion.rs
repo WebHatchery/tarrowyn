@@ -77,6 +77,7 @@ fn erase_account(state: &mut RepositoryState, request: &PendingAccountDeletion) 
     state
         .sessions
         .retain(|_, session| session.identity_key != request.identity_key);
+    super::super::record_offline_presence_if_last_session(state, &request.identity_key);
     state.phase6.accounts.remove(&request.account_id);
     state.phase5.travel.remove(&request.identity_key);
     state.phase3.contracts.remove(&request.identity_key);

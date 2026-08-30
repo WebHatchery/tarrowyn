@@ -2942,3 +2942,13 @@ Rust file-size scan pass. The project `publish.ps1` Windows/WebGL build,
 packaging, Preview deployment, and catalog-sync checks pass. No full workspace
 gate was repeated because this was a bounded guest-session presence correction,
 and no new external or deferred work was opened.
+
+Account deletion now emits a durable offline presence after removing the last
+access and refresh sessions, so connected observers can remove the deleted
+character immediately instead of waiting for stale-presence aging. The focused
+`repository::phase6::tests::account_cleanup::account_deletion_records_departure_for_connected_observers`
+test passes; server-package formatting and clippy, `git diff --check`, and the
+Rust file-size scan pass. The project `publish.ps1` Windows/WebGL build,
+packaging, Preview deployment, and catalog-sync checks pass. No full workspace
+gate was repeated because this was a bounded account-deletion presence
+correction, and no new external or deferred work was opened.

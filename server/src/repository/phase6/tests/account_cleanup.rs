@@ -3,7 +3,7 @@ use tarrowyn_protocol::{
     AccountDeletionRequest, AuthLinkRequest, AuthRefreshRequest, ChatRequest, ChronicleEntry,
     ClaimLifecycleAction, ClaimLifecycleRequest, GuestSessionRequest, KnowledgeAction,
     KnowledgeRequest, MarketOrderAction, MarketOrderRequest, ModerationReportRequest,
-    ProfessionAction, ProfessionKind, ProfessionRequest, SkillAction, SkillRequest,
+    ProfessionAction, ProfessionKind, ProfessionRequest, SkillAction, SkillRequest, WorldEvent,
 };
 
 fn history_entry(name: &str) -> ChronicleEntry {
@@ -15,6 +15,59 @@ fn history_entry(name: &str) -> ChronicleEntry {
         created_tick: 1,
         cursor: 1,
     }
+}
+
+#[test]
+fn account_deletion_records_departure_for_connected_observers() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let guest = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("deletion-presence-guest".to_owned()),
+            reset: false,
+        })
+        .expect("guest session")
+        .data;
+    let linked = repository
+        .auth_link(
+            &guest.account_token,
+            AuthLinkRequest {
+                request_id: "deletion-presence-link".to_owned(),
+                provider: "webhatchery-identity-oidc".to_owned(),
+                subject: "deletion-presence-subject".to_owned(),
+                display_name: None,
+            },
+        )
+        .expect("linked session")
+        .data;
+    let cursor_before_delete = repository
+        .world(&linked.session.account_token)
+        .expect("world before deletion")
+        .meta
+        .cursor
+        .expect("world cursor");
+
+    let deletion = repository
+        .account_delete(
+            &linked.session.account_token,
+            AccountDeletionRequest {
+                request_id: "deletion-presence-delete".to_owned(),
+                account_id: linked.account_id.clone(),
+            },
+        )
+        .expect("schedule deletion")
+        .data;
+    assert!(deletion.accepted);
+    repository.tick();
+
+    let state = repository.state.lock().expect("state lock");
+    assert!(state.events.iter().any(|record| {
+        record.cursor > cursor_before_delete
+            && matches!(
+                &record.event,
+                WorldEvent::Presence(presence)
+                    if !presence.online && presence.account_id == "former-resident"
+            )
+    }));
 }
 
 #[test]
