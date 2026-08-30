@@ -140,6 +140,12 @@ pub fn draw_skill_selection(ctx: &UiContext<'_>, mouse: Vec2, actions: &mut Vec<
         2.0,
         CREAM,
     );
+    draw_ui_text_ex(
+        &advanced_skill_line(ctx.skills),
+        panel.x + 20.0,
+        panel.y + 131.0,
+        TextStyle::new(10.0, MINT).params(),
+    );
     let choices: Vec<_> = ctx
         .skills
         .iter()
@@ -212,6 +218,33 @@ pub fn skill_practice_choice(skill: &tarrowyn_protocol::SkillView) -> bool {
             skill.status,
             tarrowyn_protocol::SkillStatus::Available | tarrowyn_protocol::SkillStatus::Practising
         )
+}
+
+pub fn advanced_skill_line(skills: &[tarrowyn_protocol::SkillView]) -> String {
+    let visible = skills
+        .iter()
+        .filter(|skill| {
+            skill.depth > 1
+                && matches!(
+                    skill.status,
+                    tarrowyn_protocol::SkillStatus::Resonating
+                        | tarrowyn_protocol::SkillStatus::Discovered
+                )
+        })
+        .map(|skill| {
+            let status = match skill.status {
+                tarrowyn_protocol::SkillStatus::Resonating => "resonating",
+                tarrowyn_protocol::SkillStatus::Discovered => "discovered",
+                _ => "hidden",
+            };
+            format!("{} ({status})", skill.name)
+        })
+        .collect::<Vec<_>>();
+    if visible.is_empty() {
+        "Advanced arts remain quiet; keep practising to find a pattern.".to_owned()
+    } else {
+        format!("Advanced arts in your ledger: {}", visible.join(" • "))
+    }
 }
 
 pub fn draw_combat_status(ctx: &UiContext<'_>, content: Rect, top: f32) {

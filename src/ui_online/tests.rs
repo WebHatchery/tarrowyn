@@ -85,6 +85,39 @@ fn skill_selection_keeps_roots_open_and_advanced_arts_hidden() {
 }
 
 #[test]
+fn advanced_skill_line_names_only_revealed_discovery_states() {
+    let hidden = tarrowyn_protocol::SkillView {
+        skill_id: "hidden-art".to_owned(),
+        name: "Hidden Art".to_owned(),
+        family: tarrowyn_protocol::SkillFamily::Magic,
+        depth: 2,
+        mastery: 0,
+        status: tarrowyn_protocol::SkillStatus::Available,
+        description: "A secret pattern.".to_owned(),
+        entry_hint: "Not yet.".to_owned(),
+    };
+    let hidden_available = hidden.clone();
+    let resonating = tarrowyn_protocol::SkillView {
+        skill_id: "storm-magic".to_owned(),
+        name: "Storm Magic".to_owned(),
+        status: tarrowyn_protocol::SkillStatus::Resonating,
+        ..hidden.clone()
+    };
+    let discovered = tarrowyn_protocol::SkillView {
+        skill_id: "weapon-fighting".to_owned(),
+        name: "Weapon Fighting".to_owned(),
+        status: tarrowyn_protocol::SkillStatus::Discovered,
+        ..hidden
+    };
+
+    assert_eq!(
+        super::panels::advanced_skill_line(&[resonating, discovered]),
+        "Advanced arts in your ledger: Storm Magic (resonating) • Weapon Fighting (discovered)"
+    );
+    assert!(!super::panels::advanced_skill_line(&[hidden_available]).contains("Hidden Art"));
+}
+
+#[test]
 fn regional_route_actions_close_when_every_local_route_is_closed() {
     let region = tarrowyn_protocol::RegionSnapshot {
         region_id: "hearthlands".to_owned(),

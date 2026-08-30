@@ -1568,3 +1568,12 @@ readable. `publish.ps1` passes Windows/WebGL builds, packaging, Preview
 deployment, and catalog sync. No full workspace gate was repeated because this
 was a bounded online-ledger presentation slice, and no new external or
 deferred work was opened.
+
+The skill panel now names advanced arts whose server-owned state has reached
+resonance or discovery, while continuing to omit unrevealed recipes and direct
+practice controls for merged skills. The focused advanced-skill presentation
+regression passes (1), client-package clippy, formatting, diff, and Rust
+file-size checks pass. `publish.ps1` passes Windows/WebGL builds, packaging,
+Preview deployment, and catalog sync. No full workspace gate was repeated
+because this was a bounded progression-presentation slice, and no new external
+or deferred work was opened.
