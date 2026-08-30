@@ -4,7 +4,8 @@ use tarrowyn_protocol::{
     AccountDeletionRequest, AccountDeletionResponse, AuthLinkRequest, AuthLinkResponse,
     AuthRevokeRequest, AuthRevokeResponse, MarketOrderRequest, MarketOrderResponse,
     ModerationReportRequest, ModerationReportResponse, RegionalEventRequest, RegionalEventResponse,
-    RouteRequest, RouteResponse, TravelRequest, TravelResponse, TravelState, TravelStatus,
+    RouteRecord, RouteRequest, RouteResponse, RouteStatus, TravelRequest, TravelResponse,
+    TravelState, TravelStatus,
 };
 
 pub(super) enum Phase5Command {
@@ -40,6 +41,20 @@ pub(super) fn travel_success_message(travel: Option<&TravelState>, location_id: 
     }
 }
 
+pub(super) fn route_success_message(route: &RouteRecord) -> String {
+    let status = match route.status {
+        RouteStatus::Operational => "open",
+        RouteStatus::Delayed => "delayed",
+        RouteStatus::Threatened => "threatened",
+        RouteStatus::Repairing => "under repair",
+        RouteStatus::Closed => "closed",
+    };
+    format!(
+        "{} is {status} • condition {} • {}% risk.",
+        route.name, route.condition, route.risk_percent
+    )
+}
+
 #[derive(Deserialize)]
 #[serde(untagged)]
 pub(super) enum Phase5CommandResponse {
@@ -67,12 +82,10 @@ impl Phase5Client {
                     travel_success_message(response.travel.as_ref(), &response.location_id);
                 phase5_notice(response.accepted, response.reason, &message, notices);
             }
-            Phase5CommandResponse::Route(response) => phase5_notice(
-                response.accepted,
-                response.reason,
-                "The route ledger recorded the logistics action.",
-                notices,
-            ),
+            Phase5CommandResponse::Route(response) => {
+                let message = route_success_message(&response.route);
+                phase5_notice(response.accepted, response.reason, &message, notices);
+            }
             Phase5CommandResponse::Market(response) => phase5_notice(
                 response.accepted,
                 response.reason,

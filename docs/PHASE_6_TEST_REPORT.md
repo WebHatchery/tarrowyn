@@ -1683,3 +1683,11 @@ client clippy and the Rust file-size check pass, and `publish.ps1` passes
 Windows/WebGL builds, packaging, Preview deployment, and catalog sync. No full
 workspace gate was repeated because this was a bounded client contract-feedback
 slice, and no new external or deferred work was opened.
+
+Accepted route responses now state the resulting road condition in the visible
+notice: its player-facing status, condition percentage, and risk percentage.
+The focused route-detail regression passes, client clippy and the Rust
+file-size check pass, and `publish.ps1` passes Windows/WebGL builds, packaging,
+Preview deployment, and catalog sync. No full workspace gate was repeated
+because this was a bounded client route-feedback slice, and no new external or
+deferred work was opened.

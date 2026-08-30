@@ -485,6 +485,31 @@ fn market_result_message_names_the_shipment_details() {
 }
 
 #[test]
+fn route_success_message_names_condition_and_risk() {
+    let route = RouteRecord {
+        route_id: "north-pack-road".to_owned(),
+        name: "North Pack Road".to_owned(),
+        origin_location_id: "hearth".to_owned(),
+        destination_location_id: "saltmere".to_owned(),
+        transport: "pack road".to_owned(),
+        length: 6,
+        risk_percent: 18,
+        condition: 82,
+        capacity: 8,
+        travel_ticks: 4,
+        repair_cost: 3,
+        status: RouteStatus::Operational,
+        last_action_tick: 4,
+        note: "The road is open to carts.".to_owned(),
+    };
+
+    assert_eq!(
+        super::commands::route_success_message(&route),
+        "North Pack Road is open • condition 82 • 18% risk."
+    );
+}
+
+#[test]
 fn travel_success_message_explains_progress_and_risk() {
     let travel = tarrowyn_protocol::TravelState {
         travel_id: "travel-1".to_owned(),
