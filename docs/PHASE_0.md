@@ -1,5 +1,9 @@
 # Phase 0 — The First Evening
 
+> Implementation status: complete for the local client foundation. The offline
+> fixture remains a deliberate development mode, while later phases now own
+> the server-authoritative multiplayer slice described below.
+
 ## Purpose
 
 Phase 0 gives The Years of Tarrowyn a small, attractive 2D client foundation
@@ -28,17 +32,17 @@ trading, combat, NPC simulation, or deployment. The local `GameSession` owns
 simulation only as a temporary client prototype; the first multiplayer phase
 must move shared state and validation behind a server boundary.
 
-## Phase 1 handoff
+## Historical Phase 1 handoff
 
-The next milestone should introduce a workspace-level server crate and a small
-protocol for login, player presence, movement acknowledgement, chat, and a
-server-owned clock. The existing `GameSession` fields provide the first client
-projection to map onto that protocol, while the UI actions already return
-intent-like events rather than mutating state directly. See the full roadmap in
+Phase 1 introduced the workspace-level server crate and small protocol for
+login, player presence, movement acknowledgement, chat, and a server-owned
+clock. The existing `GameSession` fields provided the first client projection
+to map onto that protocol, while the UI actions already returned intent-like
+events rather than mutating state directly. See the full roadmap in
 [`docs/README.md`](README.md) and [Phase 1](PHASE_1.md).
 
-The GDD’s smallest multiplayer slice remains the product target: multiple
-clients in one tiny settlement, movement, collision, social presence, chat,
-accelerated time, a tavern, shared plots, three crops, inventory, direct trade,
-one wilderness threat, one repeatable contract, skill progress, and restart-safe
-server persistence.
+The GDD’s smallest multiplayer slice is now carried by the completed Phase 1–5
+implementation: multiple clients in one tiny settlement, movement, collision,
+social presence, chat, accelerated time, a tavern, shared plots, three crops,
+inventory, direct trade, one wilderness threat, one repeatable contract, skill
+progress, and restart-safe server persistence.
