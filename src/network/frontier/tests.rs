@@ -220,6 +220,21 @@ fn contract_cycle_waits_through_the_tavern_cooldown() {
 }
 
 #[test]
+fn chronicle_search_queues_the_latest_query_for_the_frontier_reader() {
+    let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
+    client.state = crate::network::ConnectionState::Online;
+
+    client.search_chronicle("Storm Magic");
+
+    assert_eq!(
+        client.frontier.chronicle_search_request.as_deref(),
+        Some("Storm Magic")
+    );
+    assert!(client.chronicle_search_pending());
+    assert!(client.status_message.contains("durable chronicle"));
+}
+
+#[test]
 fn contract_success_message_explains_active_progress() {
     let contract = AdventurerContract {
         contract_id: "brambleback-watch".to_owned(),

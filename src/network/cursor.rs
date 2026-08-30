@@ -49,6 +49,10 @@ pub(super) fn reset_projection_history(projection: &mut WorldProjection) {
     projection.wilderness = None;
     projection.chronicle.clear();
     projection.chronicle_summary = None;
+    projection.chronicle_search.clear();
+    projection.chronicle_search_summary = None;
+    projection.chronicle_search_query = None;
+    projection.chronicle_search_next_cursor = None;
     projection.opportunities.clear();
     projection.claim = None;
     projection.outpost = None;

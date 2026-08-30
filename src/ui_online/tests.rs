@@ -240,3 +240,11 @@ fn chronicle_panel_text_keeps_archive_context_and_recent_records() {
     assert!(text.contains("The storm answers — The eastern road glows under blue rain."));
     assert!(text.contains("The first sheaf rises — A neighbour brought in wheat before dusk."));
 }
+
+#[test]
+fn chronicle_search_panel_text_distinguishes_empty_results() {
+    let text = super::panels::chronicle_search_panel_text("lost road", &[], None);
+
+    assert!(text.contains("Search results for “lost road”:"));
+    assert!(text.contains("No matching records were found in the durable chronicle."));
+}

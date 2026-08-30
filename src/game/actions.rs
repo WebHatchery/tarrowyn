@@ -6,6 +6,12 @@ impl Game {
             self.chronicle_open = false;
             return;
         }
+        if id == "chronicle-search" {
+            if let ClientMode::Online(client) = &mut self.mode {
+                client.search_chronicle(&self.chronicle_query);
+            }
+            return;
+        }
         if id == "region-details" {
             if matches!(&self.mode, ClientMode::Online(_)) {
                 self.skill_selection_open = false;

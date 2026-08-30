@@ -1832,3 +1832,13 @@ deployment, and catalog sync. No full workspace gate was repeated because
 this was a bounded client chronicle-presentation slice. Typed archive search
 remains a documented follow-up if the player-facing archive needs searching
 older than the cached recent window.
+
+The Chronicle panel now submits its visible query to the authenticated archive
+search endpoint, displays bounded returned records and the matching archive
+range, and keeps an all-history search reachable through a visible Search
+control. Focused query-encoding, frontier-queue, and no-match presentation
+regressions pass, client clippy and the Rust file-size check pass, and
+`publish.ps1` passes Windows/WebGL builds, packaging, Preview deployment, and
+catalog sync. No full workspace gate was repeated because this was a bounded
+client chronicle-search slice. True touch text entry and older-result
+pagination remain in the follow-up register.

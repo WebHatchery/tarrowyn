@@ -49,6 +49,9 @@ pub(super) struct FrontierClient {
     pub(super) pending_contracts: Option<Pending<ApiResponse<ContractsResponse>>>,
     pub(super) pending_chronicle:
         Option<Pending<ApiResponse<tarrowyn_protocol::ChronicleResponse>>>,
+    pub(super) pending_chronicle_search:
+        Option<Pending<ApiResponse<tarrowyn_protocol::ChronicleSearchResponse>>>,
+    chronicle_search_request: Option<String>,
     pub(super) pending_opportunities: Option<Pending<ApiResponse<OpportunitiesResponse>>>,
     pub(super) pending_command: Option<Pending<ApiResponse<FrontierCommandResponse>>>,
     in_flight_command: Option<FrontierCommand>,
@@ -73,6 +76,8 @@ impl FrontierClient {
             contracts: Vec::new(),
             pending_contracts: None,
             pending_chronicle: None,
+            pending_chronicle_search: None,
+            chronicle_search_request: None,
             pending_opportunities: None,
             pending_command: None,
             in_flight_command: None,
@@ -140,6 +145,33 @@ impl FrontierClient {
                 }
                 Err(error) => notices.push(NetworkNotice::Warning(refresh_error_notice(
                     "settlement chronicle",
+                    &error,
+                ))),
+            }
+        }
+        if let Some(result) = self
+            .pending_chronicle_search
+            .as_mut()
+            .and_then(|pending| pending.poll_timed(dt, REQUEST_TIMEOUT_SECONDS))
+        {
+            self.pending_chronicle_search = None;
+            match result {
+                Ok(response) => {
+                    let cursor = response.meta.cursor.unwrap_or(response.data.cursor);
+                    let current = projection.response_is_current(response.meta.server_tick, cursor);
+                    projection.record_response_version(response.meta.server_tick, Some(cursor));
+                    if current {
+                        projection.chronicle_search = response.data.entries;
+                        projection.chronicle_search_summary = response.data.summary;
+                        projection.chronicle_search_query = Some(response.data.query);
+                        projection.chronicle_search_next_cursor = response.data.next_cursor;
+                    }
+                }
+                Err(error) if super::cursor::is_cursor_recovery_error(&error) => {
+                    cursor_boundary = true;
+                }
+                Err(error) => notices.push(NetworkNotice::Warning(refresh_error_notice(
+                    "chronicle archive search",
                     &error,
                 ))),
             }
@@ -231,6 +263,13 @@ impl FrontierClient {
             self.pending_chronicle =
                 Some(api.get(&format!("/v1/settlement/chronicle?since={cursor}")));
         }
+        if self.pending_chronicle_search.is_none() {
+            if let Some(query) = self.chronicle_search_request.take() {
+                let query = super::chronicle::encode_query_value(&query);
+                self.pending_chronicle_search =
+                    Some(api.get(&format!("/v1/chronicle/search?since=0&q={query}")));
+            }
+        }
         if self.pending_opportunities.is_none() {
             self.pending_opportunities = Some(api.get("/v1/settlement/opportunities"));
         }
@@ -258,6 +297,8 @@ impl FrontierClient {
         self.contracts.clear();
         self.pending_contracts = None;
         self.pending_chronicle = None;
+        self.pending_chronicle_search = None;
+        self.chronicle_search_request = None;
         self.pending_opportunities = None;
         self.pending_command = None;
         self.in_flight_command = None;
@@ -268,6 +309,16 @@ impl FrontierClient {
 
     pub(super) fn has_pending_command(&self) -> bool {
         self.pending_command.is_some()
+    }
+
+    pub(super) fn queue_chronicle_search(&mut self, query: String) {
+        if self.pending_chronicle_search.is_none() {
+            self.chronicle_search_request = Some(query);
+        }
+    }
+
+    pub(super) fn chronicle_search_pending(&self) -> bool {
+        self.pending_chronicle_search.is_some() || self.chronicle_search_request.is_some()
     }
 
     pub(super) fn queue_contract(&mut self, request_id: String, action: ContractAction) -> bool {

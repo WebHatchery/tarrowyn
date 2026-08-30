@@ -15,16 +15,61 @@ pub fn draw_chronicle(ctx: &UiContext<'_>, mouse: Vec2, actions: &mut Vec<UiActi
             .with_header_divider(1.0, Color::new(0.32, 0.48, 0.50, 0.75)),
         TextStyle::new(17.0, CREAM),
     );
+    draw_surface(
+        Rect::new(panel.x + 20.0, panel.y + 58.0, panel.w - 40.0, 30.0),
+        &SurfaceStyle::new(Color::new(0.10, 0.14, 0.15, 1.0))
+            .with_border(1.0, Color::new(0.32, 0.48, 0.50, 0.55)),
+    );
+    draw_ui_text_ex(
+        &format!(
+            "Query: {}",
+            if ctx.chronicle_query.trim().is_empty() {
+                "all records"
+            } else {
+                ctx.chronicle_query
+            }
+        ),
+        panel.x + 28.0,
+        panel.y + 78.0,
+        TextStyle::new(12.0, CREAM).params(),
+    );
+    let panel_text = if ctx.chronicle_search_pending {
+        format!(
+            "Searching the durable chronicle for {}…",
+            if ctx.chronicle_query.trim().is_empty() {
+                "all records".to_owned()
+            } else {
+                format!("“{}”", ctx.chronicle_query)
+            }
+        )
+    } else if let Some(query) = ctx.chronicle_search_query {
+        chronicle_search_panel_text(query, ctx.chronicle_search, ctx.chronicle_search_summary)
+    } else {
+        chronicle_panel_text(ctx.chronicle, ctx.chronicle_summary)
+    };
     draw_text_block(
-        &chronicle_panel_text(ctx.chronicle, ctx.chronicle_summary),
+        &panel_text,
         panel.x + 20.0,
-        panel.y + 70.0,
+        panel.y + 102.0,
         panel.w - 40.0,
-        318.0,
+        286.0,
         14.0,
         3.0,
         CREAM,
     );
+    if virtual_button(
+        Rect::new(panel.x + 20.0, panel.bottom() - 42.0, 106.0, 28.0),
+        if ctx.chronicle_search_pending {
+            "Searching…"
+        } else {
+            "Search"
+        },
+        !ctx.chronicle_search_pending,
+        ButtonTone::Primary,
+        mouse,
+    ) {
+        actions.push(UiAction::Interact("chronicle-search".to_owned()));
+    }
     if virtual_button(
         Rect::new(panel.right() - 126.0, panel.bottom() - 42.0, 106.0, 28.0),
         "Close",
@@ -53,6 +98,33 @@ pub fn chronicle_panel_text(
     lines.push("Recent community records:".to_owned());
     if entries.is_empty() {
         lines.push("The chronicle is quiet; new shared-road moments will appear here.".to_owned());
+    } else {
+        for entry in entries.iter().rev().take(6) {
+            lines.push(format!("• {} — {}", entry.title, entry.text));
+        }
+    }
+    lines.join("\n")
+}
+
+pub fn chronicle_search_panel_text(
+    query: &str,
+    entries: &[tarrowyn_protocol::ChronicleEntry],
+    summary: Option<&tarrowyn_protocol::ChronicleSummary>,
+) -> String {
+    let label = if query.trim().is_empty() {
+        "all records".to_owned()
+    } else {
+        format!("“{query}”")
+    };
+    let mut lines = vec![format!("Search results for {label}:")];
+    if let Some(summary) = summary {
+        lines.push(format!(
+            "Archive range: beats {}–{} • {} matching records.",
+            summary.from_tick, summary.to_tick, summary.entry_count
+        ));
+    }
+    if entries.is_empty() {
+        lines.push("No matching records were found in the durable chronicle.".to_owned());
     } else {
         for entry in entries.iter().rev().take(6) {
             lines.push(format!("• {} — {}", entry.title, entry.text));

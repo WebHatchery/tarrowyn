@@ -43,6 +43,7 @@ pub struct Game {
     regional_inspection_open: bool,
     skill_selection_open: bool,
     chronicle_open: bool,
+    chronicle_query: String,
 }
 
 impl Game {
@@ -104,6 +105,7 @@ impl Game {
             regional_inspection_open: false,
             skill_selection_open: false,
             chronicle_open: false,
+            chronicle_query: String::new(),
         };
         game.refresh_save_state();
         game
@@ -239,6 +241,11 @@ impl Game {
                     chronicle_open: self.chronicle_open && client.state == ConnectionState::Online,
                     chronicle: &client.projection.chronicle,
                     chronicle_summary: client.projection.chronicle_summary.as_ref(),
+                    chronicle_query: &self.chronicle_query,
+                    chronicle_search: &client.projection.chronicle_search,
+                    chronicle_search_summary: client.projection.chronicle_search_summary.as_ref(),
+                    chronicle_search_query: client.projection.chronicle_search_query.as_deref(),
+                    chronicle_search_pending: client.chronicle_search_pending(),
                     opportunities: &client.projection.opportunities,
                     phase4_summary: &client.phase4_summary(),
                     phase5_summary: &client.phase5_summary(),
@@ -320,6 +327,11 @@ impl Game {
                     chronicle_open: false,
                     chronicle: &[],
                     chronicle_summary: None,
+                    chronicle_query: &self.chronicle_query,
+                    chronicle_search: &[],
+                    chronicle_search_summary: None,
+                    chronicle_search_query: None,
+                    chronicle_search_pending: false,
                     opportunities: &[],
                     phase4_summary: "Phase 4 ledgers are available only on the shared road.",
                     phase5_summary:
@@ -363,6 +375,7 @@ impl Game {
                 self.regional_inspection_open = false;
                 self.skill_selection_open = false;
                 self.chronicle_open = false;
+                self.chronicle_query.clear();
                 self.chat_draft.clear();
                 self.sync_camera(TilePos::new(8, 6));
                 self.notifications
@@ -376,6 +389,7 @@ impl Game {
                 self.regional_inspection_open = false;
                 self.skill_selection_open = false;
                 self.chronicle_open = false;
+                self.chronicle_query.clear();
                 self.chat_draft.clear();
                 self.sync_camera(TilePos::new(8, 6));
                 self.notifications.info("Connecting to the shared road…");
@@ -385,6 +399,7 @@ impl Game {
                     self.regional_inspection_open = false;
                     self.skill_selection_open = false;
                     self.chronicle_open = false;
+                    self.chronicle_query.clear();
                     if !client.reconnect() {
                         self.notifications
                             .warning("Wait for the reconnect cooldown to finish.");
@@ -398,6 +413,7 @@ impl Game {
                     self.regional_inspection_open = false;
                     self.skill_selection_open = false;
                     self.chronicle_open = false;
+                    self.chronicle_query.clear();
                     self.sync_camera(TilePos::new(8, 6));
                     self.notifications.info("Connecting to the shared road…");
                 }

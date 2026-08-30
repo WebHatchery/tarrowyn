@@ -59,6 +59,10 @@ pub struct WorldProjection {
     pub wilderness: Option<WildernessZone>,
     pub chronicle: Vec<ChronicleEntry>,
     pub chronicle_summary: Option<ChronicleSummary>,
+    pub chronicle_search: Vec<ChronicleEntry>,
+    pub chronicle_search_summary: Option<ChronicleSummary>,
+    pub chronicle_search_query: Option<String>,
+    pub chronicle_search_next_cursor: Option<u64>,
     pub opportunities: Vec<OpportunitySignal>,
     pub claim: Option<LandClaim>,
     pub outpost: Option<macroquad_toolkit::grid::TilePos>,
@@ -90,6 +94,10 @@ impl WorldProjection {
             wilderness: None,
             chronicle: Vec::new(),
             chronicle_summary: None,
+            chronicle_search: Vec::new(),
+            chronicle_search_summary: None,
+            chronicle_search_query: None,
+            chronicle_search_next_cursor: None,
             opportunities: Vec::new(),
             claim: None,
             outpost: None,
@@ -414,6 +422,17 @@ impl OnlineClient {
         if self.state == ConnectionState::Online {
             self.state_refresh = 0.0;
         }
+    }
+
+    pub fn search_chronicle(&mut self, query: &str) {
+        if self.state == ConnectionState::Online {
+            self.frontier.queue_chronicle_search(query.to_owned());
+            self.status_message = "Searching the durable chronicle…".to_owned();
+        }
+    }
+
+    pub(crate) fn chronicle_search_pending(&self) -> bool {
+        self.frontier.chronicle_search_pending()
     }
 
     pub fn reconnect(&mut self) -> bool {

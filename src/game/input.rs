@@ -2,6 +2,21 @@ use super::*;
 
 impl Game {
     pub(super) fn read_keyboard_input(&mut self) {
+        if self.chronicle_open {
+            while let Some(character) = get_char_pressed() {
+                if !character.is_control() && self.chronicle_query.chars().count() < 80 {
+                    self.chronicle_query.push(character);
+                }
+            }
+            if is_key_pressed(KeyCode::Backspace) {
+                self.chronicle_query.pop();
+            }
+            if is_key_pressed(KeyCode::Enter) {
+                self.events
+                    .push(UiAction::Interact("chronicle-search".to_owned()));
+            }
+            return;
+        }
         let movement = if is_key_pressed(KeyCode::W) || is_key_pressed(KeyCode::Up) {
             Some((0, -1))
         } else if is_key_pressed(KeyCode::D) || is_key_pressed(KeyCode::Right) {
