@@ -37,7 +37,9 @@ impl Phase4Client {
             return;
         }
         self.command_retry_timer = (self.command_retry_timer - dt.max(0.0)).max(0.0);
-        advance_crafting(&mut self.crafting, dt);
+        if !context.session_only {
+            advance_crafting(&mut self.crafting, dt);
+        }
         poll_projection(
             &mut self.pending_governance,
             dt,

@@ -3061,3 +3061,12 @@ combat-queue regression passes, along with client-package formatting and
 clippy. `git diff --check` and the Rust file-size scan pass. No publisher or
 full workspace gate was repeated because this was test-only organization
 maintenance, and no new external or deferred work was opened.
+
+The local crafting timing marker now pauses while the authoritative player
+projection reloads, matching the hidden gameplay overlay and preserving the
+player's opportunity to tap SET QUALITY after recovery. The focused crafting
+reload regression passes, along with client-package formatting and clippy.
+`git diff --check` and the Rust file-size scan pass. The project `publish.ps1`
+Windows/WebGL build, packaging, Preview deployment, and catalog-sync checks
+pass. No full workspace gate was repeated because this was a bounded crafting
+recovery correction, and no new external or deferred work was opened.
