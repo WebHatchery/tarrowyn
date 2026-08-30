@@ -42,6 +42,25 @@ fn response_deserialization_rejects_a_deployment_protocol_mismatch() {
 }
 
 #[test]
+fn operations_health_defaults_new_integrity_details_for_older_payloads() {
+    let json = serde_json::json!({
+        "status": "ok",
+        "ready": true,
+        "storage_version": 6,
+        "protocol_version": "6",
+        "last_backup_tick": null,
+        "last_backup_path": null,
+        "integrity_ok": true,
+        "persistence_error": null,
+        "backup_error": null,
+        "maintenance_message": null
+    });
+    let health: OpsHealthResponse = serde_json::from_value(json).unwrap();
+    assert!(health.integrity_ok);
+    assert!(health.integrity_failures.is_empty());
+}
+
+#[test]
 fn position_distance_saturates_malformed_coordinates() {
     assert_eq!(
         Position {

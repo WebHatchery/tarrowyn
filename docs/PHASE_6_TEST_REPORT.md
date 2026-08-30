@@ -1272,3 +1272,11 @@ direct formatting, and diff checks pass. The publisher check is required for
 this protocol/server runtime slice; no full workspace suite or release gate
 was repeated because this is not a major milestone. No new external or
 deferred work was opened.
+
+The protocol compatibility fixture now proves that a health payload produced
+before integrity detail codes existed still decodes with an empty failure
+list. The focused protocol regression passes (1), with direct formatting and
+diff checks clean. No server, client, workspace, or publisher validation was
+repeated because this follow-up changes only protocol test coverage; the
+runtime publisher result is recorded in the preceding entry. No new external
+or deferred work was opened.
