@@ -1335,3 +1335,10 @@ check passes its Windows/WebGL builds, packaging, Preview deployment, and
 catalog sync; the existing `net2 v0.2.39` future-incompatibility warning is
 non-blocking. No full workspace gate was repeated and no new external or
 deferred work was opened.
+
+The HTTP dispatcher no longer wraps JSON responses in CORS headers a second
+time after `json_response` has applied them. The focused response-boundary
+tests pass (2), including the exact-one-origin-header regression, and
+server-package clippy plus workspace formatting remain clean. No full
+workspace or publisher gate was repeated because this is an isolated HTTP
+header fix; no new external or deferred work was opened.

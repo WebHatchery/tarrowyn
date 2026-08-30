@@ -95,6 +95,20 @@ fn api_responses_disable_intermediary_caching() {
 }
 
 #[test]
+fn api_responses_emit_one_cors_origin_header() {
+    let response = json_response(StatusCode(200), serde_json::json!({ "status": "ok" }));
+
+    assert_eq!(
+        response
+            .headers()
+            .iter()
+            .filter(|header| header.field.equiv("Access-Control-Allow-Origin"))
+            .count(),
+        1
+    );
+}
+
+#[test]
 fn guest_session_rate_limiter_bounds_a_source_window() {
     let mut limiter = GuestSessionRateLimiter::default();
     let source = "192.0.2.10".parse().expect("test source address");

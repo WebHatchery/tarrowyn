@@ -506,7 +506,7 @@ fn handle_request(
             repository.health().meta,
         ),
     };
-    let _ = request.respond(with_cors(result));
+    let _ = request.respond(result);
 }
 
 fn authenticated<T, F>(
