@@ -885,3 +885,11 @@ and reset cleanup assertions, server clippy, formatting, size, and diff checks
 pass; no full workspace gate was rerun because this is a continuation of the
 same session-boundary maintenance slice. No new external or deferred work was
 opened.
+
+Development guest reset now anonymises retained presence, chat, frontier, and
+chronicle records before removing the old identity, preventing stale account
+references from degrading readiness or reappearing in the next guest fixture.
+The focused reset-history regression also verifies the resulting readiness
+projection; server clippy, formatting, size, and diff checks pass. No full
+workspace gate was rerun because this is a bounded development-identity cleanup
+slice. No new external or deferred work was opened.

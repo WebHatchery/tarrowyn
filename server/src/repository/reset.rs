@@ -1,19 +1,18 @@
 use super::models::RepositoryState;
 use tarrowyn_protocol::{
-    ClaimLifecycleStatus, ClaimStatus, ExpeditionStatus, ProposalStatus, ServiceOrderStatus,
+    ClaimLifecycleStatus, ClaimStatus, ExpeditionStatus, FrontierEvent, ProposalStatus,
+    ServiceOrderStatus, WorldEvent,
 };
 
 const RESET_ACCOUNT: &str = "former-resident";
 const RESET_NAME: &str = "Former resident";
 
 pub(super) fn reset_guest(state: &mut RepositoryState, identity_key: &str) {
-    let Some(old_account_id) = state
-        .identities
-        .get(identity_key)
-        .map(|identity| identity.account_id.clone())
-    else {
+    let Some(identity) = state.identities.get(identity_key) else {
         return;
     };
+    let old_account_id = identity.account_id.clone();
+    let old_display_name = identity.display_name.clone();
 
     state
         .sessions
@@ -47,6 +46,7 @@ pub(super) fn reset_guest(state: &mut RepositoryState, identity_key: &str) {
     super::phase5::close_deleted_account_orders(state, &old_account_id);
     reset_phase3_public_ownership(state, &old_account_id);
     reset_phase4_public_ownership(state, &old_account_id);
+    anonymize_public_history(state, &old_account_id, &old_display_name);
     state.phase6.audits.retain(|record| {
         record.actor_account_id != old_account_id && record.target != old_account_id
     });
@@ -71,6 +71,105 @@ pub(super) fn reset_guest(state: &mut RepositoryState, identity_key: &str) {
     state.identities.remove(identity_key);
 }
 
+fn anonymize_public_history(state: &mut RepositoryState, old_account_id: &str, old_name: &str) {
+    for message in &mut state.chat_history {
+        anonymize_chat(message, old_account_id);
+    }
+    for event in &mut state.events {
+        anonymize_event(&mut event.event, old_account_id, old_name);
+    }
+    for entry in state
+        .phase3
+        .chronicle
+        .iter_mut()
+        .chain(state.phase3.chronicle_archive.iter_mut())
+    {
+        anonymize_chronicle(entry, old_name);
+    }
+    for settlement in &mut state.phase5.settlements {
+        for entry in &mut settlement.chronicle {
+            anonymize_chronicle(entry, old_name);
+        }
+    }
+}
+
+fn anonymize_event(event: &mut WorldEvent, old_account_id: &str, old_name: &str) {
+    match event {
+        WorldEvent::Presence(presence) => {
+            if presence.account_id == old_account_id {
+                presence.account_id = RESET_ACCOUNT.to_owned();
+                presence.display_name = RESET_NAME.to_owned();
+                presence.online = false;
+            }
+        }
+        WorldEvent::Chat(message) => anonymize_chat(message, old_account_id),
+        WorldEvent::Trade(trade) => {
+            if trade.creator_account_id == old_account_id {
+                trade.creator_account_id = RESET_ACCOUNT.to_owned();
+                trade.creator_name = RESET_NAME.to_owned();
+            }
+            if trade.recipient_account_id == old_account_id {
+                trade.recipient_account_id = RESET_ACCOUNT.to_owned();
+                trade.recipient_name = RESET_NAME.to_owned();
+            }
+        }
+        WorldEvent::Frontier(FrontierEvent::Claim(claim)) => {
+            if claim.owner_account_id == old_account_id {
+                claim.owner_account_id = RESET_ACCOUNT.to_owned();
+                claim.owner_name = RESET_NAME.to_owned();
+                claim.status = ClaimStatus::Reclaimed;
+            }
+        }
+        WorldEvent::Frontier(FrontierEvent::Expedition(expedition)) => {
+            reset_expedition(expedition, old_account_id)
+        }
+        WorldEvent::Chronicle(entry) => anonymize_chronicle(entry, old_name),
+        WorldEvent::Clock(_) | WorldEvent::Farming(_) | WorldEvent::TavernNotice(_) => {}
+        WorldEvent::Frontier(FrontierEvent::Threat(_))
+        | WorldEvent::Frontier(FrontierEvent::Opportunity(_)) => {}
+    }
+}
+
+fn anonymize_chat(message: &mut tarrowyn_protocol::ChatMessage, old_account_id: &str) {
+    if message.account_id == old_account_id {
+        message.account_id = RESET_ACCOUNT.to_owned();
+        message.display_name = RESET_NAME.to_owned();
+        message.text = "[message removed after development identity reset]".to_owned();
+    }
+}
+
+fn anonymize_chronicle(entry: &mut tarrowyn_protocol::ChronicleEntry, old_name: &str) {
+    if !old_name.is_empty() {
+        entry.title = entry.title.replace(old_name, RESET_NAME);
+        entry.text = entry.text.replace(old_name, RESET_NAME);
+    }
+}
+
+fn reset_expedition(expedition: &mut tarrowyn_protocol::Expedition, old_account_id: &str) {
+    let leader_reset = expedition.leader_account_id == old_account_id;
+    expedition
+        .members
+        .retain(|member| member.account_id != old_account_id);
+    if leader_reset {
+        expedition.leader_account_id = expedition
+            .members
+            .first()
+            .map(|member| member.account_id.clone())
+            .unwrap_or_else(|| RESET_ACCOUNT.to_owned());
+    }
+    if expedition.members.is_empty()
+        && matches!(
+            expedition.status,
+            ExpeditionStatus::Planning | ExpeditionStatus::Launched
+        )
+    {
+        expedition.status = ExpeditionStatus::Retreated;
+        expedition.outcome = Some(
+            "The party returned when its development identity was reset.".to_owned(),
+        );
+    }
+}
+
 fn reset_phase3_public_ownership(state: &mut RepositoryState, old_account_id: &str) {
     if let Some(claim) = state.phase3.claim.as_mut() {
         if claim.owner_account_id == old_account_id {
@@ -80,27 +179,7 @@ fn reset_phase3_public_ownership(state: &mut RepositoryState, old_account_id: &s
         }
     }
     if let Some(expedition) = state.phase3.expedition.as_mut() {
-        let leader_reset = expedition.leader_account_id == old_account_id;
-        expedition
-            .members
-            .retain(|member| member.account_id != old_account_id);
-        if leader_reset {
-            expedition.leader_account_id = expedition
-                .members
-                .first()
-                .map(|member| member.account_id.clone())
-                .unwrap_or_else(|| RESET_ACCOUNT.to_owned());
-        }
-        if expedition.members.is_empty()
-            && matches!(
-                expedition.status,
-                ExpeditionStatus::Planning | ExpeditionStatus::Launched
-            )
-        {
-            expedition.status = ExpeditionStatus::Retreated;
-            expedition.outcome =
-                Some("The party returned when its development identity was reset.".to_owned());
-        }
+        reset_expedition(expedition, old_account_id);
     }
 }
 

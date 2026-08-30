@@ -1,9 +1,9 @@
 use super::super::WorldRepository;
 use crate::ServerConfig;
 use tarrowyn_protocol::{
-    AuthRevokeRequest, ClaimLifecycleAction, ClaimLifecycleRequest, GuestSessionRequest,
-    MarketOrderAction, MarketOrderRequest, ModerationReportRequest, ProfessionAction,
-    ProfessionKind, ProfessionRequest, TravelAction, TravelRequest,
+    AuthRevokeRequest, ChatRequest, ClaimLifecycleAction, ClaimLifecycleRequest, FrontierEvent,
+    GuestSessionRequest, MarketOrderAction, MarketOrderRequest, ModerationReportRequest,
+    ProfessionAction, ProfessionKind, ProfessionRequest, TravelAction, TravelRequest, WorldEvent,
 };
 
 #[test]
@@ -140,6 +140,16 @@ fn guest_reset_replaces_private_state_and_releases_world_ownership() {
         .unwrap()
         .data;
     assert!(market.accepted);
+    repository
+        .chat(
+            &first.account_token,
+            ChatRequest {
+                request_id: "reset-chat".to_owned(),
+                channel: "settlement".to_owned(),
+                text: "This history must lose its reset identity.".to_owned(),
+            },
+        )
+        .expect("the guest should create a public message");
 
     let revoke = repository
         .auth_revoke(
@@ -200,6 +210,36 @@ fn guest_reset_replaces_private_state_and_releases_world_ownership() {
         .any(|key| key.starts_with(&format!("phase5:{}:", first.client_key))));
     assert!(state.phase6.auth_revoke_results.is_empty());
     assert!(state.phase6.auth_revoke_guest_tokens.is_empty());
+    assert!(state.events.iter().all(|record| match &record.event {
+        WorldEvent::Presence(presence) => presence.account_id != first.account_id,
+        WorldEvent::Chat(message) => message.account_id != first.account_id,
+        WorldEvent::Trade(trade) => {
+            trade.creator_account_id != first.account_id
+                && trade.recipient_account_id != first.account_id
+        }
+        WorldEvent::Frontier(FrontierEvent::Claim(claim)) => {
+            claim.owner_account_id != first.account_id
+        }
+        WorldEvent::Frontier(FrontierEvent::Expedition(expedition)) => {
+            expedition.leader_account_id != first.account_id
+                && expedition
+                    .members
+                    .iter()
+                    .all(|member| member.account_id != first.account_id)
+        }
+        WorldEvent::Clock(_)
+        | WorldEvent::Farming(_)
+        | WorldEvent::TavernNotice(_)
+        | WorldEvent::Chronicle(_)
+        | WorldEvent::Frontier(FrontierEvent::Threat(_))
+        | WorldEvent::Frontier(FrontierEvent::Opportunity(_)) => true,
+    }));
+    assert!(state.chat_history.iter().any(|message| {
+        message.account_id == "former-resident"
+            && message
+                .text
+                .contains("development identity reset")
+    }));
     let claim = state
         .phase4
         .claims
@@ -239,6 +279,8 @@ fn guest_reset_replaces_private_state_and_releases_world_ownership() {
             .get(&second.client_key)
             .expect("the replacement identity should remain")
             .account_id,
-        second.account_id
+            second.account_id
     );
+    drop(state);
+    assert!(repository.ops_health().data.integrity_ok);
 }
