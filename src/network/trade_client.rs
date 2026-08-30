@@ -1,13 +1,86 @@
 use super::*;
-use tarrowyn_protocol::{TradeAction, TradeStatus};
+use tarrowyn_protocol::{TradeAction, TradeBundle, TradeOffer, TradeStatus};
 
-pub(super) fn trade_success_message(action: Option<TradeAction>) -> &'static str {
+pub(super) fn trade_success_message(
+    action: Option<TradeAction>,
+    trade: Option<&TradeOffer>,
+) -> String {
+    let Some(trade) = trade else {
+        return trade_action_success_message(action).to_owned();
+    };
+    match action {
+        Some(TradeAction::Create) => format!(
+            "Offer sent to {}; give {}, receive {}.",
+            trade.recipient_name,
+            trade_bundle_summary(trade.offer),
+            trade_bundle_summary(trade.request)
+        ),
+        Some(TradeAction::Review) => format!(
+            "Trade with {} remains pending: give {}, receive {}.",
+            trade.recipient_name,
+            trade_bundle_summary(trade.offer),
+            trade_bundle_summary(trade.request)
+        ),
+        Some(TradeAction::Accept) => format!(
+            "Trade completed with {}; exchanged {} for {}.",
+            trade.creator_name,
+            trade_bundle_summary(trade.request),
+            trade_bundle_summary(trade.offer)
+        ),
+        Some(TradeAction::Cancel) => {
+            format!("Trade with {} withdrawn.", trade.recipient_name)
+        }
+        None => format!(
+            "Trade recorded with {}; give {}, receive {}.",
+            trade.recipient_name,
+            trade_bundle_summary(trade.offer),
+            trade_bundle_summary(trade.request)
+        ),
+    }
+}
+
+fn trade_action_success_message(action: Option<TradeAction>) -> &'static str {
     match action {
         Some(TradeAction::Create) => "The trade offer is on the ledger; awaiting the other player.",
         Some(TradeAction::Review) => "The trade details are current.",
         Some(TradeAction::Accept) => "The trade ledger completed the exchange.",
         Some(TradeAction::Cancel) => "The trade offer was withdrawn.",
         None => "The trade ledger accepted the exchange.",
+    }
+}
+
+fn trade_bundle_summary(bundle: TradeBundle) -> String {
+    let mut parts = Vec::new();
+    if bundle.wheat > 0 {
+        parts.push(format!("{} wheat", bundle.wheat));
+    }
+    if bundle.turnips > 0 {
+        let unit = if bundle.turnips == 1 {
+            "turnip"
+        } else {
+            "turnips"
+        };
+        parts.push(format!("{} {unit}", bundle.turnips));
+    }
+    if bundle.moonberries > 0 {
+        let unit = if bundle.moonberries == 1 {
+            "moonberry"
+        } else {
+            "moonberries"
+        };
+        parts.push(format!("{} {unit}", bundle.moonberries));
+    }
+    if bundle.seeds > 0 {
+        let unit = if bundle.seeds == 1 { "seed" } else { "seeds" };
+        parts.push(format!("{} {unit}", bundle.seeds));
+    }
+    if bundle.gold > 0 {
+        parts.push(format!("{} gold", bundle.gold));
+    }
+    if parts.is_empty() {
+        "nothing".to_owned()
+    } else {
+        parts.join(", ")
     }
 }
 
@@ -98,9 +171,10 @@ impl OnlineClient {
                 self.pending_request_id = None;
                 self.pending_request_type = None;
                 if response.data.accepted {
-                    notices.push(NetworkNotice::Success(
-                        trade_success_message(trade_action).to_owned(),
-                    ));
+                    notices.push(NetworkNotice::Success(trade_success_message(
+                        trade_action,
+                        response.data.trade.as_ref(),
+                    )));
                 } else {
                     notices.push(NetworkNotice::Warning(
                         response

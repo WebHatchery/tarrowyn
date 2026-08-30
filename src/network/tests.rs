@@ -589,16 +589,61 @@ fn trade_metadata_waits_for_dispatch_and_keeps_queue_order() {
 #[test]
 fn trade_success_notice_describes_the_requested_action() {
     assert_eq!(
-        super::trade_client::trade_success_message(Some(tarrowyn_protocol::TradeAction::Create)),
+        super::trade_client::trade_success_message(
+            Some(tarrowyn_protocol::TradeAction::Create),
+            None,
+        ),
         "The trade offer is on the ledger; awaiting the other player."
     );
     assert_eq!(
-        super::trade_client::trade_success_message(Some(tarrowyn_protocol::TradeAction::Review)),
+        super::trade_client::trade_success_message(
+            Some(tarrowyn_protocol::TradeAction::Review),
+            None,
+        ),
         "The trade details are current."
     );
     assert_eq!(
-        super::trade_client::trade_success_message(Some(tarrowyn_protocol::TradeAction::Accept)),
+        super::trade_client::trade_success_message(
+            Some(tarrowyn_protocol::TradeAction::Accept),
+            None,
+        ),
         "The trade ledger completed the exchange."
+    );
+}
+
+#[test]
+fn trade_success_notice_explains_the_accepted_exchange() {
+    let trade = tarrowyn_protocol::TradeOffer {
+        trade_id: "trade-1".to_owned(),
+        creator_account_id: "account-1".to_owned(),
+        creator_name: "Mara".to_owned(),
+        recipient_account_id: "account-2".to_owned(),
+        recipient_name: "The traveller".to_owned(),
+        offer: tarrowyn_protocol::TradeBundle {
+            wheat: 2,
+            turnips: 0,
+            moonberries: 0,
+            seeds: 1,
+            gold: 0,
+        },
+        request: tarrowyn_protocol::TradeBundle {
+            wheat: 0,
+            turnips: 0,
+            moonberries: 1,
+            seeds: 0,
+            gold: 3,
+        },
+        status: tarrowyn_protocol::TradeStatus::Accepted,
+        created_tick: 2,
+        expires_tick: 8,
+    };
+
+    assert_eq!(
+        super::trade_client::trade_success_message(
+            Some(tarrowyn_protocol::TradeAction::Accept),
+            Some(&trade),
+        ),
+        "Trade completed with Mara; exchanged 1 moonberry, 3 gold for 2 wheat, 1 seed."
     );
 }
 
