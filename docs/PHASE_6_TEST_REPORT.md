@@ -1594,3 +1594,11 @@ layout remains readable. `publish.ps1` passes Windows/WebGL builds, packaging,
 Preview deployment, and catalog sync. No full workspace gate was repeated
 because this was a bounded recovery-guidance slice, and no new external or
 deferred work was opened.
+
+The combat cooldown prompt now names the visible `Strike`, `Technique`, `Guard`,
+`Bandage`, and `Retreat` controls instead of asking the player to choose an
+unspecified combat action. The focused server timing regression passes (1),
+formatting and diff checks are clean, and `publish.ps1` passes Windows/WebGL
+builds, packaging, Preview deployment, and catalog sync. No full workspace gate
+was repeated because this was a bounded combat-guidance slice, and no new
+external or deferred work was opened.

@@ -169,6 +169,9 @@ fn local_combat_rejects_same_tick_actions_until_the_server_window_opens() {
         .data;
     assert!(!too_soon.accepted);
     assert!(too_soon.reason.unwrap().contains("server beat 1"));
+    assert!(too_soon
+        .prompt
+        .contains("tap Strike, Technique, Guard, Bandage, or Retreat"));
     assert_eq!(too_soon.combat.turn, 0);
 
     repo.tick();

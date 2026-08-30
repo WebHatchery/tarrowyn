@@ -100,7 +100,7 @@ impl super::super::WorldRepository {
                 combat.action_available_at_tick
             ));
             response.prompt =
-                "Wait for the visible action window, then choose a combat control.".to_owned();
+                "Wait for the visible action window, then tap Strike, Technique, Guard, Bandage, or Retreat.".to_owned();
             return finish_local_combat(self, &mut state, cache, response);
         }
         let storm_magic = super::super::skills::storm_magic_discovered(&state, &key);
