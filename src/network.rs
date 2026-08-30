@@ -205,6 +205,17 @@ impl WorldProjection {
         server_tick >= self.server_tick && cursor > self.cursor
     }
 
+    pub(super) fn accept_response_version(
+        &mut self,
+        server_tick: u64,
+        cursor: Option<u64>,
+    ) -> bool {
+        let version_cursor = cursor.unwrap_or(self.cursor);
+        let current = self.response_is_current(server_tick, version_cursor);
+        self.record_response_version(server_tick, cursor);
+        current
+    }
+
     pub(super) fn record_response_version(&mut self, server_tick: u64, cursor: Option<u64>) {
         self.server_tick = self.server_tick.max(server_tick);
         if let Some(cursor) = cursor {

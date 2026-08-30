@@ -1027,3 +1027,14 @@ diff, Rust file-size, and client clippy checks pass. The publisher check remains
 the runtime validation path; no full workspace gate was rerun because this is a
 bounded continuation of client cursor-ordering maintenance. No new external or
 deferred work was opened.
+
+Auxiliary Phase 4 and Phase 5 ledgers now compare server tick as well as event
+cursor before replacing cached governance, claim, profession, knowledge, skill,
+combat, regional, market, law, account, household, and event projections. A
+late accepted chat response likewise keeps its outcome notice without
+appending stale history. The focused Phase 4 tests (29 passed), Phase 5 tests
+(29 passed), root projection regression (1 passed), direct formatting, diff,
+Rust file-size, and client clippy checks pass. The publisher check remains the
+runtime validation path; no full workspace gate was rerun because this is a
+bounded continuation of client cursor-ordering maintenance. No new external or
+deferred work was opened.

@@ -20,8 +20,10 @@ impl Phase4Client {
             &mut self.pending_governance,
             dt,
             |response| {
-                projection.record_response_version(response.meta.server_tick, response.meta.cursor);
-                if accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor) {
+                if projection
+                    .accept_response_version(response.meta.server_tick, response.meta.cursor)
+                    && accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor)
+                {
                     self.governance = Some(response.data.governance);
                 }
             },
@@ -32,8 +34,10 @@ impl Phase4Client {
             &mut self.pending_claims,
             dt,
             |response| {
-                projection.record_response_version(response.meta.server_tick, response.meta.cursor);
-                if accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor) {
+                if projection
+                    .accept_response_version(response.meta.server_tick, response.meta.cursor)
+                    && accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor)
+                {
                     self.claims = Some(response.data);
                 }
             },
@@ -44,8 +48,10 @@ impl Phase4Client {
             &mut self.pending_professions,
             dt,
             |response| {
-                projection.record_response_version(response.meta.server_tick, response.meta.cursor);
-                if accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor) {
+                if projection
+                    .accept_response_version(response.meta.server_tick, response.meta.cursor)
+                    && accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor)
+                {
                     self.professions = Some(response.data);
                 }
             },
@@ -56,8 +62,10 @@ impl Phase4Client {
             &mut self.pending_knowledge,
             dt,
             |response| {
-                projection.record_response_version(response.meta.server_tick, response.meta.cursor);
-                if accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor) {
+                if projection
+                    .accept_response_version(response.meta.server_tick, response.meta.cursor)
+                    && accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor)
+                {
                     self.knowledge = Some(response.data);
                 }
             },
@@ -68,8 +76,10 @@ impl Phase4Client {
             &mut self.pending_skills,
             dt,
             |response| {
-                projection.record_response_version(response.meta.server_tick, response.meta.cursor);
-                if accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor) {
+                if projection
+                    .accept_response_version(response.meta.server_tick, response.meta.cursor)
+                    && accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor)
+                {
                     self.skills = Some(response.data);
                 }
             },
@@ -80,8 +90,10 @@ impl Phase4Client {
             &mut self.pending_households,
             dt,
             |response| {
-                projection.record_response_version(response.meta.server_tick, response.meta.cursor);
-                if accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor) {
+                if projection
+                    .accept_response_version(response.meta.server_tick, response.meta.cursor)
+                    && accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor)
+                {
                     self.households = Some(response.data);
                 }
             },
@@ -92,8 +104,10 @@ impl Phase4Client {
             &mut self.pending_combat,
             dt,
             |response| {
-                projection.record_response_version(response.meta.server_tick, response.meta.cursor);
-                if accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor) {
+                if projection
+                    .accept_response_version(response.meta.server_tick, response.meta.cursor)
+                    && accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor)
+                {
                     self.combat = Some(response.data);
                 }
             },
@@ -111,13 +125,12 @@ impl Phase4Client {
                 Ok(response) => {
                     self.command_retry_timer = 0.0;
                     self.command_retry_count = 0;
-                    projection
-                        .record_response_version(response.meta.server_tick, response.meta.cursor);
+                    let projection_current = projection
+                        .accept_response_version(response.meta.server_tick, response.meta.cursor);
                     self.apply_command(
                         response.data,
-                        projection,
-                        response.meta.server_tick,
                         response.meta.cursor,
+                        projection_current,
                         notices,
                     );
                 }

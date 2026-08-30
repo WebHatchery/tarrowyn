@@ -151,13 +151,15 @@ impl OnlineClient {
         match result {
             Ok(response) => {
                 let message_cursor = response.data.message.as_ref().map(|message| message.cursor);
-                self.projection.record_response_version(
-                    response.meta.server_tick,
-                    response.meta.cursor.or(message_cursor),
-                );
+                let response_cursor = response.meta.cursor.or(message_cursor);
+                let projection_current = self
+                    .projection
+                    .accept_response_version(response.meta.server_tick, response_cursor);
                 if response.data.accepted {
-                    if let Some(message) = response.data.message {
-                        self.projection.push_chat(message);
+                    if projection_current {
+                        if let Some(message) = response.data.message {
+                            self.projection.push_chat(message);
+                        }
                     }
                     notices.push(NetworkNotice::Success(
                         "Message sent to the settlement.".to_owned(),

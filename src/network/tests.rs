@@ -120,6 +120,10 @@ fn projection_versions_accept_equal_state_but_reject_older_responses() {
     assert!(projection.response_is_current(12, 9));
     assert!(projection.response_is_newer(12, 10));
     assert!(!projection.response_is_newer(12, 9));
+    assert!(!projection.accept_response_version(11, Some(9)));
+    assert_eq!(projection.server_tick, 12);
+    assert_eq!(projection.cursor, 9);
+    assert!(projection.accept_response_version(12, Some(9)));
 }
 
 #[test]

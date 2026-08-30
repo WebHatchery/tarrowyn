@@ -129,8 +129,10 @@ impl Phase5Client {
             &mut self.pending_region,
             dt,
             |response| {
-                projection.record_response_version(response.meta.server_tick, response.meta.cursor);
-                if accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor) {
+                if projection
+                    .accept_response_version(response.meta.server_tick, response.meta.cursor)
+                    && accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor)
+                {
                     self.region = Some(response.data);
                 }
             },
@@ -141,8 +143,10 @@ impl Phase5Client {
             &mut self.pending_settlements,
             dt,
             |response| {
-                projection.record_response_version(response.meta.server_tick, response.meta.cursor);
-                if accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor) {
+                if projection
+                    .accept_response_version(response.meta.server_tick, response.meta.cursor)
+                    && accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor)
+                {
                     self.settlements = Some(response.data);
                 }
             },
@@ -153,8 +157,10 @@ impl Phase5Client {
             &mut self.pending_households,
             dt,
             |response| {
-                projection.record_response_version(response.meta.server_tick, response.meta.cursor);
-                if accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor) {
+                if projection
+                    .accept_response_version(response.meta.server_tick, response.meta.cursor)
+                    && accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor)
+                {
                     self.households = Some(response.data);
                 }
             },
@@ -165,8 +171,10 @@ impl Phase5Client {
             &mut self.pending_market,
             dt,
             |response| {
-                projection.record_response_version(response.meta.server_tick, response.meta.cursor);
-                if accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor) {
+                if projection
+                    .accept_response_version(response.meta.server_tick, response.meta.cursor)
+                    && accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor)
+                {
                     self.market = Some(response.data);
                 }
             },
@@ -178,8 +186,10 @@ impl Phase5Client {
             &mut self.pending_law,
             dt,
             |response| {
-                projection.record_response_version(response.meta.server_tick, response.meta.cursor);
-                if accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor) {
+                if projection
+                    .accept_response_version(response.meta.server_tick, response.meta.cursor)
+                    && accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor)
+                {
                     self.law = Some(response.data);
                 }
             },
@@ -190,8 +200,10 @@ impl Phase5Client {
             &mut self.pending_account,
             dt,
             |response| {
-                projection.record_response_version(response.meta.server_tick, response.meta.cursor);
-                if accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor) {
+                if projection
+                    .accept_response_version(response.meta.server_tick, response.meta.cursor)
+                    && accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor)
+                {
                     self.account = Some(response.data);
                 }
             },
@@ -597,8 +609,11 @@ impl Phase5Client {
         self.pending_events = None;
         match result {
             Ok(response) => {
-                projection.record_response_version(response.meta.server_tick, response.meta.cursor);
-                if accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor) {
+                let projection_current = projection
+                    .accept_response_version(response.meta.server_tick, response.meta.cursor);
+                if projection_current
+                    && accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor)
+                {
                     merge_regional_events(&mut self.events, response.data);
                 }
             }
