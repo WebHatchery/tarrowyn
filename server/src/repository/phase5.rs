@@ -208,6 +208,10 @@ impl WorldRepository {
         let mut route = state.phase5.routes[route_index].clone();
         let mut accepted = false;
         let reason = match request.action {
+            RouteAction::Repair if route.status == RouteStatus::Operational => Some(
+                "The route is already operational; choose Escort or Improve for another logistics step."
+                    .to_owned(),
+            ),
             RouteAction::Repair => {
                 let cost = route.repair_cost;
                 let can_pay = state.identities.get(&key).expect("identity exists").gold >= cost;
@@ -232,6 +236,10 @@ impl WorldRepository {
                 accepted = true;
                 None
             }
+            RouteAction::Improve if route.status == RouteStatus::Closed => Some(
+                "The route is closed; repair or escort it before improving its capacity."
+                    .to_owned(),
+            ),
             RouteAction::Improve => {
                 route.capacity = route.capacity.saturating_add(2);
                 route.travel_ticks = route.travel_ticks.saturating_sub(1).max(1);

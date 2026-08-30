@@ -103,5 +103,16 @@ fn regional_route_actions_close_when_every_local_route_is_closed() {
         cursor: 0,
     };
 
-    assert!(!super::panels::has_open_local_route(Some(&region)));
+    assert!(super::panels::has_local_route(
+        Some(&region),
+        tarrowyn_protocol::RouteAction::Repair
+    ));
+    assert!(super::panels::has_local_route(
+        Some(&region),
+        tarrowyn_protocol::RouteAction::Escort
+    ));
+    assert!(!super::panels::has_local_route(
+        Some(&region),
+        tarrowyn_protocol::RouteAction::Improve
+    ));
 }

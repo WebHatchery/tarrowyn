@@ -756,6 +756,8 @@ regression covers the full-queue response and rejection count; server clippy,
 size, and diff checks are the validation scope for this Phase 6 maintenance
 slice. No new external or deferred work was opened.
 
+
+
 Expired regional route-action cooldown entries are now pruned at the
 authoritative Phase 5 tick, so a route that is ready again cannot leave the
 readiness integrity check degraded. The focused route-history regression covers
@@ -1098,3 +1100,15 @@ server and client clippy, direct formatting, diff, and Rust file-size checks
 pass. The publisher check remains the runtime validation path; no full
 workspace gate was rerun because this is a bounded regional economy safety
 slice. No new external or deferred work was opened.
+
+Regional route action eligibility now agrees across authority and touch
+selectors: Repair is for non-operational roads, Escort can recover a Closed
+road as promised by the travel notice, and Improve waits until a road is open.
+The focused route-history tests (5 server tests), Phase 5 client tests (31
+passed), online UI tests (4 passed), server and client clippy, direct formatting
+of changed implementation and client-test files, diff, and Rust file-size
+checks pass. The known pre-existing formatting drift in the route-history
+fixture was audited and remains untouched. The publisher check remains the
+runtime validation path; no full workspace gate was rerun because this is a
+bounded regional route-action contract slice. No new external or deferred work
+was opened.

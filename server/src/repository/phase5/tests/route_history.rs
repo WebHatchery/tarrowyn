@@ -151,6 +151,82 @@ fn route_logistics_accept_only_one_step_per_decision_interval() {
 }
 
 #[test]
+fn route_actions_follow_the_visible_recovery_boundaries() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("phase5-route-action-boundaries".to_owned()),
+            reset: false,
+        })
+        .expect("guest session")
+        .data;
+
+    let operational_repair = repository
+        .route_action(
+            &session.account_token,
+            RouteRequest {
+                request_id: "operational-repair".to_owned(),
+                route_id: "saltmere-ferry".to_owned(),
+                action: RouteAction::Repair,
+            },
+        )
+        .expect("operational repair response")
+        .data;
+    assert!(!operational_repair.accepted);
+    assert_eq!(
+        operational_repair.reason.as_deref(),
+        Some(
+            "The route is already operational; choose Escort or Improve for another logistics step."
+        )
+    );
+
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state
+            .phase5
+            .routes
+            .iter_mut()
+            .find(|route| route.route_id == "saltmere-ferry")
+            .expect("saltmere ferry")
+            .status = tarrowyn_protocol::RouteStatus::Closed;
+    }
+
+    let closed_improve = repository
+        .route_action(
+            &session.account_token,
+            RouteRequest {
+                request_id: "closed-improve".to_owned(),
+                route_id: "saltmere-ferry".to_owned(),
+                action: RouteAction::Improve,
+            },
+        )
+        .expect("closed improve response")
+        .data;
+    assert!(!closed_improve.accepted);
+    assert_eq!(
+        closed_improve.reason.as_deref(),
+        Some("The route is closed; repair or escort it before improving its capacity.")
+    );
+
+    let closed_escort = repository
+        .route_action(
+            &session.account_token,
+            RouteRequest {
+                request_id: "closed-escort".to_owned(),
+                route_id: "saltmere-ferry".to_owned(),
+                action: RouteAction::Escort,
+            },
+        )
+        .expect("closed escort response")
+        .data;
+    assert!(closed_escort.accepted);
+    assert_eq!(
+        closed_escort.route.status,
+        tarrowyn_protocol::RouteStatus::Delayed
+    );
+}
+
+#[test]
 fn expired_route_cooldowns_are_pruned_before_restart_readiness() {
     let path = std::env::temp_dir().join(format!(
         "tarrowyn-route-cooldown-restart-{}.json",

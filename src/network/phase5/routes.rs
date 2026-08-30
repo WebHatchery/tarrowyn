@@ -8,18 +8,12 @@ impl Phase5Client {
                 .iter()
                 .find(|route| {
                     route.origin_location_id == region.player_location_id
-                        && (action == tarrowyn_protocol::RouteAction::Repair
-                            || route.status != tarrowyn_protocol::RouteStatus::Closed)
-                        && (action != RouteAction::Repair
-                            || route.status != tarrowyn_protocol::RouteStatus::Operational)
+                        && route_action_selectable(route.status, action)
                 })
                 .or_else(|| {
                     region.routes.iter().find(|route| {
                         route.destination_location_id == region.player_location_id
-                            && (action == tarrowyn_protocol::RouteAction::Repair
-                                || route.status != tarrowyn_protocol::RouteStatus::Closed)
-                            && (action != RouteAction::Repair
-                                || route.status != tarrowyn_protocol::RouteStatus::Operational)
+                            && route_action_selectable(route.status, action)
                     })
                 })
                 .map(|route| route.route_id.clone())
@@ -35,5 +29,16 @@ impl Phase5Client {
                 action,
             }),
         )
+    }
+}
+
+fn route_action_selectable(
+    status: tarrowyn_protocol::RouteStatus,
+    action: RouteAction,
+) -> bool {
+    match action {
+        RouteAction::Repair => status != tarrowyn_protocol::RouteStatus::Operational,
+        RouteAction::Escort => true,
+        RouteAction::Improve => status != tarrowyn_protocol::RouteStatus::Closed,
     }
 }
