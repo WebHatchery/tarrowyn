@@ -102,3 +102,38 @@ fn knowledge_inspection_is_fresh_and_does_not_fill_replay_storage() {
         1
     );
 }
+
+#[test]
+fn profession_inspection_projects_defaults_without_materializing_player_state() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = guest(&repository, "phase4-profession-read-view");
+
+    let response = repository.professions(&session.account_token).unwrap().data;
+    assert_eq!(response.profiles.len(), 1);
+    assert_eq!(
+        response.profiles[0].profession,
+        tarrowyn_protocol::ProfessionKind::Farmer
+    );
+    assert_eq!(response.materials.wood, 3);
+
+    let state = repository.state.lock().expect("repository lock");
+    assert!(!state.phase4.profiles.contains_key(&session.client_key));
+    assert!(!state.phase4.materials.contains_key(&session.client_key));
+    assert!(!state.phase4.credentials.contains_key(&session.client_key));
+}
+
+#[test]
+fn combat_status_projects_ready_state_without_inserting_a_record() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = guest(&repository, "phase4-combat-read-view");
+
+    let response = repository
+        .combat_status(&session.account_token)
+        .unwrap()
+        .data;
+    assert_eq!(response.status, tarrowyn_protocol::LocalCombatStatus::Ready);
+    assert_eq!(response.enemy_health, 3);
+
+    let state = repository.state.lock().expect("repository lock");
+    assert!(!state.phase4.combat.contains_key(&session.client_key));
+}

@@ -15,7 +15,6 @@ impl super::super::WorldRepository {
         let mut state = self.state.lock().expect("world repository lock poisoned");
         super::super::expire_sessions(&mut state, &self.config);
         let key = super::super::authenticate(&mut state, token, &self.config)?;
-        ensure_player(&mut state, &key);
         Ok(ApiResponse {
             meta: super::super::meta(state.tick, None, Some(state.cursor)),
             data: view(&state, &key),
@@ -317,27 +316,33 @@ fn ensure_player(state: &mut super::super::models::RepositoryState, key: &str) {
         .phase4
         .profiles
         .entry(key.to_owned())
-        .or_insert_with(|| {
-            vec![ProfessionProfile {
-                profession: ProfessionKind::Farmer,
-                level: 1,
-                reputation: 0,
-                credential: Some("settlement-fieldhand credential".to_owned()),
-                capabilities: vec![default_capability(ProfessionKind::Farmer)],
-            }]
-        });
+        .or_insert_with(default_profiles);
     state
         .phase4
         .materials
         .entry(key.to_owned())
-        .or_insert(MaterialStock {
-            wood: 3,
-            iron: 2,
-            cloth: 1,
-            bandages: 1,
-            tools: 1,
-        });
+        .or_insert_with(default_materials);
     state.phase4.credentials.entry(key.to_owned()).or_default();
+}
+
+fn default_profiles() -> Vec<ProfessionProfile> {
+    vec![ProfessionProfile {
+        profession: ProfessionKind::Farmer,
+        level: 1,
+        reputation: 0,
+        credential: Some("settlement-fieldhand credential".to_owned()),
+        capabilities: vec![default_capability(ProfessionKind::Farmer)],
+    }]
+}
+
+fn default_materials() -> MaterialStock {
+    MaterialStock {
+        wood: 3,
+        iron: 2,
+        cloth: 1,
+        bandages: 1,
+        tools: 1,
+    }
 }
 
 pub(super) fn remember_credential(credentials: &mut Vec<String>, credential: String) {
@@ -348,9 +353,19 @@ pub(super) fn remember_credential(credentials: &mut Vec<String>, credential: Str
 
 fn view(state: &super::super::models::RepositoryState, key: &str) -> ProfessionsResponse {
     ProfessionsResponse {
-        profiles: state.phase4.profiles.get(key).cloned().unwrap_or_default(),
+        profiles: state
+            .phase4
+            .profiles
+            .get(key)
+            .cloned()
+            .unwrap_or_else(default_profiles),
         orders: state.phase4.orders.clone(),
-        materials: state.phase4.materials.get(key).copied().unwrap_or_default(),
+        materials: state
+            .phase4
+            .materials
+            .get(key)
+            .copied()
+            .unwrap_or_else(default_materials),
         credentials: state
             .phase4
             .credentials

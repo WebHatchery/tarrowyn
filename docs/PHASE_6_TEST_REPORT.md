@@ -939,3 +939,11 @@ formatting differences in unrelated committed files; the edited files were
 formatted directly. No full workspace gate was rerun because this is a bounded
 Phase 4 read-path maintenance slice. No new external or deferred work was
 opened.
+
+Profession and local-combat inspection now project their default views without
+materializing player records in the authoritative Phase 4 state. The focused
+read-view regressions verify default projections and empty mutation maps;
+server clippy, direct formatting, size, diff, and publisher checks pass. No
+full workspace gate was rerun because this is a continuation of the bounded
+Phase 4 read-path maintenance slice. No new external or deferred work was
+opened.

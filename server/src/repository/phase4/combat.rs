@@ -15,9 +15,9 @@ impl super::super::WorldRepository {
         let combat = state
             .phase4
             .combat
-            .entry(key)
-            .or_insert_with(default_combat)
-            .clone();
+            .get(&key)
+            .cloned()
+            .unwrap_or_else(default_combat);
         Ok(ApiResponse {
             meta: super::super::meta(state.tick, None, Some(state.cursor)),
             data: combat,
