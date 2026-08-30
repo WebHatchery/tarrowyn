@@ -1797,3 +1797,12 @@ Rust file-size check pass, and `publish.ps1` passes Windows/WebGL builds,
 packaging, Preview deployment, and catalog sync. No full workspace gate was
 repeated because this was a bounded client knowledge-feedback slice, and no
 new external or deferred work was opened.
+
+Interrupted travel notices now preserve the authoritative interruption reason
+before naming the visible Recover control, so a failed journey explains what
+blocked it instead of only reporting that it stopped. The focused
+interrupted-travel regression passes, client clippy and the Rust file-size
+check pass, and `publish.ps1` passes Windows/WebGL builds, packaging, Preview
+deployment, and catalog sync. No full workspace gate was repeated because
+this was a bounded client travel-recovery-feedback slice, and no new external
+or deferred work was opened.

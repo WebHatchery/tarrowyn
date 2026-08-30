@@ -28,10 +28,23 @@ pub(super) fn travel_success_message(travel: Option<&TravelState>, location_id: 
             "Journey underway to {} • {}% complete • {}% risk.",
             travel.destination_location_id, travel.progress, travel.risk_percent
         ),
-        TravelStatus::Interrupted => format!(
-            "Journey interrupted before {}; tap Recover to continue.",
-            travel.destination_location_id
-        ),
+        TravelStatus::Interrupted => travel
+            .interruption
+            .as_deref()
+            .map(|reason| reason.trim_end_matches('.'))
+            .filter(|reason| !reason.is_empty())
+            .map(|reason| {
+                format!(
+                    "Journey interrupted before {}: {reason}. Tap Recover to continue.",
+                    travel.destination_location_id
+                )
+            })
+            .unwrap_or_else(|| {
+                format!(
+                    "Journey interrupted before {}; tap Recover to continue.",
+                    travel.destination_location_id
+                )
+            }),
         TravelStatus::Recovering => format!(
             "Journey recovery is underway toward {} • {}% complete.",
             travel.destination_location_id, travel.progress

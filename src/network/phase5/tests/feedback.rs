@@ -131,7 +131,7 @@ fn travel_success_message_names_arrival_and_recovery_control() {
     };
     assert_eq!(
         super::super::commands::travel_success_message(Some(&travel), "hearth"),
-        "Journey interrupted before saltmere; tap Recover to continue."
+        "Journey interrupted before saltmere: A fallen marker blocks the trail. Tap Recover to continue."
     );
 
     travel.status = TravelStatus::Arrived;
