@@ -628,6 +628,12 @@ future content additions do not push the catalog access module toward the
 workspace's 800-line Rust limit. The 37 content-focused tests and the project
 publisher both pass after the organization-only change.
 
+Phase 6 audit and session helpers now live in a dedicated child module, keeping
+the repository coordinator below the workspace's 800-line Rust limit while
+preserving the existing behavior. The 43 Phase 6-focused tests, server-only
+clippy check, size audit, and project publisher all pass after this
+organization-only change.
+
 The cross-layer persistence-readiness milestone passed the full release gate on
 2026-08-30 after the core and Phase 3-6 integrity additions: 14 protocol tests,
 282 server tests, and 93 client tests, followed by asset/code-standard checks,
