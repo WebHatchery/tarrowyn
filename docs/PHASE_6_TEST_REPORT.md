@@ -2099,3 +2099,13 @@ file-size check pass, and `publish.ps1` passes Windows/WebGL builds, packaging,
 Preview deployment, and catalog sync. No full workspace gate was repeated
 because this was a bounded regional projection correction, and no new external
 or deferred work was opened.
+
+The regional location cache now waits for an authoritative state, movement,
+presence, combat, or recovery position instead of projecting the placeholder
+Hearth coordinate during initial loading or carrying the previous account's
+position across an identity link. Focused client authority and identity-handoff
+regressions pass, client clippy, standards, and the Rust file-size check pass,
+and `publish.ps1` passes Windows/WebGL builds, packaging, Preview deployment,
+and catalog sync. No full workspace gate was repeated because this was a
+bounded regional projection authority correction, and no new external or
+deferred work was opened.

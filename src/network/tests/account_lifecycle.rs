@@ -48,6 +48,9 @@ fn linked_account_handoff_discards_stale_world_and_trade_projections() {
         recovery_cost: 0,
     });
     client.projection.trades = client.trades.clone();
+    client
+        .projection
+        .set_authoritative_player_position(macroquad_toolkit::grid::TilePos::new(8, 6));
     client.state_refresh = 4.0;
 
     client.apply_linked_account(GuestSessionResponse {
@@ -72,6 +75,7 @@ fn linked_account_handoff_discards_stale_world_and_trade_projections() {
     assert!(client.pending_trade_action.is_none());
     assert!(client.trades.is_empty());
     assert!(client.projection.player.is_none());
+    assert_eq!(client.projection.authoritative_player_position(), None);
     assert!(client.projection.trades.is_empty());
     assert_eq!(client.state_refresh, 0.0);
 }

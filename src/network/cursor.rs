@@ -38,6 +38,7 @@ pub(super) fn reset_projection_history(projection: &mut WorldProjection) {
     projection.server_tick = 0;
     projection.cursor = 0;
     projection.player = None;
+    projection.forget_authoritative_player_position();
     projection.animals.clear();
     projection.feed = TavernFeedResponse {
         notices: Vec::new(),

@@ -8,6 +8,7 @@ use tarrowyn_protocol::{
 };
 
 mod account_lifecycle;
+mod location_projection;
 mod movement_feedback;
 
 fn config() -> GameConfig {

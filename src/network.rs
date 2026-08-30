@@ -45,6 +45,7 @@ pub use types::{ConnectionState, NetworkNotice, RemotePlayer};
 pub struct WorldProjection {
     pub world: WorldState,
     pub player_position: TilePos,
+    player_position_authoritative: bool,
     pub players: Vec<RemotePlayer>,
     pub chat: Vec<ChatMessage>,
     pub day: u32,
@@ -75,6 +76,7 @@ impl WorldProjection {
         Self {
             world: WorldState::new(config),
             player_position: TilePos::new(8, 6),
+            player_position_authoritative: false,
             players: Vec::new(),
             chat: Vec::new(),
             day: 1,
@@ -154,13 +156,15 @@ impl WorldProjection {
             .iter()
             .find(|player| player.account_id == own_account)
         {
-            self.player_position = player.position;
+            self.set_authoritative_player_position(player.position);
         }
     }
 
     fn apply_state(&mut self, snapshot: StateSnapshot, server_tick: u64) {
+        let position = snapshot.player.position;
         self.apply_snapshot(snapshot.world, &snapshot.player.account_id, server_tick);
         self.player = Some(snapshot.player);
+        self.set_authoritative_player_position(TilePos::new(position.x, position.y));
         self.feed = snapshot.feed;
         self.chat = self.feed.chat.clone();
     }
@@ -237,7 +241,7 @@ impl WorldProjection {
     fn apply_presence(&mut self, presence: PlayerPresence, own_account: &str) {
         let remote = remote_player(presence);
         if remote.account_id == own_account {
-            self.player_position = remote.position;
+            self.set_authoritative_player_position(remote.position);
         }
         if let Some(existing) = self
             .players
@@ -270,6 +274,20 @@ impl WorldProjection {
             let keep_from = self.chat.len() - 8;
             self.chat.drain(0..keep_from);
         }
+    }
+
+    pub(super) fn authoritative_player_position(&self) -> Option<TilePos> {
+        self.player_position_authoritative
+            .then_some(self.player_position)
+    }
+
+    pub(super) fn set_authoritative_player_position(&mut self, position: TilePos) {
+        self.player_position = position;
+        self.player_position_authoritative = true;
+    }
+
+    pub(super) fn forget_authoritative_player_position(&mut self) {
+        self.player_position_authoritative = false;
     }
 }
 
@@ -376,8 +394,7 @@ impl OnlineClient {
         if frontier_cursor_boundary {
             cursor::recover_from_cursor_boundary(self, &mut notices);
         }
-        self.phase4
-            .sync_regional_player_location(self.projection.player_position);
+        self.sync_regional_player_location();
         let player_knocked_out = self
             .projection
             .player
@@ -446,12 +463,20 @@ impl OnlineClient {
         self.trades.clear();
         self.frontier.clear();
         self.projection.player = None;
+        self.projection.forget_authoritative_player_position();
         self.projection.players.clear();
         self.projection.trades.clear();
         self.projection.claim = None;
         self.projection.outpost = None;
         self.projection.expedition = None;
         self.state_refresh = 0.0;
+    }
+
+    fn sync_regional_player_location(&mut self) {
+        let Some(position) = self.projection.authoritative_player_position() else {
+            return;
+        };
+        self.phase4.sync_regional_player_location(position);
     }
 
     pub fn refresh_tavern(&mut self) {

@@ -511,11 +511,11 @@ fn apply_combat(
     projection_current: bool,
 ) {
     if projection_current {
+        let position = response.player.position;
         projection.player = Some(response.player);
-        projection.player_position = macroquad_toolkit::grid::TilePos::new(
-            projection.player.as_ref().unwrap().position.x,
-            projection.player.as_ref().unwrap().position.y,
-        );
+        projection.set_authoritative_player_position(macroquad_toolkit::grid::TilePos::new(
+            position.x, position.y,
+        ));
         projection.wilderness = Some(response.zone);
     }
     match response.outcome {
@@ -548,7 +548,9 @@ fn apply_recovery(
     if projection_current {
         let position = response.player.position;
         projection.player = Some(response.player);
-        projection.player_position = macroquad_toolkit::grid::TilePos::new(position.x, position.y);
+        projection.set_authoritative_player_position(macroquad_toolkit::grid::TilePos::new(
+            position.x, position.y,
+        ));
     }
     command_notice(
         response.accepted,

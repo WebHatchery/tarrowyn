@@ -84,7 +84,8 @@ impl OnlineClient {
                 self.projection
                     .record_response_version(response.meta.server_tick, response.meta.cursor);
                 if current {
-                    self.projection.player_position = TilePos::new(position.x, position.y);
+                    self.projection
+                        .set_authoritative_player_position(TilePos::new(position.x, position.y));
                 }
                 if response.data.accepted {
                     notices.push(NetworkNotice::Info(movement_success_notice(position)));
