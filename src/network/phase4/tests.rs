@@ -718,6 +718,25 @@ fn claim_success_message_explains_status_and_recovery_path() {
     );
 }
 
+#[test]
+fn profession_success_message_explains_order_result() {
+    let mut order = service_order_for_test(tarrowyn_protocol::ServiceOrderStatus::Completed);
+    order.quality = 87;
+    order.reward_gold = 12;
+    order.benefit = "The field tool is restored.".to_owned();
+    assert_eq!(
+        super::profession_success_message(Some(&order)),
+        "Service order completed: Repair a field tool at 87% quality; 12 gold paid. The field tool is restored."
+    );
+
+    order.status = tarrowyn_protocol::ServiceOrderStatus::Accepted;
+    order.provider_name = Some("Mara".to_owned());
+    assert_eq!(
+        super::profession_success_message(Some(&order)),
+        "Service order accepted: Repair a field tool; Mara is responsible for the 12 gold reward."
+    );
+}
+
 fn claim_for_test(
     claim_id: &str,
     owner_account_id: Option<&str>,
@@ -740,5 +759,27 @@ fn claim_for_test(
         building_access: true,
         protected_goods_policy: "Safe".to_owned(),
         inspection_note: "Recorded for the test.".to_owned(),
+    }
+}
+
+fn service_order_for_test(
+    status: tarrowyn_protocol::ServiceOrderStatus,
+) -> tarrowyn_protocol::ServiceOrder {
+    tarrowyn_protocol::ServiceOrder {
+        order_id: "service-order-test".to_owned(),
+        requester_account_id: "account-1".to_owned(),
+        requester_name: "Resident".to_owned(),
+        provider_account_id: Some("account-2".to_owned()),
+        provider_name: Some("Provider".to_owned()),
+        service: "Repair a field tool".to_owned(),
+        required_profession: ProfessionKind::Carpenter,
+        materials: tarrowyn_protocol::MaterialStock::default(),
+        tools_required: 1,
+        reward_gold: 4,
+        benefit: "A sound field tool".to_owned(),
+        status,
+        quality: 0,
+        created_tick: 1,
+        completed_tick: None,
     }
 }

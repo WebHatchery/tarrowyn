@@ -772,6 +772,15 @@ regression covers that replay boundary; server clippy, size, diff, and publisher
 checks are the validation scope for this Phase 6 identity-maintenance slice. No
 new external or deferred work was opened.
 
+Accepted Order responses now explain the authoritative service result when an
+order is posted, accepted, or completed: the service and gold reward, the
+named provider, completion quality, and the returned benefit. The focused
+profession-success-message regression passes, client clippy and the Rust
+file-size check pass, and `publish.ps1` passes Windows/WebGL builds, packaging,
+Preview deployment, and catalog sync. No full workspace gate was repeated
+because this was a bounded client Order-feedback slice, and no new external or
+deferred work was opened.
+
 Chronicle search now rejects a cursor ahead of the authoritative world with the
 same structured `cursor_ahead` boundary used by the other history endpoints.
 The focused chronicle-search regression covers the invalid cursor response;

@@ -7,8 +7,8 @@ use tarrowyn_protocol::{
     ClaimsResponse, GovernanceAction, GovernanceRequest, GovernanceResponse, GovernanceState,
     HouseholdsResponse, KnowledgeAction, KnowledgeRequest, KnowledgeResponse, LocalCombatAction,
     LocalCombatRequest, LocalCombatResponse, LocalCombatState, ProfessionAction, ProfessionKind,
-    ProfessionRequest, ProfessionResponse, ProfessionsResponse, SkillAction, SkillRequest,
-    SkillResponse, SkillStatus, SkillsResponse, WeaponKind,
+    ProfessionRequest, ProfessionResponse, ProfessionsResponse, ServiceOrder, ServiceOrderStatus,
+    SkillAction, SkillRequest, SkillResponse, SkillStatus, SkillsResponse, WeaponKind,
 };
 
 const MAX_COMMAND_RETRIES: u8 = 3;
@@ -532,15 +532,11 @@ impl Phase4Client {
                 phase4_notice(response.accepted, response.reason, &message, notices);
             }
             Phase4CommandResponse::Profession(response) => {
+                let message = profession_success_message(response.order.as_ref());
                 if current {
                     self.professions = Some(response.professions);
                 }
-                phase4_notice(
-                    response.accepted,
-                    response.reason,
-                    "The profession ledger recorded the order step.",
-                    notices,
-                );
+                phase4_notice(response.accepted, response.reason, &message, notices);
             }
             Phase4CommandResponse::Knowledge(response) => {
                 if current {
@@ -613,6 +609,41 @@ fn claim_success_message(claim: Option<&ClaimRecord>) -> String {
         ClaimLifecycleStatus::Reclaimed => format!(
             "Lease reclaimed; plot {plot} is back in the available land ledger."
         ),
+    }
+}
+
+fn profession_success_message(order: Option<&ServiceOrder>) -> String {
+    let Some(order) = order else {
+        return "The profession ledger recorded the requested action.".to_owned();
+    };
+    match order.status {
+        ServiceOrderStatus::Open => format!(
+            "Service order posted: {}; {} gold reward is on the board.",
+            order.service, order.reward_gold
+        ),
+        ServiceOrderStatus::Accepted => format!(
+            "Service order accepted: {}; {} is responsible for the {} gold reward.",
+            order.service,
+            order.provider_name.as_deref().unwrap_or("a named provider"),
+            order.reward_gold
+        ),
+        ServiceOrderStatus::Completed => {
+            let benefit = order.benefit.trim_end_matches('.');
+            if benefit.is_empty() {
+                format!(
+                    "Service order completed: {} at {}% quality; {} gold paid.",
+                    order.service, order.quality, order.reward_gold
+                )
+            } else {
+                format!(
+                    "Service order completed: {} at {}% quality; {} gold paid. {benefit}.",
+                    order.service, order.quality, order.reward_gold
+                )
+            }
+        }
+        ServiceOrderStatus::Cancelled => {
+            format!("Service order cancelled: {}.", order.service)
+        }
     }
 }
 
