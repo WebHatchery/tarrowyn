@@ -1639,3 +1639,13 @@ trade. `publish.ps1` passes Windows/WebGL builds, packaging, Preview deployment,
 and catalog sync. No full workspace gate was repeated because this was a
 bounded trade-inspection presentation slice, and no new external or deferred
 work was opened.
+
+The online farming client now chooses the nearest plot whose projected crop
+state matches the requested action: empty for planting, growing for tending,
+and mature for harvesting. This prevents an adjacent plot in an unrelated
+state from consuming the action attempt, while the authoritative server still
+rejects stale projections. The focused action-target regression passes for all
+three crop actions, client clippy and the Rust file-size check pass, and
+`publish.ps1` passes Windows/WebGL builds, packaging, Preview deployment, and
+catalog sync. No full workspace gate was repeated because this was a bounded
+client farming-target slice, and no new external or deferred work was opened.

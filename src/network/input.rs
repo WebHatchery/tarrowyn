@@ -72,17 +72,36 @@ impl OnlineClient {
                 .world
                 .tiles
                 .iter_with_pos()
-                .find(|(pos, tile)| {
-                    **tile == TileKind::Field
-                        && pos.manhattan_distance(&self.projection.player_position) <= 1
+                .filter(|(pos, tile)| {
+                    if **tile != TileKind::Field
+                        || pos.manhattan_distance(&self.projection.player_position) > 1
+                    {
+                        return false;
+                    }
+                    let crop = self.projection.world.crops.get(*pos).copied().flatten();
+                    match action {
+                        FarmingAction::Plant => crop.is_none(),
+                        FarmingAction::Tend => crop.is_some_and(|crop| !crop.mature()),
+                        FarmingAction::Harvest => crop.is_some_and(|crop| crop.mature()),
+                        FarmingAction::TendAnimal => false,
+                    }
                 })
+                .min_by_key(|(pos, _)| pos.manhattan_distance(&self.projection.player_position))
                 .map(|(pos, _)| tarrowyn_protocol::Position { x: pos.x, y: pos.y })
         };
         let Some(target) = target else {
-            self.status_message = if action == FarmingAction::TendAnimal {
-                "Stand beside Bellweather near the shared fields before caring for it.".to_owned()
-            } else {
-                "Stand beside a shared field plot before tending crops.".to_owned()
+            self.status_message = match action {
+                FarmingAction::Plant => {
+                    "Stand beside an empty shared field plot before planting.".to_owned()
+                }
+                FarmingAction::Tend => "Stand beside a growing crop before tending it.".to_owned(),
+                FarmingAction::Harvest => {
+                    "Stand beside a mature crop before harvesting it.".to_owned()
+                }
+                FarmingAction::TendAnimal => {
+                    "Stand beside Bellweather near the shared fields before caring for it."
+                        .to_owned()
+                }
             };
             return;
         };

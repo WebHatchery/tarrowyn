@@ -336,6 +336,53 @@ fn farming_without_a_nearby_target_explains_where_to_go() {
 }
 
 #[test]
+fn farming_actions_choose_a_nearby_plot_matching_the_action() {
+    let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
+    client.state = ConnectionState::Online;
+    client.projection.world.tiles = FlatGrid::new(3, 2, TileKind::Field);
+    client.projection.player_position = TilePos::new(1, 1);
+    client
+        .projection
+        .world
+        .tiles
+        .set(TilePos::new(1, 1), TileKind::Meadow);
+    client.projection.world.crops.set(
+        TilePos::new(0, 1),
+        Some(crate::state::CropState {
+            kind: crate::state::CropKind::Wheat,
+            stage: crate::state::CropState::MATURE_STAGE,
+        }),
+    );
+    client.projection.world.crops.set(
+        TilePos::new(1, 0),
+        Some(crate::state::CropState {
+            kind: crate::state::CropKind::Turnip,
+            stage: 1,
+        }),
+    );
+
+    client.queue_farming(FarmingAction::Harvest);
+    assert_eq!(
+        client.farming_queue.back().map(|request| request.position),
+        Some(Position { x: 0, y: 1 })
+    );
+    client.farming_queue.clear();
+
+    client.queue_farming(FarmingAction::Tend);
+    assert_eq!(
+        client.farming_queue.back().map(|request| request.position),
+        Some(Position { x: 1, y: 0 })
+    );
+    client.farming_queue.clear();
+
+    client.queue_farming(FarmingAction::Plant);
+    assert_eq!(
+        client.farming_queue.back().map(|request| request.position),
+        Some(Position { x: 2, y: 1 })
+    );
+}
+
+#[test]
 fn animal_care_targets_the_nearby_animal() {
     let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
     client.state = ConnectionState::Online;
