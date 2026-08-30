@@ -7,6 +7,8 @@ use tarrowyn_protocol::{
     TileKind as ProtocolTileKind, TradeAction, TradeRequest, WorldClock, WorldEvent, WorldTile,
 };
 
+mod movement_feedback;
+
 fn config() -> GameConfig {
     GameConfig {
         game_name: "years_of_tarrowyn".to_owned(),

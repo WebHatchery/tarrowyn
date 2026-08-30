@@ -1,8 +1,12 @@
 use super::*;
-use tarrowyn_protocol::{CropKind, FarmPlot};
+use tarrowyn_protocol::{CropKind, FarmPlot, Position};
 
 pub(super) const MAX_COMMAND_RETRIES: u8 = 3;
 pub(super) const COMMAND_RETRY_DELAY_SECONDS: f32 = 1.0;
+
+pub(super) fn movement_success_notice(position: Position) -> String {
+    format!("Moved to tile ({}, {}).", position.x, position.y)
+}
 
 pub(super) fn farming_success_notice(
     action: FarmingAction,
@@ -83,9 +87,7 @@ impl OnlineClient {
                     self.projection.player_position = TilePos::new(position.x, position.y);
                 }
                 if response.data.accepted {
-                    notices.push(NetworkNotice::Info(
-                        "The server accepted that step.".to_owned(),
-                    ));
+                    notices.push(NetworkNotice::Info(movement_success_notice(position)));
                 } else {
                     notices.push(NetworkNotice::Warning(
                         response

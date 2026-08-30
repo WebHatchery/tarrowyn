@@ -1772,3 +1772,11 @@ passed, followed by `cargo test --workspace` with 15 protocol, 416 server, and
 `cargo clippy --workspace --all-targets --all-features -- -D warnings` also
 passed. This is the first full gate in the current feedback sweep; no new
 external or deferred work was opened.
+
+Accepted movement responses now name the authoritative destination tile
+instead of only saying that the step was accepted. The focused movement-notice
+regression passes, client clippy and the Rust file-size check pass, and
+`publish.ps1` passes Windows/WebGL builds, packaging, Preview deployment, and
+catalog sync. No full workspace gate was repeated because this was a bounded
+client movement-feedback slice, and no new external or deferred work was
+opened.
