@@ -387,6 +387,7 @@ impl WorldRepository {
                 data: previous,
             });
         }
+        self.expire_and_persist_sessions(&mut state);
         let Some((old_token, old_session)) = state
             .phase6
             .sessions

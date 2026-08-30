@@ -1,6 +1,7 @@
 use super::super::super::{ServerConfig, WorldRepository};
+use std::time::Duration;
 use tarrowyn_protocol::{
-    AuthLinkRequest, AuthRefreshRequest, AuthRevokeRequest, GuestSessionRequest,
+    AuthLinkRequest, AuthRefreshRequest, AuthRevokeRequest, GuestSessionRequest, WorldEvent,
 };
 
 #[test]
@@ -39,6 +40,60 @@ fn production_session_refresh_window_covers_access_window() {
     let health = repository.ops_health().data;
     assert!(!health.integrity_ok);
     assert!(!health.ready);
+}
+
+#[test]
+fn direct_refresh_persists_presence_when_access_has_expired() {
+    let repository = WorldRepository::new(ServerConfig {
+        backup_path: None,
+        tick_interval: Duration::from_millis(1),
+        production_session_ttl_seconds: 1,
+        refresh_ttl_seconds: 3,
+        ..ServerConfig::default()
+    });
+    let guest = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("direct-refresh-expiry-presence".to_owned()),
+            reset: false,
+        })
+        .expect("guest session")
+        .data;
+    let linked = repository
+        .auth_link(
+            &guest.account_token,
+            AuthLinkRequest {
+                request_id: "direct-refresh-expiry-link".to_owned(),
+                provider: "webhatchery-identity-oidc".to_owned(),
+                subject: "direct-refresh-expiry-subject".to_owned(),
+                display_name: None,
+            },
+        )
+        .expect("linked session")
+        .data;
+
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state.tick = linked.session.expires_at_tick;
+    }
+
+    let refreshed = repository
+        .auth_refresh(AuthRefreshRequest {
+            request_id: "direct-refresh-expiry-refresh".to_owned(),
+            refresh_token: linked.session.refresh_token,
+        })
+        .expect("refresh should remain valid")
+        .data;
+    assert_ne!(
+        refreshed.session.account_token,
+        linked.session.account_token
+    );
+
+    let state = repository.state.lock().expect("repository lock");
+    assert!(state.events.iter().any(|record| matches!(
+        &record.event,
+        WorldEvent::Presence(presence)
+            if !presence.online && presence.account_id == linked.account_id
+    )));
 }
 
 #[test]

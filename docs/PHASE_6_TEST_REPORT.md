@@ -2617,3 +2617,15 @@ file-size scan pass. The project `publish.ps1` Windows/WebGL build, packaging,
 Preview deployment, and catalog-sync checks pass. No full workspace gate was
 repeated because this was a bounded client projection-presentation correction,
 and no new external or deferred work was opened.
+
+Direct production-session refresh now sweeps expired access credentials before
+rotating a still-valid refresh session, so the boundary records the durable
+offline-presence event that a direct refresh would otherwise skip. Replayed
+refresh requests still return from the idempotency cache before the sweep. The
+focused binary test
+`repository::phase6::tests::session_integrity::direct_refresh_persists_presence_when_access_has_expired`
+passes; server-package formatting and clippy, `git diff --check`, and the Rust
+file-size scan pass. The project `publish.ps1` Windows/WebGL build, packaging,
+Preview deployment, and catalog-sync checks pass. No full workspace gate was
+repeated because this was a bounded refresh-expiry persistence correction, and
+no new external or deferred work was opened.
