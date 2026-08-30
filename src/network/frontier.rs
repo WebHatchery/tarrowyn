@@ -409,6 +409,11 @@ impl FrontierClient {
     }
 
     pub(super) fn queue_recovery(&mut self, request_id: String, choice: RecoveryChoice) -> bool {
+        if self.recovery_command_pending()
+            && self.commands.len() < super::queue::MAX_PENDING_COMMANDS
+        {
+            return false;
+        }
         super::queue::try_push(
             &mut self.commands,
             FrontierCommand::Recovery(RecoveryRequest { request_id, choice }),

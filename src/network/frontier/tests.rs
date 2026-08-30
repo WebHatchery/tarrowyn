@@ -541,6 +541,29 @@ fn recovery_buttons_queue_each_authoritative_choice() {
 }
 
 #[test]
+fn recovery_controls_wait_for_one_queued_or_in_flight_command() {
+    let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
+    client.state = crate::network::ConnectionState::Online;
+    client.queue_recovery(RecoveryChoice::SelfRecover);
+    assert!(client.recovery_pending());
+
+    client.queue_recovery(RecoveryChoice::AskRescuer);
+    assert!(client
+        .status_message
+        .contains("frontier action is not ready"));
+    assert_eq!(client.frontier.commands.len(), 1);
+
+    let Some(FrontierCommand::Recovery(request)) = client.frontier.commands.pop_front() else {
+        panic!("the first recovery choice should remain queued");
+    };
+    client.frontier.in_flight_command = Some(FrontierCommand::Recovery(request));
+    client.queue_recovery(RecoveryChoice::PayHealer);
+    assert!(client
+        .status_message
+        .contains("frontier action is not ready"));
+}
+
+#[test]
 fn frontier_claim_controls_wait_for_one_queued_or_in_flight_command() {
     let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
     client.state = crate::network::ConnectionState::Online;
