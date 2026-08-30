@@ -1389,3 +1389,11 @@ and session filters pass (16 tests total), with server-package clippy,
 formatting, and diff checks clean. No full workspace or publisher gate was
 repeated because this is an isolated replay-integrity hardening change; no new
 external or deferred work was opened.
+
+Scheduled backups now flush their complete temporary snapshot to the operating
+system before the atomic replacement, while the per-command live snapshot
+writer keeps its existing latency profile. The existing complete-backup
+regression passes, with server-package clippy, formatting, and diff checks
+clean. No full workspace or publisher gate was repeated because this is a
+narrow backup durability hardening; no new external or deferred work was
+opened.
