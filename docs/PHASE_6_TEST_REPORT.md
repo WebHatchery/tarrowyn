@@ -2812,3 +2812,14 @@ The project `publish.ps1` Windows/WebGL build, packaging, Preview deployment,
 and catalog-sync checks pass. No full workspace gate was repeated because this
 was a bounded readiness-recovery correction, and no new external or deferred
 work was opened.
+
+Logout and expiry now record one offline presence only after the last live
+session for a character leaves. Authoritative world snapshots also collapse
+multiple live sessions for the same character and retain the latest seen tick,
+so multi-device sessions do not duplicate companions or make an active player
+appear gone. The focused `repository::session::tests` module passes all eight
+tests; server-package formatting and clippy, `git diff --check`, and the Rust
+file-size scan pass. The project `publish.ps1` Windows/WebGL build, packaging,
+Preview deployment, and catalog-sync checks pass. No full workspace gate was
+repeated because this was a bounded session-presence correction, and no new
+external or deferred work was opened.

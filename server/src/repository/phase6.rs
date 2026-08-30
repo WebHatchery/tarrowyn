@@ -537,6 +537,7 @@ impl WorldRepository {
             }
             state.sessions.remove(session_token);
         }
+        super::record_offline_presence_if_last_session(&mut state, &key);
         for guest_token in guest_tokens {
             state
                 .phase6

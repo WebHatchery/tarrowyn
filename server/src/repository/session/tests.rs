@@ -193,3 +193,165 @@ fn expired_revoke_attempt_persists_presence_before_rejecting_access() {
                 if !presence.online && presence.account_id == session.account_id
         )));
 }
+
+#[test]
+fn revoking_the_last_session_records_an_offline_presence() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("revoke-last-session-presence".to_owned()),
+            reset: false,
+        })
+        .expect("guest session")
+        .data;
+
+    repository
+        .auth_revoke(
+            &session.account_token,
+            tarrowyn_protocol::AuthRevokeRequest {
+                request_id: "revoke-last-session-presence-request".to_owned(),
+                revoke_all: false,
+            },
+        )
+        .expect("revoke session");
+
+    let state = repository.state.lock().expect("state lock");
+    assert!(state.events.iter().any(|record| matches!(
+        &record.event,
+        WorldEvent::Presence(presence)
+            if !presence.online && presence.account_id == session.account_id
+    )));
+}
+
+#[test]
+fn revoking_one_of_two_sessions_keeps_presence_online_until_the_last_leaves() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let first = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("two-session-presence".to_owned()),
+            reset: false,
+        })
+        .expect("first guest session")
+        .data;
+    let second_token = "dev-session-secondary".to_owned();
+    {
+        let mut state = repository.state.lock().expect("state lock");
+        let last_seen_tick = state.tick;
+        state.sessions.insert(
+            second_token.clone(),
+            super::super::models::Session {
+                client_key: first.client_key.clone(),
+                identity_key: first.client_key.clone(),
+                last_seen_tick,
+                last_movement_tick: None,
+                last_chat_tick: None,
+            },
+        );
+    }
+    let cursor_before_revoke = repository
+        .world(&second_token)
+        .unwrap()
+        .meta
+        .cursor
+        .expect("world response cursor");
+
+    repository
+        .auth_revoke(
+            &first.account_token,
+            tarrowyn_protocol::AuthRevokeRequest {
+                request_id: "revoke-one-session-presence".to_owned(),
+                revoke_all: false,
+            },
+        )
+        .expect("revoke first session");
+
+    let events = repository
+        .events(&second_token, cursor_before_revoke)
+        .expect("remaining session should read the event stream")
+        .data
+        .events;
+    assert!(!events.iter().any(|record| matches!(
+        &record.event,
+        WorldEvent::Presence(presence)
+            if !presence.online && presence.account_id == first.account_id
+    )));
+    assert_eq!(
+        repository.world(&second_token).unwrap().data.players.len(),
+        1
+    );
+
+    repository
+        .auth_revoke(
+            &second_token,
+            tarrowyn_protocol::AuthRevokeRequest {
+                request_id: "revoke-last-session-presence".to_owned(),
+                revoke_all: false,
+            },
+        )
+        .expect("revoke final session");
+    let state = repository.state.lock().expect("state lock");
+    assert_eq!(
+        state
+            .events
+            .iter()
+            .filter(|record| matches!(
+                &record.event,
+                WorldEvent::Presence(presence)
+                    if !presence.online && presence.account_id == first.account_id
+            ))
+            .count(),
+        1
+    );
+}
+
+#[test]
+fn expiring_multiple_sessions_records_one_departure_and_removes_duplicate_presence() {
+    let repository = WorldRepository::new(ServerConfig {
+        backup_path: None,
+        session_ttl_seconds: 1,
+        ..ServerConfig::default()
+    });
+    let first = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("expiry-duplicate-presence".to_owned()),
+            reset: false,
+        })
+        .expect("first guest session")
+        .data;
+    let second_token = "dev-session-expiry-secondary".to_owned();
+    {
+        let mut state = repository.state.lock().expect("state lock");
+        let last_seen_tick = state.tick;
+        state.sessions.insert(
+            second_token.clone(),
+            super::super::models::Session {
+                client_key: first.client_key.clone(),
+                identity_key: first.client_key.clone(),
+                last_seen_tick,
+                last_movement_tick: None,
+                last_chat_tick: None,
+            },
+        );
+    }
+    {
+        let mut state = repository.state.lock().expect("state lock");
+        state.tick = repository.config.session_ttl_ticks();
+    }
+
+    assert!(repository.world(&first.account_token).is_err());
+    let state = repository.state.lock().expect("state lock");
+    assert!(!state.sessions.contains_key(&first.account_token));
+    assert!(!state.sessions.contains_key(&second_token));
+    assert_eq!(
+        state
+            .events
+            .iter()
+            .filter(|record| matches!(
+                &record.event,
+                WorldEvent::Presence(presence)
+                    if !presence.online && presence.account_id == first.account_id
+            ))
+            .count(),
+        1
+    );
+}

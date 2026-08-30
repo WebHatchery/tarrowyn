@@ -1,5 +1,6 @@
 use super::models::{Identity, RepositoryState};
 use super::{RepositoryError, ServerConfig};
+use std::collections::{HashMap, HashSet};
 use tarrowyn_protocol::PlayerPresence;
 
 pub(super) fn authenticate(
@@ -58,13 +59,14 @@ pub(super) fn expire_sessions(state: &mut RepositoryState, config: &ServerConfig
         })
         .map(|(token, _)| token.clone())
         .collect();
+    let mut departed_identities = HashSet::new();
     for token in expired {
         if let Some(session) = state.sessions.remove(&token) {
-            if let Some(identity) = state.identities.get(&session.identity_key) {
-                let event = super::WorldEvent::Presence(presence(identity, state.tick, false));
-                super::push_event(state, event);
-            }
+            departed_identities.insert(session.identity_key);
         }
+    }
+    for identity_key in departed_identities {
+        record_offline_presence_if_last_session(state, &identity_key);
     }
     state.phase6.sessions.retain(|token, session| {
         state.sessions.contains_key(token)
@@ -74,18 +76,41 @@ pub(super) fn expire_sessions(state: &mut RepositoryState, config: &ServerConfig
 }
 
 pub(super) fn sorted_presences(state: &RepositoryState) -> Vec<PlayerPresence> {
-    let mut players: Vec<_> = state
-        .sessions
-        .values()
-        .filter_map(|session| {
+    let mut latest_seen_by_identity = HashMap::new();
+    for session in state.sessions.values() {
+        latest_seen_by_identity
+            .entry(session.identity_key.clone())
+            .and_modify(|last_seen: &mut u64| *last_seen = (*last_seen).max(session.last_seen_tick))
+            .or_insert(session.last_seen_tick);
+    }
+    let mut players: Vec<_> = latest_seen_by_identity
+        .into_iter()
+        .filter_map(|(identity_key, last_seen_tick)| {
             state
                 .identities
-                .get(&session.identity_key)
-                .map(|identity| presence(identity, session.last_seen_tick, true))
+                .get(&identity_key)
+                .map(|identity| presence(identity, last_seen_tick, true))
         })
         .collect();
     players.sort_by(|left, right| left.character_id.cmp(&right.character_id));
     players
+}
+
+pub(super) fn record_offline_presence_if_last_session(
+    state: &mut RepositoryState,
+    identity_key: &str,
+) {
+    if state
+        .sessions
+        .values()
+        .any(|session| session.identity_key == identity_key)
+    {
+        return;
+    }
+    if let Some(identity) = state.identities.get(identity_key) {
+        let event = super::WorldEvent::Presence(presence(identity, state.tick, false));
+        super::push_event(state, event);
+    }
 }
 
 pub(super) fn presence(identity: &Identity, last_seen_tick: u64, online: bool) -> PlayerPresence {

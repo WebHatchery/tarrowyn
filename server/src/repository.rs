@@ -48,7 +48,10 @@ pub(crate) use skills::validate_catalog as validate_skill_catalog;
 
 use models::{Identity, RepositoryState, Session};
 use persistence::PersistenceBackend;
-use session::{authenticate, expire_sessions, presence, sorted_presences};
+use session::{
+    authenticate, expire_sessions, presence, record_offline_presence_if_last_session,
+    sorted_presences,
+};
 
 #[derive(Debug, Clone)]
 pub struct RepositoryError {
