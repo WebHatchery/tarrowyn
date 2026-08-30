@@ -37,6 +37,21 @@ fn malformed_query_escapes_are_not_forwarded_to_authority() {
 }
 
 #[test]
+fn bearer_scheme_is_case_insensitive_but_credentials_must_be_present() {
+    assert_eq!(
+        parse_bearer_header("bearer guest-session-1").as_deref(),
+        Some("guest-session-1")
+    );
+    assert_eq!(
+        parse_bearer_header("Bearer   guest-session-2").as_deref(),
+        Some("guest-session-2")
+    );
+    assert!(parse_bearer_header("Basic guest-session").is_none());
+    assert!(parse_bearer_header("Bearer").is_none());
+    assert!(parse_bearer_header("Bearer guest\n-session").is_none());
+}
+
+#[test]
 fn history_cursors_reject_malformed_values_instead_of_resetting() {
     assert_eq!(query_cursor("since=12", "since"), Ok(12));
     assert_eq!(query_cursor("q=road", "since"), Ok(0));

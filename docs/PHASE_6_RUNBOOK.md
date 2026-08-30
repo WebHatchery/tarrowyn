@@ -156,6 +156,9 @@ support credentials to the client. A moderator records the category, target,
 evidence reference, decision, and retention deadline. Resolve through the
 audited support repair surface using a token for an account in the configured
 operator allowlist. Ordinary player tokens receive a clear forbidden response.
+HTTP authentication accepts the standard case-insensitive Bearer scheme and
+rejects missing or control-character credentials before they reach the
+repository boundary.
 The allowlisted `GET /v1/support/account?account_id=...` view shows account ID,
 character ID, settlement history, claims, trades, and cursors, but never access
 tokens, refresh tokens, provider secrets, or raw credentials. Ordinary player

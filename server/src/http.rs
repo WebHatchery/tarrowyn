@@ -487,8 +487,17 @@ fn bearer_token(request: &Request) -> Option<String> {
         .headers()
         .iter()
         .find(|header| header.field.equiv("Authorization"))
-        .and_then(|header| header.value.as_str().strip_prefix("Bearer "))
-        .map(str::to_owned)
+        .and_then(|header| parse_bearer_header(header.value.as_str()))
+}
+
+fn parse_bearer_header(value: &str) -> Option<String> {
+    let (scheme, credentials) = value.split_once(' ')?;
+    if !scheme.eq_ignore_ascii_case("Bearer") {
+        return None;
+    }
+    let credentials = credentials.trim();
+    (!credentials.is_empty() && !credentials.chars().any(char::is_control))
+        .then(|| credentials.to_owned())
 }
 
 fn split_url(url: &str) -> (&str, &str) {

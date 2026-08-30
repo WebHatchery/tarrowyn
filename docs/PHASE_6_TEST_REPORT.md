@@ -652,6 +652,11 @@ Chronicle search now also rejects malformed form encoding in its `q` parameter
 while preserving an omitted query as an unfiltered search. The focused HTTP
 query suite passes 8 tests with server clippy, size, diff, and publisher checks.
 
+The HTTP authentication boundary now accepts case-insensitive Bearer scheme
+names while requiring non-empty credentials without control characters. The
+focused HTTP suite passes 9 tests, with server clippy, size, diff, and publisher
+checks passing for the same boundary.
+
 Phase 6 audit and session helpers now live in a dedicated child module, keeping
 the repository coordinator below the workspace's 800-line Rust limit while
 preserving the existing behavior. The 43 Phase 6-focused tests, server-only
