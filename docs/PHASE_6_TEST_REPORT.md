@@ -1159,3 +1159,11 @@ clippy, direct formatting, diff, and size checks pass. No publisher run was
 needed separately because the combined frontier publisher run above covered the
 runtime change. No full workspace gate was rerun because this is a bounded
 server authority slice. No new external or deferred work was opened.
+
+The online sidebar now keeps the authoritative pioneer expedition visible while
+it is planning, travelling, founded, or retreated, including party size and
+bounded supply totals. The focused online UI tests pass; client clippy, direct
+formatting, diff, and size checks pass. The publisher check passed the Windows
+and WebGL release builds, packaging, Preview deployment, and catalog sync. No
+full workspace gate was rerun because this is a bounded presentation slice. No
+new external or deferred work was opened.

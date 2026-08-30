@@ -116,3 +116,30 @@ fn regional_route_actions_close_when_every_local_route_is_closed() {
         tarrowyn_protocol::RouteAction::Improve
     ));
 }
+
+#[test]
+fn pioneer_status_line_keeps_an_active_party_visible() {
+    let expedition = tarrowyn_protocol::Expedition {
+        expedition_id: "pioneer-1".to_owned(),
+        outpost_name: "Lantern Rest".to_owned(),
+        leader_account_id: "account-1".to_owned(),
+        members: vec![tarrowyn_protocol::ExpeditionMember {
+            account_id: "account-1".to_owned(),
+            display_name: "The traveller".to_owned(),
+            role: tarrowyn_protocol::ExpeditionRole::Scout,
+        }],
+        food: 6,
+        tools: 3,
+        materials: 8,
+        safety: 3,
+        status: tarrowyn_protocol::ExpeditionStatus::Launched,
+        outcome: None,
+        outpost_position: tarrowyn_protocol::Position { x: 14, y: 8 },
+    };
+
+    let line = super::pioneer_status_line(&expedition);
+    assert!(line.contains("Pioneer on the road"));
+    assert!(line.contains("1 companions"));
+    assert!(line.contains("supplies 6/3/8/3"));
+    assert!(line.contains("Lantern Rest"));
+}

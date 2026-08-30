@@ -383,17 +383,20 @@ pub(super) fn draw_sidebar(
         actions,
     );
     let chronicle_line = ctx
-        .chronicle_summary
-        .map(|summary| {
-            format!(
-                "{} older chronicle entries remain searchable; {}",
-                summary.entry_count,
-                summary
-                    .highlights
-                    .last()
-                    .map(String::as_str)
-                    .unwrap_or("the archive is ready")
-            )
+        .expedition
+        .map(pioneer_status_line)
+        .or_else(|| {
+            ctx.chronicle_summary.map(|summary| {
+                format!(
+                    "{} older chronicle entries remain searchable; {}",
+                    summary.entry_count,
+                    summary
+                        .highlights
+                        .last()
+                        .map(String::as_str)
+                        .unwrap_or("the archive is ready")
+                )
+            })
         })
         .or_else(|| {
             ctx.chronicle
@@ -451,4 +454,22 @@ pub(super) fn draw_sidebar(
         top + 454.0,
         TextStyle::new(8.25, dark::TEXT_DIM).params(),
     );
+}
+
+fn pioneer_status_line(expedition: &tarrowyn_protocol::Expedition) -> String {
+    let status = match expedition.status {
+        tarrowyn_protocol::ExpeditionStatus::Planning => "planning",
+        tarrowyn_protocol::ExpeditionStatus::Launched => "on the road",
+        tarrowyn_protocol::ExpeditionStatus::Succeeded => "founded",
+        tarrowyn_protocol::ExpeditionStatus::Retreated => "retreated",
+    };
+    format!(
+        "Pioneer {status} • {} companions • supplies {}/{}/{}/{} • {}",
+        expedition.members.len(),
+        expedition.food,
+        expedition.tools,
+        expedition.materials,
+        expedition.safety,
+        expedition.outpost_name,
+    )
 }
