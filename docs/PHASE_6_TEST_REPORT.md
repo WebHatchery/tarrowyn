@@ -760,6 +760,15 @@ catalog sync. No full workspace gate was repeated because this was a bounded
 client Town Hall-feedback slice, and no new external or deferred work was
 opened.
 
+Accepted profession responses for capability learning now name the learned
+discipline and confirm that its credential entered the profession ledger;
+inspection responses also use a ledger-specific message. The focused
+profession-feedback regressions pass, client clippy and the Rust file-size
+check pass, and `publish.ps1` passes Windows/WebGL builds, packaging, Preview
+deployment, and catalog sync. No full workspace gate was repeated because this
+was a bounded client capability-feedback slice, and no new external or
+deferred work was opened.
+
 Accepted frontier homestead responses now explain the returned lease state:
 the plot and recognised access duration while active, the inactivity window
 before abandoned land can be reclaimed, and the visible Claim path after

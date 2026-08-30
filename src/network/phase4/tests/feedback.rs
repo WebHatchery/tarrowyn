@@ -30,15 +30,33 @@ fn profession_success_message_explains_order_result() {
     order.reward_gold = 12;
     order.benefit = "The field tool is restored.".to_owned();
     assert_eq!(
-        super::super::profession_success_message(Some(&order)),
+        super::super::profession_success_message(Some(&order), None),
         "Service order completed: Repair a field tool at 87% quality; 12 gold paid. The field tool is restored."
     );
 
     order.status = tarrowyn_protocol::ServiceOrderStatus::Accepted;
     order.provider_name = Some("Mara".to_owned());
     assert_eq!(
-        super::super::profession_success_message(Some(&order)),
+        super::super::profession_success_message(Some(&order), None),
         "Service order accepted: Repair a field tool; Mara is responsible for the 12 gold reward."
+    );
+}
+
+#[test]
+fn profession_success_message_names_a_learned_capability() {
+    let request = tarrowyn_protocol::ProfessionRequest {
+        request_id: "learn-capability".to_owned(),
+        action: tarrowyn_protocol::ProfessionAction::LearnCapability,
+        order_id: None,
+        profession: Some(tarrowyn_protocol::ProfessionKind::Carpenter),
+        capability_id: None,
+        service: None,
+        timing_score: None,
+    };
+
+    assert_eq!(
+        super::super::profession_success_message(None, Some(&request)),
+        "Carpenter capability recorded; its credential is now in the profession ledger."
     );
 }
 

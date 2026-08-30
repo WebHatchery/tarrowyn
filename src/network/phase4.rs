@@ -533,7 +533,11 @@ impl Phase4Client {
                 phase4_notice(response.accepted, response.reason, &message, notices);
             }
             Phase4CommandResponse::Profession(response) => {
-                let message = profession_success_message(response.order.as_ref());
+                let request = command.and_then(|command| match command {
+                    Phase4Command::Profession(request) => Some(request),
+                    _ => None,
+                });
+                let message = profession_success_message(response.order.as_ref(), request);
                 if current {
                     self.professions = Some(response.professions);
                 }
@@ -613,8 +617,31 @@ fn claim_success_message(claim: Option<&ClaimRecord>) -> String {
     }
 }
 
-fn profession_success_message(order: Option<&ServiceOrder>) -> String {
+fn profession_success_message(
+    order: Option<&ServiceOrder>,
+    request: Option<&ProfessionRequest>,
+) -> String {
     let Some(order) = order else {
+        if let Some(request) = request {
+            return match request.action {
+                ProfessionAction::LearnCapability => request
+                    .profession
+                    .map(|profession| {
+                        format!(
+                            "{} capability recorded; its credential is now in the profession ledger.",
+                            profession_name(profession)
+                        )
+                    })
+                    .unwrap_or_else(|| {
+                        "Professional capability recorded in the profession ledger.".to_owned()
+                    }),
+                ProfessionAction::Inspect => {
+                    "Profession ledger inspected; materials and service orders are current."
+                        .to_owned()
+                }
+                _ => "The profession ledger recorded the requested action.".to_owned(),
+            };
+        }
         return "The profession ledger recorded the requested action.".to_owned();
     };
     match order.status {
@@ -645,6 +672,17 @@ fn profession_success_message(order: Option<&ServiceOrder>) -> String {
         ServiceOrderStatus::Cancelled => {
             format!("Service order cancelled: {}.", order.service)
         }
+    }
+}
+
+fn profession_name(profession: ProfessionKind) -> &'static str {
+    match profession {
+        ProfessionKind::Farmer => "Farmer",
+        ProfessionKind::Smith => "Smith",
+        ProfessionKind::Carpenter => "Carpenter",
+        ProfessionKind::Healer => "Healer",
+        ProfessionKind::Scout => "Scout",
+        ProfessionKind::Steward => "Steward",
     }
 }
 
