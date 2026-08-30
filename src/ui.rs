@@ -43,7 +43,10 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
 
     draw_header(&ctx);
     let map_rect = draw_world_panel(&ctx, mouse);
-    if ctx.crafting.is_none() && !ctx.knocked_out && is_mouse_button_released(MouseButton::Left) {
+    if ctx.crafting.is_none()
+        && ui_online::movement_enabled(&ctx)
+        && is_mouse_button_released(MouseButton::Left)
+    {
         if let Some(tile) = MapView::new(&ctx, map_rect).tile_at(mouse) {
             actions.push(UiAction::MoveTo(tile));
         }
@@ -174,6 +177,8 @@ fn draw_world_panel(ctx: &UiContext<'_>, mouse: Vec2) -> Rect {
         draw_tooltip(
             if ctx.knocked_out {
                 "Choose a recovery prompt before walking."
+            } else if !ui_online::movement_enabled(ctx) {
+                "Your regional journey is underway; use the visible travel control."
             } else {
                 "Tap a walkable tile to take one step toward it."
             },

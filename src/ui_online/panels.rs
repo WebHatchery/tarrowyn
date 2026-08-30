@@ -1,5 +1,5 @@
 use super::*;
-use tarrowyn_protocol::{RegionSnapshot, RouteAction, RouteStatus};
+use tarrowyn_protocol::{RegionSnapshot, RouteAction, RouteStatus, TravelStatus};
 
 pub fn draw_account(ctx: &UiContext<'_>, mouse: Vec2, actions: &mut Vec<UiAction>) {
     if !ctx.account_open {
@@ -264,6 +264,17 @@ pub fn local_combat_action_enabled(
         combat.status == tarrowyn_protocol::LocalCombatStatus::Engaged
             && combat.action_available_at_tick <= server_tick
     })
+}
+
+pub fn regional_travel_blocks_movement(region: Option<&RegionSnapshot>) -> bool {
+    region
+        .and_then(|region| region.travel.as_ref())
+        .is_some_and(|travel| {
+            matches!(
+                travel.status,
+                TravelStatus::Travelling | TravelStatus::Interrupted | TravelStatus::Recovering
+            )
+        })
 }
 
 pub fn frontier_threat_is_reachable(

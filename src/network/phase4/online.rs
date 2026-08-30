@@ -8,6 +8,10 @@ impl Phase4Client {
         self.regional.sync_player_location(position);
     }
 
+    pub(crate) fn regional_movement_locked(&self) -> bool {
+        self.regional.movement_locked()
+    }
+
     pub(super) fn queue_region_intervention(
         &mut self,
         request_id: String,

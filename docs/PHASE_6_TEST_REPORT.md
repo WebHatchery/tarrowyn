@@ -2119,3 +2119,13 @@ clippy, standards, and the Rust file-size check pass, and `publish.ps1` passes
 Windows/WebGL builds, packaging, Preview deployment, and catalog sync. No full
 workspace gate was repeated because this was a bounded combat presentation
 correction, and no new external or deferred work was opened.
+
+The regional journey lock now reaches every movement path: map taps and the
+arrow pad become visibly unavailable during travel, interrupted recovery, and
+active recovery, with an on-map instruction to use the visible travel control;
+the keyboard supplement also stops before queuing a server-rejected step. The
+focused regional travel-lock and UI regressions pass, client clippy, standards,
+and the Rust file-size check pass, and `publish.ps1` passes Windows/WebGL
+builds, packaging, Preview deployment, and catalog sync. No full workspace gate
+was repeated because this was a bounded travel-input presentation correction,
+and no new external or deferred work was opened.

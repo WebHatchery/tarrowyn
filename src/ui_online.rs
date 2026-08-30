@@ -54,7 +54,7 @@ pub(super) fn draw_sidebar(
         top + 47.0,
         mouse,
         actions,
-        !ctx.knocked_out,
+        movement_enabled(ctx),
     );
 
     draw_combat_status(ctx, content, top);
@@ -490,6 +490,11 @@ pub(super) fn draw_sidebar(
 
 fn travel_control_enabled(available: bool, knocked_out: bool) -> bool {
     available && !knocked_out
+}
+
+pub(super) fn movement_enabled(ctx: &UiContext<'_>) -> bool {
+    !ctx.knocked_out
+        && (ctx.offline || !panels::regional_travel_blocks_movement(ctx.regional_region))
 }
 
 fn pioneer_status_line(

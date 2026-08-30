@@ -455,6 +455,7 @@ fn travel_control_does_not_offer_interrupt_during_recovery() {
         client.travel_control_details(),
         ("Recovering", false, false)
     );
+    assert!(client.movement_locked());
     assert!(!client.queue_cycle("travel"));
     assert!(client.commands.is_empty());
 }

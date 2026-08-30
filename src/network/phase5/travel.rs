@@ -1,6 +1,18 @@
 use super::*;
 
 impl Phase5Client {
+    pub(crate) fn movement_locked(&self) -> bool {
+        self.region
+            .as_ref()
+            .and_then(|region| region.travel.as_ref())
+            .is_some_and(|travel| {
+                matches!(
+                    travel.status,
+                    TravelStatus::Travelling | TravelStatus::Interrupted | TravelStatus::Recovering
+                )
+            })
+    }
+
     pub(super) fn travel_control_details(&self) -> (&'static str, bool, bool) {
         let Some(region) = self.region.as_ref() else {
             return ("Travel", false, false);

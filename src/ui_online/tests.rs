@@ -274,6 +274,51 @@ fn local_combat_actions_wait_for_an_engaged_ready_encounter() {
 }
 
 #[test]
+fn regional_journey_locks_walking_until_arrival_or_recovery() {
+    let mut region = tarrowyn_protocol::RegionSnapshot {
+        region_id: "hearthlands".to_owned(),
+        season: "thaw".to_owned(),
+        calendar_day: 1,
+        locations: Vec::new(),
+        routes: Vec::new(),
+        visible_settlements: Vec::new(),
+        player_location_id: "hearth".to_owned(),
+        travel: Some(tarrowyn_protocol::TravelState {
+            travel_id: "travel-1".to_owned(),
+            route_id: "north-pack-road".to_owned(),
+            origin_location_id: "hearth".to_owned(),
+            destination_location_id: "whisperwood-outpost".to_owned(),
+            departure_tick: 1,
+            eta_tick: 7,
+            progress: 20,
+            risk_percent: 28,
+            status: tarrowyn_protocol::TravelStatus::Travelling,
+            interruption: None,
+            recovery_note: None,
+        }),
+        interest_radius: 12,
+        cursor: 0,
+    };
+
+    assert!(super::panels::regional_travel_blocks_movement(Some(
+        &region
+    )));
+    region.travel.as_mut().unwrap().status = tarrowyn_protocol::TravelStatus::Interrupted;
+    assert!(super::panels::regional_travel_blocks_movement(Some(
+        &region
+    )));
+    region.travel.as_mut().unwrap().status = tarrowyn_protocol::TravelStatus::Recovering;
+    assert!(super::panels::regional_travel_blocks_movement(Some(
+        &region
+    )));
+    region.travel.as_mut().unwrap().status = tarrowyn_protocol::TravelStatus::Arrived;
+    assert!(!super::panels::regional_travel_blocks_movement(Some(
+        &region
+    )));
+    assert!(!super::panels::regional_travel_blocks_movement(None));
+}
+
+#[test]
 fn chronicle_panel_text_keeps_archive_context_and_recent_records() {
     let entries = vec![
         tarrowyn_protocol::ChronicleEntry {

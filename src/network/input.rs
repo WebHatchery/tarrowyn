@@ -5,6 +5,12 @@ impl OnlineClient {
         if self.state != ConnectionState::Online {
             return;
         }
+        if self.phase4.regional_movement_locked() {
+            self.status_message =
+                "Your regional journey is underway; tap Travel or Recover before walking."
+                    .to_owned();
+            return;
+        }
         let request_id = self.next_request_id("move");
         if !queue::try_push(
             &mut self.movement_queue,
