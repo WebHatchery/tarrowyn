@@ -227,7 +227,7 @@ pub(super) fn draw_sidebar(
                 ButtonTone::Primary,
             ),
             ("chronicle", "Chronicle", true, ButtonTone::Secondary),
-            ("say-hello", "Hello", true, ButtonTone::Secondary),
+            ("say-hello", "Meet", true, ButtonTone::Secondary),
             ("school", "School", !ctx.knocked_out, ButtonTone::Primary),
             (
                 "practice",

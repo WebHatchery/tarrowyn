@@ -1550,3 +1550,11 @@ tests (7), client-package clippy, formatting, diff, and Rust file-size checks
 pass, and `publish.ps1` refreshed the Windows/WebGL packages and Preview
 artifacts. No full workspace gate was repeated because this was a bounded
 touch-presentation slice, and no new external or deferred work was opened.
+
+The visible quick-chat control now says `Meet`, matching the “Meet at the
+Hearth” message it sends and the GDD's intended social regrouping cue. The
+focused online UI suite (7) and client-package clippy pass; the gameplay
+capture confirms the label in the rendered touch layout, and `publish.ps1`
+passes Windows/WebGL builds, packaging, Preview deployment, and catalog sync.
+No full workspace gate was repeated because this was a bounded social-copy
+presentation slice, and no new external or deferred work was opened.
