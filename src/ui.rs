@@ -83,6 +83,7 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
         actions.retain(|action| {
             matches!(action, UiAction::Practice(_))
                 || matches!(action, UiAction::Interact(id) if id == "skill-close")
+                || is_recovery_action(action)
         });
     }
     if ctx.chronicle_open {
@@ -90,14 +91,22 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
             matches!(action, UiAction::Interact(id) if matches!(
                 id.as_str(),
                 "chronicle-close" | "chronicle-search" | "chronicle-search-next"
-            ) || id.starts_with("chronicle-key-"))
+            ) || id.starts_with("chronicle-key-")
+                || is_recovery_action(action))
         });
     }
     if ctx.account_open {
-        actions.retain(|action| matches!(action, UiAction::Interact(id) if id == "account-close"));
+        actions.retain(|action| {
+            matches!(action, UiAction::Interact(id) if id == "account-close")
+                || is_recovery_action(action)
+        });
     }
 
     actions
+}
+
+fn is_recovery_action(action: &UiAction) -> bool {
+    matches!(action, UiAction::Reconnect | UiAction::UseOffline)
 }
 
 fn draw_header(ctx: &UiContext<'_>) {

@@ -1945,6 +1945,16 @@ Windows/WebGL builds, packaging, Preview deployment, and catalog sync. No full
 workspace gate was repeated because this was a bounded account-feedback
 correction, and no new external or deferred work was opened.
 
+Online recovery controls now remain actionable when the account, skill, or
+chronicle modal is open: the modal action filters preserve `Reconnect` and
+`Offline fixture` while continuing to reject unrelated sidebar actions. The
+focused `ui::tests::modal_filters_keep_recovery_controls_touchable` test
+passes; client-package formatting and clippy, `git diff --check`, and the Rust
+file-size scan pass. The project `publish.ps1` Windows/WebGL build, packaging,
+Preview deployment, and catalog-sync checks pass. No full workspace gate was
+repeated because this was a bounded touch-recovery action-filter correction,
+and no new external or deferred work was opened.
+
 Registry, Abandon, and Transfer controls now close while a lease lifecycle
 command is queued or in flight, and direct duplicate claim mutations are
 rejected until the first response resolves. The focused lease-control test

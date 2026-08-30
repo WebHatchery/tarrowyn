@@ -44,3 +44,15 @@ fn map_player_marker_waits_for_authority_unless_using_the_offline_fixture() {
     assert!(super::ui_map::should_draw_player_marker(false, true));
     assert!(!super::ui_map::should_draw_player_marker(false, false));
 }
+
+#[test]
+fn modal_filters_keep_recovery_controls_touchable() {
+    assert!(is_recovery_action(&UiAction::Reconnect));
+    assert!(is_recovery_action(&UiAction::UseOffline));
+    assert!(!is_recovery_action(&UiAction::Interact(
+        "account-close".to_owned()
+    )));
+    assert!(!is_recovery_action(&UiAction::Practice(
+        "farming".to_owned()
+    )));
+}
