@@ -187,6 +187,12 @@ impl WorldRepository {
         let Some(mut crop) = state.plots[plot_index].crop else {
             return (false, Some("That plot is empty.".to_owned()));
         };
+        if crop.last_tended_tick == Some(state.tick) {
+            return (
+                false,
+                Some("That crop has already been tended this server beat.".to_owned()),
+            );
+        }
         if crop.mature() {
             return (false, Some("That crop is ready to harvest.".to_owned()));
         }

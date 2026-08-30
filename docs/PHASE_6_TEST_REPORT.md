@@ -448,6 +448,11 @@ history to make room. A failed no-plot request therefore leaves the land
 registry unchanged; the focused claim-retention suite covers that rejection
 beside reclaimed-history eviction and full-live-ledger blocking.
 
+Crop tending now rejects a second action against the same plot in one server
+beat, preserving the tool condition and slow-growth boundary; the next beat
+opens the plot again. The focused farming suite covers same-beat rejection and
+post-tick acceptance.
+
 Phase 4 land-registry integrity now also rejects claim and available-plot
 positions outside the configured world bounds, while retaining dynamic plot
 layouts for migration compatibility. Two focused regressions cover malformed
