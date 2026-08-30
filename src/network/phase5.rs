@@ -146,6 +146,16 @@ impl Phase5Client {
                 .any(|command| matches!(command, Phase5Command::Route(_)))
     }
 
+    pub(super) fn travel_command_pending(&self) -> bool {
+        self.in_flight_command
+            .as_ref()
+            .is_some_and(|command| matches!(command, Phase5Command::Travel(_)))
+            || self
+                .commands
+                .iter()
+                .any(|command| matches!(command, Phase5Command::Travel(_)))
+    }
+
     pub(super) fn dispatch_blocked(&self) -> bool {
         self.logged_out || self.auth_refresh_pending()
     }

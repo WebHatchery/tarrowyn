@@ -174,6 +174,7 @@ fn route_repair_button_queues_an_authoritative_repair() {
         .expect("regional projection")
         .player_location_id = "saltmere".to_owned();
     client.queue_cycle("travel");
+    assert!(client.travel_command_pending());
     assert!(matches!(
         client.commands.front(),
         Some(Phase5Command::Travel(request))
@@ -182,6 +183,7 @@ fn route_repair_button_queues_an_authoritative_repair() {
     ));
 
     client.commands.clear();
+    assert!(!client.travel_command_pending());
     client.region.as_mut().expect("regional projection").travel =
         Some(tarrowyn_protocol::TravelState {
             travel_id: "arrived-watch-trail".to_owned(),

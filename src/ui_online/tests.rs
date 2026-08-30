@@ -229,9 +229,10 @@ fn pioneer_status_line_keeps_an_active_party_visible() {
 
 #[test]
 fn travel_controls_close_while_knocked_out() {
-    assert!(super::travel_control_enabled(true, false));
-    assert!(!super::travel_control_enabled(true, true));
-    assert!(!super::travel_control_enabled(false, false));
+    assert!(super::travel_control_enabled(true, false, false));
+    assert!(!super::travel_control_enabled(true, true, false));
+    assert!(!super::travel_control_enabled(true, false, true));
+    assert!(!super::travel_control_enabled(false, false, false));
 }
 
 #[test]

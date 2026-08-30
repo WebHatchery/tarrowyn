@@ -291,6 +291,7 @@ impl Game {
                     travel_label,
                     can_travel,
                     can_recover_travel,
+                    travel_pending: client.travel_pending(),
                     ui: &virtual_ui,
                 })
             }
@@ -370,6 +371,7 @@ impl Game {
                     travel_label: "Travel",
                     can_travel: false,
                     can_recover_travel: false,
+                    travel_pending: false,
                     ui: &virtual_ui,
                 })
             }

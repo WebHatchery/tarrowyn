@@ -1912,6 +1912,14 @@ Windows/WebGL builds, packaging, Preview deployment, and catalog sync. No full
 workspace gate was repeated because this was a bounded account-feedback
 correction, and no new external or deferred work was opened.
 
+Travel Start, Interrupt, and Recover controls now close while a travel command
+is queued or in flight, preventing duplicate journey mutations while the
+regional projection catches up. The focused travel filter passes, client
+clippy, standards, and the Rust file-size check pass, and `publish.ps1` passes
+Windows/WebGL builds, packaging, Preview deployment, and catalog sync. No full
+workspace gate was repeated because this was a bounded travel-control
+correction, and no new external or deferred work was opened.
+
 Route Repair, Escort road, and Improve road controls now close while a route
 logistics command is queued or in flight, preventing duplicate work orders
 before the authoritative route projection catches up. The focused route filter

@@ -92,5 +92,6 @@ pub struct UiContext<'a> {
     pub travel_label: &'a str,
     pub can_travel: bool,
     pub can_recover_travel: bool,
+    pub travel_pending: bool,
     pub ui: &'a VirtualUi,
 }

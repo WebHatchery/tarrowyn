@@ -72,6 +72,10 @@ impl Phase4Client {
         self.regional.route_command_pending()
     }
 
+    pub(crate) fn travel_command_pending(&self) -> bool {
+        self.regional.travel_command_pending()
+    }
+
     pub(crate) fn regional_inspection(&self) -> String {
         self.regional.inspection()
     }

@@ -351,13 +351,13 @@ pub(super) fn draw_sidebar(
             (
                 "travel",
                 ctx.travel_label,
-                travel_control_enabled(ctx.can_travel, ctx.knocked_out),
+                travel_control_enabled(ctx.can_travel, ctx.knocked_out, ctx.travel_pending),
                 ButtonTone::Primary,
             ),
             (
                 "recover-travel",
                 "Recover",
-                travel_control_enabled(ctx.can_recover_travel, ctx.knocked_out),
+                travel_control_enabled(ctx.can_recover_travel, ctx.knocked_out, ctx.travel_pending),
                 ButtonTone::Primary,
             ),
             (
@@ -516,8 +516,8 @@ pub(super) fn draw_sidebar(
     );
 }
 
-fn travel_control_enabled(available: bool, knocked_out: bool) -> bool {
-    available && !knocked_out
+fn travel_control_enabled(available: bool, knocked_out: bool, travel_pending: bool) -> bool {
+    available && !knocked_out && !travel_pending
 }
 
 fn recovery_control_enabled(knocked_out: bool, recovery_pending: bool) -> bool {

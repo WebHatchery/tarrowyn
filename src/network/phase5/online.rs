@@ -37,6 +37,10 @@ impl OnlineClient {
         self.phase4.route_command_pending()
     }
 
+    pub(crate) fn travel_pending(&self) -> bool {
+        self.phase4.travel_command_pending()
+    }
+
     pub(crate) fn phase5_inspection(&self) -> String {
         self.phase4.regional_inspection()
     }
