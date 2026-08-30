@@ -2,9 +2,63 @@ use super::super::WorldRepository;
 use crate::ServerConfig;
 use tarrowyn_protocol::{
     ClaimLifecycleAction, ClaimLifecycleRequest, GuestSessionRequest, MarketOrderAction,
-    MarketOrderRequest, ProfessionAction, ProfessionKind, ProfessionRequest, TravelAction,
-    TravelRequest,
+    MarketOrderRequest, ModerationReportRequest, ProfessionAction, ProfessionKind,
+    ProfessionRequest, TravelAction, TravelRequest,
 };
+
+#[test]
+fn guest_reset_keeps_moderation_replays_for_identity_prefix_collisions() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let reset_guest = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("reset-owner".to_owned()),
+            reset: false,
+        })
+        .unwrap()
+        .data;
+    let retained_reporter = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("reset-owner:observer".to_owned()),
+            reset: false,
+        })
+        .unwrap()
+        .data;
+    let original = repository
+        .moderation_report(
+            &retained_reporter.account_token,
+            ModerationReportRequest {
+                request_id: "reset-retained-moderation".to_owned(),
+                target_account_id: None,
+                message_id: None,
+                category: "harassment".to_owned(),
+                note: "The observer report must survive a guest reset.".to_owned(),
+            },
+        )
+        .unwrap()
+        .data;
+
+    repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some(reset_guest.client_key),
+            reset: true,
+        })
+        .expect("guest reset");
+
+    let replayed = repository
+        .moderation_report(
+            &retained_reporter.account_token,
+            ModerationReportRequest {
+                request_id: "reset-retained-moderation".to_owned(),
+                target_account_id: None,
+                message_id: None,
+                category: "harassment".to_owned(),
+                note: "The observer report must survive a guest reset.".to_owned(),
+            },
+        )
+        .expect("retained moderation report should replay")
+        .data;
+    assert_eq!(replayed, original);
+}
 
 #[test]
 fn guest_reset_replaces_private_state_and_releases_world_ownership() {

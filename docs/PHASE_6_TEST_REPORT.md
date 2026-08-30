@@ -783,3 +783,10 @@ idempotent report response. The focused account-deletion regression covers that
 identity boundary; server clippy, size, diff, formatting, and publisher checks
 are the validation scope for this Phase 6 privacy-maintenance slice. No new
 external or deferred work was opened.
+
+Development-guest reset now applies the same exact moderation replay-key
+cleanup as production account deletion, so an identity-prefix collision cannot
+discard another player's idempotent report response. The focused reset
+regression covers that privacy boundary; server clippy, size, diff, formatting,
+and publisher checks are the validation scope for this Phase 6 maintenance
+slice. No new external or deferred work was opened.

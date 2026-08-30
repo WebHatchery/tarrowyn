@@ -59,10 +59,9 @@ pub(super) fn reset_guest(state: &mut RepositoryState, identity_key: &str) {
     state.phase6.audits.retain(|record| {
         record.actor_account_id != old_account_id && record.target != old_account_id
     });
-    state
-        .phase6
-        .moderation_results
-        .retain(|key, _| !key.contains(&format!(":{identity_key}:")));
+    state.phase6.moderation_results.retain(|key, response| {
+        key != &format!("moderation:{identity_key}:{}", response.request_id)
+    });
     state
         .phase6
         .moderation_last_report_ticks
