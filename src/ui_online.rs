@@ -336,7 +336,12 @@ pub(super) fn draw_sidebar(
                 claim_control_enabled(ctx.can_transfer_claim, ctx.claim_pending),
                 ButtonTone::Secondary,
             ),
-            ("order", "Order", true, ButtonTone::Secondary),
+            (
+                "order",
+                "Order",
+                order_control_enabled(ctx.crafting.is_none(), ctx.order_pending),
+                ButtonTone::Secondary,
+            ),
             (
                 "tax-rate",
                 "Tax",
@@ -618,6 +623,10 @@ fn skill_control_enabled(available: bool, skill_pending: bool) -> bool {
 
 fn knowledge_control_enabled(knowledge_pending: bool) -> bool {
     !knowledge_pending
+}
+
+fn order_control_enabled(available: bool, order_pending: bool) -> bool {
+    available && !order_pending
 }
 
 fn combat_control_enabled(available: bool, combat_pending: bool) -> bool {

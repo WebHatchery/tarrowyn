@@ -411,6 +411,13 @@ fn knowledge_controls_wait_for_the_previous_archive_command() {
 }
 
 #[test]
+fn order_controls_wait_for_the_previous_service_command() {
+    assert!(!super::order_control_enabled(true, true));
+    assert!(!super::order_control_enabled(false, false));
+    assert!(super::order_control_enabled(true, false));
+}
+
+#[test]
 fn combat_controls_wait_for_the_previous_encounter_command() {
     assert!(!super::combat_control_enabled(true, true));
     assert!(super::combat_control_enabled(true, false));

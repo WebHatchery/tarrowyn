@@ -149,6 +149,10 @@ impl OnlineClient {
         self.phase4.knowledge_command_pending()
     }
 
+    pub(crate) fn order_pending(&self) -> bool {
+        self.phase4.order_command_pending() || self.phase4.crafting_view().is_some()
+    }
+
     pub(crate) fn combat_pending(&self) -> bool {
         self.phase4.combat_command_pending()
     }

@@ -132,6 +132,7 @@ impl Phase4Client {
         if ((id == "town-hall" || id == "tax-rate") && self.governance_command_pending())
             || (id == "registry" && self.claim_command_pending())
             || (id == "knowledge" && self.knowledge_command_pending())
+            || (id == "order" && self.order_command_pending())
             || (id == "practice" && self.skill_command_pending())
             || (matches!(
                 id,
@@ -196,6 +197,16 @@ impl Phase4Client {
                 .commands
                 .iter()
                 .any(|command| matches!(command, Phase4Command::Knowledge(_)))
+    }
+
+    pub(super) fn order_command_pending(&self) -> bool {
+        self.in_flight_command
+            .as_ref()
+            .is_some_and(|command| matches!(command, Phase4Command::Profession(_)))
+            || self
+                .commands
+                .iter()
+                .any(|command| matches!(command, Phase4Command::Profession(_)))
     }
 
     pub(super) fn combat_command_pending(&self) -> bool {
@@ -296,7 +307,7 @@ impl Phase4Client {
     }
 
     fn queue_order(&mut self, request_id: String) {
-        if self.crafting.is_some() {
+        if self.crafting.is_some() || self.order_command_pending() {
             return;
         }
         let own = self.own_account_id.as_deref();

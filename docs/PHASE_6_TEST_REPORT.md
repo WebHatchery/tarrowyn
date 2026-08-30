@@ -2295,3 +2295,13 @@ check pass, and `publish.ps1` passes Windows/WebGL builds, packaging, Preview
 deployment, and catalog sync. No full workspace gate was repeated because this
 was a bounded knowledge-control correction, and no new external or deferred
 work was opened.
+
+The Order control now closes while a Profession command is queued or in flight,
+and also closes while its timing challenge is active, preventing duplicate
+service-order requests from a stale professions ledger or a live crafting
+interaction. The focused order-control filter passes two related tests; client
+formatting, clippy, standards, and the Rust file-size check pass, and
+`publish.ps1` passes Windows/WebGL builds, packaging, Preview deployment, and
+catalog sync. No full workspace gate was repeated because this was a bounded
+service-order control correction, and no new external or deferred work was
+opened.
