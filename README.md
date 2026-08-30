@@ -146,6 +146,11 @@ cargo clippy --workspace --all-targets --all-features -- -D warnings
 .\publish.ps1
 ```
 
+The command list above is the full release gate for a major milestone or a
+change that crosses subsystem boundaries. For focused maintenance, run only
+the smallest changed-subsystem test and matching package clippy, plus
+formatting, diff, size, and publisher checks when runtime files changed.
+
 The Phase 5 and Phase 6 design decisions, playthrough, test report, operator
 runbook, and production-readiness review are recorded in `docs/`. The current
 release candidate retains JSON as the deterministic default and keeps the
