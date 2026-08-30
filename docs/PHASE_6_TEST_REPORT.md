@@ -808,6 +808,19 @@ regression covers that replay boundary; server clippy, size, diff, and publisher
 checks are the validation scope for this Phase 6 identity-maintenance slice. No
 new external or deferred work was opened.
 
+Mutation dispatch now treats the queue boundary symmetrically: an in-flight
+Phase 4 or regional command prevents later general, trade, or frontier
+requests from starting, while older queued work retains priority and can still
+be dispatched first. The focused coordinator filters pass three related tests
+(`queued_general_mutation_blocks_phase_four_dispatch_until_its_turn`,
+`queued_frontier_mutation_blocks_phase_four_dispatch_until_its_turn`, and
+`in_flight_phase_four_mutation_blocks_later_general_and_frontier_dispatch`);
+client formatting, clippy, standards, and the Rust file-size check pass, and
+`publish.ps1` passes Windows/WebGL builds, packaging, Preview deployment, and
+catalog sync. No full workspace gate was repeated because this was a bounded
+cross-phase dispatch-order correction, and no new external or deferred work was
+opened.
+
 Queued frontier commands now count at the Phase 4 mutation boundary instead of
 being mistaken for an idle frontier because only the in-flight request was
 checked. The focused

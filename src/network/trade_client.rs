@@ -232,6 +232,12 @@ impl OnlineClient {
         if self.pending_trades.is_none() {
             self.pending_trades = Some(self.api.get("/v1/trades"));
         }
+        if self.phase4.mutation_in_flight()
+            || self.frontier.command_in_flight()
+            || self.general_mutation_pending()
+        {
+            return;
+        }
         if self.pending_trade.is_none() {
             if let Some(request) = self.trade_queue.pop_front() {
                 self.pending_trade_action = Some(request.action);

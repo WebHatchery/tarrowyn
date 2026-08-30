@@ -655,6 +655,12 @@ impl Phase4Client {
         summary::render(self)
     }
 
+    pub(super) fn mutation_in_flight(&self) -> bool {
+        self.pending_command.is_some()
+            || self.in_flight_command.is_some()
+            || self.regional.command_in_flight()
+    }
+
     #[cfg(test)]
     pub(super) fn command_request_pending_for_test(&self) -> bool {
         self.pending_command.is_some()

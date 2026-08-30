@@ -407,13 +407,8 @@ impl OnlineClient {
                 .map(|account| account.account_id.as_str()),
         );
         let other_mutation_pending = self.frontier.has_pending_command()
-            || self.pending_movement.is_some()
-            || self.pending_chat.is_some()
-            || self.pending_farming.is_some()
+            || self.general_mutation_pending()
             || self.pending_trade.is_some()
-            || !self.movement_queue.is_empty()
-            || !self.chat_queue.is_empty()
-            || !self.farming_queue.is_empty()
             || !self.trade_queue.is_empty();
         self.phase4.update(
             dt,
@@ -437,11 +432,16 @@ impl OnlineClient {
         }
         self.dispatch_requests();
         self.dispatch_trade_requests();
+        let frontier_another_mutation_pending = self.phase4.mutation_in_flight()
+            || self.general_mutation_pending()
+            || self.pending_trade.is_some()
+            || !self.trade_queue.is_empty();
         self.frontier.dispatch(
             &mut self.api,
             self.state == ConnectionState::Online,
             self.projection.cursor,
             self.phase4.auth_refresh_pending(),
+            frontier_another_mutation_pending,
         );
         maintenance::restore_status(self);
         notices
@@ -688,6 +688,15 @@ impl OnlineClient {
         let id = format!("{prefix}-{}", self.next_request_id);
         self.next_request_id = self.next_request_id.saturating_add(1);
         id
+    }
+
+    fn general_mutation_pending(&self) -> bool {
+        self.pending_movement.is_some()
+            || self.pending_chat.is_some()
+            || self.pending_farming.is_some()
+            || !self.movement_queue.is_empty()
+            || !self.chat_queue.is_empty()
+            || !self.farming_queue.is_empty()
     }
 }
 

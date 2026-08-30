@@ -115,6 +115,12 @@ impl Phase5Client {
 
     pub(super) fn command_pending(&self) -> bool {
         self.pending_command.is_some()
+            || self.in_flight_command.is_some()
+            || !self.commands.is_empty()
+    }
+
+    pub(super) fn command_in_flight(&self) -> bool {
+        self.pending_command.is_some() || self.in_flight_command.is_some()
     }
 
     pub(super) fn dispatch_blocked(&self) -> bool {

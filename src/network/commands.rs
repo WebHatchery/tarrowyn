@@ -257,6 +257,12 @@ impl OnlineClient {
                     .get(&format!("/v1/events?since={}", self.projection.cursor)),
             );
         }
+        if self.phase4.mutation_in_flight()
+            || self.frontier.command_in_flight()
+            || self.pending_trade.is_some()
+        {
+            return;
+        }
         if self.pending_movement.is_none() {
             if let Some(request) = self.movement_queue.pop_front() {
                 self.pending_movement = Some(PendingMovement {

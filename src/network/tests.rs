@@ -272,7 +272,9 @@ fn authenticated_reads_wait_for_a_same_frame_refresh_boundary() {
 
     client.dispatch_requests();
     client.dispatch_trade_requests();
-    client.frontier.dispatch(&mut client.api, true, 0, true);
+    client
+        .frontier
+        .dispatch(&mut client.api, true, 0, true, true);
 
     assert!(client.pending_state.is_none());
     assert!(client.pending_events.is_none());
@@ -314,6 +316,29 @@ fn queued_frontier_mutation_blocks_phase_four_dispatch_until_its_turn() {
     assert!(client.frontier.has_pending_command());
     assert!(!client.phase4.command_request_pending_for_test());
     assert!(client.phase4.knowledge_command_pending());
+}
+
+#[test]
+fn in_flight_phase_four_mutation_blocks_later_general_and_frontier_dispatch() {
+    let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
+    client.state = ConnectionState::Online;
+    client.queue_knowledge_cycle(None);
+    client.update(0.0);
+    assert!(client.phase4.command_request_pending_for_test());
+
+    client.movement_queue.push_back(MovementIntent {
+        request_id: "movement-after-phase-four".to_owned(),
+        dx: 1,
+        dy: 0,
+    });
+    client.queue_contract(tarrowyn_protocol::ContractAction::Accept);
+
+    client.update(0.0);
+
+    assert!(client.pending_movement.is_none());
+    assert_eq!(client.movement_queue.len(), 1);
+    assert!(client.frontier.pending_command.is_none());
+    assert!(client.frontier.has_pending_command());
 }
 
 #[test]
