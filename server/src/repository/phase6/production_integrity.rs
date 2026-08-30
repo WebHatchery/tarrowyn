@@ -213,8 +213,9 @@ fn replay_caches_ok(state: &RepositoryState, identity_accounts: &HashSet<&str>) 
         phase6
             .auth_revoke_guest_tokens
             .iter()
-            .all(|(_, identity_key)| {
-                bounded(identity_key, MAX_ACCOUNT_ID_CHARS)
+            .all(|(fingerprint, identity_key)| {
+                fingerprint_ok(fingerprint, true)
+                    && bounded(identity_key, MAX_ACCOUNT_ID_CHARS)
                     && state.identities.contains_key(identity_key)
             });
     let support_results_ok = phase6.request_results.iter().all(|(key, response)| {
@@ -302,8 +303,8 @@ fn support_response_ok(response: &SupportRepairResponse) -> bool {
 }
 
 fn auth_session_ok(session: &AuthSession) -> bool {
-    bounded(&session.account_token, MAX_TOKEN_CHARS)
-        && bounded(&session.refresh_token, MAX_TOKEN_CHARS)
+    production_token_ok(&session.account_token, "prod-session-")
+        && production_token_ok(&session.refresh_token, "prod-refresh-")
         && session.expires_in_seconds > 0
         && session.expires_at_tick > 0
 }
@@ -316,7 +317,14 @@ fn refresh_cache_key_matches(key: &str, request_id: &str) -> bool {
     let Some(fingerprint) = key.strip_prefix(&format!("{request_id}:")) else {
         return false;
     };
-    fingerprint.len() == 16 && u64::from_str_radix(fingerprint, 16).is_ok()
+    fingerprint_ok(fingerprint, false)
+}
+
+fn fingerprint_ok(value: &str, allow_decimal_legacy: bool) -> bool {
+    bounded(value, MAX_CACHE_KEY_CHARS)
+        && ((value.len() == 64 && value.bytes().all(|byte| byte.is_ascii_hexdigit()))
+            || (value.len() == 16 && value.bytes().all(|byte| byte.is_ascii_hexdigit()))
+            || (allow_decimal_legacy && value.parse::<u64>().is_ok()))
 }
 
 fn cached_session_matches_account(

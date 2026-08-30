@@ -1379,3 +1379,13 @@ credential regression passes (1), with server-package clippy, formatting, and
 diff checks clean. No full workspace or publisher gate was repeated because
 this is a narrow integrity check paired with the preceding credential
 hardening; no new external or deferred work was opened.
+
+Auth refresh and revoked-guest replay fingerprints now use stable SHA-256
+hexadecimal keys instead of the previous non-cryptographic 64-bit fingerprint;
+legacy persisted replay-key shapes remain readable during expiry and retention.
+Cached auth responses are held to the same production credential-shape check as
+live sessions. The focused production-integrity, replay-cache, persistence,
+and session filters pass (16 tests total), with server-package clippy,
+formatting, and diff checks clean. No full workspace or publisher gate was
+repeated because this is an isolated replay-integrity hardening change; no new
+external or deferred work was opened.

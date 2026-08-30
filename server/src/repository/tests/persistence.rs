@@ -163,7 +163,7 @@ fn replay_caches_are_trimmed_on_the_world_tick() {
             state
                 .phase6
                 .auth_revoke_guest_tokens
-                .insert(index, "replay-cache-limit".to_owned());
+                .insert(index.to_string(), "replay-cache-limit".to_owned());
         }
     }
 

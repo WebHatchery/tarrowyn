@@ -127,3 +127,49 @@ fn malformed_production_credentials_degrade_readiness() {
     assert!(!health.integrity_ok);
     assert!(!health.ready);
 }
+
+#[test]
+fn malformed_cached_production_credentials_degrade_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let guest = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("cached-session-credential-shape-integrity".to_owned()),
+            reset: false,
+        })
+        .expect("guest session")
+        .data;
+    let linked = repository
+        .auth_link(
+            &guest.account_token,
+            AuthLinkRequest {
+                request_id: "cached-session-credential-shape-link".to_owned(),
+                provider: "webhatchery-identity-oidc".to_owned(),
+                subject: "cached-session-credential-shape-subject".to_owned(),
+                display_name: None,
+            },
+        )
+        .expect("linked session")
+        .data;
+    repository
+        .auth_refresh(AuthRefreshRequest {
+            request_id: "cached-session-credential-shape-refresh".to_owned(),
+            refresh_token: linked.session.refresh_token,
+        })
+        .expect("refreshed session");
+
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state
+            .phase6
+            .auth_refresh_results
+            .values_mut()
+            .next()
+            .expect("refresh replay")
+            .session
+            .account_token = "prod-session-not-hex".to_owned();
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.integrity_ok);
+    assert!(!health.ready);
+}

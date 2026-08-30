@@ -1624,6 +1624,7 @@ dependencies = [
  "mysql",
  "serde",
  "serde_json",
+ "sha2",
  "tarrowyn-protocol",
  "tiny_http",
  "windows-sys 0.52.0",

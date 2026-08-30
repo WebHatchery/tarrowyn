@@ -116,7 +116,7 @@ pub(super) struct Phase6State {
     #[serde(default)]
     pub(super) auth_revoke_results: HashMap<String, AuthRevokeResponse>,
     #[serde(default)]
-    pub(super) auth_revoke_guest_tokens: HashMap<u64, String>,
+    pub(super) auth_revoke_guest_tokens: HashMap<String, String>,
     pub(super) audits: VecDeque<AuditRecord>,
     pub(super) reports: HashMap<String, ModerationReportResponse>,
     #[serde(default)]
@@ -370,7 +370,7 @@ impl WorldRepository {
             "The refresh token must be bounded and contain no control characters.",
         )?;
         let cache_key = format!(
-            "{}:{:016x}",
+            "{}:{}",
             request.request_id,
             stable_fingerprint(&refresh_token)
         );

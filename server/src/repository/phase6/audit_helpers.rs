@@ -1,4 +1,5 @@
 use super::*;
+use sha2::{Digest, Sha256};
 
 const SESSION_TOKEN_BYTES: usize = 32;
 
@@ -20,13 +21,14 @@ pub fn audit_command(
     );
 }
 
-pub fn stable_fingerprint(value: &str) -> u64 {
-    let mut hash = 14_695_981_039_346_656_037_u64;
-    for byte in value.as_bytes() {
-        hash ^= u64::from(*byte);
-        hash = hash.wrapping_mul(1_099_511_628_211_u64);
+pub fn stable_fingerprint(value: &str) -> String {
+    let digest = Sha256::digest(value.as_bytes());
+    let mut fingerprint = String::with_capacity(digest.len() * 2);
+    for byte in digest {
+        fingerprint.push(HEX[(byte >> 4) as usize] as char);
+        fingerprint.push(HEX[(byte & 0x0f) as usize] as char);
     }
-    hash
+    fingerprint
 }
 
 pub fn new_session_tokens() -> Result<(String, String), ()> {
@@ -41,7 +43,6 @@ pub fn new_session_tokens() -> Result<(String, String), ()> {
 }
 
 fn hex_token(bytes: &[u8; SESSION_TOKEN_BYTES]) -> String {
-    const HEX: &[u8; 16] = b"0123456789abcdef";
     let mut token = String::with_capacity(bytes.len() * 2);
     for byte in bytes {
         token.push(HEX[(byte >> 4) as usize] as char);
@@ -49,6 +50,8 @@ fn hex_token(bytes: &[u8; SESSION_TOKEN_BYTES]) -> String {
     }
     token
 }
+
+const HEX: &[u8; 16] = b"0123456789abcdef";
 
 pub fn issue_session(
     state: &mut RepositoryState,
