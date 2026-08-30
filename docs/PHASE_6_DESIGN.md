@@ -96,9 +96,11 @@ response lost after server commit does not strand the character between guest
 and production identity. Automatic production-session refreshes use the same
 bounded exact-request retry boundary after transient transport failures, while
 an explicit expiry or revocation response still clears the session and returns
-the player to visible sign-in recovery. Mutation dispatch waits for an in-flight
-refresh to finish across movement, chat, farming, trade, regional, profession,
-and frontier commands so a token rotation cannot invalidate a newly sent command.
+the player to visible sign-in recovery. Mutation dispatch and authenticated
+projection reads wait for an in-flight refresh to finish across movement,
+chat, farming, trade, regional, profession, and frontier surfaces so a token
+rotation cannot invalidate a newly sent request or leave a same-frame
+projection using the old bearer token.
 Those command queues preserve their exact request ID and retry a transport failure
 within the same bounded limit, allowing the server's durable replay result to
 confirm a committed action.
