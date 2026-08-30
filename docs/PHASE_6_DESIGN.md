@@ -9,6 +9,9 @@ credential. A guest fixture may be
 linked to that subject once; the character ID remains the durable character
 boundary. Production access tokens are opaque, short-lived, rotated on refresh,
 and revocable. Refresh tokens are stored only as server-side session records.
+The unauthenticated development-guest endpoint admits at most 32 attempts per
+source in a 60-second HTTP window, with a bounded source table; deployment
+proxies must add their own rate and identity controls for public traffic.
 Linking a guest migrates its persisted account references across trades, claims,
 orders, frontier parties, market records, retained history, audits, and
 account- or identity-keyed replay payloads before the production session is

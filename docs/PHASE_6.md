@@ -29,6 +29,12 @@ gates.
 - Define privacy and data-retention behaviour for account, chat, payment-free
   gameplay, and settlement-history data before public access.
 
+The unauthenticated development-guest entry point now has a bounded HTTP
+admission window of 32 attempts per source over 60 seconds, preventing an
+anonymous burst of new client keys from growing the durable fixture without
+blocking the supported 24-client local target. Production deployment should
+still apply its own proxy-level limits and identity controls.
+
 ### Production persistence and recovery
 
 - Move the repository behind the selected MySQL database while preserving

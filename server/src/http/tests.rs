@@ -93,3 +93,31 @@ fn api_responses_disable_intermediary_caching() {
         header.field.equiv("Cache-Control") && header.value.as_str() == "no-store"
     }));
 }
+
+#[test]
+fn guest_session_rate_limiter_bounds_a_source_window() {
+    let mut limiter = GuestSessionRateLimiter::default();
+    let source = "192.0.2.10".parse().expect("test source address");
+    let other_source = "192.0.2.11".parse().expect("test source address");
+    let now = Instant::now();
+
+    for _ in 0..GUEST_SESSION_BURST_LIMIT {
+        assert!(limiter.allow_ip(Some(source), now));
+    }
+    assert!(!limiter.allow_ip(Some(source), now));
+    assert!(limiter.allow_ip(Some(other_source), now));
+    assert!(limiter.allow_ip(
+        Some(source),
+        now + GUEST_SESSION_RATE_WINDOW + Duration::from_millis(1)
+    ));
+}
+
+#[test]
+fn guest_session_rate_limiter_does_not_block_unaddressed_fixture_clients() {
+    let mut limiter = GuestSessionRateLimiter::default();
+    let now = Instant::now();
+
+    for _ in 0..(GUEST_SESSION_BURST_LIMIT + 1) {
+        assert!(limiter.allow_ip(None, now));
+    }
+}

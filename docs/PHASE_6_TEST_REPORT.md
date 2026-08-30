@@ -1326,3 +1326,12 @@ The Phase 4 runbook and acceptance harness now use the server's real-time
 stale tick-based lease variable that the server ignores. The affected live
 acceptance passes, with no runtime source changes and no full workspace or
 publisher validation repeated. No new external or deferred work was opened.
+
+Guest-session admission now applies a bounded 32-attempt, 60-second per-source
+HTTP window before creating another durable development identity. The focused
+HTTP limiter regressions pass (2), server formatting and package clippy remain
+clean, and the 24-client target remains below the local window. The publisher
+check passes its Windows/WebGL builds, packaging, Preview deployment, and
+catalog sync; the existing `net2 v0.2.39` future-incompatibility warning is
+non-blocking. No full workspace gate was repeated and no new external or
+deferred work was opened.

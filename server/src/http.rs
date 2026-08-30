@@ -1,7 +1,9 @@
 use crate::repository::{RepositoryError, WorldRepository};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
+use std::collections::HashMap;
 use std::io::Read;
+use std::net::IpAddr;
 use std::sync::Arc;
 use std::thread;
 use std::time::{Duration, Instant};
@@ -18,6 +20,62 @@ use tiny_http::{Header, Method, Request, Response, Server, StatusCode};
 
 type JsonResponse = Response<std::io::Cursor<Vec<u8>>>;
 const MAX_REQUEST_BODY_BYTES: usize = 64 * 1024;
+const GUEST_SESSION_RATE_WINDOW: Duration = Duration::from_secs(60);
+const GUEST_SESSION_BURST_LIMIT: u16 = 32;
+const MAX_TRACKED_GUEST_SOURCES: usize = 4096;
+
+#[derive(Default)]
+struct GuestSessionRateLimiter {
+    windows: HashMap<IpAddr, GuestSessionRateWindow>,
+}
+
+struct GuestSessionRateWindow {
+    started_at: Instant,
+    attempts: u16,
+}
+
+impl GuestSessionRateLimiter {
+    fn allow(&mut self, request: &Request) -> bool {
+        self.allow_ip(
+            request.remote_addr().map(|address| address.ip()),
+            Instant::now(),
+        )
+    }
+
+    fn allow_ip(&mut self, source: Option<IpAddr>, now: Instant) -> bool {
+        let Some(source) = source else {
+            return true;
+        };
+        self.windows.retain(|_, window| {
+            now.checked_duration_since(window.started_at)
+                .unwrap_or_default()
+                < GUEST_SESSION_RATE_WINDOW
+        });
+        if !self.windows.contains_key(&source) && self.windows.len() >= MAX_TRACKED_GUEST_SOURCES {
+            return false;
+        }
+        let window = self
+            .windows
+            .entry(source)
+            .or_insert(GuestSessionRateWindow {
+                started_at: now,
+                attempts: 0,
+            });
+        if now
+            .checked_duration_since(window.started_at)
+            .unwrap_or_default()
+            >= GUEST_SESSION_RATE_WINDOW
+        {
+            window.started_at = now;
+            window.attempts = 0;
+        }
+        if window.attempts >= GUEST_SESSION_BURST_LIMIT {
+            return false;
+        }
+        window.attempts += 1;
+        true
+    }
+}
 
 #[cfg(test)]
 mod tests;
@@ -46,8 +104,9 @@ pub fn serve(config: crate::config::ServerConfig) -> Result<(), String> {
         PROTOCOL_VERSION,
         config.tick_interval.as_millis()
     );
+    let mut guest_session_limiter = GuestSessionRateLimiter::default();
     for request in server.incoming_requests() {
-        handle_request(request, Arc::clone(&repository));
+        handle_request(request, Arc::clone(&repository), &mut guest_session_limiter);
     }
     Ok(())
 }
@@ -68,7 +127,11 @@ fn next_tick_deadline(deadline: Instant, now: Instant, interval: Duration) -> In
         .unwrap_or_else(|| now.checked_add(interval).unwrap_or(now))
 }
 
-fn handle_request(mut request: Request, repository: Arc<WorldRepository>) {
+fn handle_request(
+    mut request: Request,
+    repository: Arc<WorldRepository>,
+    guest_session_limiter: &mut GuestSessionRateLimiter,
+) {
     if request.method() == &Method::Options {
         let _ = request.respond(with_cors(Response::empty(StatusCode(204))));
         return;
@@ -79,19 +142,33 @@ fn handle_request(mut request: Request, repository: Arc<WorldRepository>) {
     let result = match (request.method(), path.as_str()) {
         (Method::Get, "/health") => json_response(StatusCode(200), repository.health()),
         (Method::Get, "/v1/ops/health") => json_response(StatusCode(200), repository.ops_health()),
-        (Method::Post, "/v1/session/guest") => match read_json_or_default(&mut request) {
-            Ok(body) => match repository.guest_session(body) {
-                Ok(response) => json_response(StatusCode(200), response),
-                Err(error) => json_response(
-                    StatusCode(error.status),
-                    ApiErrorResponse {
-                        meta: repository.health().meta,
-                        error: error.error,
+        (Method::Post, "/v1/session/guest") => {
+            if !guest_session_limiter.allow(&request) {
+                error_response(
+                    429,
+                    "rate_limited",
+                    "Too many guest-session attempts from this source; try again shortly."
+                        .to_owned(),
+                    repository.health().meta,
+                )
+            } else {
+                match read_json_or_default(&mut request) {
+                    Ok(body) => match repository.guest_session(body) {
+                        Ok(response) => json_response(StatusCode(200), response),
+                        Err(error) => json_response(
+                            StatusCode(error.status),
+                            ApiErrorResponse {
+                                meta: repository.health().meta,
+                                error: error.error,
+                            },
+                        ),
                     },
-                ),
-            },
-            Err(error) => error_response(400, "invalid_json", error, repository.health().meta),
-        },
+                    Err(error) => {
+                        error_response(400, "invalid_json", error, repository.health().meta)
+                    }
+                }
+            }
+        }
         (Method::Post, "/v1/auth/link") => match read_json::<AuthLinkRequest>(&mut request) {
             Ok(body) => authenticated(&request, &repository, |token| {
                 repository.auth_link(token, body)
