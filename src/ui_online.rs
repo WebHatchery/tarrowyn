@@ -49,7 +49,13 @@ pub(super) fn draw_sidebar(
         top + 57.0,
         TextStyle::new(12.0, CREAM).params(),
     );
-    draw_move_pad(content.x + 238.0, top + 47.0, mouse, actions);
+    draw_move_pad(
+        content.x + 238.0,
+        top + 47.0,
+        mouse,
+        actions,
+        !ctx.knocked_out,
+    );
 
     draw_combat_status(ctx, content, top);
 

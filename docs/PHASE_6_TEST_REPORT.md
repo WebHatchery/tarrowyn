@@ -810,6 +810,15 @@ clippy, size, diff, formatting, and publisher checks are the validation scope
 for this Phase 6 identity-maintenance slice. No new external or deferred work
 was opened.
 
+The online map tap and directional pad now stop emitting movement while the
+character is knocked out, and the map tooltip points to the visible recovery
+prompts instead. The focused online UI tests (4 passed), client clippy, direct
+formatting, diff, and Rust file-size checks pass. The publisher check passed
+the Windows and WebGL release builds, packaging, Preview deployment, and
+catalog sync. No full workspace gate was rerun because this is a bounded
+client recovery-affordance slice. No new external or deferred work was
+opened.
+
 Account-link migration and account/reset cleanup now compare complete Phase 4
 and support-repair replay keys against their cached response request IDs. This
 keeps a delimiter-like account boundary from moving or deleting a neighbouring

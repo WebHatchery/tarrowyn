@@ -39,7 +39,7 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
 
     draw_header(&ctx);
     let map_rect = draw_world_panel(&ctx, mouse);
-    if ctx.crafting.is_none() && is_mouse_button_released(MouseButton::Left) {
+    if ctx.crafting.is_none() && !ctx.knocked_out && is_mouse_button_released(MouseButton::Left) {
         if let Some(tile) = MapView::new(&ctx, map_rect).tile_at(mouse) {
             actions.push(UiAction::MoveTo(tile));
         }
@@ -154,7 +154,14 @@ fn draw_world_panel(ctx: &UiContext<'_>, mouse: Vec2) -> Rect {
     let map = Rect::new(panel.x + 18.0, panel.y + 61.0, panel.w - 36.0, 398.0);
     draw_map(ctx, map);
     if map.contains_point(mouse) {
-        draw_tooltip("Tap a walkable tile to take one step toward it.", mouse);
+        draw_tooltip(
+            if ctx.knocked_out {
+                "Choose a recovery prompt before walking."
+            } else {
+                "Tap a walkable tile to take one step toward it."
+            },
+            mouse,
+        );
     }
 
     draw_text_right(
@@ -232,7 +239,7 @@ fn draw_offline_sidebar(
         429.0,
         TextStyle::new(16.0, CREAM).params(),
     );
-    draw_move_pad(content.x + 77.0, 437.0, mouse, actions);
+    draw_move_pad(content.x + 77.0, 437.0, mouse, actions, true);
 
     let save_y = 535.0;
     let half = (content.w - 8.0) * 0.5;
@@ -329,14 +336,14 @@ fn draw_action_card(rect: Rect, action: &ActionDef, mouse: Vec2) -> bool {
     hovered && is_mouse_button_released(MouseButton::Left)
 }
 
-fn draw_move_pad(x: f32, y: f32, mouse: Vec2, actions: &mut Vec<UiAction>) {
+fn draw_move_pad(x: f32, y: f32, mouse: Vec2, actions: &mut Vec<UiAction>, enabled: bool) {
     let size = 28.0;
     let gap = 4.0;
     let button = |x: f32, y: f32, label: &str, action: &mut Vec<UiAction>| {
         if virtual_button(
             Rect::new(x, y, size, size),
             label,
-            true,
+            enabled,
             ButtonTone::Secondary,
             mouse,
         ) {
