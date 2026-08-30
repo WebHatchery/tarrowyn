@@ -3054,6 +3054,15 @@ and clippy. `git diff --check` and the Rust file-size scan pass. No publisher or
 full workspace gate was repeated because this was test-only organization
 maintenance, and no new external or deferred work was opened.
 
+The server's Phase 4 Wind Spark and Storm Magic scenarios now live in the
+dedicated `phase4/tests/magic.rs` child module, reducing the combat test root
+from 741 to 572 lines while keeping the magic rules together. The focused Storm
+Magic discovery and power regression passes, along with server-package
+formatting and strict clippy. `git diff --check` and the Rust file-size scan
+pass. No publisher or full workspace gate was repeated because this was
+test-only organization maintenance, and no new external or deferred work was
+opened.
+
 The Phase 4 combat queue and weapon-cycle cases now live in a dedicated
 `combat_actions` child module, reducing the root Phase 4 test file from 784 to
 739 lines while preserving the project Rust source-size rule. The focused
