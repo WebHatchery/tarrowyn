@@ -160,12 +160,13 @@ be present beside the teacher. The teacher opens a persisted lesson and the
 learner joins it through a second visible School action; an abandoned lesson
 expires after a bounded window. The active school ledger retains at most 128
 lessons and rejects another opening while every retained lesson is active. A
-root lesson starts one practice, while an
-advanced lesson grants only the discovery and leaves mastery and all personal
-requirements to the learner. The current client offers mastered roots through
-the visible School control and surfaces open lessons in the skill projection;
-the server remains the authority for future school membership, tuition, halls,
-and advanced lesson policy.
+root lesson starts one practice, while an advanced lesson grants only the
+discovery and leaves mastery and all personal requirements to the learner. The
+server accepts a mastered root or a discovered, directly teachable advanced
+skill from a teacher whose Teaching mastery reaches that skill's depth. The
+current client offers mastered roots through the visible School control and
+surfaces open lessons in the skill projection; the server remains the authority
+for future school membership, tuition, halls, and advanced lesson policy.
 
 Every depth-one catalogue entry also has a dependable first-practice path. A
 visible Practice control opens a touch chooser containing every available or

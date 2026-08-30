@@ -228,7 +228,7 @@ impl WorldRepository {
             return finish_skill_action(self, &mut state, cache, response);
         }
         let teacher_skills = &state.identities.get(&key).expect("identity exists").skills;
-        if mastery(teacher_skills, skill_id) < 5 {
+        if !teacher_can_teach(teacher_skills, &definition) {
             response.reason =
                 Some("Master the discipline before offering it as a lesson.".to_owned());
             return finish_skill_action(self, &mut state, cache, response);
@@ -419,7 +419,7 @@ impl WorldRepository {
             .get(&teacher_key)
             .expect("teacher identity exists")
             .skills;
-        if mastery(teacher_skills, &lesson.skill_id) < 5
+        if !teacher_can_teach(teacher_skills, &definition)
             || mastery(teacher_skills, "teaching") < definition.depth
         {
             response.reason =
@@ -685,6 +685,17 @@ fn mastery(ledger: &SkillLedger, skill_id: &str) -> u8 {
         0
     } else {
         (practice / 4 + 1).min(5) as u8
+    }
+}
+
+fn teacher_can_teach(ledger: &SkillLedger, definition: &SkillDefinition) -> bool {
+    if definition.depth == 1 {
+        mastery(ledger, &definition.id) >= 5
+    } else {
+        ledger
+            .known
+            .iter()
+            .any(|skill_id| skill_id == &definition.id)
     }
 }
 

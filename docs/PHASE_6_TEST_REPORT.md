@@ -3133,3 +3133,13 @@ the Rust file-size scan pass. The project `publish.ps1` Windows/WebGL build,
 packaging, Preview deployment, and catalog-sync checks pass. No full workspace
 gate was repeated because this was a bounded player incident-path correction,
 and no new external or deferred work was opened.
+
+Formal school lessons now accept a discovered, directly teachable advanced
+skill when the teacher has the required Teaching depth; the previous root-only
+mastery check made the catalogue's advanced teaching policy unreachable. The
+focused `repository::skills::tests::a_discovered_advanced_skill_can_be_taught_without_granting_mastery`
+regression passes, along with server-package formatting and strict clippy.
+`git diff --check` and the Rust file-size scan pass. The project `publish.ps1`
+Windows/WebGL build, packaging, Preview deployment, and catalog-sync checks
+pass. No full workspace gate was repeated because this was a bounded school
+lesson correction, and no new external or deferred work was opened.

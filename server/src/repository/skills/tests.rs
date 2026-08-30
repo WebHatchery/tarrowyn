@@ -351,3 +351,79 @@ fn a_nearby_master_can_teach_a_root_once() {
             .accepted
     );
 }
+
+#[test]
+fn a_discovered_advanced_skill_can_be_taught_without_granting_mastery() {
+    let repository = WorldRepository::new(ServerConfig {
+        backup_path: None,
+        ..ServerConfig::default()
+    });
+    let teacher = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("advanced-school-teacher".to_owned()),
+            reset: false,
+        })
+        .expect("guest session");
+    let learner = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("advanced-school-learner".to_owned()),
+            reset: false,
+        })
+        .expect("guest session");
+    {
+        let mut state = repository.state.lock().expect("state lock");
+        let teacher_skills = &mut state
+            .identities
+            .get_mut(&teacher.data.client_key)
+            .expect("teacher identity exists")
+            .skills;
+        teacher_skills.known.push("storm-magic".to_owned());
+        for _ in 0..4 {
+            record_practice(&mut state, &teacher.data.client_key, "teaching");
+        }
+    }
+
+    let lesson = repository
+        .begin_skill_lesson(
+            &teacher.data.account_token,
+            SkillRequest {
+                request_id: "advanced-school-lesson".to_owned(),
+                action: SkillAction::BeginLesson,
+                lesson_id: None,
+                skill_id: Some("storm-magic".to_owned()),
+                target_account_id: Some(learner.data.account_id.clone()),
+            },
+        )
+        .unwrap()
+        .data;
+    assert!(lesson.accepted);
+    let lesson_id = lesson
+        .lesson
+        .as_ref()
+        .expect("advanced lesson should be open")
+        .lesson_id
+        .clone();
+
+    let learner_join = repository
+        .complete_skill_lesson(
+            &learner.data.account_token,
+            SkillRequest {
+                request_id: "advanced-school-lesson-join".to_owned(),
+                action: SkillAction::CompleteLesson,
+                lesson_id: Some(lesson_id),
+                skill_id: Some("storm-magic".to_owned()),
+                target_account_id: Some(teacher.data.account_id.clone()),
+            },
+        )
+        .unwrap()
+        .data;
+    assert!(learner_join.accepted);
+    let storm_magic = learner_join
+        .skills
+        .skills
+        .iter()
+        .find(|skill| skill.skill_id == "storm-magic")
+        .expect("storm magic should remain in the catalogue");
+    assert_eq!(storm_magic.status, SkillStatus::Discovered);
+    assert_eq!(storm_magic.mastery, 0);
+}
