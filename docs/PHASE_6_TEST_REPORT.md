@@ -2431,3 +2431,12 @@ and `publish.ps1` Windows/WebGL build, packaging, Preview deployment, and
 catalog-sync checks pass. No full workspace gate was repeated because this was
 a bounded deletion idempotency correction, and no new external or deferred
 work was opened.
+
+Session revocation now counts only production session records that are not
+already revoked, so a refresh rotation followed by “revoke all” reports the
+number of credentials actually transitioned instead of counting the retired
+session again. The focused `repository::phase6::tests::session_integrity`
+filter passes six tests; formatting, diff, Rust file-size, and `publish.ps1`
+Windows/WebGL build, packaging, Preview deployment, and catalog-sync checks
+pass. No full workspace gate was repeated because this was a bounded session
+accounting correction, and no new external or deferred work was opened.

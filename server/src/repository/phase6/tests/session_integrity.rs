@@ -142,6 +142,51 @@ fn revocation_removes_refresh_replay_credentials() {
 }
 
 #[test]
+fn revocation_counts_only_sessions_it_revokes_after_refresh_rotation() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let guest = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("revoke-count-after-refresh".to_owned()),
+            reset: false,
+        })
+        .expect("guest session")
+        .data;
+    let linked = repository
+        .auth_link(
+            &guest.account_token,
+            AuthLinkRequest {
+                request_id: "revoke-count-link".to_owned(),
+                provider: "webhatchery-identity-oidc".to_owned(),
+                subject: "revoke-count-subject".to_owned(),
+                display_name: None,
+            },
+        )
+        .expect("linked session")
+        .data;
+    let refreshed = repository
+        .auth_refresh(AuthRefreshRequest {
+            request_id: "revoke-count-refresh".to_owned(),
+            refresh_token: linked.session.refresh_token,
+        })
+        .expect("refreshed session")
+        .data
+        .session;
+
+    let revoked = repository
+        .auth_revoke(
+            &refreshed.account_token,
+            AuthRevokeRequest {
+                request_id: "revoke-count-revoke".to_owned(),
+                revoke_all: true,
+            },
+        )
+        .expect("revoke session")
+        .data;
+
+    assert_eq!(revoked.revoked_sessions, 1);
+}
+
+#[test]
 fn malformed_production_credentials_degrade_readiness() {
     let repository = WorldRepository::new(ServerConfig::default());
     let guest = repository

@@ -507,7 +507,9 @@ impl WorldRepository {
             .sessions
             .iter()
             .filter(|(session_token, session)| {
-                session.account_id == account && (request.revoke_all || *session_token == token)
+                session.account_id == account
+                    && !session.revoked
+                    && (request.revoke_all || *session_token == token)
             })
             .map(|(session_token, _)| session_token.clone())
             .collect();
