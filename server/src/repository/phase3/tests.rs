@@ -642,3 +642,32 @@ fn state_advertises_configured_pioneer_requirements() {
     assert_eq!(snapshot.world.expedition_requirements.materials, 12);
     assert_eq!(snapshot.world.expedition_requirements.safety, 7);
 }
+
+#[test]
+fn threat_pressure_keeps_household_opportunity_score_in_its_valid_range() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state
+            .phase3
+            .households
+            .first_mut()
+            .expect("household")
+            .opportunity_score = 0;
+    }
+
+    repository.tick();
+
+    let state = repository.state.lock().expect("repository lock");
+    assert_eq!(
+        state
+            .phase3
+            .households
+            .first()
+            .expect("household")
+            .opportunity_score,
+        0
+    );
+    drop(state);
+    assert!(repository.ops_health().data.ready);
+}

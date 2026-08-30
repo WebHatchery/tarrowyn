@@ -47,21 +47,39 @@ try {
     $env:TARROWYN_STATE_PATH = $restorePath
     $env:TARROWYN_BACKUP_PATH = $restoreBackupPath
     $env:TARROWYN_BACKUP_INTERVAL_TICKS = "1"
+    $serverOutputPath = Join-Path $temporaryRoot "server.stdout.log"
+    $serverErrorPath = Join-Path $temporaryRoot "server.stderr.log"
     $server = Start-Process -FilePath "cargo.exe" `
         -ArgumentList @("run", "-p", "tarrowyn-server", "--quiet") `
         -WorkingDirectory $projectRoot `
         -WindowStyle Hidden `
+        -RedirectStandardOutput $serverOutputPath `
+        -RedirectStandardError $serverErrorPath `
         -PassThru
     $health = $null
-    for ($attempt = 0; $attempt -lt 40 -and $null -eq $health; $attempt++) {
+    # A cold cargo-run may need more than the normal HTTP startup window while
+    # it recompiles the restored server, especially after a release build.
+    for ($attempt = 0; $attempt -lt 120 -and $null -eq $health; $attempt++) {
         try {
             $health = Invoke-RestMethod -Method Get -Uri "http://$ServerAddress/v1/ops/health"
         } catch {
             Start-Sleep -Milliseconds 250
         }
     }
-    if ($null -eq $health -or -not $health.data.ready -or -not $health.data.integrity_ok) {
-        throw "Temporary restore server did not become ready."
+    if ($null -eq $health) {
+        $stdout = if (Test-Path -LiteralPath $serverOutputPath) {
+            $contents = Get-Content -Raw -LiteralPath $serverOutputPath
+            if ([string]::IsNullOrWhiteSpace($contents)) { "<empty stdout>" } else { $contents.Trim() }
+        } else { "<no stdout>" }
+        $stderr = if (Test-Path -LiteralPath $serverErrorPath) {
+            $contents = Get-Content -Raw -LiteralPath $serverErrorPath
+            if ([string]::IsNullOrWhiteSpace($contents)) { "<empty stderr>" } else { $contents.Trim() }
+        } else { "<no stderr>" }
+        throw "Temporary restore server did not answer the readiness endpoint. stdout=$stdout stderr=$stderr"
+    }
+    if (-not $health.data.ready -or -not $health.data.integrity_ok) {
+        $healthSummary = $health.data | ConvertTo-Json -Compress -Depth 8
+        throw "Temporary restore server reported degraded readiness: $healthSummary"
     }
     $backupWritten = $false
     for ($attempt = 0; $attempt -lt 40; $attempt++) {

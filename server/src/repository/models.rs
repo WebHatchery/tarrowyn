@@ -3,7 +3,7 @@ use super::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::hash::Hash;
-use tarrowyn_protocol::FarmPlot;
+use tarrowyn_protocol::{FarmPlot, FrontierEvent};
 
 pub(super) const MAX_REPLAY_CACHE: usize = 512;
 
@@ -173,6 +173,9 @@ impl RepositoryState {
         super::phase3::archive_excess(&mut phase3);
         super::phase3::trim_expedition_members(&mut phase3);
         super::phase3_frontier::backfill_expedition_credentials(&mut phase3);
+        for household in &mut phase3.households {
+            super::phase3::normalize_opportunity_score(&mut household.opportunity_score);
+        }
         trim_replay_cache(&mut phase3.request_results);
         let mut phase4 = stored.phase4;
         super::phase4::trim_proposals(&mut phase4.governance);
@@ -193,6 +196,13 @@ impl RepositoryState {
         );
         trim_replay_cache(&mut phase4.request_results);
         let mut phase5 = stored.phase5;
+        if phase5.fallback_day == 0 {
+            // Snapshots written before fallback-day tracking omitted this field.
+            // Treat the restored clock day as the start of the current fallback
+            // window so a legacy world can pass readiness without losing its
+            // accumulated regional state.
+            phase5.fallback_day = stored.clock.day.max(1);
+        }
         phase5
             .route_action_available_at_tick
             .retain(|_, available_at_tick| *available_at_tick > stored.tick);
@@ -223,6 +233,13 @@ impl RepositoryState {
         }
         let mut trades = stored.trades;
         super::trades::trim_trade_history(&mut trades);
+        let mut events = trim_queue(stored.events, MAX_EVENTS);
+        for record in &mut events {
+            if let WorldEvent::Frontier(FrontierEvent::Opportunity(opportunity)) = &mut record.event
+            {
+                super::phase3::normalize_opportunity_score(&mut opportunity.opportunity_score);
+            }
+        }
         let lease_days = super::phase4::lease_duration_days(config);
         let now = super::phase4::unix_time_seconds();
         for claim in &mut phase4.claims {
@@ -258,7 +275,7 @@ impl RepositoryState {
                 )
             })
             .collect();
-        Self {
+        let mut state = Self {
             tick: stored.tick,
             clock: WorldClock {
                 day: stored.clock.day.max(1),
@@ -274,7 +291,7 @@ impl RepositoryState {
             identities,
             sessions,
             plots: super::world::restore_plots(stored.plots),
-            events: trim_queue(stored.events, MAX_EVENTS),
+            events,
             chat_history: trim_queue(stored.chat_history, MAX_CHAT_HISTORY),
             notices: trim_queue(stored.notices, MAX_NOTICES),
             trades,
@@ -282,7 +299,9 @@ impl RepositoryState {
             phase4,
             phase5,
             phase6,
-        }
+        };
+        super::reset::anonymize_orphaned_public_history(&mut state);
+        state
     }
 
     pub(crate) fn to_stored(&self) -> StoredState {

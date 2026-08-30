@@ -1250,3 +1250,14 @@ direct formatting, diff, and Rust file-size checks pass, and the publisher
 check completed Windows/WebGL builds, packaging, Preview deployment, and
 catalog sync. No full workspace gate was rerun because this is a bounded client
 presentation slice. No new external or deferred work was opened.
+
+The restore path now migrates older regional snapshots that omitted
+`fallback_day`, carries invalid historical opportunity scores back into the
+bounded `0..=100` range, and anonymizes orphaned public-history and audit
+actors as former residents. The live household tick clamps future score
+pressure at zero. The focused migration and runtime regressions pass (1 each),
+the JSON restore failure drill passes with the active-state hash unchanged, and
+server formatting and clippy checks pass. No full workspace suite or publisher
+run was repeated because this was a focused persistence/runtime recovery slice;
+the complete milestone gate remains green in the preceding entry. No new
+external or deferred work was opened.

@@ -566,3 +566,70 @@ fn phase_two_state_without_frontier_fields_loads_safe_phase_three_defaults() {
 
     let _ = std::fs::remove_file(path);
 }
+
+#[test]
+fn legacy_regional_state_backfills_the_fallback_day_from_the_clock() {
+    let path = std::env::temp_dir().join(format!(
+        "tarrowyn-phase5-fallback-migration-{}.json",
+        std::process::id()
+    ));
+    let path_string = path.to_string_lossy().into_owned();
+    let config = ServerConfig {
+        persistence_path: Some(path_string.clone()),
+        backup_path: None,
+        ..ServerConfig::default()
+    };
+    let first = WorldRepository::new(config.clone());
+    let session = guest(&first, "legacy-fallback-day");
+    first
+        .chat(
+            &session.account_token,
+            ChatRequest {
+                request_id: "legacy-orphan-chat".to_owned(),
+                channel: "settlement".to_owned(),
+                text: "An old public record.".to_owned(),
+            },
+        )
+        .unwrap();
+    first
+        .state
+        .lock()
+        .unwrap()
+        .identities
+        .remove(&session.client_key);
+    first.tick();
+    drop(first);
+
+    let bytes = std::fs::read(&path).unwrap();
+    let mut document: serde_json::Value = serde_json::from_slice(&bytes).unwrap();
+    document["phase5"]
+        .as_object_mut()
+        .unwrap()
+        .remove("fallback_day");
+    document["phase3"]["households"][0]["opportunity_score"] = serde_json::json!(-5);
+    std::fs::write(&path, serde_json::to_vec_pretty(&document).unwrap()).unwrap();
+
+    let migrated = WorldRepository::new(config);
+    assert!(migrated.ops_health().data.ready);
+    let state = migrated.state.lock().unwrap();
+    assert_eq!(
+        state.phase3.households.first().unwrap().opportunity_score,
+        0
+    );
+    assert!(state
+        .chat_history
+        .iter()
+        .any(|message| message.account_id == "former-resident"));
+    assert!(state.events.iter().all(|record| match &record.event {
+        WorldEvent::Presence(presence) => presence.account_id == "former-resident",
+        WorldEvent::Chat(message) => message.account_id == "former-resident",
+        _ => true,
+    }));
+    assert!(state
+        .phase6
+        .audits
+        .iter()
+        .all(|audit| audit.actor_account_id == "former-resident"));
+
+    let _ = std::fs::remove_file(path);
+}

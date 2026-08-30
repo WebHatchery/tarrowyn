@@ -1,4 +1,5 @@
 use super::models::RepositoryState;
+use std::collections::HashSet;
 use tarrowyn_protocol::{
     ClaimLifecycleStatus, ClaimStatus, ExpeditionStatus, FrontierEvent, ProposalStatus,
     ServiceOrderStatus, WorldEvent,
@@ -6,6 +7,65 @@ use tarrowyn_protocol::{
 
 const RESET_ACCOUNT: &str = "former-resident";
 const RESET_NAME: &str = "Former resident";
+
+pub(super) fn anonymize_orphaned_public_history(state: &mut RepositoryState) {
+    let account_ids: HashSet<String> = state
+        .identities
+        .values()
+        .map(|identity| identity.account_id.clone())
+        .collect();
+    for message in &mut state.chat_history {
+        if is_orphaned_account(&message.account_id, &account_ids) {
+            let account_id = message.account_id.clone();
+            anonymize_chat(message, &account_id);
+        }
+    }
+    for audit in &mut state.phase6.audits {
+        if is_orphaned_account(&audit.actor_account_id, &account_ids) {
+            audit.actor_account_id = RESET_ACCOUNT.to_owned();
+        }
+    }
+    for event in &mut state.events {
+        let orphaned_ids = orphaned_event_accounts(&event.event, &account_ids);
+        for account_id in orphaned_ids {
+            anonymize_event(&mut event.event, &account_id, "");
+        }
+    }
+}
+
+fn orphaned_event_accounts(event: &WorldEvent, account_ids: &HashSet<String>) -> Vec<String> {
+    let candidates: Vec<&str> = match event {
+        WorldEvent::Presence(presence) => vec![&presence.account_id],
+        WorldEvent::Chat(message) => vec![&message.account_id],
+        WorldEvent::Trade(trade) => vec![&trade.creator_account_id, &trade.recipient_account_id],
+        WorldEvent::Frontier(FrontierEvent::Claim(claim)) => vec![&claim.owner_account_id],
+        WorldEvent::Frontier(FrontierEvent::Expedition(expedition)) => {
+            std::iter::once(expedition.leader_account_id.as_str())
+                .chain(
+                    expedition
+                        .members
+                        .iter()
+                        .map(|member| member.account_id.as_str()),
+                )
+                .collect()
+        }
+        WorldEvent::Clock(_)
+        | WorldEvent::Farming(_)
+        | WorldEvent::TavernNotice(_)
+        | WorldEvent::Chronicle(_)
+        | WorldEvent::Frontier(FrontierEvent::Threat(_))
+        | WorldEvent::Frontier(FrontierEvent::Opportunity(_)) => Vec::new(),
+    };
+    candidates
+        .into_iter()
+        .filter(|account_id| is_orphaned_account(account_id, account_ids))
+        .map(str::to_owned)
+        .collect()
+}
+
+fn is_orphaned_account(account_id: &str, account_ids: &HashSet<String>) -> bool {
+    account_id != RESET_ACCOUNT && !account_ids.contains(account_id)
+}
 
 pub(super) fn reset_guest(state: &mut RepositoryState, identity_key: &str) {
     let Some(identity) = state.identities.get(identity_key) else {

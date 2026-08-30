@@ -127,6 +127,10 @@ pub(super) fn archive_excess(phase: &mut Phase3State) {
     }
 }
 
+pub(super) fn normalize_opportunity_score(score: &mut i16) {
+    *score = (*score).clamp(0, 100);
+}
+
 pub(super) fn tick(state: &mut RepositoryState, config: &ServerConfig) {
     for progress in state.phase3.contracts.values_mut() {
         if progress.status == ContractStatus::Cooldown && progress.available_at_tick <= state.tick {
@@ -148,7 +152,7 @@ pub(super) fn tick(state: &mut RepositoryState, config: &ServerConfig) {
     let poor_condition_ticks = state.phase3.poor_condition_ticks;
     if let Some(household) = state.phase3.households.first_mut() {
         household.opportunity_score = if threat_active {
-            household.opportunity_score.saturating_sub(1)
+            household.opportunity_score.saturating_sub(1).max(0)
         } else {
             household.opportunity_score.saturating_add(2).min(100)
         };
