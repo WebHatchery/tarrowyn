@@ -1357,3 +1357,9 @@ to wait for the same admission window. The focused HTTP header regression
 passes (1), with server-package clippy, formatting, and diff checks clean. No
 full workspace or publisher gate was repeated because this is a narrow
 rate-limit response improvement; no new external or deferred work was opened.
+
+The affected HTTP/security slices were then validated through `publish.ps1`:
+Windows and WebGL release builds, packaging, Preview deployment, catalog sync,
+and the existing non-blocking `net2 v0.2.39` future-incompatibility warning
+were observed as expected. No full workspace suite was repeated, and no new
+external or deferred work was opened.
