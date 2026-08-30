@@ -227,8 +227,8 @@ fn chronicle_search_queues_the_latest_query_for_the_frontier_reader() {
     client.search_chronicle("Storm Magic");
 
     assert_eq!(
-        client.frontier.chronicle_search_request.as_deref(),
-        Some("Storm Magic")
+        client.frontier.chronicle_search_request.as_ref(),
+        Some(&("Storm Magic".to_owned(), 0))
     );
     assert!(client.chronicle_search_pending());
     assert!(client.status_message.contains("durable chronicle"));

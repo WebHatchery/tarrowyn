@@ -12,6 +12,19 @@ impl Game {
             }
             return;
         }
+        if id == "chronicle-search-next" {
+            if let ClientMode::Online(client) = &mut self.mode {
+                if let Some(cursor) = client.projection.chronicle_search_next_cursor {
+                    let query = client
+                        .projection
+                        .chronicle_search_query
+                        .clone()
+                        .unwrap_or_default();
+                    client.search_chronicle_page(&query, cursor);
+                }
+            }
+            return;
+        }
         if id == "region-details" {
             if matches!(&self.mode, ClientMode::Online(_)) {
                 self.skill_selection_open = false;

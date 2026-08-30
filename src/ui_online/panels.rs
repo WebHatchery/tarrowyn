@@ -70,6 +70,17 @@ pub fn draw_chronicle(ctx: &UiContext<'_>, mouse: Vec2, actions: &mut Vec<UiActi
     ) {
         actions.push(UiAction::Interact("chronicle-search".to_owned()));
     }
+    if ctx.chronicle_search_next_cursor.is_some()
+        && virtual_button(
+            Rect::new(panel.x + 134.0, panel.bottom() - 42.0, 106.0, 28.0),
+            "Next",
+            !ctx.chronicle_search_pending,
+            ButtonTone::Secondary,
+            mouse,
+        )
+    {
+        actions.push(UiAction::Interact("chronicle-search-next".to_owned()));
+    }
     if virtual_button(
         Rect::new(panel.right() - 126.0, panel.bottom() - 42.0, 106.0, 28.0),
         "Close",

@@ -51,7 +51,7 @@ pub(super) struct FrontierClient {
         Option<Pending<ApiResponse<tarrowyn_protocol::ChronicleResponse>>>,
     pub(super) pending_chronicle_search:
         Option<Pending<ApiResponse<tarrowyn_protocol::ChronicleSearchResponse>>>,
-    chronicle_search_request: Option<String>,
+    chronicle_search_request: Option<(String, u64)>,
     pub(super) pending_opportunities: Option<Pending<ApiResponse<OpportunitiesResponse>>>,
     pub(super) pending_command: Option<Pending<ApiResponse<FrontierCommandResponse>>>,
     in_flight_command: Option<FrontierCommand>,
@@ -264,10 +264,10 @@ impl FrontierClient {
                 Some(api.get(&format!("/v1/settlement/chronicle?since={cursor}")));
         }
         if self.pending_chronicle_search.is_none() {
-            if let Some(query) = self.chronicle_search_request.take() {
+            if let Some((query, since)) = self.chronicle_search_request.take() {
                 let query = super::chronicle::encode_query_value(&query);
                 self.pending_chronicle_search =
-                    Some(api.get(&format!("/v1/chronicle/search?since=0&q={query}")));
+                    Some(api.get(&format!("/v1/chronicle/search?since={since}&q={query}")));
             }
         }
         if self.pending_opportunities.is_none() {
@@ -311,9 +311,9 @@ impl FrontierClient {
         self.pending_command.is_some()
     }
 
-    pub(super) fn queue_chronicle_search(&mut self, query: String) {
+    pub(super) fn queue_chronicle_search(&mut self, query: String, since: u64) {
         if self.pending_chronicle_search.is_none() {
-            self.chronicle_search_request = Some(query);
+            self.chronicle_search_request = Some((query, since));
         }
     }
 

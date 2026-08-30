@@ -1842,3 +1842,12 @@ regressions pass, client clippy and the Rust file-size check pass, and
 catalog sync. No full workspace gate was repeated because this was a bounded
 client chronicle-search slice. True touch text entry and older-result
 pagination remain in the follow-up register.
+
+Chronicle archive search now advances through a full returned page with a
+visible Next control, preserving the server cursor and query between requests.
+The focused pagination queue regression, query-encoding regression, and
+no-match presentation regression pass, client clippy and the Rust file-size
+check pass, and `publish.ps1` passes Windows/WebGL builds, packaging, Preview
+deployment, and catalog sync. No full workspace gate was repeated because
+this was a bounded client chronicle-pagination slice. True touch text entry
+for arbitrary queries remains in the follow-up register.

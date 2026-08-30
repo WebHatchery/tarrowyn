@@ -67,6 +67,7 @@ pub struct UiContext<'a> {
     pub chronicle_search: &'a [ChronicleEntry],
     pub chronicle_search_summary: Option<&'a ChronicleSummary>,
     pub chronicle_search_query: Option<&'a str>,
+    pub chronicle_search_next_cursor: Option<u64>,
     pub chronicle_search_pending: bool,
     pub opportunities: &'a [OpportunitySignal],
     pub phase4_summary: &'a str,

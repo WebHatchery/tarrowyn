@@ -82,8 +82,12 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
         });
     }
     if ctx.chronicle_open {
-        actions
-            .retain(|action| matches!(action, UiAction::Interact(id) if id == "chronicle-close"));
+        actions.retain(|action| {
+            matches!(action, UiAction::Interact(id) if matches!(
+                id.as_str(),
+                "chronicle-close" | "chronicle-search" | "chronicle-search-next"
+            ))
+        });
     }
 
     actions

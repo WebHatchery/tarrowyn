@@ -425,8 +425,13 @@ impl OnlineClient {
     }
 
     pub fn search_chronicle(&mut self, query: &str) {
+        self.search_chronicle_page(query, 0);
+    }
+
+    pub fn search_chronicle_page(&mut self, query: &str, since: u64) {
         if self.state == ConnectionState::Online {
-            self.frontier.queue_chronicle_search(query.to_owned());
+            self.frontier
+                .queue_chronicle_search(query.to_owned(), since);
             self.status_message = "Searching the durable chronicle…".to_owned();
         }
     }
