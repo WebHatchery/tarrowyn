@@ -254,7 +254,12 @@ pub(super) fn draw_sidebar(
                     local_combat_action_ready,
                     ButtonTone::Secondary,
                 ),
-                ("claim", "Claim", true, ButtonTone::Secondary),
+                (
+                    "claim",
+                    "Claim",
+                    claim_control_enabled(true, ctx.frontier_claim_pending),
+                    ButtonTone::Secondary,
+                ),
                 (
                     "item",
                     "Bandage",

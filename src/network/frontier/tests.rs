@@ -541,6 +541,35 @@ fn recovery_buttons_queue_each_authoritative_choice() {
 }
 
 #[test]
+fn frontier_claim_controls_wait_for_one_queued_or_in_flight_command() {
+    let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
+    client.state = crate::network::ConnectionState::Online;
+    let request = ClaimRequest {
+        request_id: "claim-queued".to_owned(),
+        action: ClaimAction::Request,
+    };
+    client
+        .frontier
+        .commands
+        .push_back(FrontierCommand::Claim(request.clone()));
+
+    assert!(client.frontier.claim_command_pending());
+    client.queue_claim_cycle();
+    assert!(client
+        .status_message
+        .contains("frontier action is not ready"));
+    assert_eq!(client.frontier.commands.len(), 1);
+
+    client.frontier.commands.clear();
+    client.frontier.in_flight_command = Some(FrontierCommand::Claim(request));
+    assert!(client.frontier.claim_command_pending());
+    client.queue_claim(ClaimAction::Renew);
+    assert!(client
+        .status_message
+        .contains("frontier action is not ready"));
+}
+
+#[test]
 fn recovery_response_moves_the_map_to_the_hearth() {
     let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
     client.projection.player_position = macroquad_toolkit::grid::TilePos::new(14, 8);

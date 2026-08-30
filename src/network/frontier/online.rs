@@ -141,6 +141,10 @@ impl OnlineClient {
         self.frontier.combat_command_pending()
     }
 
+    pub(crate) fn frontier_claim_pending(&self) -> bool {
+        self.frontier.claim_command_pending()
+    }
+
     pub fn queue_claim(&mut self, action: ClaimAction) {
         if self.state == ConnectionState::Online {
             let request_id = self.next_request_id("claim");

@@ -275,6 +275,7 @@ impl Game {
                     contract_pending: client.contract_pending(),
                     expedition_pending: client.expedition_pending(),
                     frontier_combat_pending: client.frontier_combat_pending(),
+                    frontier_claim_pending: client.frontier_claim_pending(),
                     knocked_out: client
                         .projection
                         .player
@@ -383,6 +384,7 @@ impl Game {
                     contract_pending: false,
                     expedition_pending: false,
                     frontier_combat_pending: false,
+                    frontier_claim_pending: false,
                     knocked_out: false,
                     recovery_pending: false,
                     has_open_market_order: false,
