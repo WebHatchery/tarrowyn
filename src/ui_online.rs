@@ -659,11 +659,16 @@ fn frontier_combat_control_enabled(reachable: bool, combat_pending: bool) -> boo
 pub(super) fn movement_enabled(ctx: &UiContext<'_>) -> bool {
     !ctx.knocked_out
         && walking_connection_enabled(ctx.connection, ctx.offline)
+        && walking_projection_enabled(ctx.player_position_authoritative, ctx.offline)
         && !panels::regional_travel_blocks_movement(ctx.regional_region)
 }
 
 fn walking_connection_enabled(connection: ConnectionState, offline_fixture: bool) -> bool {
     offline_fixture || connection == ConnectionState::Online
+}
+
+fn walking_projection_enabled(player_position_authoritative: bool, offline_fixture: bool) -> bool {
+    offline_fixture || player_position_authoritative
 }
 
 fn visible_companion_count(

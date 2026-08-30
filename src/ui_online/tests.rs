@@ -356,6 +356,13 @@ fn walking_controls_wait_for_an_authoritative_connection() {
 }
 
 #[test]
+fn walking_controls_wait_for_an_authoritative_player_projection() {
+    assert!(super::walking_projection_enabled(true, false));
+    assert!(super::walking_projection_enabled(false, true));
+    assert!(!super::walking_projection_enabled(false, false));
+}
+
+#[test]
 fn companion_count_ignores_own_stale_and_offline_presence() {
     let players = vec![
         RemotePlayer {

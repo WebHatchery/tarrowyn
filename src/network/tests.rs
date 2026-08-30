@@ -250,6 +250,9 @@ fn online_commands_are_not_queued_while_disconnected() {
     assert!(client.chat_queue.is_empty());
 
     client.state = ConnectionState::Online;
+    client
+        .projection
+        .set_authoritative_player_position(TilePos::new(8, 6));
     client.queue_movement(1, 0);
     client.queue_chat("The road is open");
     assert_eq!(client.movement_queue.len(), 1);
@@ -359,6 +362,9 @@ fn client_pending_queues_stop_at_the_backpressure_limit() {
 fn movement_and_chat_backpressure_explain_the_retry_path() {
     let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
     client.state = ConnectionState::Online;
+    client
+        .projection
+        .set_authoritative_player_position(TilePos::new(8, 6));
     for index in 0..super::queue::MAX_PENDING_COMMANDS {
         client.movement_queue.push_back(super::MovementIntent {
             request_id: format!("move-{index}"),
@@ -387,6 +393,17 @@ fn movement_and_chat_backpressure_explain_the_retry_path() {
 
     assert_eq!(client.chat_queue.len(), super::queue::MAX_PENDING_COMMANDS);
     assert!(client.status_message.contains("chat channel is busy"));
+}
+
+#[test]
+fn movement_waits_for_a_fresh_player_projection_after_recovery() {
+    let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
+    client.state = ConnectionState::Online;
+
+    client.queue_movement(1, 0);
+
+    assert!(client.movement_queue.is_empty());
+    assert!(client.status_message.contains("position is still loading"));
 }
 
 #[test]

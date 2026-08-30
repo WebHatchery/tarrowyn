@@ -2688,3 +2688,15 @@ clippy, `git diff --check`, and the Rust file-size scan pass. The project
 catalog-sync checks pass. No full workspace gate was repeated because this was
 a bounded refresh-presence continuity correction, and no new external or
 deferred work was opened.
+
+Map clicks, movement-pad taps, and direct movement requests now wait for an
+authoritative player position after cursor or identity recovery instead of
+using the cleared/default local position. The map tooltip names the loading or
+visible reconnect/travel path, while the offline fixture keeps its local
+movement behavior. The focused UI and network movement regressions plus the
+existing disconnected and backpressure checks pass; client-package formatting
+and clippy, `git diff --check`, and the Rust file-size scan pass. The project
+`publish.ps1` Windows/WebGL build, packaging, Preview deployment, and
+catalog-sync checks pass. No full workspace gate was repeated because this was
+a bounded movement-recovery input correction, and no new external or deferred
+work was opened.
