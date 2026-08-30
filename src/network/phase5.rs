@@ -3,8 +3,8 @@
 use super::*;
 use tarrowyn_protocol::{
     AccountDeletionRequest, AccountResponse, ApiResponse, AuthLinkRequest, AuthLinkResponse,
-    AuthRefreshResponse, AuthSession, GuestSessionResponse, LawBoundaryResponse, MarketOrderAction,
-    MarketOrderRequest, MarketSnapshot, ModerationReportRequest, RegionSnapshot,
+    AuthRefreshResponse, AuthSession, GuestSessionResponse, LawBoundaryResponse, MarketOrder,
+    MarketOrderAction, MarketOrderRequest, MarketSnapshot, ModerationReportRequest, RegionSnapshot,
     RegionalEventAction, RegionalEventRequest, RegionalEventsResponse, RegionalHouseholdsResponse,
     RouteAction, RouteRequest, SettlementsResponse, TravelAction, TravelRequest, TravelStatus,
 };
@@ -660,6 +660,41 @@ fn market_success_message(action: Option<MarketOrderAction>, fallback_used: bool
         Some(MarketOrderAction::Cancel) => "The shipment was cancelled and its escrow returned.",
         None => "The regional market accepted the command.",
     }
+}
+
+fn market_result_message(
+    action: Option<MarketOrderAction>,
+    fallback_used: bool,
+    order: Option<&MarketOrder>,
+) -> String {
+    let message = market_success_message(action, fallback_used);
+    let Some(order) = order else {
+        return message.to_owned();
+    };
+    format!(
+        "{message} Details: {} from {} to {} • {} gold.",
+        market_quantity_label(order),
+        order.origin_location_id,
+        order.destination_location_id,
+        order.total_price
+    )
+}
+
+fn market_quantity_label(order: &MarketOrder) -> String {
+    let unit = match (order.commodity, order.quantity) {
+        (tarrowyn_protocol::CommodityKind::Turnips, 1) => "turnip",
+        (tarrowyn_protocol::CommodityKind::Moonberries, 1) => "moonberry",
+        (tarrowyn_protocol::CommodityKind::Seeds, 1) => "seed",
+        (tarrowyn_protocol::CommodityKind::Bandages, 1) => "bandage",
+        (tarrowyn_protocol::CommodityKind::Wheat, _) => "wheat",
+        (tarrowyn_protocol::CommodityKind::Turnips, _) => "turnips",
+        (tarrowyn_protocol::CommodityKind::Moonberries, _) => "moonberries",
+        (tarrowyn_protocol::CommodityKind::Seeds, _) => "seeds",
+        (tarrowyn_protocol::CommodityKind::Timber, _) => "timber",
+        (tarrowyn_protocol::CommodityKind::Stone, _) => "stone",
+        (tarrowyn_protocol::CommodityKind::Bandages, _) => "bandages",
+    };
+    format!("{} {unit}", order.quantity)
 }
 
 #[cfg(test)]

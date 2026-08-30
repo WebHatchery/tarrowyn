@@ -1668,6 +1668,14 @@ and catalog sync. No full workspace gate was repeated because this was a
 bounded client travel-feedback slice, and no new external or deferred work was
 opened.
 
+Accepted regional market responses now retain the existing action-specific
+message and add exact shipment details when present: quantity, commodity,
+origin, destination, and gold total. The focused market-detail regression
+passes, client clippy and the Rust file-size check pass, and `publish.ps1`
+passes Windows/WebGL builds, packaging, Preview deployment, and catalog sync.
+No full workspace gate was repeated because this was a bounded client
+market-feedback slice, and no new external or deferred work was opened.
+
 Accepted contract responses now explain the updated Brambleback watch state:
 active progress shows its count, while a completed report confirms payment and
 the next available beat. The two focused contract-notice regressions pass,

@@ -460,6 +460,31 @@ fn market_success_notice_describes_the_requested_action() {
 }
 
 #[test]
+fn market_result_message_names_the_shipment_details() {
+    let order = MarketOrder {
+        order_id: "seed-shipment".to_owned(),
+        owner_account_id: "account-1".to_owned(),
+        owner_name: "The traveller".to_owned(),
+        origin_location_id: "hearth".to_owned(),
+        destination_location_id: "saltmere".to_owned(),
+        commodity: tarrowyn_protocol::CommodityKind::Seeds,
+        quantity: 1,
+        unit_price: 4,
+        total_price: 4,
+        status: tarrowyn_protocol::MarketOrderStatus::Open,
+        created_tick: 2,
+        settled_tick: None,
+        route_id: "north-pack-road".to_owned(),
+        fallback_used: false,
+    };
+
+    assert_eq!(
+        super::market_result_message(Some(MarketOrderAction::Create), false, Some(&order)),
+        "The shipment is on the regional ledger. Details: 1 seed from hearth to saltmere • 4 gold."
+    );
+}
+
+#[test]
 fn travel_success_message_explains_progress_and_risk() {
     let travel = tarrowyn_protocol::TravelState {
         travel_id: "travel-1".to_owned(),
