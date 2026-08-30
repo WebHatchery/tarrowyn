@@ -831,6 +831,14 @@ identity boundary; server clippy, size, diff, formatting, and publisher checks
 are the validation scope for this Phase 6 privacy-maintenance slice. No new
 external or deferred work was opened.
 
+Test maintenance moved the Phase 4 feedback formatters and the six recent
+Phase 5 result-feedback regressions into focused child modules before either
+parent file approached the 800-line Rust limit. The combined focused feedback
+suite passes 10 tests, client clippy passes, and the Rust file-size check now
+reports the largest affected parent at 779 lines (`src/network/tests.rs`). No
+publisher run was needed because this was test organization only, and no new
+external or deferred work was opened.
+
 Development-guest reset now applies the same exact moderation replay-key
 cleanup as production account deletion, so an identity-prefix collision cannot
 discard another player's idempotent report response. The focused reset
