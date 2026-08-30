@@ -129,7 +129,9 @@ impl Phase4Client {
     }
 
     pub(super) fn queue_cycle(&mut self, id: &str, request_id: String) -> bool {
-        if id == "registry" && self.claim_command_pending() {
+        if ((id == "town-hall" || id == "tax-rate") && self.governance_command_pending())
+            || (id == "registry" && self.claim_command_pending())
+        {
             return false;
         }
         let queue_len = self.commands.len();
@@ -158,6 +160,16 @@ impl Phase4Client {
         self.commands.len() > queue_len
             || refresh_households
             || (id == "order" && self.crafting.is_some())
+    }
+
+    pub(super) fn governance_command_pending(&self) -> bool {
+        self.in_flight_command
+            .as_ref()
+            .is_some_and(|command| matches!(command, Phase4Command::Governance(_)))
+            || self
+                .commands
+                .iter()
+                .any(|command| matches!(command, Phase4Command::Governance(_)))
     }
 
     fn queue_governance(&mut self, request_id: String) {

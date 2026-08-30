@@ -87,6 +87,7 @@ pub struct UiContext<'a> {
     pub market_pending: bool,
     pub event_pending: bool,
     pub route_pending: bool,
+    pub governance_pending: bool,
     pub can_abandon_claim: bool,
     pub can_transfer_claim: bool,
     pub claim_pending: bool,

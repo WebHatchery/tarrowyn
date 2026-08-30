@@ -122,6 +122,33 @@ fn phase_four_mutation_waits_when_regional_refresh_becomes_due() {
 }
 
 #[test]
+fn governance_controls_wait_for_one_queued_or_in_flight_command() {
+    let mut client = Phase4Client::new();
+    let request = GovernanceRequest {
+        request_id: "governance-queued".to_owned(),
+        action: GovernanceAction::Inspect,
+        office_id: None,
+        proposal_id: None,
+        public_action: None,
+        target: None,
+        cost: None,
+        tax_rate_percent: None,
+    };
+    client
+        .commands
+        .push_back(Phase4Command::Governance(request.clone()));
+
+    assert!(client.governance_command_pending());
+    assert!(!client.queue_cycle("town-hall", "governance-duplicate".to_owned()));
+    assert!(!client.queue_cycle("tax-rate", "tax-duplicate".to_owned()));
+
+    client.commands.clear();
+    client.in_flight_command = Some(Phase4Command::Governance(request));
+    assert!(client.governance_command_pending());
+    assert!(!client.queue_cycle("town-hall", "governance-in-flight".to_owned()));
+}
+
+#[test]
 fn crafting_tap_becomes_a_bounded_completion_request() {
     let mut client = Phase4Client::new();
     client.begin_crafting("service-order-2");

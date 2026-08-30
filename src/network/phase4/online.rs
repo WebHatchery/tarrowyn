@@ -137,6 +137,10 @@ impl OnlineClient {
         self.phase4.claim_command_pending()
     }
 
+    pub(crate) fn governance_pending(&self) -> bool {
+        self.phase4.governance_command_pending()
+    }
+
     pub(crate) fn queue_claim_action(
         &mut self,
         action: ClaimLifecycleAction,

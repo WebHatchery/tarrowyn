@@ -2211,3 +2211,11 @@ clippy, standards, and the Rust file-size check pass, and `publish.ps1` passes
 Windows/WebGL builds, packaging, Preview deployment, and catalog sync. No full
 workspace gate was repeated because this was a bounded identity-control
 correction, and no new external or deferred work was opened.
+
+Town Hall and Tax controls now close together while any governance command is
+queued or in flight, and the client rejects a second governance cycle against
+the stale settlement ledger. The focused governance filter passes four tests,
+client formatting, clippy, standards, and the Rust file-size check pass, and
+`publish.ps1` passes Windows/WebGL builds, packaging, Preview deployment, and
+catalog sync. No full workspace gate was repeated because this was a bounded
+governance-control correction, and no new external or deferred work was opened.

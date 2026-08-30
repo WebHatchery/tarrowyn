@@ -283,7 +283,12 @@ pub(super) fn draw_sidebar(
         22.0,
         mouse,
         &[
-            ("town-hall", "Town hall", true, ButtonTone::Primary),
+            (
+                "town-hall",
+                "Town hall",
+                governance_control_enabled(ctx.governance_pending),
+                ButtonTone::Primary,
+            ),
             (
                 "registry",
                 "Registry",
@@ -303,7 +308,12 @@ pub(super) fn draw_sidebar(
                 ButtonTone::Secondary,
             ),
             ("order", "Order", true, ButtonTone::Secondary),
-            ("tax-rate", "Tax", true, ButtonTone::Secondary),
+            (
+                "tax-rate",
+                "Tax",
+                governance_control_enabled(ctx.governance_pending),
+                ButtonTone::Secondary,
+            ),
         ],
         ctx,
         actions,
@@ -558,6 +568,10 @@ fn claim_control_enabled(claim_available: bool, claim_pending: bool) -> bool {
 
 fn route_control_enabled(route_available: bool, route_pending: bool) -> bool {
     route_available && !route_pending
+}
+
+fn governance_control_enabled(governance_pending: bool) -> bool {
+    !governance_pending
 }
 
 pub(super) fn movement_enabled(ctx: &UiContext<'_>) -> bool {
