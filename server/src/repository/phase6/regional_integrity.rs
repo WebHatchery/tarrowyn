@@ -35,6 +35,7 @@ pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
             .routes
             .iter()
             .all(|route| route_ok(route, &location_ids, state.tick))
+        && route_action_cooldowns_ok(state)
         && unique_event_ids(state)
         && state.phase5.events.iter().all(|event| {
             event.cursor > state.phase5.event_history_floor
@@ -56,6 +57,21 @@ pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
             state.identities.contains_key(identity_key)
                 && travel_ok(travel, &location_ids, state.tick)
         })
+}
+
+fn route_action_cooldowns_ok(state: &RepositoryState) -> bool {
+    state.phase5.route_action_available_at_tick.len() <= state.phase5.routes.len()
+        && state.phase5.route_action_available_at_tick.iter().all(
+            |(route_id, available_at_tick)| {
+                !route_id.trim().is_empty()
+                    && state
+                        .phase5
+                        .routes
+                        .iter()
+                        .any(|route| route.route_id == *route_id)
+                    && *available_at_tick > state.tick
+            },
+        )
 }
 
 fn location_ok(location: &tarrowyn_protocol::LocationRecord, config: &ServerConfig) -> bool {

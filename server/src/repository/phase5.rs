@@ -156,6 +156,32 @@ impl WorldRepository {
                 "That regional route is not recorded.",
             ));
         };
+        let action_available_at_tick = state
+            .phase5
+            .route_action_available_at_tick
+            .get(&route_id)
+            .copied()
+            .unwrap_or(0);
+        if action_available_at_tick > state.tick {
+            let response = RouteResponse {
+                request_id: request.request_id.clone(),
+                accepted: false,
+                route: state.phase5.routes[route_index].clone(),
+                reason: Some(format!(
+                    "The route crew is still working; the next logistics step opens at server beat {action_available_at_tick}."
+                )),
+            };
+            state
+                .phase5
+                .request_results
+                .insert(cache_key, Phase5Response::Route(response.clone()));
+            record_command_outcome(&mut state, false);
+            self.persist(&state);
+            return Ok(ApiResponse {
+                meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
+                data: response,
+            });
+        }
         let current = player_location(&state, &key);
         if state.phase5.routes[route_index].origin_location_id != current
             && state.phase5.routes[route_index].destination_location_id != current
@@ -204,6 +230,13 @@ impl WorldRepository {
         if accepted {
             route.last_action_tick = state.tick;
             state.phase5.routes[route_index] = route.clone();
+            let action_available_at_tick = state
+                .tick
+                .saturating_add(self.config.household_decision_interval_ticks.max(1));
+            state
+                .phase5
+                .route_action_available_at_tick
+                .insert(route_id, action_available_at_tick);
         }
         let response = RouteResponse {
             request_id: request.request_id.clone(),

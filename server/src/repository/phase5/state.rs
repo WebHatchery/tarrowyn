@@ -32,6 +32,8 @@ pub(crate) struct Phase5State {
     pub(crate) event_history_floor: u64,
     pub(crate) locations: Vec<LocationRecord>,
     pub(crate) routes: Vec<RouteRecord>,
+    #[serde(default)]
+    pub(crate) route_action_available_at_tick: HashMap<String, u64>,
     pub(crate) settlements: Vec<SettlementProjection>,
     pub(crate) travel: HashMap<String, TravelState>,
     pub(crate) market_orders: Vec<MarketOrder>,
@@ -77,6 +79,7 @@ pub(crate) fn fresh(_config: &ServerConfig) -> Phase5State {
         event_history_floor: 0,
         locations,
         routes,
+        route_action_available_at_tick: HashMap::new(),
         settlements,
         travel: HashMap::new(),
         market_orders: Vec::new(),

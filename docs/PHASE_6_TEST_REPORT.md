@@ -657,6 +657,12 @@ names while requiring non-empty credentials without control characters. The
 focused HTTP suite passes 9 tests, with server clippy, size, diff, and publisher
 checks passing for the same boundary.
 
+Regional route Repair, Escort, and Improve actions now keep a persisted
+per-route availability beat, limiting accepted logistics changes to one step
+per configured regional decision interval. The focused route-history suite
+covers same-beat rejection and post-interval acceptance, while regional
+readiness validates cooldown keys against recorded routes.
+
 Phase 6 audit and session helpers now live in a dedicated child module, keeping
 the repository coordinator below the workspace's 800-line Rust limit while
 preserving the existing behavior. The 43 Phase 6-focused tests, server-only

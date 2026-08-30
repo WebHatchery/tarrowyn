@@ -43,8 +43,10 @@ action is sent. Use the
 visible `Escort road` control to reduce route risk, or `Improve road` to
 increase route capacity and shorten its travel time. Both actions select the
 first open route connected to the current location and remain
-server-authoritative; the panel also remains the place to read the detail
-behind the compact sidebar telemetry.
+server-authoritative. Repair, escort, and improvement accept at most one
+logistics step per configured regional decision interval, so repeated taps
+cannot create an unbounded same-beat upgrade. The panel also remains the place
+to read the detail behind the compact sidebar telemetry.
 
 ## Market and event inspection
 

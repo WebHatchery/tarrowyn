@@ -82,3 +82,64 @@ fn rejected_route_repair_does_not_mark_route_as_active() {
         .expect("route remains recorded");
     assert_eq!(route.last_action_tick, 0);
 }
+
+#[test]
+fn route_logistics_accept_only_one_step_per_decision_interval() {
+    let repository = WorldRepository::new(ServerConfig {
+        household_decision_interval_ticks: 4,
+        ..ServerConfig::default()
+    });
+    let session = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("phase5-route-cooldown".to_owned()),
+            reset: false,
+        })
+        .expect("guest session")
+        .data;
+
+    let first = repository
+        .route_action(
+            &session.account_token,
+            RouteRequest {
+                request_id: "route-cooldown-first".to_owned(),
+                route_id: "north-pack-road".to_owned(),
+                action: RouteAction::Improve,
+            },
+        )
+        .expect("first route improvement")
+        .data;
+    assert!(first.accepted);
+
+    let blocked = repository
+        .route_action(
+            &session.account_token,
+            RouteRequest {
+                request_id: "route-cooldown-blocked".to_owned(),
+                route_id: "north-pack-road".to_owned(),
+                action: RouteAction::Improve,
+            },
+        )
+        .expect("cooldown response")
+        .data;
+    assert!(!blocked.accepted);
+    assert!(blocked
+        .reason
+        .as_deref()
+        .is_some_and(|reason| reason.contains("next logistics step")));
+
+    for _ in 0..4 {
+        repository.tick();
+    }
+    let after_interval = repository
+        .route_action(
+            &session.account_token,
+            RouteRequest {
+                request_id: "route-cooldown-after".to_owned(),
+                route_id: "north-pack-road".to_owned(),
+                action: RouteAction::Improve,
+            },
+        )
+        .expect("route improvement after cooldown")
+        .data;
+    assert!(after_interval.accepted);
+}
