@@ -37,6 +37,14 @@ fn malformed_query_escapes_are_not_forwarded_to_authority() {
 }
 
 #[test]
+fn history_cursors_reject_malformed_values_instead_of_resetting() {
+    assert_eq!(query_cursor("since=12", "since"), Ok(12));
+    assert_eq!(query_cursor("q=road", "since"), Ok(0));
+    assert!(query_cursor("since=-1", "since").is_err());
+    assert!(query_cursor("since=bad%GG", "since").is_err());
+}
+
+#[test]
 fn tick_deadline_stays_fixed_until_an_overrun_needs_recovery() {
     let start = Instant::now();
     let interval = Duration::from_millis(250);

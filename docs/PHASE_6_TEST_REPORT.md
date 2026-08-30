@@ -643,6 +643,11 @@ The Delete control now reflects the same account boundary: it is enabled only
 for a linked production projection, while a guest must use Account first. The
 focused account-lifecycle tests cover both states alongside the client checks.
 
+The shared, regional, settlement-chronicle, and chronicle-search HTTP routes
+now reject malformed `since` values with `invalid_cursor` instead of silently
+resetting history reads to cursor zero. The focused HTTP cursor regression,
+server clippy check, size audit, diff check, and project publisher pass.
+
 Phase 6 audit and session helpers now live in a dedicated child module, keeping
 the repository coordinator below the workspace's 800-line Rust limit while
 preserving the existing behavior. The 43 Phase 6-focused tests, server-only
