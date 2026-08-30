@@ -3045,3 +3045,19 @@ clippy. `git diff --check` and the Rust file-size scan pass. The project
 catalog-sync checks pass. No full workspace gate was repeated because this was
 a bounded file-ownership maintenance correction, and no new external or
 deferred work was opened.
+
+The Phase 5 route and cache tests now live in a dedicated `regional_commands`
+child module, reducing the root test file from 788 to 581 lines while keeping
+the route-authority cases together and preserving the project Rust source-size
+rule. The focused route regression passes, along with client-package formatting
+and clippy. `git diff --check` and the Rust file-size scan pass. No publisher or
+full workspace gate was repeated because this was test-only organization
+maintenance, and no new external or deferred work was opened.
+
+The Phase 4 combat queue and weapon-cycle cases now live in a dedicated
+`combat_actions` child module, reducing the root Phase 4 test file from 784 to
+739 lines while preserving the project Rust source-size rule. The focused
+combat-queue regression passes, along with client-package formatting and
+clippy. `git diff --check` and the Rust file-size scan pass. No publisher or
+full workspace gate was repeated because this was test-only organization
+maintenance, and no new external or deferred work was opened.
