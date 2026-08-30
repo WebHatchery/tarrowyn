@@ -3035,3 +3035,13 @@ Windows/WebGL build, packaging, Preview deployment, and catalog-sync checks
 pass. No full workspace gate was repeated because this was a bounded touch
 recovery presentation correction, and no new external or deferred work was
 opened.
+
+The authoritative world and event projection now lives in a dedicated child
+module, reducing `src/network.rs` from 777 to 594 lines while preserving the
+existing snapshot, presence, clock, chat, and cursor behavior. The focused
+projection clock regression passes, along with client-package formatting and
+clippy. `git diff --check` and the Rust file-size scan pass. The project
+`publish.ps1` Windows/WebGL build, packaging, Preview deployment, and
+catalog-sync checks pass. No full workspace gate was repeated because this was
+a bounded file-ownership maintenance correction, and no new external or
+deferred work was opened.
