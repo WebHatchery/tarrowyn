@@ -2017,3 +2017,12 @@ handoff regression passes, client clippy and the Rust file-size check pass, and
 catalog sync. No full workspace gate was repeated because this was a bounded
 online identity-handoff correction, and no new external or deferred work was
 opened.
+
+Keyboard gameplay input now pauses behind account, regional-inspection, and
+skill-selection panels, matching the existing touch-action filtering; the
+chronicle panel retains its dedicated query-entry path. The focused client
+modal-input regression passes, client clippy and the Rust file-size check pass,
+and `publish.ps1` passes Windows/WebGL builds, packaging, Preview deployment,
+and catalog sync. No full workspace gate was repeated because this was a
+bounded touch-first input correction, and no new external or deferred work was
+opened.

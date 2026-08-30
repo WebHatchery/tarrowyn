@@ -17,6 +17,13 @@ impl Game {
             }
             return;
         }
+        if keyboard_gameplay_blocked(
+            self.account_open,
+            self.regional_inspection_open,
+            self.skill_selection_open,
+        ) {
+            return;
+        }
         let movement = if is_key_pressed(KeyCode::W) || is_key_pressed(KeyCode::Up) {
             Some((0, -1))
         } else if is_key_pressed(KeyCode::D) || is_key_pressed(KeyCode::Right) {
@@ -55,4 +62,12 @@ impl Game {
             self.events.push(UiAction::Zoom(-0.05));
         }
     }
+}
+
+pub(super) fn keyboard_gameplay_blocked(
+    account_open: bool,
+    regional_inspection_open: bool,
+    skill_selection_open: bool,
+) -> bool {
+    account_open || regional_inspection_open || skill_selection_open
 }
