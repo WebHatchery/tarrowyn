@@ -81,6 +81,7 @@ pub struct UiContext<'a> {
     pub combat: Option<&'a LocalCombatState>,
     pub storm_magic_unlocked: bool,
     pub knocked_out: bool,
+    pub recovery_pending: bool,
     pub has_open_market_order: bool,
     pub can_abandon_claim: bool,
     pub can_transfer_claim: bool,

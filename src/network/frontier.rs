@@ -311,6 +311,16 @@ impl FrontierClient {
         self.pending_command.is_some()
     }
 
+    pub(super) fn recovery_command_pending(&self) -> bool {
+        self.in_flight_command
+            .as_ref()
+            .is_some_and(|command| matches!(command, FrontierCommand::Recovery(_)))
+            || self
+                .commands
+                .iter()
+                .any(|command| matches!(command, FrontierCommand::Recovery(_)))
+    }
+
     pub(super) fn queue_chronicle_search(&mut self, query: String, since: u64) {
         if self.pending_chronicle_search.is_none() {
             self.chronicle_search_request = Some((query, since));
@@ -691,6 +701,10 @@ impl OnlineClient {
                         .to_owned();
             }
         }
+    }
+
+    pub(crate) fn recovery_pending(&self) -> bool {
+        self.frontier.recovery_command_pending()
     }
 
     pub fn queue_claim(&mut self, action: ClaimAction) {

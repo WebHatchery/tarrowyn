@@ -335,6 +335,13 @@ fn reconnect_control_waits_for_a_failed_connection() {
 }
 
 #[test]
+fn recovery_controls_close_after_one_choice_is_pending() {
+    assert!(!super::recovery_control_enabled(true, true));
+    assert!(super::recovery_control_enabled(true, false));
+    assert!(!super::recovery_control_enabled(false, false));
+}
+
+#[test]
 fn chronicle_panel_text_keeps_archive_context_and_recent_records() {
     let entries = vec![
         tarrowyn_protocol::ChronicleEntry {

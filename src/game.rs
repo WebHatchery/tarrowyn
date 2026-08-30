@@ -269,6 +269,7 @@ impl Game {
                         .player
                         .as_ref()
                         .is_some_and(|player| player.knocked_out),
+                    recovery_pending: client.recovery_pending(),
                     has_open_market_order: client.has_open_market_order(),
                     can_abandon_claim: client.can_abandon_claim(),
                     can_transfer_claim: client.can_transfer_claim()
@@ -355,6 +356,7 @@ impl Game {
                     combat: None,
                     storm_magic_unlocked: false,
                     knocked_out: false,
+                    recovery_pending: false,
                     has_open_market_order: false,
                     can_abandon_claim: false,
                     can_transfer_claim: false,

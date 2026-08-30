@@ -183,9 +183,24 @@ pub(super) fn draw_sidebar(
             22.0,
             mouse,
             &[
-                ("recover-self", "Self", true, ButtonTone::Secondary),
-                ("recover", "Rescuer", true, ButtonTone::Secondary),
-                ("recover-healer", "Healer", true, ButtonTone::Secondary),
+                (
+                    "recover-self",
+                    "Self",
+                    recovery_control_enabled(ctx.knocked_out, ctx.recovery_pending),
+                    ButtonTone::Secondary,
+                ),
+                (
+                    "recover",
+                    "Rescuer",
+                    recovery_control_enabled(ctx.knocked_out, ctx.recovery_pending),
+                    ButtonTone::Secondary,
+                ),
+                (
+                    "recover-healer",
+                    "Healer",
+                    recovery_control_enabled(ctx.knocked_out, ctx.recovery_pending),
+                    ButtonTone::Secondary,
+                ),
             ],
             ctx,
             actions,
@@ -490,6 +505,10 @@ pub(super) fn draw_sidebar(
 
 fn travel_control_enabled(available: bool, knocked_out: bool) -> bool {
     available && !knocked_out
+}
+
+fn recovery_control_enabled(knocked_out: bool, recovery_pending: bool) -> bool {
+    knocked_out && !recovery_pending
 }
 
 pub(super) fn movement_enabled(ctx: &UiContext<'_>) -> bool {

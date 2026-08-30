@@ -439,10 +439,12 @@ fn recovery_buttons_queue_each_authoritative_choice() {
         RecoveryChoice::PayHealer,
     ] {
         client.queue_recovery(choice);
+        assert!(client.recovery_pending());
         let Some(FrontierCommand::Recovery(request)) = client.frontier.commands.pop_front() else {
             panic!("a recovery choice should queue a recovery request");
         };
         assert_eq!(request.choice, choice);
+        assert!(!client.recovery_pending());
     }
 }
 
