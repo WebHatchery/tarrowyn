@@ -201,6 +201,9 @@ impl FrontierClient {
         if !online {
             return;
         }
+        if auth_refresh_pending {
+            return;
+        }
         if self.pending_contracts.is_none() {
             self.pending_contracts = Some(api.get("/v1/contracts"));
         }
@@ -211,10 +214,7 @@ impl FrontierClient {
         if self.pending_opportunities.is_none() {
             self.pending_opportunities = Some(api.get("/v1/settlement/opportunities"));
         }
-        if self.pending_command.is_none()
-            && !auth_refresh_pending
-            && self.command_retry_timer <= 0.0
-        {
+        if self.pending_command.is_none() && self.command_retry_timer <= 0.0 {
             if let Some(command) = self.commands.pop_front() {
                 self.pending_command = Some(match &command {
                     FrontierCommand::Contract(request) => {

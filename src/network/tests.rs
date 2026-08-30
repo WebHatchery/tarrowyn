@@ -247,6 +247,36 @@ fn online_commands_are_not_queued_while_disconnected() {
 }
 
 #[test]
+fn authenticated_reads_wait_for_a_same_frame_refresh_boundary() {
+    let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
+    client.state = ConnectionState::Online;
+    client
+        .phase4
+        .prime_refresh_for_test(&mut client.api, &mut client.projection);
+    client.trade_queue.push_back(TradeRequest {
+        request_id: "refresh-read-boundary".to_owned(),
+        action: TradeAction::Review,
+        trade_id: None,
+        recipient_account_id: None,
+        offer: None,
+        request: None,
+    });
+
+    client.dispatch_requests();
+    client.dispatch_trade_requests();
+    client.frontier.dispatch(&mut client.api, true, 0, true);
+
+    assert!(client.pending_state.is_none());
+    assert!(client.pending_events.is_none());
+    assert!(client.pending_trades.is_none());
+    assert!(client.frontier.pending_contracts.is_none());
+    assert!(client.frontier.pending_chronicle.is_none());
+    assert!(client.frontier.pending_opportunities.is_none());
+    assert!(client.frontier.pending_command.is_none());
+    assert_eq!(client.trade_queue.len(), 1);
+}
+
+#[test]
 fn client_pending_queues_stop_at_the_backpressure_limit() {
     let mut queue = VecDeque::new();
     for value in 0..(super::queue::MAX_PENDING_COMMANDS + 4) {

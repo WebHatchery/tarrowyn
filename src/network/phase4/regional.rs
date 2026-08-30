@@ -1,7 +1,23 @@
 use super::Phase4Client;
+#[cfg(test)]
+use crate::network::{NetworkNotice, WorldProjection};
+#[cfg(test)]
+use macroquad_toolkit::net::HttpClient;
 use tarrowyn_protocol::{AuthSession, GuestSessionResponse, SkillStatus};
 
 impl Phase4Client {
+    #[cfg(test)]
+    pub(crate) fn prime_refresh_for_test(
+        &mut self,
+        api: &mut HttpClient,
+        projection: &mut WorldProjection,
+    ) {
+        self.regional.prime_refresh_for_test();
+        let mut notices = Vec::<NetworkNotice>::new();
+        self.regional
+            .update(0.0, api, projection, true, false, &mut notices);
+    }
+
     pub(crate) fn queue_region_cycle(&mut self, id: &str) -> bool {
         self.regional.queue_cycle(id)
     }

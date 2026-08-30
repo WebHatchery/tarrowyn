@@ -132,10 +132,13 @@ impl OnlineClient {
         if self.state != ConnectionState::Online {
             return;
         }
+        if self.phase4.auth_refresh_pending() {
+            return;
+        }
         if self.pending_trades.is_none() {
             self.pending_trades = Some(self.api.get("/v1/trades"));
         }
-        if self.pending_trade.is_none() && !self.phase4.auth_refresh_pending() {
+        if self.pending_trade.is_none() {
             if let Some(request) = self.trade_queue.pop_front() {
                 self.pending_trade_action = Some(request.action);
                 self.pending_request_type = Some(format!("trade::{:?}", request.action));

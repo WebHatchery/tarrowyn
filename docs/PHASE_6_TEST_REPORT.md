@@ -1501,3 +1501,14 @@ server-package clippy, formatting, diff, and Rust file-size checks clean.
 deployment, and catalog synchronization. No full workspace gate was repeated
 because this was a one-condition consistency fix at the existing configuration
 boundary.
+
+The client now pauses authenticated projection reads as soon as production
+session rotation is pending: core state/events, trades, and frontier contracts,
+chronicle, and opportunities cannot be started with the old bearer token in
+the same frame. The focused
+`authenticated_reads_wait_for_a_same_frame_refresh_boundary` regression passes
+(1 matching test), with client-package clippy, formatting, diff, and Rust
+file-size checks clean. `publish.ps1` passed the Windows and WebGL release
+builds, packaging, Preview deployment, and catalog synchronization. No full
+workspace gate was repeated because this was an isolated client session-boundary
+fix.

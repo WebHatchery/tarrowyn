@@ -193,20 +193,20 @@ impl OnlineClient {
         if self.state != ConnectionState::Online {
             return;
         }
-        if self.pending_state.is_none() && self.state_refresh <= 0.0 {
-            self.pending_state = Some(self.api.get("/v1/state"));
-        }
         if self.pending_ops_health.is_none() && self.state_refresh <= 0.0 {
             self.pending_ops_health = Some(self.api.get("/v1/ops/health"));
+        }
+        if self.phase4.auth_refresh_pending() {
+            return;
+        }
+        if self.pending_state.is_none() && self.state_refresh <= 0.0 {
+            self.pending_state = Some(self.api.get("/v1/state"));
         }
         if self.pending_events.is_none() {
             self.pending_events = Some(
                 self.api
                     .get(&format!("/v1/events?since={}", self.projection.cursor)),
             );
-        }
-        if self.phase4.auth_refresh_pending() {
-            return;
         }
         if self.pending_movement.is_none() {
             if let Some(request) = self.movement_queue.pop_front() {
