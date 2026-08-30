@@ -462,6 +462,28 @@ fn account_control_stays_available_during_player_projection_reload() {
 }
 
 #[test]
+fn session_controls_stay_available_during_player_projection_reload() {
+    for control in ["logout", "report", "delete-account"] {
+        assert!(
+            super::panels::sidebar_button_enabled(control, true, ConnectionState::Online, false),
+            "{control} should not depend on the gameplay position projection"
+        );
+    }
+    assert!(!super::panels::sidebar_button_enabled(
+        "logout",
+        true,
+        ConnectionState::Degraded,
+        false
+    ));
+    assert!(!super::panels::sidebar_button_enabled(
+        "plant",
+        true,
+        ConnectionState::Online,
+        false
+    ));
+}
+
+#[test]
 fn recovery_controls_close_after_one_choice_is_pending() {
     assert!(!super::recovery_control_enabled(true, true));
     assert!(super::recovery_control_enabled(true, false));

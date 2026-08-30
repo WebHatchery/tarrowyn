@@ -658,12 +658,12 @@ pub fn draw_button_row(
     let width =
         (content.w - gap * (entries.len().saturating_sub(1) as f32)) / entries.len().max(1) as f32;
     for (index, (id, label, active, tone)) in entries.iter().enumerate() {
-        let enabled = match *id {
-            "reconnect" => reconnect_control_enabled(ctx.connection),
-            "offline" => true,
-            "account" | "account-details" => account_control_enabled(*active, ctx.connection),
-            _ => button_enabled(*active, ctx.connection, ctx.player_position_authoritative),
-        };
+        let enabled = sidebar_button_enabled(
+            id,
+            *active,
+            ctx.connection,
+            ctx.player_position_authoritative,
+        );
         if virtual_button(
             Rect::new(content.x + index as f32 * (width + gap), y, width, height),
             label,
@@ -681,6 +681,22 @@ pub fn draw_button_row(
                 actions.push(UiAction::Interact((*id).to_owned()));
             }
         }
+    }
+}
+
+pub(super) fn sidebar_button_enabled(
+    id: &str,
+    active: bool,
+    connection: ConnectionState,
+    player_position_authoritative: bool,
+) -> bool {
+    match id {
+        "reconnect" => reconnect_control_enabled(connection),
+        "offline" => true,
+        "account" | "account-details" | "logout" | "report" | "delete-account" => {
+            account_control_enabled(active, connection)
+        }
+        _ => button_enabled(active, connection, player_position_authoritative),
     }
 }
 

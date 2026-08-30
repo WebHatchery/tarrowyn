@@ -2991,3 +2991,15 @@ and the Rust file-size scan pass. The project `publish.ps1` Windows/WebGL
 build, packaging, Preview deployment, and catalog-sync checks pass. No full
 workspace gate was repeated because this was a bounded crafting-overlay
 touch-recovery correction, and no new external or deferred work was opened.
+
+Session-level `Logout`, `Report`, and linked-account `Delete` controls now stay
+enabled while the gameplay position projection is reloading, while gameplay
+actions continue to wait for authoritative position and degraded connections
+still require Reconnect. The focused
+`ui::ui_online::tests::session_controls_stay_available_during_player_projection_reload`
+regression passes, along with client-package formatting and clippy. `git diff --check`
+and the Rust file-size scan pass. The project `publish.ps1`
+Windows/WebGL build, packaging, Preview deployment, and catalog-sync checks
+pass. No full workspace gate was repeated because this was a bounded
+session-control readiness correction, and no new external or deferred work was
+opened.
