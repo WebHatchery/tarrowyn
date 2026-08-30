@@ -900,3 +900,10 @@ persistence cache regression verifies both the backup and restart boundaries;
 server clippy, formatting, size, diff, and publisher checks pass. No full
 workspace gate was rerun because this is a bounded Phase 6 replay-retention
 maintenance slice. No new external or deferred work was opened.
+
+Persisted regional route-action cooldowns now discard entries whose availability
+beat has already passed before the world reopens. The focused restart-readiness
+regression verifies the expired route boundary; server clippy, formatting, size,
+diff, and publisher checks pass. No full workspace gate was rerun because this
+is a bounded Phase 5 retention maintenance slice. No new external or deferred
+work was opened.

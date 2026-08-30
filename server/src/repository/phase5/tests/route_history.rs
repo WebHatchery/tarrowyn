@@ -149,3 +149,56 @@ fn route_logistics_accept_only_one_step_per_decision_interval() {
         .data;
     assert!(after_interval.accepted);
 }
+
+#[test]
+fn expired_route_cooldowns_are_pruned_before_restart_readiness() {
+    let path = std::env::temp_dir().join(format!(
+        "tarrowyn-route-cooldown-restart-{}.json",
+        std::process::id()
+    ));
+    let config = ServerConfig {
+        persistence_path: Some(path.to_string_lossy().into_owned()),
+        household_decision_interval_ticks: 4,
+        ..ServerConfig::default()
+    };
+    let repository = WorldRepository::new(config.clone());
+    let session = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("phase5-route-cooldown-restart".to_owned()),
+            reset: false,
+        })
+        .expect("guest session")
+        .data;
+    let response = repository
+        .route_action(
+            &session.account_token,
+            RouteRequest {
+                request_id: "route-cooldown-restart-action".to_owned(),
+                route_id: "north-pack-road".to_owned(),
+                action: RouteAction::Improve,
+            },
+        )
+        .expect("route action")
+        .data;
+    assert!(response.accepted);
+    drop(repository);
+
+    let mut snapshot: serde_json::Value =
+        serde_json::from_slice(&std::fs::read(&path).expect("snapshot")).expect("valid snapshot");
+    snapshot["tick"] = serde_json::json!(4);
+    std::fs::write(&path, serde_json::to_vec_pretty(&snapshot).expect("encode snapshot"))
+        .expect("write snapshot");
+
+    let loaded = WorldRepository::new(config);
+    let state = loaded.state.lock().unwrap();
+    assert!(!state
+        .phase5
+        .route_action_available_at_tick
+        .contains_key("north-pack-road"));
+    drop(state);
+    let health = loaded.ops_health().data;
+    assert!(health.integrity_ok);
+    assert!(health.ready);
+    drop(loaded);
+    let _ = std::fs::remove_file(path);
+}

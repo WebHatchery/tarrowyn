@@ -193,6 +193,9 @@ impl RepositoryState {
         );
         trim_replay_cache(&mut phase4.request_results);
         let mut phase5 = stored.phase5;
+        phase5
+            .route_action_available_at_tick
+            .retain(|_, available_at_tick| *available_at_tick > stored.tick);
         super::phase5::trim_market_orders(&mut phase5);
         super::phase5::trim_event_history(&mut phase5);
         super::phase5::trim_settlement_chronicles(&mut phase5);
