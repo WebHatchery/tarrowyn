@@ -7,6 +7,7 @@ use tarrowyn_protocol::{
     TileKind as ProtocolTileKind, TradeAction, TradeRequest, WorldClock, WorldEvent, WorldTile,
 };
 
+mod account_lifecycle;
 mod movement_feedback;
 
 fn config() -> GameConfig {

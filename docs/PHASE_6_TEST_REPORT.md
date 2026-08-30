@@ -2007,3 +2007,13 @@ pass, and `publish.ps1` passes Windows/WebGL builds, packaging, Preview
 deployment, and catalog sync. No full workspace gate was repeated because this
 was a bounded Phase 4 identity-cache correction, and no new external or
 deferred work was opened.
+
+The online client now treats the linked account handoff as a world-projection
+boundary: stale state, event, trade, movement, chat, farming, and trade-action
+requests are canceled, guest trade and frontier caches are cleared, and the
+authoritative state refresh restarts immediately. The focused client online
+handoff regression passes, client clippy and the Rust file-size check pass, and
+`publish.ps1` passes Windows/WebGL builds, packaging, Preview deployment, and
+catalog sync. No full workspace gate was repeated because this was a bounded
+online identity-handoff correction, and no new external or deferred work was
+opened.

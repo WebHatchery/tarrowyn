@@ -395,7 +395,7 @@ impl OnlineClient {
             &mut notices,
         );
         if let Some(account) = self.phase4.take_linked_account(self.client_key.as_deref()) {
-            self.account = Some(account);
+            self.apply_linked_account(account);
         }
         if let Some(session) = self.phase4.take_refreshed_session() {
             if let Some(account) = self.account.as_mut() {
@@ -416,6 +416,34 @@ impl OnlineClient {
         );
         maintenance::restore_status(self);
         notices
+    }
+
+    fn apply_linked_account(&mut self, account: GuestSessionResponse) {
+        self.account = Some(account);
+        self.pending_state = None;
+        self.pending_events = None;
+        self.pending_movement = None;
+        self.pending_chat = None;
+        self.pending_farming = None;
+        self.pending_trades = None;
+        self.pending_trade = None;
+        self.movement_queue.clear();
+        self.chat_queue.clear();
+        self.farming_queue.clear();
+        self.trade_queue.clear();
+        self.pending_request_type = None;
+        self.pending_request_id = None;
+        self.action_awaiting_confirmation = false;
+        self.pending_trade_action = None;
+        self.trades.clear();
+        self.frontier.clear();
+        self.projection.player = None;
+        self.projection.players.clear();
+        self.projection.trades.clear();
+        self.projection.claim = None;
+        self.projection.outpost = None;
+        self.projection.expedition = None;
+        self.state_refresh = 0.0;
     }
 
     pub fn refresh_tavern(&mut self) {
