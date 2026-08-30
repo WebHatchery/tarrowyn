@@ -2847,3 +2847,13 @@ file-size scan pass. The project `publish.ps1` Windows/WebGL build, packaging,
 Preview deployment, and catalog-sync checks pass. No full workspace gate was
 repeated because this was a bounded production-session recovery correction,
 and no new external or deferred work was opened.
+
+Active JSON world snapshots now write and sync their temporary file before the
+atomic replacement, matching the existing backup durability path. Failed writes
+also remove their temporary artifact before reporting persistence failure. The
+focused `repository::tests::persistence::relative_json_paths_write_state_and_backup_files`
+test passes; server-package formatting and clippy, `git diff --check`, and the Rust
+file-size scan pass. The project `publish.ps1` Windows/WebGL build, packaging,
+Preview deployment, and catalog-sync checks pass. No full workspace gate was
+repeated because this was a bounded JSON persistence durability correction, and no
+new external or deferred work was opened.

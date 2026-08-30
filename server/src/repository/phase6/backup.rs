@@ -1,8 +1,7 @@
 use super::super::models::RepositoryState;
-use super::super::persistence::replace_file;
+use super::super::persistence::{replace_file, write_and_sync};
 use crate::config::ServerConfig;
 use std::fs;
-use std::io::Write;
 use std::path::Path;
 
 pub(super) fn write(state: &mut RepositoryState, config: &ServerConfig) -> bool {
@@ -57,10 +56,4 @@ pub(super) fn write(state: &mut RepositoryState, config: &ServerConfig) -> bool 
         eprintln!("Tarrowyn backup write failed: could not replace the backup snapshot");
         false
     }
-}
-
-fn write_and_sync(path: &Path, data: &[u8]) -> std::io::Result<()> {
-    let mut file = fs::File::create(path)?;
-    file.write_all(data)?;
-    file.sync_all()
 }

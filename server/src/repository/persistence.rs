@@ -4,6 +4,7 @@ use super::models::{RepositoryState, StoredState};
 use super::mysql::MysqlStore;
 use crate::config::ServerConfig;
 use std::fs;
+use std::io::Write;
 #[cfg(windows)]
 use std::os::windows::ffi::OsStrExt;
 use std::path::Path;
@@ -111,13 +112,22 @@ fn persist_json(
             .unwrap_or("state"),
         std::process::id()
     ));
-    fs::write(&temporary_path, data).map_err(|_| {
-        PersistenceBackendError::new("the JSON world snapshot could not be written")
-    })?;
+    if write_and_sync(&temporary_path, &data).is_err() {
+        let _ = fs::remove_file(&temporary_path);
+        return Err(PersistenceBackendError::new(
+            "the JSON world snapshot could not be written",
+        ));
+    }
     replace_file(&temporary_path, path).map_err(|_| {
         let _ = fs::remove_file(&temporary_path);
         PersistenceBackendError::new("the JSON world snapshot could not be replaced")
     })
+}
+
+pub(super) fn write_and_sync(path: &Path, data: &[u8]) -> std::io::Result<()> {
+    let mut file = fs::File::create(path)?;
+    file.write_all(data)?;
+    file.sync_all()
 }
 
 #[cfg(not(windows))]
