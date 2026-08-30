@@ -437,6 +437,12 @@ remain present after restore or repair. One focused regression exercises each
 missing collection; the dynamic available-plot list remains allowed to be empty
 when all recognised plots are occupied.
 
+Service-order creation now checks the recipe's material and tool escrow before
+evicting completed board history to make room. A failed insufficient-materials
+request therefore leaves the retained service ledger unchanged; the focused
+service-order retention suite covers that rejection beside the existing
+room-making and full-board paths.
+
 Phase 4 land-registry integrity now also rejects claim and available-plot
 positions outside the configured world bounds, while retaining dynamic plot
 layouts for migration compatibility. Two focused regressions cover malformed

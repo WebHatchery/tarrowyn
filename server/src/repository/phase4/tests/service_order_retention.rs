@@ -110,6 +110,48 @@ fn service_order_history_evicts_settled_records_and_preserves_live_escrow() {
 }
 
 #[test]
+fn rejected_service_order_does_not_evict_settled_history() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = guest(&repository, "phase4-service-rejected-history");
+    repository
+        .professions(&session.account_token)
+        .expect("profession ledger");
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state.phase4.orders = (0..64)
+            .map(|index| service_order(index, ServiceOrderStatus::Completed))
+            .collect();
+        state
+            .phase4
+            .materials
+            .get_mut(&session.client_key)
+            .expect("materials")
+            .tools = 0;
+    }
+
+    let rejected = repository
+        .profession_order(
+            &session.account_token,
+            create_request("service-rejected-history"),
+        )
+        .expect("missing escrow should return a response")
+        .data;
+
+    assert!(!rejected.accepted);
+    assert!(rejected
+        .reason
+        .as_deref()
+        .is_some_and(|reason| reason.contains("requirements")));
+    let state = repository.state.lock().expect("repository lock");
+    assert_eq!(state.phase4.orders.len(), 64);
+    assert!(state
+        .phase4
+        .orders
+        .iter()
+        .any(|order| order.order_id == "service-order-0"));
+}
+
+#[test]
 fn service_order_id_stays_at_the_numeric_ceiling() {
     let repository = WorldRepository::new(ServerConfig::default());
     let session = guest(&repository, "service-order-id-ceiling");

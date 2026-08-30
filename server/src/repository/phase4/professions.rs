@@ -99,9 +99,31 @@ impl super::super::WorldRepository {
             ProfessionAction::CreateOrder => {
                 let recipe = crate::content::recipe_template("field-tool-repair");
                 let profession = request.profession.unwrap_or(recipe.profession);
+                let required = recipe.materials;
+                let has_required_materials =
+                    state.phase4.materials.get(&key).is_some_and(|stock| {
+                        has_materials(*stock, required) && stock.tools >= recipe.tools_required
+                    });
+                let board_has_room = state.phase4.orders.len() < super::MAX_SERVICE_ORDERS
+                    || state.phase4.orders.iter().any(|order| {
+                        matches!(
+                            order.status,
+                            ServiceOrderStatus::Completed | ServiceOrderStatus::Cancelled
+                        )
+                    });
                 if profession != recipe.profession {
                     response.reason = Some(
                         "The current service order recipe requires the Carpenter profession."
+                            .to_owned(),
+                    );
+                } else if !board_has_room {
+                    response.reason = Some(
+                        "The service order board is full; complete an existing order before adding another."
+                            .to_owned(),
+                    );
+                } else if !has_required_materials {
+                    response.reason = Some(
+                        "This order shows its wood, iron, and tool requirements before creation."
                             .to_owned(),
                     );
                 } else if !super::service_order_room(&mut state.phase4) {
@@ -115,38 +137,30 @@ impl super::super::WorldRepository {
                         .materials
                         .get_mut(&key)
                         .expect("materials exist");
-                    let required = recipe.materials;
-                    if !has_materials(*stock, required) || stock.tools < recipe.tools_required {
-                        response.reason = Some(
-                            "This order shows its wood, iron, and tool requirements before creation."
-                                .to_owned(),
-                        );
-                    } else {
-                        subtract_materials(stock, required);
-                        stock.tools -= recipe.tools_required;
-                        let order = ServiceOrder {
-                            order_id: format!("service-order-{}", state.phase4.next_order_id),
-                            requester_account_id: account_id(&state, &key),
-                            requester_name: account_name(&state, &key),
-                            provider_account_id: None,
-                            provider_name: None,
-                            service: recipe.service.clone(),
-                            required_profession: recipe.profession,
-                            materials: required,
-                            tools_required: recipe.tools_required,
-                            reward_gold: recipe.reward_gold,
-                            benefit: recipe.benefit,
-                            status: ServiceOrderStatus::Open,
-                            quality: 0,
-                            created_tick: state.tick,
-                            completed_tick: None,
-                        };
-                        state.phase4.next_order_id = state.phase4.next_order_id.saturating_add(1);
-                        response.order = Some(order.clone());
-                        state.phase4.orders.push(order);
-                        response.accepted = true;
-                        record(&mut state, "service order created", "A need becomes work another profession can answer", "A player escrowed materials and posted a repair order on the settlement board.");
-                    }
+                    subtract_materials(stock, required);
+                    stock.tools -= recipe.tools_required;
+                    let order = ServiceOrder {
+                        order_id: format!("service-order-{}", state.phase4.next_order_id),
+                        requester_account_id: account_id(&state, &key),
+                        requester_name: account_name(&state, &key),
+                        provider_account_id: None,
+                        provider_name: None,
+                        service: recipe.service.clone(),
+                        required_profession: recipe.profession,
+                        materials: required,
+                        tools_required: recipe.tools_required,
+                        reward_gold: recipe.reward_gold,
+                        benefit: recipe.benefit,
+                        status: ServiceOrderStatus::Open,
+                        quality: 0,
+                        created_tick: state.tick,
+                        completed_tick: None,
+                    };
+                    state.phase4.next_order_id = state.phase4.next_order_id.saturating_add(1);
+                    response.order = Some(order.clone());
+                    state.phase4.orders.push(order);
+                    response.accepted = true;
+                    record(&mut state, "service order created", "A need becomes work another profession can answer", "A player escrowed materials and posted a repair order on the settlement board.");
                 }
             }
             ProfessionAction::AcceptOrder => {
