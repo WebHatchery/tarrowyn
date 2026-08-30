@@ -15,6 +15,7 @@ pub(super) fn run(state: &mut RepositoryState, config: &ServerConfig) -> Option<
         .auth_refresh_accounts
         .retain(|key, _| state.phase6.auth_refresh_results.contains_key(key));
     trim_replay_cache(&mut state.phase6.auth_revoke_results);
+    trim_replay_cache(&mut state.phase6.auth_revoke_guest_tokens);
     trim_replay_cache(&mut state.phase6.moderation_results);
     prune_moderation_cooldowns(state);
     trim_replay_cache(&mut state.phase3.request_results);

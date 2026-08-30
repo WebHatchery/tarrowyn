@@ -59,6 +59,10 @@ pub(super) fn reset_guest(state: &mut RepositoryState, identity_key: &str) {
         .retain(|key, response| key != &format!("{identity_key}:{}", response.request_id));
     state
         .phase6
+        .auth_revoke_guest_tokens
+        .retain(|_, revoked_identity_key| revoked_identity_key != identity_key);
+    state
+        .phase6
         .moderation_last_report_ticks
         .remove(identity_key);
     state.phase6.request_results.retain(|key, response| {

@@ -105,6 +105,10 @@ fn erase_account(state: &mut RepositoryState, request: &PendingAccountDeletion) 
     state.phase6.auth_revoke_results.retain(|key, response| {
         key != &format!("{}:{}", request.identity_key, response.request_id)
     });
+    state
+        .phase6
+        .auth_revoke_guest_tokens
+        .retain(|_, identity_key| identity_key != &request.identity_key);
     state.phase6.auth_refresh_results.retain(|key, response| {
         !deleted_refresh_replays.contains(key)
             && !deleted_tokens.contains(&response.session.account_token)

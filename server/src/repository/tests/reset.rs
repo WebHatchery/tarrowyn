@@ -152,6 +152,16 @@ fn guest_reset_replaces_private_state_and_releases_world_ownership() {
         .unwrap();
     assert_eq!(revoke.data.revoked_sessions, 1);
     assert!(repository.world(&first.account_token).is_err());
+    let replayed_revoke = repository
+        .auth_revoke(
+            &first.account_token,
+            AuthRevokeRequest {
+                request_id: "reset-revoke".to_owned(),
+                revoke_all: false,
+            },
+        )
+        .expect("the same guest revoke should replay after removal");
+    assert_eq!(replayed_revoke.data, revoke.data);
 
     let second = repository
         .guest_session(GuestSessionRequest {
@@ -189,6 +199,7 @@ fn guest_reset_replaces_private_state_and_releases_world_ownership() {
         .keys()
         .any(|key| key.starts_with(&format!("phase5:{}:", first.client_key))));
     assert!(state.phase6.auth_revoke_results.is_empty());
+    assert!(state.phase6.auth_revoke_guest_tokens.is_empty());
     let claim = state
         .phase4
         .claims

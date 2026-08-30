@@ -144,6 +144,7 @@ fn replay_caches_ok(state: &RepositoryState, identity_accounts: &HashSet<&str>) 
         phase6.auth_refresh_results.len(),
         phase6.auth_refresh_accounts.len(),
         phase6.auth_revoke_results.len(),
+        phase6.auth_revoke_guest_tokens.len(),
         phase6.moderation_results.len(),
         phase6.request_results.len(),
     ]
@@ -208,6 +209,10 @@ fn replay_caches_ok(state: &RepositoryState, identity_accounts: &HashSet<&str>) 
             && bounded(&response.request_id, 64)
             && identity_cache_key_matches(key, "", &response.request_id, state)
     });
+    let revoked_guest_tokens_ok = phase6.auth_revoke_guest_tokens.iter().all(
+        |(_, identity_key)| bounded(identity_key, MAX_ACCOUNT_ID_CHARS)
+            && state.identities.contains_key(identity_key),
+    );
     let support_results_ok = phase6.request_results.iter().all(|(key, response)| {
         bounded(key, MAX_CACHE_KEY_CHARS)
             && support_response_ok(response)
@@ -228,6 +233,7 @@ fn replay_caches_ok(state: &RepositoryState, identity_accounts: &HashSet<&str>) 
         && refresh_results_ok
         && refresh_accounts_ok
         && revoke_results_ok
+        && revoked_guest_tokens_ok
         && support_results_ok
         && moderation_results_ok
         && account_ids_ok

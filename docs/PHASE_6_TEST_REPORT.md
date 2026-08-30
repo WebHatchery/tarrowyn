@@ -877,3 +877,11 @@ token usable until its normal timeout. The focused guest reset/logout regression
 server clippy, formatting, size, and diff checks pass; no full workspace gate
 was rerun because this is a bounded session-boundary maintenance slice. No new
 external or deferred work was opened.
+
+Guest revocation also keeps a bounded fingerprint tombstone long enough to
+identify the same request after the bearer has been removed, preserving replay
+idempotency without persisting the token itself. The focused guest revoke replay
+and reset cleanup assertions, server clippy, formatting, size, and diff checks
+pass; no full workspace gate was rerun because this is a continuation of the
+same session-boundary maintenance slice. No new external or deferred work was
+opened.

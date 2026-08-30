@@ -105,6 +105,8 @@ pub(super) struct Phase6State {
     pub(super) auth_refresh_accounts: HashMap<String, String>,
     #[serde(default)]
     pub(super) auth_revoke_results: HashMap<String, AuthRevokeResponse>,
+    #[serde(default)]
+    pub(super) auth_revoke_guest_tokens: HashMap<u64, String>,
     pub(super) audits: VecDeque<AuditRecord>,
     pub(super) reports: HashMap<String, ModerationReportResponse>,
     #[serde(default)]
@@ -140,6 +142,7 @@ pub(super) fn fresh(_config: &ServerConfig) -> Phase6State {
         auth_refresh_results: HashMap::new(),
         auth_refresh_accounts: HashMap::new(),
         auth_revoke_results: HashMap::new(),
+        auth_revoke_guest_tokens: HashMap::new(),
         audits: VecDeque::new(),
         reports: HashMap::new(),
         report_created_at: HashMap::new(),
@@ -439,6 +442,13 @@ impl WorldRepository {
                     .sessions
                     .get(token)
                     .map(|session| session.identity_key.clone())
+            })
+            .or_else(|| {
+                state
+                    .phase6
+                    .auth_revoke_guest_tokens
+                    .get(&stable_fingerprint(token))
+                    .cloned()
             });
         if let Some(identity_key) = identity_hint.as_deref() {
             let cache_key = format!("{}:{}", identity_key, request.request_id);
@@ -456,6 +466,16 @@ impl WorldRepository {
             .expect("identity exists")
             .account_id
             .clone();
+        let guest_tokens: Vec<String> = state
+            .sessions
+            .iter()
+            .filter(|(session_token, session)| {
+                session.identity_key == key
+                    && !state.phase6.sessions.contains_key(*session_token)
+                    && (request.revoke_all || *session_token == token)
+            })
+            .map(|(session_token, _)| session_token.clone())
+            .collect();
         let mut tokens: HashSet<String> = state
             .phase6
             .sessions
@@ -475,6 +495,12 @@ impl WorldRepository {
                 session.revoked = true;
             }
             state.sessions.remove(session_token);
+        }
+        for guest_token in guest_tokens {
+            state
+                .phase6
+                .auth_revoke_guest_tokens
+                .insert(stable_fingerprint(&guest_token), key.clone());
         }
         audit(
             &mut state,

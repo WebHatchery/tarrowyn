@@ -2,11 +2,15 @@ use super::phase3::Phase3State;
 use super::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
+use std::hash::Hash;
 use tarrowyn_protocol::FarmPlot;
 
 pub(super) const MAX_REPLAY_CACHE: usize = 512;
 
-pub(super) fn trim_replay_cache<T>(cache: &mut HashMap<String, T>) {
+pub(super) fn trim_replay_cache<K, T>(cache: &mut HashMap<K, T>)
+where
+    K: Clone + Eq + Hash,
+{
     while cache.len() > MAX_REPLAY_CACHE {
         let Some(key) = cache.keys().next().cloned() else {
             break;
