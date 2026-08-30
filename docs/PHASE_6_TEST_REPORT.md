@@ -1053,3 +1053,11 @@ combat. The focused farming tests (10 passed), server clippy, direct formatting,
 diff, and Rust file-size checks pass. The publisher check remains the runtime
 validation path; no full workspace gate was rerun because this is a bounded
 Phase 4 farming authority slice. No new external or deferred work was opened.
+
+The online sidebar now disables Plant, Tend, Harvest, and Care while the
+character is knocked out, matching the authoritative farming recovery boundary
+and keeping the visible touch surface from advertising unavailable work. The
+focused online UI tests (3 passed), client clippy, direct formatting, diff, and
+Rust file-size checks pass. The publisher check remains the runtime validation
+path; no full workspace gate was rerun because this is a bounded client
+presentation slice. No new external or deferred work was opened.

@@ -76,10 +76,10 @@ pub(super) fn draw_sidebar(
         23.0,
         mouse,
         &[
-            ("plant", "Plant", true, ButtonTone::Positive),
-            ("tend", "Tend", true, ButtonTone::Positive),
-            ("harvest", "Harvest", true, ButtonTone::Positive),
-            ("animal", "Care", true, ButtonTone::Positive),
+            ("plant", "Plant", !ctx.knocked_out, ButtonTone::Positive),
+            ("tend", "Tend", !ctx.knocked_out, ButtonTone::Positive),
+            ("harvest", "Harvest", !ctx.knocked_out, ButtonTone::Positive),
+            ("animal", "Care", !ctx.knocked_out, ButtonTone::Positive),
             (
                 "trade",
                 if has_pending_trade { "Review" } else { "Trade" },
