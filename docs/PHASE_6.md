@@ -182,7 +182,7 @@ Suggested production-facing additions include:
 | `POST /v1/account/delete` | Queue authenticated account deletion and anonymise retained public history. |
 | `GET /v1/support/account` | Let an allowlisted operator inspect account state without secrets. |
 | `POST /v1/support/repair` | Audited operator repair for explicitly supported stuck-state cases. |
-| `GET /v1/ops/health` / `GET /v1/ops/metrics` | Expose readiness and operational signals to the deployment, not to ordinary players. |
+| `GET /v1/ops/health` / `GET /v1/ops/metrics` | Expose a safe public readiness projection for client maintenance handling; keep detailed operational metrics behind authenticated operator access. |
 | `GET /v1/chronicle/search` | Search or summarise long-lived regional history with access controls. |
 
 The client must handle session expiry, maintenance, deployment mismatch,
