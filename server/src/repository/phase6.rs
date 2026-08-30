@@ -485,6 +485,7 @@ impl WorldRepository {
                 });
             }
         }
+        self.expire_and_persist_sessions(&mut state);
         let key = authenticate(&mut state, token, &self.config)?;
         let account = state
             .identities

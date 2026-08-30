@@ -111,3 +111,46 @@ fn expired_account_read_persists_presence_before_rejecting_access() {
     drop(state);
     let _ = std::fs::remove_file(path);
 }
+
+#[test]
+fn expired_revoke_attempt_persists_presence_before_rejecting_access() {
+    let repository = WorldRepository::new(ServerConfig {
+        backup_path: None,
+        session_ttl_seconds: 1,
+        ..ServerConfig::default()
+    });
+    let session = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("expired-revoke-presence".to_owned()),
+            reset: false,
+        })
+        .expect("guest session")
+        .data;
+
+    {
+        let mut state = repository.state.lock().expect("state lock");
+        state.tick = repository.config.session_ttl_ticks();
+    }
+
+    let error = repository
+        .auth_revoke(
+            &session.account_token,
+            tarrowyn_protocol::AuthRevokeRequest {
+                request_id: "expired-revoke".to_owned(),
+                revoke_all: false,
+            },
+        )
+        .unwrap_err();
+    assert_eq!(error.status, 401);
+    assert!(repository
+        .state
+        .lock()
+        .expect("state lock")
+        .events
+        .iter()
+        .any(|record| matches!(
+            &record.event,
+            WorldEvent::Presence(presence)
+                if !presence.online && presence.account_id == session.account_id
+        )));
+}

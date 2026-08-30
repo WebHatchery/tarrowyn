@@ -778,6 +778,17 @@ builds, packaging, Preview deployment, and catalog sync. No full workspace gate
 was repeated because this was a bounded client homestead-feedback slice, and
 no new external or deferred work was opened.
 
+An expired access token reaching the revoke endpoint now passes through the
+same change-aware session sweep after replay lookup, so the rejected logout
+attempt records its offline presence before returning unauthorized. Existing
+revocation replay behavior remains unchanged. The focused
+`repository::session::tests` filter passes four tests; server-package formatting
+and clippy, `git diff --check`, and the Rust file-size scan pass. The project
+`publish.ps1` Windows/WebGL build, packaging, Preview deployment, and
+catalog-sync checks pass. No full workspace gate was repeated because this was
+a bounded session-expiry endpoint correction, and no new external or deferred
+work was opened.
+
 The online crafting overlay now appears only while the shared connection is
 Online, so a disconnect during timing play no longer hides the visible
 Reconnect control behind an action that the request layer cannot submit. The
