@@ -2369,3 +2369,12 @@ clippy, standards, and the Rust file-size check pass, and `publish.ps1` passes
 Windows/WebGL builds, packaging, Preview deployment, and catalog sync. No full
 workspace gate was repeated because this was a bounded regional-travel queue
 correction, and no new external or deferred work was opened.
+
+The implemented Phase 3–5 mutation surfaces now share queue-boundary protection
+for stale projections: farming, trade, governance, skill, combat, frontier
+contract, expedition, claim, and recovery, plus Phase 5 market, event, route,
+travel, moderation, and Phase 4 knowledge and service-order controls. The major
+command-hardening milestone passed the full workspace gate: 15 protocol tests,
+419 server tests, 199 client tests, asset registry, code standards, doc tests,
+and workspace clippy with warnings denied. The focused publisher checks for the
+latest slices also pass; no new external or deferred work was opened.
