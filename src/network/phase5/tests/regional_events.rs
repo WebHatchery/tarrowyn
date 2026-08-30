@@ -196,6 +196,7 @@ fn regional_event_initial_cache_stays_bounded() {
 #[test]
 fn regional_cursor_reset_discards_stale_events_and_restarts_refresh() {
     let mut client = Phase5Client::new();
+    client.account = Some(account_response(false));
     client.region = Some(tarrowyn_protocol::RegionSnapshot {
         region_id: "hearthlands".to_owned(),
         season: "thaw".to_owned(),
@@ -237,6 +238,7 @@ fn regional_cursor_reset_discards_stale_events_and_restarts_refresh() {
     assert!(client.region.is_none());
     assert!(client.market.is_none());
     assert!(client.events.is_none());
+    assert!(client.account.is_none());
     assert!(client.commands.is_empty());
     assert_eq!(client.refresh_timer, 0.0);
 }

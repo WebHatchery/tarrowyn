@@ -2755,3 +2755,15 @@ clippy, `git diff --check`, and the Rust file-size scan pass. The project
 catalog-sync checks pass. No full workspace gate was repeated because this was
 a bounded presence-transition correction, and no new external or deferred
 work was opened.
+
+Cursor recovery now clears the cached account character snapshot alongside
+regional, reward, and history projections. The account panel therefore shows
+its loading boundary until the scheduled authenticated account read returns,
+instead of presenting stale position, gold, or status after a restored history
+window. The focused
+`network::phase5::tests::regional_events::regional_cursor_reset_discards_stale_events_and_restarts_refresh`
+regression passes; client-package formatting and clippy, `git diff --check`,
+and the Rust file-size scan pass. The project `publish.ps1` Windows/WebGL
+build, packaging, Preview deployment, and catalog-sync checks pass. No full
+workspace gate was repeated because this was a bounded stale-account-cache
+correction, and no new external or deferred work was opened.

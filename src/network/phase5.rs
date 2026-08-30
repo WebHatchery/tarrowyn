@@ -497,6 +497,7 @@ impl Phase5Client {
         self.in_flight_command = None;
         self.commands.clear();
         self.clear_cached_projections();
+        self.account = None;
         self.refresh_timer = 0.0;
         self.command_retry_timer = 0.0;
         self.command_retry_count = 0;
