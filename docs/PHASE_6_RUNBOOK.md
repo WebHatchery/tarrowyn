@@ -131,8 +131,14 @@ Run `scripts/phase6_failure_drill.ps1` with the active JSON state and its backup
 present. The drill fingerprints the active state, parses the backup, checks
 storage version, starts a server on a temporary port, reads `/v1/ops/health`,
 and verifies that the active fingerprint is unchanged; it does not overwrite the
-active world. The MySQL backend currently exposes the same versioned snapshot as a
-transactional bridge. `scripts/verify_mysql.ps1` covers the local migration,
+active world. A cold `cargo run` is allowed a longer startup window, and a
+startup failure includes the temporary server's captured stdout and stderr.
+Older JSON snapshots are upgraded in memory before readiness is checked: missing
+regional fallback-window metadata is restored from the saved clock, bounded
+household opportunity scores are clamped, and orphaned public-history or audit
+actors are anonymised as former residents. The MySQL backend currently exposes
+the same versioned snapshot as a transactional bridge. `scripts/verify_mysql.ps1`
+covers the local migration,
 restart, duplicate-request, backup, and native dump/restore portion of that
 gate; target-environment failover, concurrency, and rollback drills remain
 explicit. For a stuck journey use `ClearStuckTravel`, for a duplicate or invalid
