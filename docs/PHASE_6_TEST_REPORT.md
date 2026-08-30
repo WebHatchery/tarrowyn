@@ -1000,3 +1000,11 @@ direct formatting, diff, Rust file-size, and client clippy checks pass. The
 publisher check remains the runtime validation path; no full workspace gate was
 rerun because this is a bounded continuation of client cursor-ordering
 maintenance. No new external or deferred work was opened.
+
+The regional law and authenticated-account reads now use the same monotonic
+cursor boundary as the other Phase 5 projections, so a delayed guest response
+cannot replace a newly linked production account view. The focused Phase 5
+tests (29 passed), direct formatting, diff, Rust file-size, and client clippy
+checks pass. The publisher check remains the runtime validation path; no full
+workspace gate was rerun because this is a bounded Phase 5 client ordering
+maintenance slice. No new external or deferred work was opened.

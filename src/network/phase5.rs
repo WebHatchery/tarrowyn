@@ -179,7 +179,9 @@ impl Phase5Client {
             dt,
             |response| {
                 projection.record_response_version(response.meta.server_tick, response.meta.cursor);
-                self.law = Some(response.data);
+                if accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor) {
+                    self.law = Some(response.data);
+                }
             },
             notices,
             "law boundary",
@@ -189,7 +191,9 @@ impl Phase5Client {
             dt,
             |response| {
                 projection.record_response_version(response.meta.server_tick, response.meta.cursor);
-                self.account = Some(response.data);
+                if accept_projection_cursor(&mut self.projection_cursor, response.meta.cursor) {
+                    self.account = Some(response.data);
+                }
             },
             notices,
             "account boundary",

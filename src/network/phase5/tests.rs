@@ -296,6 +296,15 @@ fn older_regional_projection_cannot_replace_newer_command_state() {
 }
 
 #[test]
+fn account_and_law_reads_share_the_regional_cursor_boundary() {
+    let mut cursor = 0;
+
+    assert!(super::accept_projection_cursor(&mut cursor, Some(16)));
+    assert!(!super::accept_projection_cursor(&mut cursor, Some(15)));
+    assert_eq!(cursor, 16);
+}
+
+#[test]
 fn market_success_notice_describes_the_requested_action() {
     assert_eq!(
         super::market_success_message(Some(MarketOrderAction::Create), false),
