@@ -1150,3 +1150,10 @@ in a Join/Launch cycle. The focused frontier role-selection regression passes;
 client clippy, direct formatting, diff, and size checks pass. No publisher run
 was needed because this is a client selector/test slice. No new external or
 deferred work was opened.
+
+Expedition launch and resolution now require the authenticated character to be
+named on the pioneer party, matching the existing membership boundary for join
+and supply actions. The focused frontier authority regression passes; server
+clippy, direct formatting, diff, and size checks pass. No publisher run was
+needed because this is a server authority/test slice. No new external or
+deferred work was opened.

@@ -18,6 +18,13 @@ fn expedition_is_staffed(expedition: &Expedition) -> bool {
     expedition.members.len() >= 3 && has_roles(&expedition.members)
 }
 
+fn expedition_has_member(expedition: &Expedition, account_id: &str) -> bool {
+    expedition
+        .members
+        .iter()
+        .any(|member| member.account_id == account_id)
+}
+
 fn expedition_is_prepared(expedition: &Expedition, config: &ServerConfig) -> bool {
     expedition_is_staffed(expedition)
         && expedition.food >= config.expedition_min_food
@@ -381,6 +388,9 @@ impl WorldRepository {
                 };
                 if !expedition_selector_matches(expedition_id.as_deref(), &existing.expedition_id) {
                     response.reason = Some("That expedition is no longer current.".to_owned());
+                } else if !expedition_has_member(&existing, &account_id) {
+                    response.reason =
+                        Some("Join the pioneer party before launching it.".to_owned());
                 } else if existing.status != ExpeditionStatus::Planning {
                     response.reason =
                         Some("Only a gathering expedition can be launched.".to_owned());
@@ -421,6 +431,10 @@ impl WorldRepository {
                 };
                 if !expedition_selector_matches(expedition_id.as_deref(), &existing.expedition_id) {
                     response.reason = Some("That expedition is no longer current.".to_owned());
+                    response.expedition = Some(existing.clone());
+                } else if !expedition_has_member(&existing, &account_id) {
+                    response.reason =
+                        Some("Join the pioneer party before resolving it.".to_owned());
                     response.expedition = Some(existing.clone());
                 } else if existing.status != ExpeditionStatus::Launched {
                     response.reason =

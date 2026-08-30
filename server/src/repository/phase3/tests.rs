@@ -228,6 +228,153 @@ fn expedition_actions_reject_stale_selectors_without_mutating_the_registry() {
 }
 
 #[test]
+fn expedition_launch_and_resolve_require_party_membership() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let leader = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("expedition-authority-leader".to_owned()),
+            reset: false,
+        })
+        .expect("leader guest")
+        .data;
+    let farmer = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("expedition-authority-farmer".to_owned()),
+            reset: false,
+        })
+        .expect("farmer guest")
+        .data;
+    let builder = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("expedition-authority-builder".to_owned()),
+            reset: false,
+        })
+        .expect("builder guest")
+        .data;
+    let outsider = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("expedition-authority-outsider".to_owned()),
+            reset: false,
+        })
+        .expect("outsider guest")
+        .data;
+
+    repository
+        .expedition(
+            &leader.account_token,
+            ExpeditionRequest {
+                request_id: "authority-announce".to_owned(),
+                action: ExpeditionAction::Announce,
+                expedition_id: None,
+                role: Some(ExpeditionRole::Scout),
+                food: 0,
+                tools: 0,
+                materials: 0,
+                safety: 0,
+                outpost_name: None,
+            },
+        )
+        .expect("expedition announce");
+    for (session, role, request_id) in [
+        (&farmer, ExpeditionRole::Farmer, "authority-join-farmer"),
+        (&builder, ExpeditionRole::Builder, "authority-join-builder"),
+    ] {
+        assert!(
+            repository
+                .expedition(
+                    &session.account_token,
+                    ExpeditionRequest {
+                        request_id: request_id.to_owned(),
+                        action: ExpeditionAction::Join,
+                        expedition_id: Some("pioneer-1".to_owned()),
+                        role: Some(role),
+                        food: 0,
+                        tools: 0,
+                        materials: 0,
+                        safety: 0,
+                        outpost_name: None,
+                    },
+                )
+                .expect("expedition join")
+                .data
+                .accepted
+        );
+    }
+
+    let outsider_launch = repository
+        .expedition(
+            &outsider.account_token,
+            ExpeditionRequest {
+                request_id: "authority-outsider-launch".to_owned(),
+                action: ExpeditionAction::Launch,
+                expedition_id: Some("pioneer-1".to_owned()),
+                role: None,
+                food: 0,
+                tools: 0,
+                materials: 0,
+                safety: 0,
+                outpost_name: None,
+            },
+        )
+        .expect("outsider launch response")
+        .data;
+    assert!(!outsider_launch.accepted);
+    assert_eq!(
+        outsider_launch.reason.as_deref(),
+        Some("Join the pioneer party before launching it.")
+    );
+
+    let leader_launch = repository
+        .expedition(
+            &leader.account_token,
+            ExpeditionRequest {
+                request_id: "authority-leader-launch".to_owned(),
+                action: ExpeditionAction::Launch,
+                expedition_id: Some("pioneer-1".to_owned()),
+                role: None,
+                food: 0,
+                tools: 0,
+                materials: 0,
+                safety: 0,
+                outpost_name: None,
+            },
+        )
+        .expect("leader launch response")
+        .data;
+    assert!(leader_launch.accepted);
+
+    let outsider_resolve = repository
+        .expedition(
+            &outsider.account_token,
+            ExpeditionRequest {
+                request_id: "authority-outsider-resolve".to_owned(),
+                action: ExpeditionAction::Resolve,
+                expedition_id: Some("pioneer-1".to_owned()),
+                role: None,
+                food: 0,
+                tools: 0,
+                materials: 0,
+                safety: 0,
+                outpost_name: None,
+            },
+        )
+        .expect("outsider resolve response")
+        .data;
+    assert!(!outsider_resolve.accepted);
+    assert_eq!(
+        outsider_resolve.reason.as_deref(),
+        Some("Join the pioneer party before resolving it.")
+    );
+    assert_eq!(
+        outsider_resolve
+            .expedition
+            .expect("current expedition")
+            .status,
+        ExpeditionStatus::Launched
+    );
+}
+
+#[test]
 fn poorly_prepared_expedition_can_retreat_without_founding_an_outpost() {
     let repository = WorldRepository::new(ServerConfig::default());
     let leader = guest(&repository);
