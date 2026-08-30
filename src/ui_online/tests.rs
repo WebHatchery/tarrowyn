@@ -363,6 +363,26 @@ fn walking_controls_wait_for_an_authoritative_player_projection() {
 }
 
 #[test]
+fn movement_tooltip_names_the_next_visible_recovery_path() {
+    assert!(
+        super::movement_tooltip_for(ConnectionState::Degraded, false, false, false, false)
+            .contains("Reconnect")
+    );
+    assert!(
+        super::movement_tooltip_for(ConnectionState::Online, false, false, false, false)
+            .contains("position is still loading")
+    );
+    assert!(
+        super::movement_tooltip_for(ConnectionState::Online, false, true, true, false)
+            .contains("recovery prompt")
+    );
+    assert!(
+        super::movement_tooltip_for(ConnectionState::Online, false, false, true, true)
+            .contains("Travel or Recover")
+    );
+}
+
+#[test]
 fn companion_count_ignores_own_stale_and_offline_presence() {
     let players = vec![
         RemotePlayer {

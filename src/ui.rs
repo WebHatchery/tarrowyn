@@ -174,20 +174,7 @@ fn draw_world_panel(ctx: &UiContext<'_>, mouse: Vec2) -> Rect {
     let map = Rect::new(panel.x + 18.0, panel.y + 61.0, panel.w - 36.0, 398.0);
     draw_map(ctx, map);
     if map.contains_point(mouse) {
-        draw_tooltip(
-            if ctx.knocked_out {
-                "Choose a recovery prompt before walking."
-            } else if !ctx.offline && !ctx.player_position_authoritative {
-                "Your position is still loading; wait for the authoritative road snapshot."
-            } else if !ctx.offline && ctx.connection != ConnectionState::Online {
-                "The shared road is reconnecting; tap Reconnect when it is available."
-            } else if !ui_online::movement_enabled(ctx) {
-                "Your regional journey is underway; use the visible Travel or Recover control."
-            } else {
-                "Tap a walkable tile to take one step toward it."
-            },
-            mouse,
-        );
+        draw_tooltip(ui_online::movement_tooltip(ctx), mouse);
     }
 
     draw_text_right(

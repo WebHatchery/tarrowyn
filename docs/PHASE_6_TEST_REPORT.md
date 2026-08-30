@@ -2700,3 +2700,15 @@ and clippy, `git diff --check`, and the Rust file-size scan pass. The project
 catalog-sync checks pass. No full workspace gate was repeated because this was
 a bounded movement-recovery input correction, and no new external or deferred
 work was opened.
+
+Movement recovery messaging now prioritizes the connection state before the
+cleared-position state, so a degraded client is told to tap the visible
+Reconnect control even when its cached player position has already been
+discarded. Online projection loading, knockout recovery, regional travel, and
+ordinary walking retain distinct touch guidance. The focused tooltip state
+matrix and movement-authority regression pass; client-package formatting and
+clippy, `git diff --check`, and the Rust file-size scan pass. The project
+`publish.ps1` Windows/WebGL build, packaging, Preview deployment, and
+catalog-sync checks pass. No full workspace gate was repeated because this was
+a bounded recovery-message correction, and no new external or deferred work
+was opened.

@@ -663,12 +663,42 @@ pub(super) fn movement_enabled(ctx: &UiContext<'_>) -> bool {
         && !panels::regional_travel_blocks_movement(ctx.regional_region)
 }
 
+pub(super) fn movement_tooltip(ctx: &UiContext<'_>) -> &'static str {
+    movement_tooltip_for(
+        ctx.connection,
+        ctx.offline,
+        ctx.knocked_out,
+        ctx.player_position_authoritative,
+        panels::regional_travel_blocks_movement(ctx.regional_region),
+    )
+}
+
 fn walking_connection_enabled(connection: ConnectionState, offline_fixture: bool) -> bool {
     offline_fixture || connection == ConnectionState::Online
 }
 
 fn walking_projection_enabled(player_position_authoritative: bool, offline_fixture: bool) -> bool {
     offline_fixture || player_position_authoritative
+}
+
+fn movement_tooltip_for(
+    connection: ConnectionState,
+    offline_fixture: bool,
+    knocked_out: bool,
+    player_position_authoritative: bool,
+    regional_travel_blocked: bool,
+) -> &'static str {
+    if !offline_fixture && connection != ConnectionState::Online {
+        "The shared road is reconnecting; tap Reconnect when it is available."
+    } else if knocked_out {
+        "Choose a recovery prompt before walking."
+    } else if !offline_fixture && !player_position_authoritative {
+        "Your position is still loading; wait for the authoritative road snapshot."
+    } else if regional_travel_blocked {
+        "Your regional journey is underway; use the visible Travel or Recover control."
+    } else {
+        "Tap a walkable tile to take one step toward it."
+    }
 }
 
 fn visible_companion_count(
