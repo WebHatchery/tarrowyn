@@ -78,9 +78,12 @@ serde defaults keeping older combat records available after upgrade.
 Storm Magic discovery uses the persisted root-practice and qualifying-event
 ledger: severe-weather three-element workings are limited to one spell per
 encounter, require mastered Wind, Water, and Electricity Magic, and reveal the
-server-owned merger after 25 successful interactions. The existing touch Spell
-control presents the discovered Storm technique without exposing hidden
-prerequisite data.
+server-owned merger after 25 successful interactions. Discovery and usability
+remain separate in the skill projection: a learner who receives Storm Magic
+through a lesson must still satisfy the personal prerequisite and interaction
+requirements before the touch Spell control presents the Storm technique.
+Ready discovered advanced arts are also exposed as selectable subjects in the
+touch School chooser without revealing hidden recipe details.
 Account deletion work is a live queue rather than replay history: repeated
 requests for one account coalesce onto its pending operation, pending records
 are never evicted by replay-cache maintenance, and admission is capped at 128

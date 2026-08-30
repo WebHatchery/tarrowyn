@@ -3157,3 +3157,9 @@ publisher also pass: Windows/WebGL builds, packaging, Preview deployment,
 tracker recording, and catalog sync completed successfully. The remaining
 follow-up is player playtesting of advanced lesson pacing and Storm feedback,
 tracked in the Phase 6 register.
+
+The follow-up hardening checks confirm that older serialized `SkillView`
+payloads default the new usability signal to false and that a teacher carrying
+only an advanced discovery cannot open a lesson until its own requirements are
+complete. These focused protocol and server regressions pass; no additional
+publisher or workspace-wide gate was repeated for this test-only correction.
