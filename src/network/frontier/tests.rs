@@ -195,6 +195,48 @@ fn contract_cycle_waits_through_the_tavern_cooldown() {
 }
 
 #[test]
+fn contract_success_message_explains_active_progress() {
+    let contract = AdventurerContract {
+        contract_id: "brambleback-watch".to_owned(),
+        title: "Brambleback watch".to_owned(),
+        description: "A repeatable watch.".to_owned(),
+        target: tarrowyn_protocol::MonsterKind::Brambleback,
+        progress: 2,
+        required_progress: 3,
+        reward_gold: 8,
+        status: ContractStatus::Accepted,
+        completion_count: 0,
+        available_at_tick: 0,
+    };
+
+    assert_eq!(
+        super::contract_success_message(&contract),
+        "Brambleback watch accepted • progress 2/3."
+    );
+}
+
+#[test]
+fn contract_success_message_explains_report_cooldown() {
+    let contract = AdventurerContract {
+        contract_id: "brambleback-watch".to_owned(),
+        title: "Brambleback watch".to_owned(),
+        description: "A repeatable watch.".to_owned(),
+        target: tarrowyn_protocol::MonsterKind::Brambleback,
+        progress: 3,
+        required_progress: 3,
+        reward_gold: 8,
+        status: ContractStatus::Cooldown,
+        completion_count: 1,
+        available_at_tick: 10,
+    };
+
+    assert_eq!(
+        super::contract_success_message(&contract),
+        "Brambleback watch reported • reward paid; available after beat 10."
+    );
+}
+
+#[test]
 fn frontier_refresh_error_keeps_an_api_rejection_code() {
     assert_eq!(
         super::refresh_error_notice(

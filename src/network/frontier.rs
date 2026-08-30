@@ -15,6 +15,26 @@ use tarrowyn_protocol::{
 const MAX_COMMAND_RETRIES: u8 = 3;
 const COMMAND_RETRY_DELAY_SECONDS: f32 = 1.0;
 
+fn contract_success_message(contract: &AdventurerContract) -> String {
+    match contract.status {
+        ContractStatus::Accepted => format!(
+            "{} accepted • progress {}/{}.",
+            contract.title, contract.progress, contract.required_progress
+        ),
+        ContractStatus::Cooldown => format!(
+            "{} reported • reward paid; available after beat {}.",
+            contract.title, contract.available_at_tick
+        ),
+        ContractStatus::Available => {
+            format!("{} is available in the tavern ledger.", contract.title)
+        }
+        ContractStatus::Completed => format!(
+            "{} complete • progress {}/{}.",
+            contract.title, contract.progress, contract.required_progress
+        ),
+    }
+}
+
 #[derive(Clone)]
 enum FrontierCommand {
     Contract(ContractRequest),
@@ -306,12 +326,12 @@ impl FrontierClient {
             FrontierCommandResponse::Contract(response) => {
                 if response.accepted {
                     if projection_current {
-                        self.contracts = vec![response.contract];
+                        self.contracts = vec![response.contract.clone()];
                         projection.player = Some(response.player);
                     }
-                    notices.push(NetworkNotice::Success(
-                        "The tavern ledger accepted the frontier contract.".to_owned(),
-                    ));
+                    notices.push(NetworkNotice::Success(contract_success_message(
+                        &response.contract,
+                    )));
                 } else if let Some(reason) = response.reason {
                     notices.push(NetworkNotice::Warning(reason));
                 }
