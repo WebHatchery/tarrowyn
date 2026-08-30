@@ -146,7 +146,7 @@ pub(super) fn render(client: &Phase5Client) -> String {
             if account.guest_fixture {
                 "Guest fixture • tap Account to link"
             } else {
-                "Linked account • tap Logout to leave safely"
+                "Linked account • tap Account for details or Logout to leave safely"
             }
         })
         .unwrap_or("Account loading");

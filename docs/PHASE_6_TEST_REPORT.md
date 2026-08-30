@@ -3115,3 +3115,12 @@ action regression passes, along with client-package formatting and strict
 clippy. `git diff --check` and the Rust file-size scan pass. No publisher or
 full workspace gate was repeated because this was test-only organization
 maintenance, and no new external or deferred work was opened.
+
+The linked compact identity summary now names both supported actions: Account
+opens the read-only identity view, while Logout leaves the session safely. The
+focused account-summary regression passes, along with client-package
+formatting and strict clippy. `git diff --check` and the Rust file-size scan
+pass. The project `publish.ps1` Windows/WebGL build, packaging, Preview
+deployment, and catalog-sync checks pass. No full workspace gate was repeated
+because this was a bounded identity-summary correction, and no new external or
+deferred work was opened.

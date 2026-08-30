@@ -364,6 +364,9 @@ fn account_summary_names_the_character_boundary_without_session_secrets() {
     assert!(summary.contains("Session valid through beat 100"));
     assert!(!summary.contains("refresh-secret"));
     assert!(!summary.contains("account_token"));
+    assert!(client
+        .summary()
+        .contains("Linked account • tap Account for details or Logout to leave safely"));
 }
 
 #[test]
