@@ -13,6 +13,17 @@ fn recovery_risk_label_stays_compact_without_losing_the_seed_rule() {
 }
 
 #[test]
+fn combat_status_names_the_improvised_weapon_and_action_window() {
+    assert_eq!(
+        super::panels::combat_weapon_line(
+            tarrowyn_protocol::WeaponKind::ImprovisedClub,
+            "Action opens in 1 beat",
+        ),
+        "Weapon: improvised club  •  Action opens in 1 beat"
+    );
+}
+
+#[test]
 fn combat_side_control_exposes_retreat_or_contract_by_state() {
     assert_eq!(combat_side_control(None, false), ("contract", "Contract"));
     assert_eq!(

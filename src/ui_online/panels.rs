@@ -242,9 +242,9 @@ pub fn draw_combat_status(ctx: &UiContext<'_>, content: Rect, top: f32) {
             top + 101.0,
             content.w,
             if combat.status == tarrowyn_protocol::LocalCombatStatus::KnockedOut {
-                38.0
+                55.0
             } else {
-                34.0
+                43.0
             },
         ),
         &SurfaceStyle::new(Color::new(0.075, 0.105, 0.115, 1.0))
@@ -252,12 +252,18 @@ pub fn draw_combat_status(ctx: &UiContext<'_>, content: Rect, top: f32) {
     );
     draw_ui_text_ex(
         &format!(
-            "Encounter {status}  •  enemy {}  •  you {}  •  {timing}",
+            "Encounter {status}  •  enemy {}  •  you {}",
             combat.enemy_health, combat.player_health
         ),
         content.x + 8.0,
         top + 115.0,
         TextStyle::new(10.0, GOLD).params(),
+    );
+    draw_ui_text_ex(
+        &combat_weapon_line(combat.weapon, &timing),
+        content.x + 8.0,
+        top + 129.0,
+        TextStyle::new(8.5, CREAM).params(),
     );
     if combat.status == tarrowyn_protocol::LocalCombatStatus::KnockedOut {
         draw_ui_text_ex(
@@ -267,10 +273,14 @@ pub fn draw_combat_status(ctx: &UiContext<'_>, content: Rect, top: f32) {
                 combat.recovery_cost,
             ),
             content.x + 8.0,
-            top + 129.0,
+            top + 143.0,
             TextStyle::new(8.0, CREAM).params(),
         );
     }
+}
+
+pub fn combat_weapon_line(weapon: tarrowyn_protocol::WeaponKind, timing: &str) -> String {
+    format!("Weapon: {}  •  {timing}", weapon.label())
 }
 
 pub fn recovery_risk_label(carried_risk: &str) -> &'static str {

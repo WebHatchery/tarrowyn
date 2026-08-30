@@ -1533,3 +1533,12 @@ filter passes (55 tests), with formatting and diff checks clean. No full
 workspace or publisher gate was repeated because
 this was test-organization-only maintenance, and no new external or deferred
 work was opened.
+
+The online combat status now names the active weapon beside the server-owned
+action window, making the visible Local fight weapon cycle—including the
+improvised club—readable after the transient prompt has gone. The focused
+online UI tests pass (7), client-package clippy, formatting, diff, and Rust
+file-size checks pass, and `publish.ps1` passes its Windows/WebGL builds,
+packaging, Preview deployment, and catalog synchronization. No full workspace
+gate was repeated because this was a bounded client presentation slice, and no
+new external or deferred work was opened.
