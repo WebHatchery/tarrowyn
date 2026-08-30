@@ -14,6 +14,18 @@ fn expedition_selector_matches(requested_id: Option<&str>, expedition_id: &str) 
     requested_id.is_none_or(|requested_id| requested_id == expedition_id)
 }
 
+fn expedition_is_staffed(expedition: &Expedition) -> bool {
+    expedition.members.len() >= 3 && has_roles(&expedition.members)
+}
+
+fn expedition_is_prepared(expedition: &Expedition, config: &ServerConfig) -> bool {
+    expedition_is_staffed(expedition)
+        && expedition.food >= config.expedition_min_food
+        && expedition.tools >= config.expedition_min_tools
+        && expedition.materials >= config.expedition_min_materials
+        && expedition.safety >= config.expedition_min_safety
+}
+
 fn validate_outpost_name(name: Option<&str>) -> Result<Option<String>, RepositoryError> {
     let Some(name) = name else {
         return Ok(None);
@@ -364,19 +376,16 @@ impl WorldRepository {
                         data: response,
                     });
                 };
-                let ready = existing.members.len() >= 3
-                    && has_roles(&existing.members)
-                    && existing.food >= self.config.expedition_min_food
-                    && existing.tools >= self.config.expedition_min_tools
-                    && existing.materials >= self.config.expedition_min_materials
-                    && existing.safety >= self.config.expedition_min_safety;
                 if !expedition_selector_matches(expedition_id.as_deref(), &existing.expedition_id) {
                     response.reason = Some("That expedition is no longer current.".to_owned());
                 } else if existing.status != ExpeditionStatus::Planning {
                     response.reason =
                         Some("Only a gathering expedition can be launched.".to_owned());
-                } else if !ready {
-                    response.reason = Some("The party still needs food, tools, materials, safety, and scout, farmer, and builder roles.".to_owned());
+                } else if !expedition_is_staffed(&existing) {
+                    response.reason = Some(
+                        "The party still needs scout, farmer, and builder roles before it can leave."
+                            .to_owned(),
+                    );
                 } else {
                     let expedition = state.phase3.expedition.as_mut().expect("expedition exists");
                     expedition.status = ExpeditionStatus::Launched;
@@ -418,31 +427,51 @@ impl WorldRepository {
                     let (outpost_position, completed) = {
                         let expedition =
                             state.phase3.expedition.as_mut().expect("expedition exists");
-                        expedition.status = ExpeditionStatus::Succeeded;
-                        expedition.outcome = Some("Lantern Rest is founded; the party retreats only after the outpost is safe.".to_owned());
+                        if expedition_is_prepared(expedition, &self.config) {
+                            expedition.status = ExpeditionStatus::Succeeded;
+                            expedition.outcome = Some("Lantern Rest is founded; the party retreats only after the outpost is safe.".to_owned());
+                        } else {
+                            expedition.status = ExpeditionStatus::Retreated;
+                            expedition.outcome = Some("The party retreats before founding the outpost; the road was understaffed by supplies, not by courage.".to_owned());
+                        }
                         (expedition.outpost_position, expedition.clone())
                     };
-                    state.phase3.outpost = Some(outpost_position);
-                    for member in &completed.members {
-                        if !state
-                            .phase3
-                            .expedition_credentials
-                            .contains(&member.account_id)
-                        {
-                            state
+                    if completed.status == ExpeditionStatus::Succeeded {
+                        state.phase3.outpost = Some(outpost_position);
+                        for member in &completed.members {
+                            if !state
                                 .phase3
                                 .expedition_credentials
-                                .push(member.account_id.clone());
+                                .contains(&member.account_id)
+                            {
+                                state
+                                    .phase3
+                                    .expedition_credentials
+                                    .push(member.account_id.clone());
+                            }
                         }
                     }
                     response.accepted = true;
                     response.expedition = Some(completed);
-                    record(
-                        &mut state,
-                        "outpost founded",
-                        "Lantern Rest joins the settlement chronicle",
-                        "The pioneer party establishes a small outpost and all characters return safely.",
-                    );
+                    if response
+                        .expedition
+                        .as_ref()
+                        .is_some_and(|expedition| expedition.status == ExpeditionStatus::Succeeded)
+                    {
+                        record(
+                            &mut state,
+                            "outpost founded",
+                            "Lantern Rest joins the settlement chronicle",
+                            "The pioneer party establishes a small outpost and all characters return safely.",
+                        );
+                    } else {
+                        record(
+                            &mut state,
+                            "expedition retreated",
+                            "The pioneer party returns before the outpost is founded",
+                            "The expedition was staffed, but its supplies were not enough to establish a safe outpost.",
+                        );
+                    }
                 }
             }
         }

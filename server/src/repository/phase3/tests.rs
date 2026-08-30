@@ -228,6 +228,117 @@ fn expedition_actions_reject_stale_selectors_without_mutating_the_registry() {
 }
 
 #[test]
+fn poorly_prepared_expedition_can_retreat_without_founding_an_outpost() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let leader = guest(&repository);
+    let farmer = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("retreat-expedition-farmer".to_owned()),
+            reset: false,
+        })
+        .expect("farmer guest")
+        .data;
+    let builder = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("retreat-expedition-builder".to_owned()),
+            reset: false,
+        })
+        .expect("builder guest")
+        .data;
+    repository
+        .expedition(
+            &leader.account_token,
+            ExpeditionRequest {
+                request_id: "retreat-announce".to_owned(),
+                action: ExpeditionAction::Announce,
+                expedition_id: None,
+                role: Some(ExpeditionRole::Scout),
+                food: 0,
+                tools: 0,
+                materials: 0,
+                safety: 0,
+                outpost_name: None,
+            },
+        )
+        .expect("expedition announce");
+    for (session, role, request_id) in [
+        (&farmer, ExpeditionRole::Farmer, "retreat-join-farmer"),
+        (&builder, ExpeditionRole::Builder, "retreat-join-builder"),
+    ] {
+        assert!(
+            repository
+                .expedition(
+                    &session.account_token,
+                    ExpeditionRequest {
+                        request_id: request_id.to_owned(),
+                        action: ExpeditionAction::Join,
+                        expedition_id: Some("pioneer-1".to_owned()),
+                        role: Some(role),
+                        food: 0,
+                        tools: 0,
+                        materials: 0,
+                        safety: 0,
+                        outpost_name: None,
+                    },
+                )
+                .expect("expedition join")
+                .data
+                .accepted
+        );
+    }
+
+    let launch = repository
+        .expedition(
+            &leader.account_token,
+            ExpeditionRequest {
+                request_id: "retreat-launch".to_owned(),
+                action: ExpeditionAction::Launch,
+                expedition_id: Some("pioneer-1".to_owned()),
+                role: None,
+                food: 0,
+                tools: 0,
+                materials: 0,
+                safety: 0,
+                outpost_name: None,
+            },
+        )
+        .expect("under-supplied launch should be accepted as an attempt")
+        .data;
+    assert!(launch.accepted);
+
+    let resolved = repository
+        .expedition(
+            &leader.account_token,
+            ExpeditionRequest {
+                request_id: "retreat-resolve".to_owned(),
+                action: ExpeditionAction::Resolve,
+                expedition_id: Some("pioneer-1".to_owned()),
+                role: None,
+                food: 0,
+                tools: 0,
+                materials: 0,
+                safety: 0,
+                outpost_name: None,
+            },
+        )
+        .expect("retreated expedition should resolve")
+        .data;
+    let expedition = resolved.expedition.expect("retreat projection");
+    assert!(resolved.accepted);
+    assert_eq!(expedition.status, ExpeditionStatus::Retreated);
+    assert!(expedition
+        .outcome
+        .as_deref()
+        .is_some_and(|outcome| outcome.contains("retreat")));
+    assert!(repository
+        .world(&leader.account_token)
+        .expect("world projection")
+        .data
+        .outpost
+        .is_none());
+}
+
+#[test]
 fn pioneer_expedition_keeps_its_durable_member_list_bounded() {
     let repository = WorldRepository::new(ServerConfig::default());
     let leader = guest(&repository);

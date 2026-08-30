@@ -835,3 +835,10 @@ current expedition; omitted selectors remain compatible with the existing
 client. The focused stale-selector regression passes; server clippy, rustfmt,
 size, diff, and publisher checks are the validation scope for this Phase 3
 frontier maintenance slice. No new external or deferred work was opened.
+
+The pioneer registry now permits a staffed but under-supplied party to attempt
+departure, and resolves that attempt as a durable retreat without founding the
+outpost or granting expedition credentials. Fully supplied parties retain the
+successful outpost path. The focused retreat regression passes; server clippy,
+rustfmt, size, diff, and publisher checks are the validation scope for this
+Phase 3 frontier-scope slice. No new external or deferred work was opened.
