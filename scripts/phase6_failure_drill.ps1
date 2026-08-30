@@ -20,6 +20,7 @@ $activeStateHash = (Get-FileHash -LiteralPath $stateFullPath -Algorithm SHA256).
 $temporaryRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("tarrowyn-restore-" + [guid]::NewGuid().ToString("N"))
 New-Item -ItemType Directory -Path $temporaryRoot | Out-Null
 $server = $null
+$oldDbDriver = $env:DB_DRIVER
 $oldAddress = $env:TARROWYN_SERVER_ADDR
 $oldState = $env:TARROWYN_STATE_PATH
 $oldBackup = $env:TARROWYN_BACKUP_PATH
@@ -44,6 +45,7 @@ try {
     if (-not $restored.phase5 -or -not $restored.phase6) { throw "The backup has no Phase 5/6 state fields." }
 
     $env:TARROWYN_SERVER_ADDR = $ServerAddress
+    $env:DB_DRIVER = "json"
     $env:TARROWYN_STATE_PATH = $restorePath
     $env:TARROWYN_BACKUP_PATH = $restoreBackupPath
     $env:TARROWYN_BACKUP_INTERVAL_TICKS = "1"
@@ -107,6 +109,7 @@ try {
     Write-Host "Restore drill passed: temporary restore became ready, wrote a backup, and passed regional tests; active state was not overwritten."
 } finally {
     if ($null -ne $server) { Stop-ServerProcessTree $server.Id }
+    if ($null -eq $oldDbDriver) { Remove-Item Env:DB_DRIVER -ErrorAction SilentlyContinue } else { $env:DB_DRIVER = $oldDbDriver }
     if ($null -eq $oldAddress) { Remove-Item Env:TARROWYN_SERVER_ADDR -ErrorAction SilentlyContinue } else { $env:TARROWYN_SERVER_ADDR = $oldAddress }
     if ($null -eq $oldState) { Remove-Item Env:TARROWYN_STATE_PATH -ErrorAction SilentlyContinue } else { $env:TARROWYN_STATE_PATH = $oldState }
     if ($null -eq $oldBackup) { Remove-Item Env:TARROWYN_BACKUP_PATH -ErrorAction SilentlyContinue } else { $env:TARROWYN_BACKUP_PATH = $oldBackup }

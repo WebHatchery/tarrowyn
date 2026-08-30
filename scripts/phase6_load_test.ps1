@@ -12,6 +12,7 @@ $statePath = Join-Path ([System.IO.Path]::GetTempPath()) "tarrowyn-phase6-load-$
 $backupPath = Join-Path ([System.IO.Path]::GetTempPath()) "tarrowyn-phase6-load-$runId.backup.json"
 $server = $null
 $environmentNames = @(
+    "DB_DRIVER",
     "TARROWYN_SERVER_ADDR",
     "TARROWYN_STATE_PATH",
     "TARROWYN_BACKUP_PATH",
@@ -285,6 +286,7 @@ try {
     Assert-True ($Rounds -ge 1) "the load test requires at least one round"
 
     $env:TARROWYN_SERVER_ADDR = $ServerAddress
+    $env:DB_DRIVER = "json"
     $env:TARROWYN_STATE_PATH = $statePath
     $env:TARROWYN_BACKUP_PATH = $backupPath
     $env:TARROWYN_BACKUP_INTERVAL_TICKS = "4"

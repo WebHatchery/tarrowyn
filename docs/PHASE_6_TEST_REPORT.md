@@ -1294,3 +1294,10 @@ preview file does not define `DB_USERNAME`; it no longer attempts the unrelated
 inherited `ODBC` account. The target migration, restore, and persistence gate
 remains unclaimed until valid preview credentials are supplied. No new
 external or deferred work was opened.
+
+The JSON Phase 6 load and restore drills now force `DB_DRIVER=json` while
+preserving and restoring the caller's environment, so a shell that previously
+loaded MySQL credentials cannot silently redirect an isolated drill to the
+shared database. Both affected scripts pass when launched under an
+intentionally wrong ambient MySQL driver; no new external or deferred work was
+opened.
