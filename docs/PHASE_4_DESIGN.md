@@ -80,7 +80,7 @@ entry path. The first infrastructure records are the north road, stone bridge,
 town hall, Hearth services, and an optional public workshop. Each has condition,
 upkeep, service quality, failure state, and last-maintained tick.
 The online client also shows the current player's lease status and remaining
-real-time days (or hours near expiry), including the requested and grace-open
+real-time days (or hours near expiry), including the requested and grace-pending
 states, beside the registry summary.
 
 ## Farming equipment and professions
