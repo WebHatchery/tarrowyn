@@ -553,6 +553,8 @@ pub(super) fn draw_sidebar(
                 })
         })
         .unwrap_or_else(|| "The frontier registry is listening.".to_owned());
+    let chronicle_line =
+        tavern_feed_line(ctx.tavern_notices, ctx.tavern_rumours).unwrap_or(chronicle_line);
     let phase_line = format!(
         "{} • {}",
         ctx.phase4_summary
@@ -598,4 +600,31 @@ pub(super) fn draw_sidebar(
         top + 454.0,
         TextStyle::new(8.25, dark::TEXT_DIM).params(),
     );
+}
+
+pub(super) fn tavern_feed_line(
+    notices: &[tarrowyn_protocol::TavernNotice],
+    rumours: &[String],
+) -> Option<String> {
+    notices
+        .iter()
+        .rev()
+        .find(|notice| !notice.text.trim().is_empty())
+        .map(|notice| format!("Tavern notice: {}", compact_feed_text(&notice.text)))
+        .or_else(|| {
+            rumours
+                .iter()
+                .find(|rumour| !rumour.trim().is_empty())
+                .map(|rumour| format!("Tavern rumour: {}", compact_feed_text(rumour)))
+        })
+}
+
+fn compact_feed_text(text: &str) -> String {
+    let mut chars = text.chars();
+    let compact: String = chars.by_ref().take(92).collect();
+    if chars.next().is_some() {
+        format!("{compact}…")
+    } else {
+        compact
+    }
 }

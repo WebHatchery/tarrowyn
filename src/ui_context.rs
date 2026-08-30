@@ -5,7 +5,7 @@ use macroquad_toolkit::grid::TilePos;
 use macroquad_toolkit::ui::VirtualUi;
 use tarrowyn_protocol::{
     ChatMessage, ChronicleEntry, ChronicleSummary, ExpeditionRequirements, LocalCombatState,
-    OpportunitySignal, RegionSnapshot, TimeOfDay, TradeOffer, WildernessZone,
+    OpportunitySignal, RegionSnapshot, TavernNotice, TimeOfDay, TradeOffer, WildernessZone,
 };
 
 #[derive(Debug, Clone, PartialEq)]
@@ -46,6 +46,8 @@ pub struct UiContext<'a> {
     pub trade_pending: bool,
     pub farming_pending: bool,
     pub chat: &'a [ChatMessage],
+    pub tavern_notices: &'a [TavernNotice],
+    pub tavern_rumours: &'a [String],
     pub chat_draft: &'a str,
     pub server_tick: u64,
     pub connection: ConnectionState,

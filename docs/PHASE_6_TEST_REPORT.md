@@ -3169,3 +3169,13 @@ equivalent states. The focused UI regression, client clippy, formatting,
 source-size and diff checks pass, and `publish.ps1` again passes the
 Windows/WebGL build, packaging, Preview deployment, tracker recording, and
 catalog sync. No new external or deferred work was opened.
+
+The online sidebar now surfaces the latest server-owned tavern notice, or a
+current tavern rumour when no notice is available, instead of leaving the
+persisted feed hidden behind the world projection. The focused
+`ui::ui_online::tests::tavern_feed_line_prefers_recent_notice_and_falls_back_to_rumour`
+regression passes, along with client-package clippy, formatting, `git diff
+--check`, and the Rust file-size scan. `publish.ps1` passes the Windows/WebGL
+packages, Preview deployment, tracker recording, and catalog synchronization.
+No full workspace gate is repeated because this is a bounded tavern-feed
+presentation change; no new external or deferred work is opened.

@@ -705,3 +705,32 @@ fn chronicle_search_paging_survives_server_query_trimming() {
         None,
     ));
 }
+
+#[test]
+fn tavern_feed_line_prefers_recent_notice_and_falls_back_to_rumour() {
+    let notices = vec![
+        tarrowyn_protocol::TavernNotice {
+            notice_id: 1,
+            kind: "old".to_owned(),
+            text: "The old road was mended.".to_owned(),
+            created_tick: 1,
+            cursor: 1,
+        },
+        tarrowyn_protocol::TavernNotice {
+            notice_id: 2,
+            kind: "new".to_owned(),
+            text: "A caravan is leaving at dusk.".to_owned(),
+            created_tick: 2,
+            cursor: 2,
+        },
+    ];
+
+    assert_eq!(
+        super::tavern_feed_line(&notices, &["The road is quiet.".to_owned()]),
+        Some("Tavern notice: A caravan is leaving at dusk.".to_owned())
+    );
+    assert_eq!(
+        super::tavern_feed_line(&[], &["The road is quiet.".to_owned()]),
+        Some("Tavern rumour: The road is quiet.".to_owned())
+    );
+}
