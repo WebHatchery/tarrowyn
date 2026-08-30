@@ -722,3 +722,8 @@ Terminal pioneer expeditions now reject late supply and relaunch commands,
 preserving the succeeded or retreated lifecycle boundary. The focused Phase 3
 expedition flow covers both rejected mutations after successful resolution;
 server clippy, size, diff, and publisher checks pass for the change.
+
+Engaged local encounters now reject a second Prepare action, preserving the
+equipped weapon until the traveller finishes or retreats. The existing focused
+combat-action test covers the rejected weapon swap; server clippy, size, diff,
+and publisher checks are the validation scope for this small Phase 4 boundary.

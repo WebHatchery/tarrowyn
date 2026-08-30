@@ -26,15 +26,35 @@ fn local_combat_accepts_one_opening_weapon_technique() {
         )
         .unwrap();
     }
-    repo.local_combat(
-        &session.account_token,
-        LocalCombatRequest {
-            request_id: "technique-prepare".to_owned(),
-            action: LocalCombatAction::Prepare,
-            weapon: WeaponKind::IronSword,
-        },
-    )
-    .unwrap();
+    let prepared = repo
+        .local_combat(
+            &session.account_token,
+            LocalCombatRequest {
+                request_id: "technique-prepare".to_owned(),
+                action: LocalCombatAction::Prepare,
+                weapon: WeaponKind::IronSword,
+            },
+        )
+        .unwrap()
+        .data;
+    assert!(prepared.accepted);
+    let reprepare = repo
+        .local_combat(
+            &session.account_token,
+            LocalCombatRequest {
+                request_id: "technique-reprepare".to_owned(),
+                action: LocalCombatAction::Prepare,
+                weapon: WeaponKind::Spear,
+            },
+        )
+        .unwrap()
+        .data;
+    assert!(!reprepare.accepted);
+    assert_eq!(reprepare.combat.weapon, WeaponKind::IronSword);
+    assert!(reprepare
+        .reason
+        .as_deref()
+        .is_some_and(|reason| reason.contains("Finish or retreat")));
     repo.movement(
         &session.account_token,
         tarrowyn_protocol::MovementIntent {

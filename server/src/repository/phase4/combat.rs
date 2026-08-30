@@ -99,7 +99,12 @@ impl super::super::WorldRepository {
             && super::super::skills::storm_prerequisites_mastered(&state, &key);
         match request.action {
             LocalCombatAction::Prepare => {
-                if position.manhattan_distance(zone_position) > 2 {
+                if combat.status == LocalCombatStatus::Engaged {
+                    response.reason = Some(
+                        "Finish or retreat from the local encounter before preparing again."
+                            .to_owned(),
+                    );
+                } else if position.manhattan_distance(zone_position) > 2 {
                     response.reason = Some(
                         "Stand near Whisperwood Edge before preparing for the local encounter."
                             .to_owned(),
