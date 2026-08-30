@@ -1520,6 +1520,6 @@ configured account cannot create a uniquely named disposable database (MySQL
 schemas belong to other applications. The full migration/restart/replay/
 backup/restore script therefore remains unrun against a clean MySQL schema;
 the deployment gate now explicitly requires disposable-schema provisioning
-permission or an operator-supplied clean snapshot. The verifier now performs
+permission and an operator-supplied clean snapshot. The verifier now performs
 that create/drop privilege probe before launching the server and reports the
 operator action directly.

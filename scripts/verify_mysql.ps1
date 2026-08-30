@@ -164,7 +164,7 @@ function Assert-MySqlRestorePrivileges([string]$mysql) {
             Invoke-MySql $mysql ($connectionArguments + "--execute=CREATE DATABASE IF NOT EXISTS $probeDatabase CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci") | Out-Null
             $created = $true
         } catch {
-            throw "MySQL acceptance failed: the configured account cannot provision the disposable restore database required by this acceptance script; grant CREATE/DROP DATABASE or provide an isolated restore target. $($_.Exception.Message)"
+            throw "MySQL acceptance failed: the configured account cannot provision the disposable restore database required by this acceptance script; grant CREATE/DROP DATABASE permission to the acceptance runner. $($_.Exception.Message)"
         }
     } finally {
         if ($created) {
