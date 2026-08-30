@@ -168,7 +168,11 @@ function Assert-MySqlRestorePrivileges([string]$mysql) {
         }
     } finally {
         if ($created) {
-            Invoke-MySql $mysql ($connectionArguments + "--execute=DROP DATABASE IF EXISTS $probeDatabase") | Out-Null
+            try {
+                Invoke-MySql $mysql ($connectionArguments + "--execute=DROP DATABASE IF EXISTS $probeDatabase") | Out-Null
+            } catch {
+                throw "MySQL acceptance failed: the configured account created the disposable restore probe but cannot remove it; grant DROP DATABASE and remove probe schema '$probeDatabase' before retrying. $($_.Exception.Message)"
+            }
         }
     }
 }
