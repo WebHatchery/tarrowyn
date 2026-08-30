@@ -82,5 +82,13 @@ fn knowledge_summary_names_discovered_records() {
         reason: None,
     });
 
-    assert!(render(&client).contains("1 knowledge records"));
+    assert!(render(&client).contains("1 knowledge record"));
+    client
+        .knowledge
+        .as_mut()
+        .expect("knowledge projection")
+        .knowledge
+        .known_by_player
+        .push("route-reading".to_owned());
+    assert!(render(&client).contains("2 knowledge records"));
 }

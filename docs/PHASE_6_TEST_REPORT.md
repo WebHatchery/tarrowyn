@@ -3204,3 +3204,11 @@ regression passes, along with client-package clippy, formatting, `git diff
 build, packaging, Preview deployment, tracker recording, and catalog
 synchronization. No full workspace gate is repeated because this is a bounded
 summary-copy correction, and no new external or deferred work is opened.
+
+The same summary copy now uses the singular “knowledge record” for one item
+and the plural form for multiple items, keeping the compact ledger readable.
+The focused knowledge-summary regression passes after covering both counts;
+package clippy, formatting, `git diff --check`, the Rust file-size scan, and
+the project publisher also pass. No full workspace gate is repeated because
+this remains a bounded copy correction, and no new external or deferred work
+was opened.

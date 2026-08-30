@@ -37,12 +37,7 @@ pub(super) fn render(client: &Phase4Client) -> String {
     let knowledge = client
         .knowledge
         .as_ref()
-        .map(|knowledge| {
-            format!(
-                "{} knowledge records",
-                knowledge.knowledge.known_by_player.len()
-            )
-        })
+        .map(|knowledge| knowledge_summary(knowledge.knowledge.known_by_player.len()))
         .unwrap_or_else(|| "Knowledge loading".to_owned());
     let skills = client
         .skills
@@ -97,6 +92,15 @@ pub(super) fn render(client: &Phase4Client) -> String {
         })
         .unwrap_or_else(|| "Tax and treasury loading".to_owned());
     format!("{household} • {offices} • {registry}\n{treasury}\n{orders} • {knowledge} • {skills}")
+}
+
+fn knowledge_summary(count: usize) -> String {
+    let noun = if count == 1 {
+        "knowledge record"
+    } else {
+        "knowledge records"
+    };
+    format!("{count} {noun}")
 }
 
 fn lease_registry_summary(client: &Phase4Client, claims: &ClaimsResponse) -> String {
