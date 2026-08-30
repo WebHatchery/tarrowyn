@@ -188,6 +188,10 @@ Reconnect, Recover, Account, Logout, or Report as named by the message. For
 an explicit Logout or an expired production session, Reconnect starts a fresh
 guest fixture in the local release candidate; a configured production
 identity gateway can replace that fixture with provider sign-in at deployment.
+After a transport failure or worker restart, a still-valid linked production
+session is recovered through its refresh credential before the client requests
+authoritative state; only explicit logout, failed refresh, or the absence of a
+refresh session uses the fresh-guest path.
 For privacy deletion, use the visible Delete control after Account shows a linked
 production account. Account is active only for a guest fixture, so an already-
 linked character cannot submit a second link request. The Delete control is
