@@ -1257,7 +1257,9 @@ bounded `0..=100` range, and anonymizes orphaned public-history and audit
 actors as former residents. The live household tick clamps future score
 pressure at zero. The focused migration and runtime regressions pass (1 each),
 the JSON restore failure drill passes with the active-state hash unchanged, and
-server formatting and clippy checks pass. No full workspace suite or publisher
-run was repeated because this was a focused persistence/runtime recovery slice;
-the complete milestone gate remains green in the preceding entry. No new
-external or deferred work was opened.
+server formatting and clippy checks pass. The publisher check also passes its
+Windows/WebGL builds, packaging, Preview deployment, and catalog sync; the
+existing `net2 v0.2.39` future-incompatibility warning remains non-blocking. No
+full workspace suite was repeated because this was a focused
+persistence/runtime recovery slice; the complete milestone gate remains green
+in the preceding entry. No new external or deferred work was opened.
