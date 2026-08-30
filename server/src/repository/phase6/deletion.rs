@@ -111,10 +111,12 @@ fn erase_account(state: &mut RepositoryState, request: &PendingAccountDeletion) 
         .phase6
         .auth_refresh_accounts
         .retain(|key, _| !deleted_refresh_replays.contains(key));
-    state
-        .phase6
-        .moderation_results
-        .retain(|key, _| !key.contains(&format!(":{}:", request.identity_key)));
+    state.phase6.moderation_results.retain(|key, response| {
+        key != &format!(
+            "moderation:{}:{}",
+            request.identity_key, response.request_id
+        )
+    });
     state
         .phase6
         .moderation_last_report_ticks

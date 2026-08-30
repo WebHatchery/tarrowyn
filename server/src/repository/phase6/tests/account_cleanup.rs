@@ -267,6 +267,76 @@ fn account_deletion_anonymises_composite_moderation_targets() {
 }
 
 #[test]
+fn account_deletion_keeps_moderation_replays_for_identity_prefix_collisions() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let deleted_guest = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("moderation-owner".to_owned()),
+            reset: false,
+        })
+        .unwrap()
+        .data;
+    let retained_reporter = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("moderation-owner:observer".to_owned()),
+            reset: false,
+        })
+        .unwrap()
+        .data;
+    let original = repository
+        .moderation_report(
+            &retained_reporter.account_token,
+            ModerationReportRequest {
+                request_id: "retained-moderation-replay".to_owned(),
+                target_account_id: None,
+                message_id: None,
+                category: "harassment".to_owned(),
+                note: "The observer report must survive another identity leaving.".to_owned(),
+            },
+        )
+        .expect("retained moderation report")
+        .data;
+    let linked = repository
+        .auth_link(
+            &deleted_guest.account_token,
+            AuthLinkRequest {
+                request_id: "moderation-owner-link".to_owned(),
+                provider: "webhatchery-identity-oidc".to_owned(),
+                subject: "moderation-owner-subject".to_owned(),
+                display_name: Some("Departing moderation owner".to_owned()),
+            },
+        )
+        .unwrap()
+        .data;
+
+    repository
+        .account_delete(
+            &linked.session.account_token,
+            AccountDeletionRequest {
+                request_id: "moderation-owner-delete".to_owned(),
+                account_id: linked.account_id,
+            },
+        )
+        .expect("account deletion");
+    repository.tick();
+
+    let replayed = repository
+        .moderation_report(
+            &retained_reporter.account_token,
+            ModerationReportRequest {
+                request_id: "retained-moderation-replay".to_owned(),
+                target_account_id: None,
+                message_id: None,
+                category: "harassment".to_owned(),
+                note: "The observer report must survive another identity leaving.".to_owned(),
+            },
+        )
+        .expect("retained moderation report should replay")
+        .data;
+    assert_eq!(replayed, original);
+}
+
+#[test]
 fn account_deletion_removes_refresh_replay_after_access_expiry() {
     let repository = WorldRepository::new(ServerConfig::default());
     let guest = repository

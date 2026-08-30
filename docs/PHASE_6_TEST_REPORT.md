@@ -776,3 +776,10 @@ The focused chronicle-search regression covers the invalid cursor response;
 server clippy, size, diff, formatting, and publisher checks are the validation
 scope for this Phase 6 history-maintenance slice. No new external or deferred
 work was opened.
+
+Account deletion now removes only the departing identity's complete moderation
+replay key, so a client-key prefix collision cannot discard another player's
+idempotent report response. The focused account-deletion regression covers that
+identity boundary; server clippy, size, diff, formatting, and publisher checks
+are the validation scope for this Phase 6 privacy-maintenance slice. No new
+external or deferred work was opened.
