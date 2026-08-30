@@ -727,3 +727,8 @@ Engaged local encounters now reject a second Prepare action, preserving the
 equipped weapon until the traveller finishes or retreats. The existing focused
 combat-action test covers the rejected weapon swap; server clippy, size, diff,
 and publisher checks are the validation scope for this small Phase 4 boundary.
+
+Public-work completion now rejects a second commission of the fixed Hearth
+workshop record before charging the public treasury. The focused governance
+history test covers the stable infrastructure ID and unchanged funds; server
+clippy, size, diff, and publisher checks remain the validation scope.

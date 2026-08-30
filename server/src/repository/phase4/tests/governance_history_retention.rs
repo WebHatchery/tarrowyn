@@ -58,6 +58,85 @@ fn infrastructure(index: usize) -> InfrastructureRecord {
     }
 }
 
+#[test]
+fn public_work_cannot_create_a_duplicate_infrastructure_record() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = guest(&repository, "phase4-public-work-once");
+    let mut office = governance_request(GovernanceAction::ClaimOffice, "public-work-office");
+    office.office_id = Some("steward".to_owned());
+    assert!(
+        repository
+            .governance(&session.account_token, office)
+            .unwrap()
+            .data
+            .accepted
+    );
+
+    complete_public_action(
+        &repository,
+        &session.account_token,
+        PublicAction::CommissionPublicWork,
+        "first-work",
+    );
+    let mut propose = governance_request(GovernanceAction::Propose, "second-work-propose");
+    propose.public_action = Some(PublicAction::CommissionPublicWork);
+    let proposal_id = repository
+        .governance(&session.account_token, propose)
+        .unwrap()
+        .data
+        .governance
+        .proposals
+        .last()
+        .unwrap()
+        .proposal_id
+        .clone();
+    let mut approve = governance_request(GovernanceAction::Approve, "second-work-approve");
+    approve.proposal_id = Some(proposal_id.clone());
+    assert!(
+        repository
+            .governance(&session.account_token, approve)
+            .unwrap()
+            .data
+            .accepted
+    );
+    let mut complete = governance_request(GovernanceAction::Complete, "second-work-complete");
+    complete.proposal_id = Some(proposal_id);
+    let rejected = repository
+        .governance(&session.account_token, complete)
+        .unwrap()
+        .data;
+
+    assert!(!rejected.accepted);
+    assert!(rejected
+        .reason
+        .unwrap()
+        .contains("already been commissioned"));
+    assert_eq!(rejected.governance.public_treasury, 36);
+    assert_eq!(
+        rejected
+            .governance
+            .proposals
+            .iter()
+            .filter(
+                |proposal| proposal.action == PublicAction::CommissionPublicWork
+                    && proposal.status == tarrowyn_protocol::ProposalStatus::Completed
+            )
+            .count(),
+        1
+    );
+    assert_eq!(
+        repository
+            .infrastructure(&session.account_token)
+            .unwrap()
+            .data
+            .records
+            .iter()
+            .filter(|record| record.infrastructure_id == "hearth-workshop")
+            .count(),
+        1
+    );
+}
+
 fn tax_collection(index: usize) -> TaxCollection {
     TaxCollection {
         collection_id: format!("tax-{index}"),

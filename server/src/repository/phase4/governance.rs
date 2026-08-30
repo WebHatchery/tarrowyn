@@ -259,6 +259,16 @@ impl super::super::WorldRepository {
                     response.reason = Some(
                         "Your office does not have authority for that public action.".to_owned(),
                     );
+                } else if proposal.action == PublicAction::CommissionPublicWork
+                    && state
+                        .phase4
+                        .infrastructure
+                        .iter()
+                        .any(|record| record.infrastructure_id == "hearth-workshop")
+                {
+                    response.reason = Some(
+                        "The Hearth public workshop has already been commissioned.".to_owned(),
+                    );
                 } else if state.phase4.governance.public_treasury < proposal.cost {
                     response.reason =
                         Some("The public treasury cannot cover that approved cost.".to_owned());
