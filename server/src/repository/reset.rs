@@ -77,6 +77,7 @@ pub(super) fn reset_guest(state: &mut RepositoryState, identity_key: &str) {
     state
         .sessions
         .retain(|_, session| session.identity_key != identity_key);
+    super::session::record_offline_presence_if_last_session(state, identity_key);
     state.phase3.contracts.remove(identity_key);
     state
         .phase3

@@ -65,6 +65,38 @@ fn guest_reset_keeps_moderation_replays_for_identity_prefix_collisions() {
 }
 
 #[test]
+fn guest_reset_records_departure_before_replacing_identity() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let first = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("reset-presence".to_owned()),
+            reset: false,
+        })
+        .expect("first guest")
+        .data;
+
+    let second = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some(first.client_key),
+            reset: true,
+        })
+        .expect("guest reset")
+        .data;
+
+    let state = repository.state.lock().expect("state lock");
+    assert!(state.events.iter().any(|record| matches!(
+        &record.event,
+        WorldEvent::Presence(presence)
+            if !presence.online && presence.account_id == "former-resident"
+    )));
+    assert!(state.events.iter().any(|record| matches!(
+        &record.event,
+        WorldEvent::Presence(presence)
+            if presence.online && presence.account_id == second.account_id
+    )));
+}
+
+#[test]
 fn guest_reset_replaces_private_state_and_releases_world_ownership() {
     let repository = WorldRepository::new(ServerConfig::default());
     let first = repository
