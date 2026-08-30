@@ -21,8 +21,10 @@ impl Game {
             return;
         }
         if id == "chronicle-search" {
+            let query = self.chronicle_query.trim().to_owned();
+            self.chronicle_query = query.clone();
             if let ClientMode::Online(client) = &mut self.mode {
-                client.search_chronicle(&self.chronicle_query);
+                client.search_chronicle(&query);
             }
             return;
         }
