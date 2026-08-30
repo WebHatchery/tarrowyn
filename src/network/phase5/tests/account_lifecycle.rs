@@ -365,6 +365,9 @@ fn linked_account_control_does_not_queue_a_second_link() {
         client.commands.front(),
         Some(Phase5Command::Link(request)) if request.provider == "webhatchery-identity-oidc"
     ));
+    assert!(!client.account_link_available());
+    assert!(!client.queue_cycle("account"));
+    assert_eq!(client.commands.len(), 1);
 }
 
 #[test]

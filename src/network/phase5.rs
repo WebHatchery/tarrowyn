@@ -388,6 +388,15 @@ impl Phase5Client {
 
     pub(super) fn account_link_available(&self) -> bool {
         self.refresh_token.is_none()
+            && self.linked_account.is_none()
+            && !self
+                .in_flight_command
+                .as_ref()
+                .is_some_and(|command| matches!(command, Phase5Command::Link(_)))
+            && !self
+                .commands
+                .iter()
+                .any(|command| matches!(command, Phase5Command::Link(_)))
             && self
                 .account
                 .as_ref()

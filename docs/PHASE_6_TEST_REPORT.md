@@ -2129,3 +2129,12 @@ and the Rust file-size check pass, and `publish.ps1` passes Windows/WebGL
 builds, packaging, Preview deployment, and catalog sync. No full workspace gate
 was repeated because this was a bounded travel-input presentation correction,
 and no new external or deferred work was opened.
+
+The guest Account link control now closes as soon as a link command is queued
+or in flight, preventing repeated taps from creating duplicate link requests
+while the production identity boundary is resolving. The existing focused
+account-link regression now covers the queued duplicate attempt, client
+clippy, standards, and the Rust file-size check pass, and `publish.ps1` passes
+Windows/WebGL builds, packaging, Preview deployment, and catalog sync. No full
+workspace gate was repeated because this was a bounded identity-control
+correction, and no new external or deferred work was opened.
