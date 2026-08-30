@@ -279,6 +279,46 @@ fn market_button_waits_for_the_order_destination() {
 }
 
 #[test]
+fn route_repair_can_select_a_closed_route_for_recovery() {
+    let mut client = Phase5Client::new();
+    client.region = Some(tarrowyn_protocol::RegionSnapshot {
+        region_id: "hearthlands".to_owned(),
+        season: "thaw".to_owned(),
+        calendar_day: 1,
+        locations: Vec::new(),
+        routes: vec![RouteRecord {
+            route_id: "closed-road".to_owned(),
+            name: "Closed Road".to_owned(),
+            origin_location_id: "hearth".to_owned(),
+            destination_location_id: "saltmere".to_owned(),
+            transport: "caravan".to_owned(),
+            length: 4,
+            risk_percent: 60,
+            condition: 20,
+            capacity: 1,
+            travel_ticks: 4,
+            repair_cost: 8,
+            status: RouteStatus::Closed,
+            last_action_tick: 0,
+            note: "The road is closed until a repair crew arrives.".to_owned(),
+        }],
+        visible_settlements: Vec::new(),
+        player_location_id: "hearth".to_owned(),
+        travel: None,
+        interest_radius: 12,
+        cursor: 0,
+    });
+
+    client.queue_cycle("route-repair");
+
+    assert!(matches!(
+        client.commands.front(),
+        Some(Phase5Command::Route(request))
+            if request.route_id == "closed-road" && request.action == RouteAction::Repair
+    ));
+}
+
+#[test]
 fn regional_cycle_reports_when_no_projection_action_is_ready() {
     let mut client = Phase5Client::new();
 

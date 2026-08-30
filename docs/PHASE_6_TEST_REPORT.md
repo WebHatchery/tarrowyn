@@ -1070,3 +1070,12 @@ focused online UI tests (3 passed), client clippy, direct formatting, diff, and
 Rust file-size checks pass. The publisher check remains the runtime validation
 path; no full workspace gate was rerun because this is a bounded client
 presentation slice. No new external or deferred work was opened.
+
+The online regional repair selector now keeps a Closed route available for
+Repair while continuing to exclude Closed routes from Escort and Improve,
+matching the server recovery path and the visible non-operational repair
+affordance. The focused Phase 5 client tests (30 passed), client clippy, direct
+formatting, diff, and Rust file-size checks pass. The publisher check remains
+the runtime validation path; no full workspace gate was rerun because this is a
+bounded Phase 5 client selector maintenance slice. No new external or deferred
+work was opened.

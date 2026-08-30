@@ -8,14 +8,16 @@ impl Phase5Client {
                 .iter()
                 .find(|route| {
                     route.origin_location_id == region.player_location_id
-                        && route.status != tarrowyn_protocol::RouteStatus::Closed
+                        && (action == tarrowyn_protocol::RouteAction::Repair
+                            || route.status != tarrowyn_protocol::RouteStatus::Closed)
                         && (action != RouteAction::Repair
                             || route.status != tarrowyn_protocol::RouteStatus::Operational)
                 })
                 .or_else(|| {
                     region.routes.iter().find(|route| {
                         route.destination_location_id == region.player_location_id
-                            && route.status != tarrowyn_protocol::RouteStatus::Closed
+                            && (action == tarrowyn_protocol::RouteAction::Repair
+                                || route.status != tarrowyn_protocol::RouteStatus::Closed)
                             && (action != RouteAction::Repair
                                 || route.status != tarrowyn_protocol::RouteStatus::Operational)
                     })
