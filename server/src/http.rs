@@ -131,12 +131,15 @@ fn handle_request(mut request: Request, repository: Arc<WorldRepository>) {
         (Method::Get, "/v1/ops/metrics") => {
             authenticated(&request, &repository, |token| repository.ops_metrics(token))
         }
-        (Method::Get, "/v1/support/account") => {
-            let account_id = query_value(&query, "account_id").unwrap_or_default();
-            authenticated(&request, &repository, |token| {
-                repository.support_account(token, &account_id)
-            })
-        }
+        (Method::Get, "/v1/support/account") => match query_value_result(&query, "account_id") {
+            Ok(account_id) => {
+                let account_id = account_id.unwrap_or_default();
+                authenticated(&request, &repository, |token| {
+                    repository.support_account(token, &account_id)
+                })
+            }
+            Err(error) => error_response(400, "invalid_query", error, repository.health().meta),
+        },
         (Method::Get, "/v1/world") => {
             authenticated(&request, &repository, |token| repository.world(token))
         }
@@ -502,10 +505,6 @@ fn parse_bearer_header(value: &str) -> Option<String> {
 
 fn split_url(url: &str) -> (&str, &str) {
     url.split_once('?').unwrap_or((url, ""))
-}
-
-fn query_value(query: &str, name: &str) -> Option<String> {
-    query_value_result(query, name).ok().flatten()
 }
 
 fn query_value_result(query: &str, name: &str) -> Result<Option<String>, String> {

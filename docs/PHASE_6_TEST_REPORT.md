@@ -668,6 +668,10 @@ Chronicle search now also rejects malformed form encoding in its `q` parameter
 while preserving an omitted query as an unfiltered search. The focused HTTP
 query suite passes 8 tests with server clippy, size, diff, and publisher checks.
 
+The support-account query now preserves malformed form encoding as a structured
+`invalid_query` response instead of silently converting it into an empty target
+account. The focused HTTP validation regression covers the shared parser.
+
 The HTTP authentication boundary now accepts case-insensitive Bearer scheme
 names while requiring non-empty credentials without control characters. The
 focused HTTP suite passes 9 tests, with server clippy, size, diff, and publisher
