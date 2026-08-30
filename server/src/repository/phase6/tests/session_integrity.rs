@@ -89,3 +89,41 @@ fn production_sessions_use_unpredictable_credentials() {
     assert_ne!(refreshed.account_token, linked.session.account_token);
     assert_ne!(refreshed.refresh_token, "prod-refresh-1");
 }
+
+#[test]
+fn malformed_production_credentials_degrade_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let guest = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("session-credential-shape-integrity".to_owned()),
+            reset: false,
+        })
+        .expect("guest session")
+        .data;
+    let linked = repository
+        .auth_link(
+            &guest.account_token,
+            AuthLinkRequest {
+                request_id: "session-credential-shape-link".to_owned(),
+                provider: "webhatchery-identity-oidc".to_owned(),
+                subject: "session-credential-shape-subject".to_owned(),
+                display_name: None,
+            },
+        )
+        .expect("linked session")
+        .data;
+
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state
+            .phase6
+            .sessions
+            .get_mut(&linked.session.account_token)
+            .expect("production session")
+            .refresh_token = "prod-refresh-not-hex".to_owned();
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.integrity_ok);
+    assert!(!health.ready);
+}

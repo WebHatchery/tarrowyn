@@ -58,10 +58,10 @@ fn sessions_ok(state: &RepositoryState) -> bool {
     let mut refresh_tokens = HashSet::new();
     let mut maximum_generated_id = 0;
     for (token, session) in &state.phase6.sessions {
-        if !bounded(token, MAX_TOKEN_CHARS)
+        if !production_token_ok(token, "prod-session-")
             || !bounded(&session.identity_key, MAX_ACCOUNT_ID_CHARS)
             || !bounded(&session.account_id, MAX_ACCOUNT_ID_CHARS)
-            || !bounded(&session.refresh_token, MAX_TOKEN_CHARS)
+            || !production_token_ok(&session.refresh_token, "prod-refresh-")
             || !refresh_tokens.insert(session.refresh_token.as_str())
             || session.expires_at_tick == 0
             || session.refresh_expires_at_tick == 0
@@ -372,4 +372,17 @@ fn bounded(value: &str, max_chars: usize) -> bool {
 
 fn generated_number(value: &str, prefix: &str) -> Option<u64> {
     value.strip_prefix(prefix)?.parse::<u64>().ok()
+}
+
+fn production_token_ok(value: &str, prefix: &str) -> bool {
+    if !bounded(value, MAX_TOKEN_CHARS) {
+        return false;
+    }
+    if generated_number(value, prefix).is_some() {
+        return true;
+    }
+    let Some(random_part) = value.strip_prefix(prefix) else {
+        return false;
+    };
+    random_part.len() == 64 && random_part.bytes().all(|byte| byte.is_ascii_hexdigit())
 }

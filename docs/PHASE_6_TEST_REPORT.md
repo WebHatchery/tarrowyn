@@ -1371,3 +1371,11 @@ including the existing core session checks), server-package clippy and
 formatting pass, and no full workspace or publisher gate was repeated because
 this is an isolated credential-issuance hardening change. No new external or
 deferred work was opened.
+
+Phase 6 readiness now accepts the documented counter-shaped legacy production
+credentials during their expiry window but rejects malformed credentials and
+any new credential shape outside the 64-byte hex format. The focused malformed
+credential regression passes (1), with server-package clippy, formatting, and
+diff checks clean. No full workspace or publisher gate was repeated because
+this is a narrow integrity check paired with the preceding credential
+hardening; no new external or deferred work was opened.
