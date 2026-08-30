@@ -106,6 +106,9 @@ before starting the server. MySQL startup fails before the HTTP listener if
 the pool or migration cannot be established. Public deployment remains
 blocked until a live MySQL acceptance run, concurrent-write tests, database
 backup/restore drill, and rollback path pass on the target environment.
+The acceptance script also creates and removes a uniquely named disposable
+restore database before starting the server, so its database account needs
+`CREATE/DROP DATABASE` permission in addition to access to `DB_DATABASE`.
 
 The shared `protocol/` crate is versioned at protocol `6`. Every successful or
 error response carries protocol version and server tick metadata; cursor-based
