@@ -196,6 +196,27 @@ fn session_reset_discards_world_and_frontier_projection_state() {
 }
 
 #[test]
+fn explicit_logout_forgets_a_linked_key_before_guest_reconnect() {
+    let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
+    client.client_key = Some("linked-client".to_owned());
+    client.account = Some(tarrowyn_protocol::GuestSessionResponse {
+        client_key: "linked-client".to_owned(),
+        account_id: "account-1".to_owned(),
+        character_id: "character-1".to_owned(),
+        display_name: "Linked traveller".to_owned(),
+        account_token: "access".to_owned(),
+        expires_in_seconds: 900,
+    });
+
+    client.clear_logged_out_session();
+
+    assert!(client.client_key.is_none());
+    assert!(client.account.is_none());
+    assert_eq!(client.state, ConnectionState::Degraded);
+    assert!(client.status_message.contains("fresh guest fixture"));
+}
+
+#[test]
 fn online_commands_are_not_queued_while_disconnected() {
     let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
     client.queue_movement(1, 0);

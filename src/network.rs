@@ -369,12 +369,7 @@ impl OnlineClient {
             }
         }
         if self.phase4.take_logged_out() {
-            self.clear_session_state();
-            self.account = None;
-            self.api.set_bearer_token(None);
-            self.state = ConnectionState::Degraded;
-            self.status_message =
-                "Signed out; tap Reconnect when you are ready to return.".to_owned();
+            self.clear_logged_out_session();
         }
         self.dispatch_requests();
         self.dispatch_trade_requests();
@@ -431,6 +426,15 @@ impl OnlineClient {
         self.pending_trade_action = None;
         self.trades.clear();
         cursor::reset_projection_history(&mut self.projection);
+    }
+
+    fn clear_logged_out_session(&mut self) {
+        self.clear_session_state();
+        self.client_key = None;
+        self.api.set_bearer_token(None);
+        self.state = ConnectionState::Degraded;
+        self.status_message =
+            "Signed out; tap Reconnect to start a fresh guest fixture.".to_owned();
     }
 
     fn begin_guest(&mut self, reset: bool) {

@@ -634,6 +634,11 @@ and retain the Logout and deletion controls. The 13 focused client account-
 lifecycle tests, client clippy check, size audit, diff check, and project
 publisher pass after this recovery-path fix.
 
+Explicit logout and expired production sessions now clear the remembered linked
+client key before the visible Reconnect path, allowing the local release
+candidate to return as a fresh guest fixture instead of retrying a protected
+production identity. The focused reconnect regression and client checks pass.
+
 Phase 6 audit and session helpers now live in a dedicated child module, keeping
 the repository coordinator below the workspace's 800-line Rust limit while
 preserving the existing behavior. The 43 Phase 6-focused tests, server-only
