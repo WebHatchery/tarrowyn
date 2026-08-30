@@ -63,3 +63,46 @@ fn operational_metrics_require_a_configured_support_operator() {
     assert!(metrics.declining_settlements > 0);
     assert!(metrics.newcomer_access);
 }
+
+#[test]
+fn operational_metrics_exclude_sessions_expired_since_the_last_world_tick() {
+    let repository = WorldRepository::new(ServerConfig {
+        session_ttl_seconds: 1,
+        support_operator_accounts: vec!["dev-account-1".to_owned()],
+        ..ServerConfig::default()
+    });
+    let operator = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("metrics-expiry-operator".to_owned()),
+            reset: false,
+        })
+        .unwrap()
+        .data;
+    let player = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("metrics-expiry-player".to_owned()),
+            reset: false,
+        })
+        .unwrap()
+        .data;
+
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state.tick = repository.config.session_ttl_ticks();
+        state
+            .sessions
+            .get_mut(&operator.account_token)
+            .expect("operator session")
+            .last_seen_tick = state.tick;
+        assert!(state.sessions.contains_key(&player.account_token));
+    }
+
+    let metrics = repository
+        .ops_metrics(&operator.account_token)
+        .expect("operator metrics")
+        .data;
+
+    assert_eq!(metrics.connected_sessions, 1);
+    let state = repository.state.lock().expect("repository lock");
+    assert!(!state.sessions.contains_key(&player.account_token));
+}

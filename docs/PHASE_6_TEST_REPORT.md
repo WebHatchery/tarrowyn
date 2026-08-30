@@ -2466,3 +2466,12 @@ passes two tests, server-package formatting and diff checks pass, and the Rust
 file-size scan is clean. No full workspace gate was repeated because this was
 a bounded operator-read-model correction, and no new external or deferred
 work was opened.
+
+Operational metrics now sweep expired sessions before counting connected
+sessions, so the support view cannot report a guest or production credential
+past its tick deadline as still connected between world ticks. The focused
+`repository::phase6::tests::operations_metrics` filter passes both tests;
+server-package formatting and clippy, `git diff --check`, and the Rust
+file-size scan pass. No full workspace gate was repeated because this was a
+bounded operator-session metrics correction, and no new external or deferred
+work was opened.
