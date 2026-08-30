@@ -582,6 +582,28 @@ fn discovered_storm_magic_changes_the_visible_spell_capability() {
 }
 
 #[test]
+fn cursor_recovery_clears_phase4_projections_and_local_work() {
+    let mut client = Phase4Client::new();
+    client.skills = Some(SkillsResponse {
+        skills: Vec::new(),
+        lessons: Vec::new(),
+        cursor: 99,
+    });
+    client.crafting = Some(CraftingChallenge {
+        order_id: "stale-order".to_owned(),
+        progress: 0.5,
+        direction: 1.0,
+        target_start: 0.4,
+        target_end: 0.6,
+    });
+
+    client.recover_cursor_boundary();
+
+    assert!(client.skills.is_none());
+    assert!(client.crafting.is_none());
+}
+
+#[test]
 fn school_button_joins_an_open_lesson_for_the_learner() {
     let mut client = Phase4Client::new();
     client.own_account_id = Some("learner-1".to_owned());

@@ -814,3 +814,11 @@ player's idempotent response. The focused Phase 4/support boundary tests and
 the account-link, deletion, and reset regressions pass; server clippy, size,
 diff, formatting, and publisher checks are the validation scope for this Phase
 6 identity-maintenance slice. No new external or deferred work was opened.
+
+Cursor recovery now clears stale Phase 4 projections, local crafting state, and
+queued Phase 4/Phase 5 mutations before reloading authoritative state and
+history. Regional cursor recovery also cancels stale regional reads and event
+commands, while production authentication refresh state remains intact. The
+focused global, Phase 4, and regional cursor tests pass; client formatting,
+client clippy, size, diff, and publisher checks are the validation scope for
+this Phase 6 recovery slice. No new external or deferred work was opened.

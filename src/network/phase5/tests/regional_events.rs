@@ -191,6 +191,14 @@ fn regional_cursor_reset_discards_stale_events_and_restarts_refresh() {
         )],
         cursor: 9,
     });
+    client
+        .commands
+        .push_back(Phase5Command::Event(RegionalEventRequest {
+            request_id: "stale-event-command".to_owned(),
+            action: RegionalEventAction::Intervene,
+            event_id: Some("event-1".to_owned()),
+            intervention: Some("stale choice".to_owned()),
+        }));
     client.refresh_timer = 3.0;
 
     client.reset_event_cursor();
@@ -198,5 +206,6 @@ fn regional_cursor_reset_discards_stale_events_and_restarts_refresh() {
     assert!(client.region.is_none());
     assert!(client.market.is_none());
     assert!(client.events.is_none());
+    assert!(client.commands.is_empty());
     assert_eq!(client.refresh_timer, 0.0);
 }

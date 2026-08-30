@@ -19,7 +19,7 @@ pub(super) fn recover_from_cursor_boundary(
     client.pending_trades = None;
     client.trades.clear();
     client.state_refresh = 0.0;
-    client.phase4.recover_regional_cursor();
+    client.phase4.recover_cursor_boundary();
     client.frontier.clear();
     client.status_message =
         "The shared history window changed; reloading the latest state…".to_owned();

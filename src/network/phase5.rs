@@ -425,9 +425,21 @@ impl Phase5Client {
     }
 
     pub(super) fn reset_event_cursor(&mut self) {
+        self.pending_region = None;
+        self.pending_settlements = None;
+        self.pending_households = None;
+        self.pending_market = None;
         self.pending_events = None;
+        self.pending_law = None;
+        self.pending_account = None;
+        self.pending_command = None;
+        self.pending_market_action = None;
+        self.in_flight_command = None;
+        self.commands.clear();
         self.clear_cached_projections();
         self.refresh_timer = 0.0;
+        self.command_retry_timer = 0.0;
+        self.command_retry_count = 0;
     }
 
     pub(super) fn take_linked_account(
