@@ -114,8 +114,19 @@ fn rejected_service_order_does_not_evict_settled_history() {
     let repository = WorldRepository::new(ServerConfig::default());
     let session = guest(&repository, "phase4-service-rejected-history");
     repository
-        .professions(&session.account_token)
-        .expect("profession ledger");
+        .profession_order(
+            &session.account_token,
+            ProfessionRequest {
+                request_id: "service-rejected-history-seed".to_owned(),
+                action: ProfessionAction::Inspect,
+                order_id: None,
+                profession: None,
+                capability_id: None,
+                service: None,
+                timing_score: None,
+            },
+        )
+        .expect("profession inspection");
     {
         let mut state = repository.state.lock().expect("repository lock");
         state.phase4.orders = (0..64)

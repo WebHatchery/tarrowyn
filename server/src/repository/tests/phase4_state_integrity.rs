@@ -3,8 +3,8 @@ use tarrowyn_protocol::LocalCombatStatus;
 use tarrowyn_protocol::{ClaimLifecycleAction, ClaimLifecycleRequest};
 use tarrowyn_protocol::{GovernanceAction, GovernanceRequest, GuestSessionRequest, PublicAction};
 use tarrowyn_protocol::{
-    GovernanceDecision, MaterialStock, ProfessionKind, ServiceOrder, ServiceOrderStatus,
-    SkillLesson, TaxCollection,
+    GovernanceDecision, MaterialStock, ProfessionAction, ProfessionKind, ProfessionRequest,
+    ServiceOrder, ServiceOrderStatus, SkillLesson, TaxCollection,
 };
 
 fn seeded_phase4_claim(repository: &WorldRepository) {
@@ -387,8 +387,19 @@ fn duplicate_phase4_profession_profile_degrades_readiness() {
         .expect("guest session")
         .data;
     repository
-        .professions(&session.account_token)
-        .expect("profession view");
+        .profession_order(
+            &session.account_token,
+            ProfessionRequest {
+                request_id: "phase4-profile-state-seed".to_owned(),
+                action: ProfessionAction::Inspect,
+                order_id: None,
+                profession: None,
+                capability_id: None,
+                service: None,
+                timing_score: None,
+            },
+        )
+        .expect("profession inspection");
     {
         let mut state = repository.state.lock().expect("repository lock");
         let profile = state
@@ -422,8 +433,19 @@ fn malformed_phase4_capability_degrades_readiness() {
         .expect("guest session")
         .data;
     repository
-        .professions(&session.account_token)
-        .expect("profession view");
+        .profession_order(
+            &session.account_token,
+            ProfessionRequest {
+                request_id: "phase4-capability-state-seed".to_owned(),
+                action: ProfessionAction::Inspect,
+                order_id: None,
+                profession: None,
+                capability_id: None,
+                service: None,
+                timing_score: None,
+            },
+        )
+        .expect("profession inspection");
     {
         let mut state = repository.state.lock().expect("repository lock");
         state

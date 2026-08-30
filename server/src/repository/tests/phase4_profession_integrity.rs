@@ -1,5 +1,5 @@
 use super::super::{ServerConfig, WorldRepository};
-use tarrowyn_protocol::GuestSessionRequest;
+use tarrowyn_protocol::{GuestSessionRequest, ProfessionAction, ProfessionRequest};
 
 fn seeded_profession(repository: &WorldRepository) -> String {
     let player = repository
@@ -10,8 +10,19 @@ fn seeded_profession(repository: &WorldRepository) -> String {
         .expect("guest session")
         .data;
     repository
-        .professions(&player.account_token)
-        .expect("profession view");
+        .profession_order(
+            &player.account_token,
+            ProfessionRequest {
+                request_id: "phase4-profession-integrity-seed".to_owned(),
+                action: ProfessionAction::Inspect,
+                order_id: None,
+                profession: None,
+                capability_id: None,
+                service: None,
+                timing_score: None,
+            },
+        )
+        .expect("profession inspection");
     player.client_key
 }
 

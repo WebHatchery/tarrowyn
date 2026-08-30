@@ -1201,3 +1201,11 @@ and diff checks pass. No full workspace suite was rerun because the milestone
 record still contains the unrelated formatter drift and the remaining stale
 fixture/read-path failures documented above. No new external or deferred work
 was opened.
+
+The Phase 4 integrity fixtures now materialize profession ledgers through the
+mutating inspection action before corrupting them, preserving the intentional
+read-only behavior of `GET /professions`. The focused profession-integrity
+tests (2 passed), service-order retention tests (3 passed), and the two touched
+state-integrity regressions (1 passed each) pass with server clippy and direct
+formatting. No full workspace suite or publisher run was needed for this
+test-only maintenance slice. No new external or deferred work was opened.
