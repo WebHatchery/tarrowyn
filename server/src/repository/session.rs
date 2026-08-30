@@ -16,7 +16,7 @@ pub(super) fn authenticate(
         .get(token)
         .map(|production| production.revoked || production.expires_at_tick <= state.tick)
         .unwrap_or_else(|| {
-            state.tick.saturating_sub(session.last_seen_tick) > config.session_ttl_ticks()
+            state.tick.saturating_sub(session.last_seen_tick) >= config.session_ttl_ticks()
         });
     if expired {
         state.sessions.remove(token);
@@ -51,7 +51,7 @@ pub(super) fn expire_sessions(state: &mut RepositoryState, config: &ServerConfig
                 .get(*token)
                 .map(|production| production.revoked || production.expires_at_tick <= state.tick)
                 .unwrap_or_else(|| {
-                    state.tick.saturating_sub(session.last_seen_tick) > config.session_ttl_ticks()
+                    state.tick.saturating_sub(session.last_seen_tick) >= config.session_ttl_ticks()
                 })
         })
         .map(|(token, _)| token.clone())

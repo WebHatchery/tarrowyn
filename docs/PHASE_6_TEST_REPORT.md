@@ -1937,3 +1937,11 @@ pass, and `publish.ps1` passes Windows/WebGL builds, packaging, Preview
 deployment, and catalog sync. No full workspace gate was repeated because this
 was a bounded Phase 5 recovery-control correction, and no new external or
 deferred work was opened.
+
+Legacy guest sessions now expire at the configured TTL tick instead of
+surviving one additional server tick; this matches the exact boundary already
+used by production sessions. The focused server session regression passes,
+server clippy and the Rust file-size check pass, and `publish.ps1` passes
+Windows/WebGL builds, packaging, Preview deployment, and catalog sync. No
+full workspace gate was repeated because this was a bounded session-expiry
+correction, and no new external or deferred work was opened.
