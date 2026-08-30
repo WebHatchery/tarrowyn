@@ -3,6 +3,9 @@ use tarrowyn_protocol::MarketOrderAction;
 
 impl Phase5Client {
     pub(super) fn queue_market(&mut self, request_id: String) {
+        if self.market_command_pending() {
+            return;
+        }
         let Some(region) = self.region.as_ref() else {
             return;
         };
@@ -54,6 +57,9 @@ impl Phase5Client {
     }
 
     pub(super) fn queue_market_cancel(&mut self, request_id: String) {
+        if self.market_command_pending() {
+            return;
+        }
         let own = self.own_account_id.as_deref();
         let order_id = self.market.as_ref().and_then(|market| {
             market

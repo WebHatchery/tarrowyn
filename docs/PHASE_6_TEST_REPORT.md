@@ -2332,3 +2332,13 @@ file-size check pass, and `publish.ps1` passes Windows/WebGL builds, packaging,
 Preview deployment, and catalog sync. No full workspace gate was repeated
 because this was a bounded frontier-recovery queue correction, and no new
 external or deferred work was opened.
+
+The Market queue now accepts only one market-region or cancellation request
+while a Market command is queued or in flight, preventing duplicate fulfilment,
+creation, or cancellation actions from a stale regional market projection. The
+focused `market_controls_wait` filter passes two related tests; client
+formatting, clippy, standards, and the Rust file-size check pass, and
+`publish.ps1` passes Windows/WebGL builds, packaging, Preview deployment, and
+catalog sync. No full workspace gate was repeated because this was a bounded
+regional-market queue correction, and no new external or deferred work was
+opened.

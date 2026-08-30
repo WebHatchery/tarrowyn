@@ -355,6 +355,31 @@ fn market_button_does_not_fulfil_the_owners_own_order() {
 }
 
 #[test]
+fn market_controls_wait_for_one_queued_or_in_flight_command() {
+    let mut client = Phase5Client::new();
+    let request = tarrowyn_protocol::MarketOrderRequest {
+        request_id: "market-queued".to_owned(),
+        action: MarketOrderAction::Create,
+        order_id: None,
+        destination_location_id: Some("saltmere".to_owned()),
+        commodity: Some(tarrowyn_protocol::CommodityKind::Seeds),
+        quantity: Some(1),
+    };
+    client
+        .commands
+        .push_back(Phase5Command::Market(request.clone()));
+
+    assert!(client.market_command_pending());
+    assert!(!client.queue_cycle("market-region"));
+    assert!(!client.queue_cycle("cancel-market"));
+
+    client.commands.clear();
+    client.in_flight_command = Some(Phase5Command::Market(request));
+    assert!(client.market_command_pending());
+    assert!(!client.queue_cycle("market-region"));
+}
+
+#[test]
 fn route_repair_can_select_a_closed_route_for_recovery() {
     let mut client = Phase5Client::new();
     client.region = Some(tarrowyn_protocol::RegionSnapshot {
