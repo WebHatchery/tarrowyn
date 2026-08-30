@@ -1,11 +1,11 @@
 use super::Phase4Client;
 
 impl Phase4Client {
-    pub(crate) fn discard_stale_knockout_combat(&mut self) {
-        if self
-            .combat
-            .as_ref()
-            .is_some_and(|combat| combat.status == tarrowyn_protocol::LocalCombatStatus::KnockedOut)
+    pub(crate) fn sync_combat_to_player_state(&mut self, player_knocked_out: bool) {
+        if player_knocked_out
+            || self.combat.as_ref().is_some_and(|combat| {
+                combat.status == tarrowyn_protocol::LocalCombatStatus::KnockedOut
+            })
         {
             self.combat = None;
             self.pending_combat = None;

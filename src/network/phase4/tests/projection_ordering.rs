@@ -45,7 +45,36 @@ fn recovered_player_discards_the_stale_knockout_combat_cache() {
         "guest knockout combat still in flight",
     ));
 
-    client.discard_stale_knockout_combat();
+    client.sync_combat_to_player_state(false);
+
+    assert!(client.combat.is_none());
+    assert!(client.pending_combat.is_none());
+}
+
+#[test]
+fn knocked_out_player_discards_the_stale_local_combat_cache() {
+    let mut client = Phase4Client::new();
+    client.combat = Some(LocalCombatState {
+        encounter_id: "frontier-knockout".to_owned(),
+        enemy_name: "Brambleback scout".to_owned(),
+        enemy_health: 2,
+        player_health: 1,
+        turn: 2,
+        status: tarrowyn_protocol::LocalCombatStatus::Engaged,
+        weapon: WeaponKind::IronSword,
+        injury_limit: 3,
+        stored_property_safe: true,
+        carried_risk: "A seed may be risked.".to_owned(),
+        recovery_cost: 4,
+        action_available_at_tick: 2,
+        reposition_ready: false,
+        spell_ready: false,
+    });
+    client.pending_combat = Some(macroquad_toolkit::net::Pending::failed(
+        "knockout combat refresh still in flight",
+    ));
+
+    client.sync_combat_to_player_state(true);
 
     assert!(client.combat.is_none());
     assert!(client.pending_combat.is_none());

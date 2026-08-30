@@ -114,6 +114,14 @@ impl Phase4Client {
             notices,
             "local combat ledger",
         );
+        if projection
+            .player
+            .as_ref()
+            .is_some_and(|player| player.knocked_out)
+        {
+            self.combat = None;
+            self.pending_combat = None;
+        }
         if let Some(result) = self
             .pending_command
             .as_mut()
@@ -171,10 +179,19 @@ impl Phase4Client {
         self.dispatch(
             api,
             another_mutation_pending || self.regional.command_pending(),
+            projection
+                .player
+                .as_ref()
+                .is_some_and(|player| player.knocked_out),
         );
     }
 
-    fn dispatch(&mut self, api: &mut HttpClient, another_mutation_pending: bool) {
+    fn dispatch(
+        &mut self,
+        api: &mut HttpClient,
+        another_mutation_pending: bool,
+        player_knocked_out: bool,
+    ) {
         if !self.regional.dispatch_blocked() {
             if self.pending_governance.is_none() {
                 self.pending_governance = Some(api.get("/v1/settlement/governance"));
@@ -194,7 +211,7 @@ impl Phase4Client {
             if self.pending_households.is_none() {
                 self.pending_households = Some(api.get("/v1/households"));
             }
-            if self.pending_combat.is_none() {
+            if !player_knocked_out && self.pending_combat.is_none() {
                 self.pending_combat = Some(api.get("/v1/combat/local"));
             }
         }

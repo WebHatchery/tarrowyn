@@ -2053,3 +2053,13 @@ clippy and the Rust file-size check pass, and `publish.ps1` passes Windows/WebGL
 builds, packaging, Preview deployment, and catalog sync. No full workspace gate
 was repeated because this was a bounded touch-control correction, and no new
 external or deferred work was opened.
+
+The client now suppresses the independent Phase 4 local-combat cache while a
+player projection is knocked out, preventing an old engaged encounter from
+appearing above the recovery choices. The cache is cleared before polling and
+local-combat refresh is held until recovery restores control. Focused client
+recovery-cache regressions pass, client clippy and the Rust file-size check
+pass, and `publish.ps1` passes Windows/WebGL builds, packaging, Preview
+deployment, and catalog sync. No full workspace gate was repeated because this
+was a bounded recovery-state synchronization correction, and no new external
+or deferred work was opened.
