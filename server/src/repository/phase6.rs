@@ -132,6 +132,8 @@ pub(super) struct Phase6State {
     pub(super) request_results: HashMap<String, SupportRepairResponse>,
     #[serde(default)]
     pub(super) deletion_requests: HashMap<String, PendingAccountDeletion>,
+    #[serde(default)]
+    pub(super) deletion_results: HashMap<String, AccountDeletionResponse>,
     pub(super) last_backup_tick: Option<u64>,
     pub(super) last_backup_path: Option<String>,
     pub(super) rejected_commands: u64,
@@ -164,6 +166,7 @@ pub(super) fn fresh(_config: &ServerConfig) -> Phase6State {
         moderation_last_report_ticks: HashMap::new(),
         request_results: HashMap::new(),
         deletion_requests: HashMap::new(),
+        deletion_results: HashMap::new(),
         last_backup_tick: None,
         last_backup_path: None,
         rejected_commands: 0,
@@ -595,6 +598,18 @@ impl WorldRepository {
             "invalid_account_id",
             "The account ID to delete must be bounded and contain no control characters.",
         )?;
+        let deletion_replay_key = deletion::replay_key(token, &request.request_id);
+        if let Some(previous) = state
+            .phase6
+            .deletion_results
+            .get(&deletion_replay_key)
+            .filter(|response| response.account_id == requested_account_id)
+        {
+            return Ok(ApiResponse {
+                meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
+                data: previous.clone(),
+            });
+        }
         let key = authenticate(&mut state, token, &self.config)?;
         let account = state
             .identities
@@ -618,9 +633,16 @@ impl WorldRepository {
         }
         let cache_key = format!("delete:{account}:{}", request.request_id);
         if let Some(pending) = state.phase6.deletion_requests.get(&cache_key) {
+            let mut response = deletion::scheduled_response(pending);
+            response.request_id = request.request_id.clone();
+            state
+                .phase6
+                .deletion_results
+                .insert(deletion_replay_key, response.clone());
+            self.persist(&state);
             return Ok(ApiResponse {
                 meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
-                data: deletion::scheduled_response(pending),
+                data: response,
             });
         }
         if let Some(pending) = state
@@ -675,6 +697,7 @@ impl WorldRepository {
             account_id: account.clone(),
             identity_key: key,
             character_id: character_id.clone(),
+            replay_key: deletion_replay_key.clone(),
         };
         state.phase6.deletion_requests.insert(cache_key, pending);
         audit(
@@ -693,6 +716,10 @@ impl WorldRepository {
             status: "scheduled".to_owned(),
             reason: None,
         };
+        state
+            .phase6
+            .deletion_results
+            .insert(deletion_replay_key, response.clone());
         record_command_outcome(&mut state, true);
         self.persist(&state);
         Ok(ApiResponse {

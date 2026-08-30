@@ -22,6 +22,7 @@ pub(super) fn run(state: &mut RepositoryState) {
     trim_replay_cache(&mut state.phase4.request_results);
     trim_replay_cache(&mut state.phase5.request_results);
     trim_replay_cache(&mut state.phase6.request_results);
+    trim_replay_cache(&mut state.phase6.deletion_results);
     trim_moderation_reports(&mut state.phase6, super::super::phase4::unix_time_seconds());
     for identity in state.identities.values_mut() {
         trim_replay_cache(&mut identity.farming_results);

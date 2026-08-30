@@ -147,6 +147,7 @@ fn replay_caches_ok(state: &RepositoryState, identity_accounts: &HashSet<&str>) 
         phase6.auth_revoke_guest_tokens.len(),
         phase6.moderation_results.len(),
         phase6.request_results.len(),
+        phase6.deletion_results.len(),
     ]
     .into_iter()
     .all(|length| length <= MAX_REPLAY_CACHE);
@@ -241,7 +242,25 @@ fn replay_caches_ok(state: &RepositoryState, identity_accounts: &HashSet<&str>) 
         && revoked_guest_tokens_ok
         && support_results_ok
         && moderation_results_ok
+        && deletion_results_ok(state)
         && account_ids_ok
+}
+
+fn deletion_results_ok(state: &RepositoryState) -> bool {
+    state.phase6.deletion_results.iter().all(|(key, response)| {
+        let Some((fingerprint, request_id)) = key.split_once(':') else {
+            return false;
+        };
+        bounded(key, MAX_CACHE_KEY_CHARS)
+            && fingerprint_ok(fingerprint, false)
+            && bounded(request_id, 64)
+            && response.request_id == request_id
+            && response.accepted
+            && response.status == "scheduled"
+            && response.reason.is_none()
+            && bounded(&response.account_id, MAX_ACCOUNT_ID_CHARS)
+            && bounded(&response.character_id, MAX_ACCOUNT_ID_CHARS)
+    })
 }
 
 fn deletion_queue_ok(state: &RepositoryState) -> bool {
@@ -255,6 +274,13 @@ fn deletion_queue_ok(state: &RepositoryState) -> bool {
             && bounded(&request.account_id, MAX_ACCOUNT_ID_CHARS)
             && bounded(&request.identity_key, MAX_ACCOUNT_ID_CHARS)
             && bounded(&request.character_id, MAX_ACCOUNT_ID_CHARS)
+            && (request.replay_key.is_empty()
+                || (bounded(&request.replay_key, MAX_CACHE_KEY_CHARS)
+                    && request.replay_key.split_once(':').is_some_and(
+                        |(fingerprint, request_id)| {
+                            fingerprint_ok(fingerprint, false) && request_id == request.request_id
+                        },
+                    )))
             && state.phase6.accounts.contains_key(&request.account_id)
             && state
                 .identities

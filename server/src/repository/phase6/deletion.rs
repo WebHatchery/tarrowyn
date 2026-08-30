@@ -1,4 +1,5 @@
 use super::super::models::RepositoryState;
+use super::stable_fingerprint;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use tarrowyn_protocol::{
@@ -15,6 +16,12 @@ pub(crate) struct PendingAccountDeletion {
     pub(super) account_id: String,
     pub(super) identity_key: String,
     pub(super) character_id: String,
+    #[serde(default)]
+    pub(super) replay_key: String,
+}
+
+pub(super) fn replay_key(token: &str, request_id: &str) -> String {
+    format!("{}:{request_id}", stable_fingerprint(token))
 }
 
 pub(super) fn scheduled_response(pending: &PendingAccountDeletion) -> AccountDeletionResponse {
@@ -31,16 +38,21 @@ pub(super) fn scheduled_response(pending: &PendingAccountDeletion) -> AccountDel
 pub(super) fn process(state: &mut RepositoryState) {
     let pending = std::mem::take(&mut state.phase6.deletion_requests);
     for request in pending.into_values() {
-        erase_account(state, &request);
+        if erase_account(state, &request) && !request.replay_key.is_empty() {
+            state
+                .phase6
+                .deletion_results
+                .insert(request.replay_key.clone(), scheduled_response(&request));
+        }
     }
 }
 
-fn erase_account(state: &mut RepositoryState, request: &PendingAccountDeletion) {
+fn erase_account(state: &mut RepositoryState, request: &PendingAccountDeletion) -> bool {
     let Some(identity) = state.identities.get(&request.identity_key) else {
-        return;
+        return false;
     };
     if identity.account_id != request.account_id {
-        return;
+        return false;
     }
     let deleted_display_name = identity.display_name.clone();
 
@@ -143,6 +155,7 @@ fn erase_account(state: &mut RepositoryState, request: &PendingAccountDeletion) 
         "Private account data was removed; public settlement history was anonymised.",
     );
     state.identities.remove(&request.identity_key);
+    true
 }
 
 fn anonymize_audit_targets(

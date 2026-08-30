@@ -58,6 +58,7 @@ fn deletion_queue_preserves_pending_work_and_coalesces_retries() {
                     account_id: format!("other-account-{index}"),
                     identity_key: format!("other-key-{index}"),
                     character_id: format!("other-character-{index}"),
+                    replay_key: format!("other-fingerprint:{index}"),
                 },
             );
         }
@@ -81,4 +82,45 @@ fn deletion_queue_preserves_pending_work_and_coalesces_retries() {
         super::super::MAX_PENDING_DELETIONS
     );
     assert_eq!(state.phase6.rejected_commands, 1);
+}
+
+#[test]
+fn completed_deletion_replays_after_the_identity_is_removed() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let guest = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("deletion-terminal-replay".to_owned()),
+            reset: false,
+        })
+        .unwrap()
+        .data;
+    let linked = repository
+        .auth_link(
+            &guest.account_token,
+            AuthLinkRequest {
+                request_id: "deletion-terminal-link".to_owned(),
+                provider: "webhatchery-identity-oidc".to_owned(),
+                subject: "deletion-terminal-subject".to_owned(),
+                display_name: None,
+            },
+        )
+        .unwrap()
+        .data;
+    let request = AccountDeletionRequest {
+        request_id: "deletion-terminal-request".to_owned(),
+        account_id: linked.account_id.clone(),
+    };
+    let scheduled = repository
+        .account_delete(&linked.session.account_token, request.clone())
+        .unwrap()
+        .data;
+    repository.tick();
+
+    let replay = repository
+        .account_delete(&linked.session.account_token, request)
+        .expect("the terminal deletion result should replay")
+        .data;
+
+    assert_eq!(replay, scheduled);
+    assert!(repository.state.lock().unwrap().identities.is_empty());
 }

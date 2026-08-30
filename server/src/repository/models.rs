@@ -226,6 +226,7 @@ impl RepositoryState {
             .moderation_last_report_ticks
             .retain(|identity_key, _| identities.contains_key(identity_key));
         trim_replay_cache(&mut phase6.request_results);
+        trim_replay_cache(&mut phase6.deletion_results);
         super::phase6::trim_audits(&mut phase6.audits);
         phase4.animals = super::phase4::restore_animals(phase4.animals);
         if phase4.governance.taxation.is_none() {

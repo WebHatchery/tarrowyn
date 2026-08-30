@@ -2421,3 +2421,13 @@ tests, including the retention-era replay regression; workspace formatting and
 `git diff --check` pass. No full workspace gate was repeated because this was
 a bounded moderation idempotency correction, and no new external or deferred
 work was opened.
+
+Account deletion now keeps a bounded, token-fingerprinted terminal response so
+a lost scheduled-deletion response can replay after the authoritative tick has
+removed the identity and invalidated its session. The focused deletion queue
+filter passes both pending coalescing and post-removal replay tests, and the
+direct production-integrity filter passes eight tests; formatting, file-size,
+and `publish.ps1` Windows/WebGL build, packaging, Preview deployment, and
+catalog-sync checks pass. No full workspace gate was repeated because this was
+a bounded deletion idempotency correction, and no new external or deferred
+work was opened.
