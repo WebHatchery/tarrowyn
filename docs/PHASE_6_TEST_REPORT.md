@@ -1232,3 +1232,12 @@ expedition-history regression passes (1), along with server clippy, direct
 formatting, and diff checks. No full workspace suite or publisher run was
 needed for this test-only maintenance slice. No new external or deferred work
 was opened.
+
+The complete milestone gate is green after the expedition contract and
+validation-fixture repairs: content manifests passed; 14 protocol, 398 server,
+and 110 client tests passed; asset and code standards passed; workspace clippy
+passed with warnings denied; and Windows/WebGL release builds, packaging,
+Preview deployment, and catalog sync completed successfully. The gate required
+removing only the exact stale generated Windows archive before packaging. The
+future-incompatibility warning for `net2 v0.2.39` remains non-blocking. No new
+external or deferred work was opened.
