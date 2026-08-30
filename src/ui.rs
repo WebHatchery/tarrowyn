@@ -74,11 +74,7 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
         });
     }
     if ctx.school_selection_open {
-        actions.retain(|action| {
-            matches!(action, UiAction::Teach(_))
-                || matches!(action, UiAction::Interact(id) if id == "school-close")
-                || is_recovery_action(action)
-        });
+        actions.retain(school_selection_action_allowed);
     }
     if ctx.chronicle_open {
         actions.retain(|action| {
@@ -101,6 +97,12 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
 
 fn is_recovery_action(action: &UiAction) -> bool {
     matches!(action, UiAction::Reconnect | UiAction::UseOffline)
+}
+
+fn school_selection_action_allowed(action: &UiAction) -> bool {
+    matches!(action, UiAction::Teach(_))
+        || matches!(action, UiAction::Interact(id) if id == "school-close")
+        || is_recovery_action(action)
 }
 
 fn regional_inspection_action_allowed(action: &UiAction) -> bool {

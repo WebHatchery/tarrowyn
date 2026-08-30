@@ -81,3 +81,19 @@ fn crafting_overlay_preserves_recovery_controls() {
         "trade".to_owned()
     )));
 }
+
+#[test]
+fn school_overlay_keeps_subject_selection_and_recovery_touchable() {
+    assert!(school_selection_action_allowed(&UiAction::Teach(
+        "storm-magic".to_owned()
+    )));
+    assert!(school_selection_action_allowed(&UiAction::Interact(
+        "school-close".to_owned()
+    )));
+    assert!(school_selection_action_allowed(&UiAction::Reconnect));
+    assert!(school_selection_action_allowed(&UiAction::UseOffline));
+    assert!(!school_selection_action_allowed(&UiAction::Move(1, 0)));
+    assert!(!school_selection_action_allowed(&UiAction::Interact(
+        "trade".to_owned()
+    )));
+}
