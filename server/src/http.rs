@@ -401,12 +401,15 @@ fn handle_request(mut request: Request, repository: Arc<WorldRepository>) {
             }
         }
         (Method::Get, "/v1/chronicle/search") => match query_cursor(&query, "since") {
-            Ok(since) => {
-                let search = query_value(&query, "q").unwrap_or_default();
-                authenticated(&request, &repository, |token| {
-                    repository.chronicle_search(token, &search, since)
-                })
-            }
+            Ok(since) => match query_value_result(&query, "q") {
+                Ok(search) => {
+                    let search = search.unwrap_or_default();
+                    authenticated(&request, &repository, |token| {
+                        repository.chronicle_search(token, &search, since)
+                    })
+                }
+                Err(error) => error_response(400, "invalid_query", error, repository.health().meta),
+            },
             Err(error) => error_response(400, "invalid_cursor", error, repository.health().meta),
         },
         _ => error_response(
@@ -493,23 +496,25 @@ fn split_url(url: &str) -> (&str, &str) {
 }
 
 fn query_value(query: &str, name: &str) -> Option<String> {
+    query_value_result(query, name).ok().flatten()
+}
+
+fn query_value_result(query: &str, name: &str) -> Result<Option<String>, String> {
     query
         .split('&')
         .filter_map(|pair| pair.split_once('='))
-        .find_map(|(key, value)| (key == name).then(|| decode_query_value(value)))
-        .flatten()
+        .find_map(|(key, value)| (key == name).then_some(value))
+        .map(|value| {
+            decode_query_value(value)
+                .ok_or_else(|| "The query value is not valid form encoding.".to_owned())
+        })
+        .transpose()
 }
 
 fn query_cursor(query: &str, name: &str) -> Result<u64, String> {
-    let Some((_, raw_value)) = query
-        .split('&')
-        .filter_map(|pair| pair.split_once('='))
-        .find(|(key, _)| *key == name)
-    else {
+    let Some(value) = query_value_result(query, name)? else {
         return Ok(0);
     };
-    let value = decode_query_value(raw_value)
-        .ok_or_else(|| "The history cursor query value is not valid form encoding.".to_owned())?;
     value
         .parse::<u64>()
         .map_err(|_| "The history cursor query value must be a non-negative integer.".to_owned())

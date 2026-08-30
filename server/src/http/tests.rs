@@ -45,6 +45,16 @@ fn history_cursors_reject_malformed_values_instead_of_resetting() {
 }
 
 #[test]
+fn chronicle_queries_reject_malformed_encoding_but_allow_omission() {
+    assert_eq!(query_value_result("since=12", "q"), Ok(None));
+    assert_eq!(
+        query_value_result("q=road%20repair", "q"),
+        Ok(Some("road repair".to_owned()))
+    );
+    assert!(query_value_result("q=road%GG", "q").is_err());
+}
+
+#[test]
 fn tick_deadline_stays_fixed_until_an_overrun_needs_recovery() {
     let start = Instant::now();
     let interval = Duration::from_millis(250);

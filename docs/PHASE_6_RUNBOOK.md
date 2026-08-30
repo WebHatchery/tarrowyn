@@ -119,6 +119,8 @@ order is cancelled without a refund because it never held player escrow.
 
 History endpoints reject malformed `since` values with a structured
 `invalid_cursor` response; they do not silently treat a broken cursor as zero.
+Chronicle search also rejects malformed form encoding in `q` instead of
+silently widening the search to an empty query.
 
 Rollback never replays rewards locally. A deployment mismatch is reported as a
 maintenance/reconnect state and the client waits for an authoritative response.

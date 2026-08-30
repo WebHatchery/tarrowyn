@@ -648,6 +648,10 @@ now reject malformed `since` values with `invalid_cursor` instead of silently
 resetting history reads to cursor zero. The focused HTTP cursor regression,
 server clippy check, size audit, diff check, and project publisher pass.
 
+Chronicle search now also rejects malformed form encoding in its `q` parameter
+while preserving an omitted query as an unfiltered search. The focused HTTP
+query suite passes 8 tests with server clippy, size, diff, and publisher checks.
+
 Phase 6 audit and session helpers now live in a dedicated child module, keeping
 the repository coordinator below the workspace's 800-line Rust limit while
 preserving the existing behavior. The 43 Phase 6-focused tests, server-only
