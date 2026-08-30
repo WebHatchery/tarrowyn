@@ -331,6 +331,11 @@ impl WorldRepository {
             &account_id,
             session_tokens,
         );
+        let presence_event = {
+            let identity = state.identities.get(&guest_key).expect("identity exists");
+            WorldEvent::Presence(super::presence(identity, state.tick, true))
+        };
+        super::push_event(&mut state, presence_event);
         audit(
             &mut state,
             &account_id,

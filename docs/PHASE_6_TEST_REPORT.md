@@ -2952,3 +2952,14 @@ Rust file-size scan pass. The project `publish.ps1` Windows/WebGL build,
 packaging, Preview deployment, and catalog-sync checks pass. No full workspace
 gate was repeated because this was a bounded account-deletion presence
 correction, and no new external or deferred work was opened.
+
+Account linking now publishes the character's updated online presence after
+the guest identity is replaced by its production account and display name.
+Other clients can therefore reconcile the account boundary through their
+normal event cursor instead of waiting for a full state refresh. The focused
+`repository::phase6::tests::session_integrity::account_link_emits_the_updated_online_presence_for_other_clients`
+test passes; server-package formatting and clippy, `git diff --check`, and the
+Rust file-size scan pass. The project `publish.ps1` Windows/WebGL build,
+packaging, Preview deployment, and catalog-sync checks pass. No full workspace
+gate was repeated because this was a bounded account-link presence correction,
+and no new external or deferred work was opened.

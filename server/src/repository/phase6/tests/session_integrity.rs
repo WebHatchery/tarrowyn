@@ -104,6 +104,47 @@ fn direct_refresh_persists_presence_when_access_has_expired() {
 }
 
 #[test]
+fn account_link_emits_the_updated_online_presence_for_other_clients() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let guest = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("link-presence-update".to_owned()),
+            reset: false,
+        })
+        .expect("guest session")
+        .data;
+
+    let linked = repository
+        .auth_link(
+            &guest.account_token,
+            AuthLinkRequest {
+                request_id: "link-presence-update-link".to_owned(),
+                provider: "webhatchery-identity-oidc".to_owned(),
+                subject: "link-presence-update-subject".to_owned(),
+                display_name: Some("Linked presence traveller".to_owned()),
+            },
+        )
+        .expect("linked session")
+        .data;
+
+    let state = repository.state.lock().expect("repository lock");
+    let latest = state
+        .events
+        .iter()
+        .filter_map(|record| match &record.event {
+            WorldEvent::Presence(presence) if presence.character_id == linked.character_id => {
+                Some(presence)
+            }
+            _ => None,
+        })
+        .last()
+        .expect("linked character should have a presence event");
+    assert!(latest.online);
+    assert_eq!(latest.account_id, linked.account_id);
+    assert_eq!(latest.display_name, linked.display_name);
+}
+
+#[test]
 fn production_sessions_use_unpredictable_credentials() {
     let repository = WorldRepository::new(ServerConfig::default());
     let guest = repository
