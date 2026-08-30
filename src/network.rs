@@ -376,6 +376,14 @@ impl OnlineClient {
         if frontier_cursor_boundary {
             cursor::recover_from_cursor_boundary(self, &mut notices);
         }
+        if self
+            .projection
+            .player
+            .as_ref()
+            .is_some_and(|player| !player.knocked_out)
+        {
+            self.phase4.discard_stale_knockout_combat();
+        }
         self.phase4.set_account(
             self.account
                 .as_ref()

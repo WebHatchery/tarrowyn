@@ -2035,3 +2035,12 @@ passes, client clippy and the Rust file-size check pass, and `publish.ps1`
 passes Windows/WebGL builds, packaging, Preview deployment, and catalog sync.
 No full workspace gate was repeated because this was a bounded recovery
 projection correction, and no new external or deferred work was opened.
+
+Recovery now also invalidates a stale Phase 4 knockout combat cache when the
+authoritative player projection returns recovered. This removes the old
+risk/knocked-out controls and causes a fresh local-combat read before the next
+Phase 4 dispatch. The focused client Phase 4 recovery regression passes, client
+clippy and the Rust file-size check pass, and `publish.ps1` passes
+Windows/WebGL builds, packaging, Preview deployment, and catalog sync. No full
+workspace gate was repeated because this was a bounded recovery control-cache
+correction, and no new external or deferred work was opened.

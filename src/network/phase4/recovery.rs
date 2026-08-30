@@ -1,6 +1,17 @@
 use super::Phase4Client;
 
 impl Phase4Client {
+    pub(crate) fn discard_stale_knockout_combat(&mut self) {
+        if self
+            .combat
+            .as_ref()
+            .is_some_and(|combat| combat.status == tarrowyn_protocol::LocalCombatStatus::KnockedOut)
+        {
+            self.combat = None;
+            self.pending_combat = None;
+        }
+    }
+
     pub(crate) fn recover_cursor_boundary(&mut self) {
         self.pending_governance = None;
         self.pending_claims = None;

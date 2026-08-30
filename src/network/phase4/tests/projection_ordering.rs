@@ -23,6 +23,35 @@ fn cursor_recovery_clears_phase4_projections_and_local_work() {
 }
 
 #[test]
+fn recovered_player_discards_the_stale_knockout_combat_cache() {
+    let mut client = Phase4Client::new();
+    client.combat = Some(LocalCombatState {
+        encounter_id: "recovered-encounter".to_owned(),
+        enemy_name: "Brambleback scout".to_owned(),
+        enemy_health: 2,
+        player_health: 0,
+        turn: 2,
+        status: tarrowyn_protocol::LocalCombatStatus::KnockedOut,
+        weapon: WeaponKind::IronSword,
+        injury_limit: 3,
+        stored_property_safe: true,
+        carried_risk: "A seed may be risked.".to_owned(),
+        recovery_cost: 4,
+        action_available_at_tick: 2,
+        reposition_ready: false,
+        spell_ready: false,
+    });
+    client.pending_combat = Some(macroquad_toolkit::net::Pending::failed(
+        "guest knockout combat still in flight",
+    ));
+
+    client.discard_stale_knockout_combat();
+
+    assert!(client.combat.is_none());
+    assert!(client.pending_combat.is_none());
+}
+
+#[test]
 fn older_phase_four_projection_cannot_replace_newer_command_state() {
     let mut cursor = 0;
 
