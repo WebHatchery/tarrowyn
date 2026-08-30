@@ -2063,3 +2063,12 @@ pass, and `publish.ps1` passes Windows/WebGL builds, packaging, Preview
 deployment, and catalog sync. No full workspace gate was repeated because this
 was a bounded recovery-state synchronization correction, and no new external
 or deferred work was opened.
+
+Accepted recovery now emits an authoritative online presence event at the
+Hearth position after moving the identity, so other connected clients can
+update the traveller's location through the normal event stream instead of
+waiting for an unrelated snapshot or movement. The focused server recovery
+stream regression passes, server clippy and the Rust file-size check pass, and
+`publish.ps1` passes Windows/WebGL builds, packaging, Preview deployment, and
+catalog sync. No full workspace gate was repeated because this was a bounded
+recovery presence correction, and no new external or deferred work was opened.

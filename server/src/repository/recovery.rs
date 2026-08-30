@@ -1,7 +1,7 @@
 use super::phase3::{cache_key, record, Phase3Response};
 use super::{
-    authenticate, expire_sessions, meta, player_projection, record_command_outcome,
-    RepositoryError, WorldRepository,
+    authenticate, expire_sessions, meta, player_projection, presence, push_event,
+    record_command_outcome, RepositoryError, WorldEvent, WorldRepository,
 };
 use tarrowyn_protocol::{ApiResponse, Position, RecoveryChoice, RecoveryRequest, RecoveryResponse};
 
@@ -100,6 +100,11 @@ impl WorldRepository {
                     "A knocked-out traveller returns to the Hearth",
                     &response.consequence,
                 );
+                let presence_event = {
+                    let identity = state.identities.get(&key).expect("identity exists");
+                    WorldEvent::Presence(presence(identity, state.tick, true))
+                };
+                push_event(&mut state, presence_event);
             }
         }
         if response.accepted {

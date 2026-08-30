@@ -1,8 +1,8 @@
 use super::super::super::{ServerConfig, WorldRepository};
 use super::guest;
 use tarrowyn_protocol::{
-    LocalCombatAction, LocalCombatRequest, RecoveryChoice, RecoveryRequest, TravelAction,
-    TravelRequest, WeaponKind,
+    LocalCombatAction, LocalCombatRequest, Position, RecoveryChoice, RecoveryRequest, TravelAction,
+    TravelRequest, WeaponKind, WorldEvent,
 };
 
 mod recovery;
@@ -398,6 +398,7 @@ fn knocked_out_local_player_cannot_reenter_before_recovery() {
         .as_deref()
         .is_some_and(|reason| reason.contains("tap Self, Rescuer, or Healer")));
 
+    let cursor_before_recovery = repo.world(&session.account_token).unwrap().data.cursor;
     let recovery = repo
         .recovery(
             &session.account_token,
@@ -410,6 +411,18 @@ fn knocked_out_local_player_cannot_reenter_before_recovery() {
         .data;
     assert!(recovery.accepted);
     assert!(!recovery.player.knocked_out);
+    let recovery_events = repo
+        .events(&session.account_token, cursor_before_recovery)
+        .unwrap()
+        .data
+        .events;
+    assert!(recovery_events.iter().any(|event| {
+        matches!(
+            &event.event,
+            WorldEvent::Presence(presence)
+                if presence.online && presence.position == Position { x: 8, y: 5 }
+        )
+    }));
     for (index, (dx, dy)) in [(1, 0), (1, 0), (1, 0), (1, 0), (0, -1), (0, -1), (0, -1)]
         .into_iter()
         .enumerate()
