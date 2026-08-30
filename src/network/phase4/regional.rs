@@ -60,6 +60,10 @@ impl Phase4Client {
         self.regional.has_open_market_order()
     }
 
+    pub(crate) fn market_command_pending(&self) -> bool {
+        self.regional.market_command_pending()
+    }
+
     pub(crate) fn regional_inspection(&self) -> String {
         self.regional.inspection()
     }

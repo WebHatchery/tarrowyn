@@ -372,13 +372,18 @@ pub(super) fn draw_sidebar(
                 }),
                 ButtonTone::Positive,
             ),
-            ("market-region", "Market", true, ButtonTone::Primary),
+            (
+                "market-region",
+                "Market",
+                market_control_enabled(ctx.market_pending),
+                ButtonTone::Primary,
+            ),
             ("region-event", "Event", true, ButtonTone::Primary),
             ("region-details", "Inspect", true, ButtonTone::Secondary),
             (
                 "cancel-market",
                 "Cancel",
-                ctx.has_open_market_order,
+                cancel_market_control_enabled(ctx.has_open_market_order, ctx.market_pending),
                 ButtonTone::Secondary,
             ),
         ],
@@ -509,6 +514,14 @@ fn travel_control_enabled(available: bool, knocked_out: bool) -> bool {
 
 fn recovery_control_enabled(knocked_out: bool, recovery_pending: bool) -> bool {
     knocked_out && !recovery_pending
+}
+
+fn market_control_enabled(market_pending: bool) -> bool {
+    !market_pending
+}
+
+fn cancel_market_control_enabled(has_open_market_order: bool, market_pending: bool) -> bool {
+    has_open_market_order && !market_pending
 }
 
 pub(super) fn movement_enabled(ctx: &UiContext<'_>) -> bool {

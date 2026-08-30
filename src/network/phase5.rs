@@ -115,6 +115,16 @@ impl Phase5Client {
         self.pending_command.is_some()
     }
 
+    pub(super) fn market_command_pending(&self) -> bool {
+        self.in_flight_command
+            .as_ref()
+            .is_some_and(|command| matches!(command, Phase5Command::Market(_)))
+            || self
+                .commands
+                .iter()
+                .any(|command| matches!(command, Phase5Command::Market(_)))
+    }
+
     pub(super) fn dispatch_blocked(&self) -> bool {
         self.logged_out || self.auth_refresh_pending()
     }
@@ -757,6 +767,10 @@ impl OnlineClient {
 
     pub(crate) fn has_open_market_order(&self) -> bool {
         self.phase4.has_open_market_order()
+    }
+
+    pub(crate) fn market_pending(&self) -> bool {
+        self.phase4.market_command_pending()
     }
 
     pub(crate) fn phase5_inspection(&self) -> String {

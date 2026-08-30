@@ -1912,6 +1912,16 @@ Windows/WebGL builds, packaging, Preview deployment, and catalog sync. No full
 workspace gate was repeated because this was a bounded account-feedback
 correction, and no new external or deferred work was opened.
 
+Market and Cancel controls now close while a market order command is queued or
+in flight, preventing repeated taps from creating duplicate shipments or
+submitting a second settlement for the same order before the authoritative
+refresh arrives. The focused market filter covers the control helpers and
+regional command projection, client clippy, standards, and the Rust file-size
+check pass, and `publish.ps1` passes Windows/WebGL builds, packaging, Preview
+deployment, and catalog sync. No full workspace gate was repeated because this
+was a bounded market-control correction, and no new external or deferred work
+was opened.
+
 Knockout recovery choices now close as soon as one recovery request is queued
 or in flight, while a failed request leaves the choices available again. The
 focused recovery filter covers the UI state and frontier queue projection,

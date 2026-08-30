@@ -273,6 +273,7 @@ fn market_button_waits_for_the_order_destination() {
 
     assert!(client.has_open_market_order());
     client.queue_cycle("cancel-market");
+    assert!(client.market_command_pending());
     assert!(matches!(
         client.commands.front(),
         Some(Phase5Command::Market(request))
@@ -280,8 +281,10 @@ fn market_button_waits_for_the_order_destination() {
                 && request.order_id.as_deref() == Some("own-saltmere-seeds")
     ));
     client.commands.clear();
+    assert!(!client.market_command_pending());
 
     client.queue_cycle("market-region");
+    assert!(!client.market_command_pending());
     assert!(client.commands.is_empty());
 
     client
@@ -290,6 +293,7 @@ fn market_button_waits_for_the_order_destination() {
         .expect("regional projection")
         .player_location_id = "saltmere".to_owned();
     client.queue_cycle("market-region");
+    assert!(client.market_command_pending());
     assert!(matches!(
         client.commands.front(),
         Some(Phase5Command::Market(request))

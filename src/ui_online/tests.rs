@@ -342,6 +342,15 @@ fn recovery_controls_close_after_one_choice_is_pending() {
 }
 
 #[test]
+fn market_controls_wait_for_the_previous_order_command() {
+    assert!(!super::market_control_enabled(true));
+    assert!(super::market_control_enabled(false));
+    assert!(!super::cancel_market_control_enabled(true, true));
+    assert!(super::cancel_market_control_enabled(true, false));
+    assert!(!super::cancel_market_control_enabled(false, false));
+}
+
+#[test]
 fn chronicle_panel_text_keeps_archive_context_and_recent_records() {
     let entries = vec![
         tarrowyn_protocol::ChronicleEntry {

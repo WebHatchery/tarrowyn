@@ -83,6 +83,7 @@ pub struct UiContext<'a> {
     pub knocked_out: bool,
     pub recovery_pending: bool,
     pub has_open_market_order: bool,
+    pub market_pending: bool,
     pub can_abandon_claim: bool,
     pub can_transfer_claim: bool,
     pub knowledge_label: &'a str,
