@@ -2,6 +2,9 @@ use super::*;
 
 impl Phase5Client {
     pub(super) fn queue_route_action(&mut self, request_id: String, action: RouteAction) -> bool {
+        if self.route_command_pending() {
+            return false;
+        }
         let route_id = self.region.as_ref().and_then(|region| {
             region
                 .routes

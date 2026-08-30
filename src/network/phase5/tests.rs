@@ -380,6 +380,28 @@ fn market_controls_wait_for_one_queued_or_in_flight_command() {
 }
 
 #[test]
+fn route_controls_wait_for_one_queued_or_in_flight_command() {
+    let mut client = Phase5Client::new();
+    let request = tarrowyn_protocol::RouteRequest {
+        request_id: "route-queued".to_owned(),
+        route_id: "north-pack-road".to_owned(),
+        action: RouteAction::Repair,
+    };
+    client
+        .commands
+        .push_back(Phase5Command::Route(request.clone()));
+
+    assert!(client.route_command_pending());
+    assert!(!client.queue_cycle("route-repair"));
+    assert!(!client.queue_route_action("route-duplicate".to_owned(), RouteAction::Escort));
+
+    client.commands.clear();
+    client.in_flight_command = Some(Phase5Command::Route(request));
+    assert!(client.route_command_pending());
+    assert!(!client.queue_cycle("route-improve"));
+}
+
+#[test]
 fn route_repair_can_select_a_closed_route_for_recovery() {
     let mut client = Phase5Client::new();
     client.region = Some(tarrowyn_protocol::RegionSnapshot {

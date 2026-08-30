@@ -2351,3 +2351,12 @@ check pass, and `publish.ps1` passes Windows/WebGL builds, packaging, Preview
 deployment, and catalog sync. No full workspace gate was repeated because this
 was a bounded regional-event queue correction, and no new external or deferred
 work was opened.
+
+Regional route actions now accept only one Repair, Escort, or Improve command
+while a Route command is queued or in flight, preventing duplicate logistics
+requests from a stale road projection. The focused `route_controls_wait`
+filter passes two related tests; client formatting, clippy, standards, and the
+Rust file-size check pass, and `publish.ps1` passes Windows/WebGL builds,
+packaging, Preview deployment, and catalog sync. No full workspace gate was
+repeated because this was a bounded regional-route queue correction, and no new
+external or deferred work was opened.
