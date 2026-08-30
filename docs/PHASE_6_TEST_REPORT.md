@@ -1870,3 +1870,11 @@ clippy and the Rust file-size check pass, and `publish.ps1` passes Windows/WebGL
 builds, packaging, Preview deployment, and catalog sync. No full workspace gate
 was repeated because this was a bounded client account-transparency slice. The
 follow-up register records only identity-surface playtest evidence.
+
+The Phase 6 player-facing readiness cluster reached its milestone gate on
+2026-08-30: `cargo test --workspace` passed 15 protocol tests, 416 server
+tests, 144 client tests, the asset registry check, the Rust file-size check,
+and all doc tests; `cargo clippy --workspace --all-targets --all-features --
+-D warnings` also passed. The focused chronicle and account checks and the
+publisher had already passed for the component slices. No target-environment
+gate was claimed by this local milestone run.
