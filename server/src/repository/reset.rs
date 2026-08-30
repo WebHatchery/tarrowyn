@@ -164,9 +164,8 @@ fn reset_expedition(expedition: &mut tarrowyn_protocol::Expedition, old_account_
         )
     {
         expedition.status = ExpeditionStatus::Retreated;
-        expedition.outcome = Some(
-            "The party returned when its development identity was reset.".to_owned(),
-        );
+        expedition.outcome =
+            Some("The party returned when its development identity was reset.".to_owned());
     }
 }
 

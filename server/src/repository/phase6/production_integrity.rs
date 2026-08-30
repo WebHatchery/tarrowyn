@@ -209,10 +209,14 @@ fn replay_caches_ok(state: &RepositoryState, identity_accounts: &HashSet<&str>) 
             && bounded(&response.request_id, 64)
             && identity_cache_key_matches(key, "", &response.request_id, state)
     });
-    let revoked_guest_tokens_ok = phase6.auth_revoke_guest_tokens.iter().all(
-        |(_, identity_key)| bounded(identity_key, MAX_ACCOUNT_ID_CHARS)
-            && state.identities.contains_key(identity_key),
-    );
+    let revoked_guest_tokens_ok =
+        phase6
+            .auth_revoke_guest_tokens
+            .iter()
+            .all(|(_, identity_key)| {
+                bounded(identity_key, MAX_ACCOUNT_ID_CHARS)
+                    && state.identities.contains_key(identity_key)
+            });
     let support_results_ok = phase6.request_results.iter().all(|(key, response)| {
         bounded(key, MAX_CACHE_KEY_CHARS)
             && support_response_ok(response)

@@ -236,9 +236,7 @@ fn guest_reset_replaces_private_state_and_releases_world_ownership() {
     }));
     assert!(state.chat_history.iter().any(|message| {
         message.account_id == "former-resident"
-            && message
-                .text
-                .contains("development identity reset")
+            && message.text.contains("development identity reset")
     }));
     let claim = state
         .phase4
@@ -279,7 +277,7 @@ fn guest_reset_replaces_private_state_and_releases_world_ownership() {
             .get(&second.client_key)
             .expect("the replacement identity should remain")
             .account_id,
-            second.account_id
+        second.account_id
     );
     drop(state);
     assert!(repository.ops_health().data.integrity_ok);

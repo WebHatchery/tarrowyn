@@ -262,8 +262,11 @@ fn expired_route_cooldowns_are_pruned_before_restart_readiness() {
     let mut snapshot: serde_json::Value =
         serde_json::from_slice(&std::fs::read(&path).expect("snapshot")).expect("valid snapshot");
     snapshot["tick"] = serde_json::json!(4);
-    std::fs::write(&path, serde_json::to_vec_pretty(&snapshot).expect("encode snapshot"))
-        .expect("write snapshot");
+    std::fs::write(
+        &path,
+        serde_json::to_vec_pretty(&snapshot).expect("encode snapshot"),
+    )
+    .expect("write snapshot");
 
     let loaded = WorldRepository::new(config);
     let state = loaded.state.lock().unwrap();
