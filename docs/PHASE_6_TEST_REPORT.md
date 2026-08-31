@@ -3969,3 +3969,13 @@ manifest. The server executable contract now also accepts the target-specific
 non-Windows name. Focused PowerShell parsing, stale-archive rejection, clean
 package/manifest generation, preservation, and three-archive rollback passed;
 no full workspace suite was repeated for this release-tooling change.
+
+The packaged-server launch gate was validated on 2026-08-31 at commit
+`2398b5f`. The complete milestone gate passed content validation, the three
+scoped formatter checks, all 714 workspace tests, workspace clippy, Preview
+publishing, current-host server packaging, isolated packaged-server launch
+and readiness checks, and manifest generation. The clean three-archive
+candidate was preserved, and the expanded client/server rollback rehearsal
+against `35efc9c` passed. This was a major cross-subsystem release milestone,
+so the full workspace suite was run here; subsequent documentation-only
+refreshes continue to use focused checks.
