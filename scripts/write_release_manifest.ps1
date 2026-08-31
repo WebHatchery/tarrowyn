@@ -51,6 +51,37 @@ function Get-StreamSha256 {
     }
 }
 
+function Read-JsonArchiveEntry {
+    param(
+        [string]$Path,
+        [string]$EntryPath
+    )
+
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    $archive = [IO.Compression.ZipFile]::OpenRead($Path)
+    try {
+        $entry = $archive.GetEntry($EntryPath)
+        if ($null -eq $entry) {
+            throw "Archive is missing required JSON entry: $EntryPath"
+        }
+        $stream = $entry.Open()
+        try {
+            $reader = [IO.StreamReader]::new($stream)
+            try {
+                return ($reader.ReadToEnd() | ConvertFrom-Json)
+            } catch {
+                throw "Archive JSON entry is invalid: $EntryPath"
+            } finally {
+                $reader.Dispose()
+            }
+        } finally {
+            $stream.Dispose()
+        }
+    } finally {
+        $archive.Dispose()
+    }
+}
+
 function Read-ArchiveRecord {
     param(
         [string]$Path,
@@ -104,13 +135,20 @@ function Read-ArchiveRecord {
         }
     }
 
-    if ($Target -in @('windows', 'server')) {
+    if ($Target -eq 'windows') {
         $executables = @($files | Where-Object {
             [IO.Path]::GetExtension([string]$_.path) -ieq '.exe' -and
             -not ([string]$_.path).Contains('/')
         })
         if ($executables.Count -ne 1) {
             throw "Windows release must contain exactly one root executable; found $($executables.Count)."
+        }
+    } elseif ($Target -eq 'server') {
+        $executables = @($files | Where-Object {
+            [string]$_.path -match '^tarrowyn-server(?:\.exe)?$'
+        })
+        if ($executables.Count -ne 1) {
+            throw "Server release must contain exactly one tarrowyn-server executable; found $($executables.Count)."
         }
     } elseif ($Target -eq 'webgl') {
         $wasmFiles = @($files | Where-Object { [IO.Path]::GetExtension([string]$_.path) -ieq '.wasm' })
@@ -167,12 +205,46 @@ $serverRecord = Read-ArchiveRecord $serverArchive 'server' @(
 )
 $shortCommit = $commit.Substring(0, 12)
 $dirtySuffix = if ($isDirty) { '-dirty' } else { '' }
+$expectedBuildId = "$version+g$shortCommit$dirtySuffix"
+$serverBuildInfo = Read-JsonArchiveEntry $serverArchive 'BUILD_INFO.json'
+if ($serverBuildInfo.schema_version -ne 1 -or
+    [string]$serverBuildInfo.game -ne 'years_of_tarrowyn' -or
+    [string]$serverBuildInfo.package -ne 'tarrowyn-server') {
+    throw 'Server BUILD_INFO.json has an unexpected package identity.'
+}
+if ([string]$serverBuildInfo.git_commit -ne $commit) {
+    throw "Server BUILD_INFO.json commit does not match the release candidate: $($serverBuildInfo.git_commit)"
+}
+if ([string]$serverBuildInfo.version -ne $version) {
+    throw "Server BUILD_INFO.json version does not match the release candidate: $($serverBuildInfo.version)"
+}
+if ([string]$serverBuildInfo.build_id -ne $expectedBuildId) {
+    throw "Server BUILD_INFO.json build ID does not match the release candidate: $($serverBuildInfo.build_id)"
+}
+if ([bool]$serverBuildInfo.working_tree_dirty -ne $isDirty) {
+    throw 'Server BUILD_INFO.json dirty-state flag does not match the release candidate.'
+}
+$serverTarget = [string]$serverBuildInfo.target
+if ($serverTarget -notmatch '^[A-Za-z0-9][A-Za-z0-9_.-]*$') {
+    throw "Server BUILD_INFO.json target is invalid: $serverTarget"
+}
+$serverExecutable = [string]$serverBuildInfo.executable
+if ($serverExecutable -notmatch '^tarrowyn-server(?:\.exe)?$') {
+    throw "Server BUILD_INFO.json executable is invalid: $serverExecutable"
+}
+if ($serverTarget -match 'windows' -and $serverExecutable -ne 'tarrowyn-server.exe') {
+    throw 'Windows server targets must package tarrowyn-server.exe.'
+}
+if ($serverTarget -notmatch 'windows' -and $serverExecutable -eq 'tarrowyn-server.exe') {
+    throw 'Non-Windows server targets must package tarrowyn-server without the Windows extension.'
+}
+$serverRecord['server_target'] = $serverTarget
 $manifest = [ordered]@{
     schema_version = 1
     package_status = 'internal_preview_not_publicly_approved'
     game = 'years_of_tarrowyn'
     version = $version
-    build_id = "$version+g$shortCommit$dirtySuffix"
+    build_id = $expectedBuildId
     git_commit = $commit
     working_tree_dirty = $isDirty
     built_utc = [DateTime]::UtcNow.ToString('yyyy-MM-ddTHH:mm:ssZ')
