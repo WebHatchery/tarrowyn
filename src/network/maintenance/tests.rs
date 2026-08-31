@@ -61,6 +61,10 @@ fn healthy_readiness_reopens_a_loaded_world_after_maintenance() {
     assert!(client.state_reload_pending);
     assert_eq!(client.projection.authoritative_player_position(), None);
     assert_eq!(client.state_refresh, 0.0);
+    assert_eq!(
+        client.status_message,
+        "The road is ready; reloading the shared settlement…"
+    );
 
     client.queue_chat("This must wait for the fresh road snapshot");
     assert!(client.chat_queue.is_empty());

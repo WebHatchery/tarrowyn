@@ -126,7 +126,7 @@ pub(crate) fn movement_tooltip_for(
     } else if knocked_out {
         "Choose a recovery prompt before walking."
     } else if !offline_fixture && !player_position_authoritative {
-        "Your position is still loading; wait for the authoritative road snapshot."
+        "Your position is still loading; wait for the shared road snapshot."
     } else if regional_travel_blocked {
         "Your regional journey is underway; use the visible Travel or Recover control."
     } else {

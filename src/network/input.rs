@@ -16,8 +16,7 @@ impl OnlineClient {
         }
         if self.projection.authoritative_player_position().is_none() {
             self.status_message =
-                "Your position is still loading; wait for the authoritative road snapshot."
-                    .to_owned();
+                "Your position is still loading; wait for the shared road snapshot.".to_owned();
             return;
         }
         if self.phase4.regional_movement_locked() {

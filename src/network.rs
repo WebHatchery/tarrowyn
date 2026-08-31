@@ -494,7 +494,7 @@ impl OnlineClient {
         self.status_message = if rate_limited {
             "The road is rate-limited; wait briefly, then tap Reconnect.".to_owned()
         } else if self.state == ConnectionState::Degraded {
-            "The server stopped answering; the last shared road is shown.".to_owned()
+            "The shared road stopped answering; the last safe view is shown.".to_owned()
         } else {
             "The shared road is unavailable.".to_owned()
         };
@@ -519,7 +519,7 @@ impl OnlineClient {
         let retry_message = if rate_limited {
             "Wait briefly, then use Reconnect when it is available."
         } else if self.retry_count >= self.max_retry_count {
-            "Retry limit reached; use Reconnect when the server is ready."
+            "Retry limit reached; use Reconnect when the shared road is ready."
         } else {
             "Reconnect is available below."
         };

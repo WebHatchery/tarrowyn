@@ -21,13 +21,13 @@ pub(super) fn farming_success_notice(
                     animal.name, animal.condition, animal.max_condition
                 )
             })
-            .unwrap_or_else(|| "The server accepted animal care.".to_owned());
+            .unwrap_or_else(|| "The shared road accepted animal care.".to_owned());
     }
     let Some(plot) = plot else {
-        return "The server accepted the farm action.".to_owned();
+        return "The shared road accepted the farm action.".to_owned();
     };
     let Some(crop) = plot.crop else {
-        return "The server accepted the farm action.".to_owned();
+        return "The shared road accepted the farm action.".to_owned();
     };
     let crop_name = match crop.kind {
         CropKind::Wheat => "Wheat",

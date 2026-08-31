@@ -3890,3 +3890,11 @@ not claim online-bootstrap coverage and no full workspace suite was repeated.
 The renamed canvas control was also tapped once; it switched to the local
 playable evening and displayed the new offline header, footer, and save-state
 copy.
+
+The remaining online copy now uses shared-road wording for disconnected
+recovery, accepted farming actions, readiness reloads, and the movement
+tooltip instead of server or authority implementation terms. Four focused
+client regressions passed (degraded recovery, farming feedback, readiness
+reload, and movement guidance), followed by package clippy, formatting, Rust
+file-size, diff, and `publish.ps1` checks. No full workspace suite was
+repeated for this final presentation-only cluster.

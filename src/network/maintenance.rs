@@ -31,8 +31,7 @@ fn apply_readiness(client: &mut OnlineClient, ready: bool, maintenance_message: 
         client.projection.forget_authoritative_player_position();
         client.state_reload_pending = true;
         client.state_refresh = 0.0;
-        client.status_message =
-            "The road is ready; reloading the authoritative settlement…".to_owned();
+        client.status_message = "The road is ready; reloading the shared settlement…".to_owned();
     }
 }
 

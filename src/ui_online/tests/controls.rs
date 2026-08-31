@@ -61,6 +61,14 @@ fn movement_tooltip_names_the_next_visible_recovery_path() {
         false
     )
     .contains("position is still loading"));
+    assert!(super::super::movement_tooltip_for(
+        ConnectionState::Online,
+        false,
+        false,
+        false,
+        false
+    )
+    .contains("shared road snapshot"));
     assert!(
         super::super::movement_tooltip_for(ConnectionState::Online, false, true, true, false)
             .contains("recovery prompt")

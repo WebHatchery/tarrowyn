@@ -71,12 +71,11 @@ fn connection_failure_exposes_recovery_and_reconnect_cooldown() {
     client.update(2.0);
     assert!(client.reconnect());
     assert_eq!(client.state, ConnectionState::Connecting);
-    assert_eq!(client.status_message, "Restoring your linked session…");
 
     client.had_world = true;
     client.connection_failed("server stopped".to_owned(), &mut notices);
     assert_eq!(client.state, ConnectionState::Degraded);
-    assert!(client.status_message.contains("last shared road"));
+    assert!(client.status_message.contains("last safe view"));
 }
 
 #[test]
@@ -118,6 +117,7 @@ fn reconnect_rotates_a_linked_session_before_guest_fallback() {
 
     assert!(client.reconnect());
     assert_eq!(client.state, ConnectionState::Online);
+    assert_eq!(client.status_message, "Restoring your linked session…");
     assert_eq!(
         client
             .account

@@ -85,6 +85,10 @@ fn farming_success_notice_names_crop_and_plot() {
         super::super::commands::farming_success_notice(FarmingAction::Harvest, Some(plot), None),
         "Harvested Turnip from plot (2, 3)."
     );
+    assert_eq!(
+        super::super::commands::farming_success_notice(FarmingAction::Plant, None, None),
+        "The shared road accepted the farm action."
+    );
 }
 
 #[test]
