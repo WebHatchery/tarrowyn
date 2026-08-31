@@ -27,7 +27,7 @@ if ($Archive -or $Unarchive) {
     exit 0
 }
 
-if ($Production) {
+if ($Production -and -not $WindowsOnly) {
     $configPath = Join-Path $PSScriptRoot "assets\data\game_config.json"
     if (-not (Test-Path -LiteralPath $configPath)) {
         Write-Error "Production browser endpoint check could not find $configPath"
