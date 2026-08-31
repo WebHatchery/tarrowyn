@@ -3467,3 +3467,12 @@ and persistence (11) regressions pass, along with server-package clippy with
 warnings denied, package formatting, `git diff --check`, and the Rust file-size
 scan. No publisher or full workspace gate is repeated because this is source
 organization maintenance, and no new external or deferred work is opened.
+
+Phase 3 chronicle and opportunity read endpoints now live in
+`phase3/presentation.rs`, reducing the phase repository module from 607 to 566
+lines while leaving contract, combat, and tick authority together. The focused
+chronicle history and cursor suite (2 tests) passes, along with server-package
+clippy with warnings denied, package formatting, `git diff --check`, and the
+Rust file-size scan. No publisher or full workspace gate is repeated because
+this is source organization maintenance, and no new external or deferred work
+is opened.

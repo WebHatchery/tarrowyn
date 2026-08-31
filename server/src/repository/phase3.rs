@@ -2,15 +2,15 @@ use super::*;
 use crate::config::ServerConfig;
 use crate::repository::models::RepositoryState;
 use tarrowyn_protocol::{
-    AdventurerContract, ChronicleEntry, ChronicleResponse, ChronicleSummary, ClaimStatus,
-    CombatAction, CombatOutcome, CombatRequest, CombatResponse, ContractAction, ContractRequest,
-    ContractResponse, ContractStatus, ContractsResponse, ExpeditionMember, ExpeditionRole,
-    ExpeditionStatus, FrontierEvent, HouseholdStatus, OpportunitiesResponse, PlayerProjection,
-    Position, WeaponKind, WorldEvent,
+    AdventurerContract, ChronicleEntry, ChronicleSummary, ClaimStatus, CombatAction, CombatOutcome,
+    CombatRequest, CombatResponse, ContractAction, ContractRequest, ContractResponse,
+    ContractStatus, ContractsResponse, ExpeditionMember, ExpeditionRole, ExpeditionStatus,
+    FrontierEvent, HouseholdStatus, PlayerProjection, Position, WeaponKind, WorldEvent,
 };
 
 const CONTRACT_ID: &str = "brambleback-watch";
 const MAX_CHRONICLE_SUMMARY_KINDS: usize = 12;
+mod presentation;
 mod state;
 #[cfg(test)]
 pub(crate) use state::MAX_CHRONICLE;
@@ -407,47 +407,6 @@ impl WorldRepository {
         Ok(ApiResponse {
             meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
             data: response,
-        })
-    }
-
-    pub fn chronicle(
-        &self,
-        token: &str,
-        since: u64,
-    ) -> Result<ApiResponse<ChronicleResponse>, RepositoryError> {
-        let mut state = self.state.lock().expect("world repository lock poisoned");
-        self.expire_and_persist_sessions(&mut state);
-        authenticate(&mut state, token, &self.config)?;
-        super::validate_event_cursor(&state, since, "chronicle")?;
-        Ok(ApiResponse {
-            meta: meta(state.tick, None, Some(state.cursor)),
-            data: ChronicleResponse {
-                entries: state
-                    .phase3
-                    .chronicle
-                    .iter()
-                    .filter(|entry| entry.cursor > since)
-                    .cloned()
-                    .collect(),
-                summary: chronicle_summary(&state.phase3.chronicle_archive, since),
-                cursor: state.cursor,
-            },
-        })
-    }
-
-    pub fn opportunities(
-        &self,
-        token: &str,
-    ) -> Result<ApiResponse<OpportunitiesResponse>, RepositoryError> {
-        let mut state = self.state.lock().expect("world repository lock poisoned");
-        self.expire_and_persist_sessions(&mut state);
-        authenticate(&mut state, token, &self.config)?;
-        Ok(ApiResponse {
-            meta: meta(state.tick, None, Some(state.cursor)),
-            data: OpportunitiesResponse {
-                opportunities: state.phase3.households.clone(),
-                cursor: state.cursor,
-            },
         })
     }
 }
