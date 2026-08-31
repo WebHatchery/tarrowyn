@@ -8,6 +8,8 @@ const MAX_EXPEDITION_SUPPLY: u32 = 99;
 const MAX_ACCOUNT_ID_CHARS: usize = 160;
 const MAX_DISPLAY_NAME_CHARS: usize = 80;
 const MAX_PHASE3_NAME_CHARS: usize = 80;
+const MAX_CHRONICLE_ID_CHARS: usize = 160;
+const MAX_CHRONICLE_KIND_CHARS: usize = 80;
 const MAX_PHASE3_HOUSEHOLD_MEMBERS: usize = 20;
 
 pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
@@ -236,9 +238,10 @@ fn chronicle_entries_ok(state: &RepositoryState) -> bool {
     {
         if entry.event_id.trim().is_empty()
             || !event_ids.insert(entry.event_id.as_str())
-            || entry.kind.trim().is_empty()
-            || entry.title.trim().is_empty()
-            || entry.text.trim().is_empty()
+            || !bounded_text(&entry.event_id, MAX_CHRONICLE_ID_CHARS)
+            || !bounded_text(&entry.kind, MAX_CHRONICLE_KIND_CHARS)
+            || !bounded_text(&entry.title, super::MAX_CHRONICLE_TEXT_CHARS)
+            || !bounded_text(&entry.text, super::MAX_CHRONICLE_TEXT_CHARS)
             || entry.created_tick > state.tick
             || entry.cursor <= previous_cursor
             || !cursor_in_world(entry.cursor, state.cursor)

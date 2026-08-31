@@ -198,6 +198,25 @@ fn future_phase3_chronicle_entry_degrades_readiness() {
 }
 
 #[test]
+fn oversized_phase3_chronicle_text_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    seeded_claim(&repository);
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state
+            .phase3
+            .chronicle
+            .back_mut()
+            .expect("chronicle entry")
+            .title = "x".repeat(513);
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
 fn malformed_phase3_household_member_degrades_readiness() {
     let repository = WorldRepository::new(ServerConfig::default());
     {

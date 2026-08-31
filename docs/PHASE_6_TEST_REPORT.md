@@ -4354,3 +4354,12 @@ display name. The focused account-lifecycle regression passed 1 test:
 clippy, Rust file-size, and diff checks passed. No full workspace suite was
 repeated for this isolated chronicle-boundary slice, and no new external or
 deferred work was opened.
+
+The persisted chronicle integrity correction was validated on 2026-08-31. The
+Phase 3 recent and archived history validator now enforces the same bounded
+identifier, kind, title, and text fields as live chronicle events. The focused
+readiness regression passed 1 test:
+`oversized_phase3_chronicle_text_degrades_readiness`. Server-package formatting,
+clippy, Rust file-size, and diff checks passed. No full workspace suite was
+repeated for this isolated persisted-history validation slice, and no new
+external or deferred work was opened.
