@@ -34,7 +34,7 @@ unmapped kind, missing launch ID, or mismatched executable kind before startup.
 The event-content regression confirms every authored intervention choice maps
 to a server effect, rejecting a visible choice that would otherwise resolve as
 a silent generic response.
-The event-scope content regression confirms each intervention includes the
+The event-scope content regression confirms each intervention includes every
 location required by its concrete route, supply, or storehouse effect.
 The localized-event regression confirms escalation, intervention supply, and
 resolution safety/price consequences stay inside the event's affected-location
@@ -4038,6 +4038,13 @@ and both initial advanced discoveries, with focused regressions for missing
 entries. The focused server skills filter passed all 17 matching tests, and the
 affected server package formatting, clippy, and diff checks passed. No full
 workspace suite was repeated for this bounded content-contract change.
+
+The release-validator parity guard was validated on 2026-08-31 at commits
+`2706361` and `e5d0533`. The PowerShell content gate now requires complete
+multi-location event scopes and lower-depth skill prerequisites, matching the
+server startup contract; the valid 15-manifest content check, all project
+PowerShell parsing, and diff checks passed. No full workspace suite was
+repeated for this bounded release-validation maintenance.
 
 The event intervention scope guard was validated on 2026-08-31 at commit
 `f8cd54f`. Multi-location interventions now require every location named by
