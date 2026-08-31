@@ -3512,6 +3512,15 @@ with server-package clippy with warnings denied, package formatting,
 gate is repeated because this is test-source organization maintenance, and no
 new external or deferred work is opened.
 
+The Phase 4 farming counter, knockout, and same-beat tending regressions now
+live in `repository/phase4/tests/farming/guards.rs`, reducing the farming test
+root from 658 to 502 lines while preserving numeric saturation, recovery
+gating, and tool-condition timing contracts. The focused farming-guards filter
+passes (3 tests), along with server-package clippy with warnings denied,
+package formatting, `git diff --check`, and the Rust file-size scan. No
+publisher or full workspace gate is repeated because this is test-source
+organization maintenance, and no new external or deferred work is opened.
+
 The shared regional route and settlement topology integrity regressions now
 live in `repository/tests/integrity/regional_topology.rs`, reducing the
 integrity test root from 638 to 574 lines while preserving bounds, collection,
