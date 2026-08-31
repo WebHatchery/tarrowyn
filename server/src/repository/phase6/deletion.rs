@@ -3,8 +3,8 @@ use super::stable_fingerprint;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use tarrowyn_protocol::{
-    AccountDeletionResponse, ClaimLifecycleStatus, ClaimStatus, FrontierEvent, ProposalStatus,
-    ServiceOrderStatus, WorldEvent,
+    AccountDeletionResponse, ClaimLifecycleStatus, ClaimRecord, ClaimStatus, FrontierEvent,
+    ProposalStatus, ServiceOrderStatus, WorldEvent,
 };
 
 const DELETED_ACCOUNT: &str = "former-resident";
@@ -100,6 +100,7 @@ fn erase_account(state: &mut RepositoryState, request: &PendingAccountDeletion) 
     });
 
     erase_private_phase4_state(state, request);
+    anonymize_phase4_replay_claims(state, &request.account_id);
     state.trades.retain(|_, trade| {
         trade.creator_account_id != request.account_id
             && trade.recipient_account_id != request.account_id
@@ -173,6 +174,51 @@ fn anonymize_phase5_replay_orders(state: &mut RepositoryState, account_id: &str)
             order.owner_name = DELETED_NAME.to_owned();
         }
     }
+}
+
+fn anonymize_phase4_replay_claims(state: &mut RepositoryState, account_id: &str) {
+    for response in state.phase4.request_results.values_mut() {
+        let super::super::phase4::Phase4Response::Claim(response) = response else {
+            continue;
+        };
+        let mut freed_positions = Vec::new();
+        if let Some(claim) = response.claim.as_mut() {
+            if anonymize_phase4_replay_claim(claim, account_id, state.tick) {
+                freed_positions.push(claim.position);
+            }
+        }
+        for claim in &mut response.claims.claims {
+            if anonymize_phase4_replay_claim(claim, account_id, state.tick) {
+                freed_positions.push(claim.position);
+            }
+        }
+        for position in freed_positions {
+            if !response.claims.available_plots.contains(&position) {
+                response.claims.available_plots.push(position);
+            }
+        }
+    }
+}
+
+fn anonymize_phase4_replay_claim(
+    claim: &mut ClaimRecord,
+    account_id: &str,
+    current_tick: u64,
+) -> bool {
+    let owner_deleted = claim.owner_account_id.as_deref() == Some(account_id);
+    if owner_deleted {
+        claim.owner_account_id = None;
+        claim.owner_name = None;
+        claim.status = ClaimLifecycleStatus::Reclaimed;
+        claim.building_access = false;
+        claim.last_active_tick = current_tick;
+        claim.inspection_note =
+            "The former holder left the settlement; this plot is available again.".to_owned();
+    }
+    if claim.approved_by.as_deref() == Some(account_id) {
+        claim.approved_by = None;
+    }
+    owner_deleted
 }
 
 fn anonymize_audit_targets(

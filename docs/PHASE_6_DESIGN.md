@@ -249,6 +249,10 @@ also anonymises matching owners in retained regional market replay responses,
 including a fulfilled order response cached under another identity, so an
 idempotent replay cannot restore the deleted account's private identifier or
 display name.
+The same boundary applies to retained claim inspection replays: matching claim
+owners are converted to the released-plot form used by live deletion cleanup,
+and deleted approver identifiers are cleared before another identity can replay
+the cached response.
 When a provider leaves while holding an accepted service order, the surviving
 requester's typed material and tool escrow is returned before that order is
 cancelled; an order owned by the departing requester is instead removed with

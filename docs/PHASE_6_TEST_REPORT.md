@@ -4203,3 +4203,12 @@ focused exact regression filter passed 1 test:
 Server-package formatting, clippy, Rust file-size, and diff checks passed. No
 full workspace suite was repeated for this isolated deletion-boundary slice,
 and no new external or deferred work was opened.
+
+The deleted-account claim replay privacy correction was validated on
+2026-08-31. Account deletion now converts matching owners in retained Phase 4
+claim inspection responses to the same released-plot form as live cleanup and
+clears deleted approver identifiers; the focused exact regression filter passed
+1 test: `account_deletion_anonymises_claim_replays_kept_by_another_identity`.
+Server-package formatting, clippy, Rust file-size, and diff checks passed. No
+full workspace suite was repeated for this isolated claim-deletion boundary
+slice, and no new external or deferred work was opened.

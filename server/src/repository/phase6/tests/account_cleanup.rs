@@ -333,6 +333,109 @@ fn account_deletion_anonymises_market_replays_kept_by_another_identity() {
 }
 
 #[test]
+fn account_deletion_anonymises_claim_replays_kept_by_another_identity() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let owner_guest = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("claim-replay-owner".to_owned()),
+            reset: false,
+        })
+        .expect("owner guest session")
+        .data;
+    let owner = repository
+        .auth_link(
+            &owner_guest.account_token,
+            AuthLinkRequest {
+                request_id: "claim-replay-owner-link".to_owned(),
+                provider: "webhatchery-identity-oidc".to_owned(),
+                subject: "claim-replay-owner-subject".to_owned(),
+                display_name: Some("Claim owner".to_owned()),
+            },
+        )
+        .expect("owner link")
+        .data;
+    let observer = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("claim-replay-observer".to_owned()),
+            reset: false,
+        })
+        .expect("observer guest session")
+        .data;
+    let claim = repository
+        .claim_lifecycle(
+            &owner.session.account_token,
+            ClaimLifecycleRequest {
+                request_id: "claim-replay-request".to_owned(),
+                action: ClaimLifecycleAction::Request,
+                claim_id: None,
+                target_account_id: None,
+            },
+        )
+        .expect("claim request")
+        .data
+        .claim
+        .expect("requested claim");
+    let approved = repository
+        .claim_lifecycle(
+            &owner.session.account_token,
+            ClaimLifecycleRequest {
+                request_id: "claim-replay-approve".to_owned(),
+                action: ClaimLifecycleAction::Approve,
+                claim_id: Some(claim.claim_id.clone()),
+                target_account_id: None,
+            },
+        )
+        .expect("claim approval")
+        .data
+        .claim
+        .expect("approved claim");
+    let inspect_request = ClaimLifecycleRequest {
+        request_id: "claim-replay-inspect".to_owned(),
+        action: ClaimLifecycleAction::Inspect,
+        claim_id: None,
+        target_account_id: None,
+    };
+    let inspected = repository
+        .claim_lifecycle(&observer.account_token, inspect_request.clone())
+        .expect("claim inspection")
+        .data;
+    assert!(inspected.claims.claims.iter().any(|record| {
+        record.claim_id == approved.claim_id
+            && record.owner_account_id.as_deref() == Some(owner.account_id.as_str())
+    }));
+
+    repository
+        .account_delete(
+            &owner.session.account_token,
+            AccountDeletionRequest {
+                request_id: "claim-replay-owner-delete".to_owned(),
+                account_id: owner.account_id,
+            },
+        )
+        .expect("schedule owner deletion");
+    repository.tick();
+
+    let replay = repository
+        .claim_lifecycle(&observer.account_token, inspect_request)
+        .expect("claim replay")
+        .data;
+    let replayed = replay
+        .claims
+        .claims
+        .iter()
+        .find(|record| record.claim_id == approved.claim_id)
+        .expect("replayed claim");
+    assert!(replayed.owner_account_id.is_none());
+    assert!(replayed.owner_name.is_none());
+    assert_eq!(
+        replayed.status,
+        tarrowyn_protocol::ClaimLifecycleStatus::Reclaimed
+    );
+    assert!(replay.claims.available_plots.contains(&replayed.position));
+    assert!(repository.ops_health().data.ready);
+}
+
+#[test]
 fn account_deletion_anonymises_composite_moderation_targets() {
     let repository = WorldRepository::new(ServerConfig::default());
     let target_guest = repository
