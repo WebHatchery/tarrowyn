@@ -3417,7 +3417,7 @@ organization maintenance, and no new external or deferred work is opened.
 
 Phase 5 commodity inventory, regional stock notes, indexed pricing, and season
 helpers now live in `phase5/logic/commodities.rs`, reducing the regional logic
-module from 674 to 510 lines while preserving the market and projection
+module from 674 to 512 lines while preserving the market and projection
 boundaries. The focused market-history suite (3 tests) and price-boundary test
 (1 test) pass, along with server-package clippy with warnings denied, package
 formatting, `git diff --check`, and the Rust file-size scan. No publisher or
@@ -3426,7 +3426,7 @@ maintenance, and no new external or deferred work is opened.
 
 The Phase 5 regional event read and action endpoints now live in
 `phase5/events.rs`, leaving event transition authority in the existing logic
-module and reducing the endpoint root from 626 to 520 lines. The focused event
+module and reducing the endpoint root from 626 to 543 lines. The focused event
 choice suite (2 tests) passes, along with server-package clippy with warnings
 denied, package formatting, `git diff --check`, and the Rust file-size scan. No
 publisher or full workspace gate is repeated because this is source
@@ -3443,7 +3443,7 @@ opened.
 
 The frontier client now keeps command-response projection updates and player
 notices in `network/frontier/feedback.rs`, reducing the frontier orchestration
-module from 667 to 440 lines while preserving contract, combat, recovery,
+module from 667 to 443 lines while preserving contract, combat, recovery,
 expedition, and homestead response handling. The focused frontier feedback
 tests pass, along with client-package clippy with warnings denied, package
 formatting, `git diff --check`, and the Rust file-size scan. No publisher or
@@ -3461,7 +3461,7 @@ maintenance, and no new external or deferred work is opened.
 
 The repository now keeps world ticking, persistence writes, session-expiry
 persistence, and tick telemetry in `repository/tick.rs`, reducing the
-repository root from 641 to 532 lines while preserving the shared authority
+repository root from 641 to 531 lines while preserving the shared authority
 hooks used by every phase. The focused telemetry (1), numeric-boundary (4),
 and persistence (11) regressions pass, along with server-package clippy with
 warnings denied, package formatting, `git diff --check`, and the Rust file-size
