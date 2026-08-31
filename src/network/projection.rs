@@ -1,6 +1,7 @@
 //! Authoritative world and event projection applied by the online client.
 
 use super::*;
+use std::collections::HashSet;
 
 impl WorldProjection {
     pub fn new(config: &GameConfig) -> Self {
@@ -70,12 +71,22 @@ impl WorldProjection {
         if width == 0 || height == 0 || tile_count != snapshot.tiles.len() {
             return false;
         }
+        let mut seen_positions = HashSet::new();
+        for tile in &snapshot.tiles {
+            let Some(x) = usize::try_from(tile.position.x).ok() else {
+                return false;
+            };
+            let Some(y) = usize::try_from(tile.position.y).ok() else {
+                return false;
+            };
+            if x >= width || y >= height || !seen_positions.insert((x, y)) {
+                return false;
+            }
+        }
         let mut tiles = FlatGrid::new(width, height, TileKind::Meadow);
         for tile in snapshot.tiles {
             let position = TilePos::new(tile.position.x, tile.position.y);
-            if tiles.is_valid(position) {
-                tiles.set(position, from_protocol_tile(tile.kind));
-            }
+            tiles.set(position, from_protocol_tile(tile.kind));
         }
         self.world = WorldState {
             tiles,

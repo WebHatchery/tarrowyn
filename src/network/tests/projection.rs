@@ -240,3 +240,84 @@ fn oversized_state_snapshot_is_rejected_before_grid_allocation() {
     assert_eq!(projection.cursor, 0);
     assert!(projection.player.is_none());
 }
+
+fn complete_test_tiles() -> Vec<WorldTile> {
+    (0..2)
+        .flat_map(|y| {
+            (0..3).map(move |x| WorldTile {
+                position: Position { x, y },
+                kind: ProtocolTileKind::Meadow,
+            })
+        })
+        .collect()
+}
+
+fn small_state_snapshot(tiles: Vec<WorldTile>) -> StateSnapshot {
+    StateSnapshot {
+        world: WorldSnapshot {
+            width: 3,
+            height: 2,
+            tiles,
+            clock: WorldClock {
+                day: 1,
+                seconds: 0.0,
+                day_length_seconds: 180.0,
+            },
+            players: Vec::new(),
+            plots: Vec::new(),
+            animals: Vec::new(),
+            tavern_position: Position { x: 1, y: 1 },
+            cursor: 1,
+            wilderness: None,
+            outpost: None,
+            claim: None,
+            expedition: None,
+            expedition_requirements: ExpeditionRequirements::default(),
+        },
+        player: PlayerProjection {
+            account_id: "account".to_owned(),
+            character_id: "character".to_owned(),
+            display_name: "Traveller".to_owned(),
+            position: Position { x: 1, y: 1 },
+            gold: 12,
+            field_tool_condition: 3,
+            field_weather: tarrowyn_protocol::FieldWeather::Clear,
+            field_pest_pressure: 0,
+            animal_condition: 10,
+            animal_max_condition: 10,
+            skill: 1,
+            reputation: 0,
+            adventurer_rank: tarrowyn_protocol::AdventurerRank::Unproven,
+            adventurer_credentials: Vec::new(),
+            inventory: tarrowyn_protocol::Inventory::default(),
+            weapon: tarrowyn_protocol::WeaponKind::IronSword,
+            knocked_out: false,
+            injuries: 0,
+            recovery_cost: 0,
+        },
+        feed: TavernFeedResponse {
+            notices: Vec::new(),
+            rumours: Vec::new(),
+            chat: Vec::new(),
+            cursor: 0,
+        },
+        cursor: 1,
+    }
+}
+
+#[test]
+fn malformed_tile_coordinates_cannot_partially_replace_projection() {
+    let mut out_of_bounds = complete_test_tiles();
+    out_of_bounds[5].position = Position { x: 3, y: 1 };
+    let mut duplicate = complete_test_tiles();
+    duplicate[5].position = duplicate[0].position;
+
+    for tiles in [out_of_bounds, duplicate] {
+        let mut projection = WorldProjection::new(&config());
+        assert!(!projection.apply_state(small_state_snapshot(tiles), 1));
+        assert_eq!(projection.world.tiles.width, config().world_width);
+        assert_eq!(projection.world.tiles.height, config().world_height);
+        assert_eq!(projection.cursor, 0);
+        assert!(projection.player.is_none());
+    }
+}
