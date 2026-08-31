@@ -85,9 +85,11 @@ requirements.
 - Provide health/readiness checks, structured logs, metrics, error reporting,
   latency and rejection dashboards, and alerts for persistence, tick drift,
   event backlog, economy anomalies, and client connection failures.
-- Add a release pipeline that runs formatting, tests, clippy, protocol checks,
-  migration checks, asset validation, `publish.ps1`, and a reproducible
-  deployment artifact.
+- The local release pipeline now runs formatting, tests, clippy, content and
+  asset validation, `publish.ps1`, and archive identity generation; its clean
+  Windows/WebGL candidates can be preserved and rollback-rehearsed. A target
+  server package and deployment artifact remain open until the target OS or
+  container contract is selected.
 - Maintain operator runbooks for launch, rollback, incident response,
   maintenance windows, restore, moderation, and communication of a service
   interruption.
