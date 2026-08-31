@@ -78,6 +78,11 @@ The post-pool 50-client one-round probe also completed 500 requests in
 recovery; its only alert was the explicitly allowed `market_backlog` boundary.
 Guest bootstrap for that controlled probe raised the configurable per-source
 burst limit, while the secure production default remains 32.
+The post-pool 100-client one-round probe then completed 1,000 requests in
+19,358.17 ms with 64.79 MB measured working set and 2,744.26 ms restart
+recovery; it passed the same recovery checks with only the explicitly allowed
+`market_backlog` alert. These post-pool probes remain monitored local evidence,
+not a production capacity claim.
 The latest 24-client baseline additionally recorded 67.06 MB of server working
 set after load and 2,837.56 ms from worker stop through restart readiness. These
 local measurements inform the target-environment gate but are not production

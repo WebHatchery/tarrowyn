@@ -3695,3 +3695,11 @@ after the load harness explicitly raised its per-source guest bootstrap limit:
 `market_backlog` boundary. This demonstrates that the previous fixed-32
 bootstrap failure is resolved, but remains monitored capacity evidence rather
 than proof of the GDD's several-hundred-client direction.
+
+The post-pool 100-client one-round probe completed 1,000 requests in
+19,358.17 ms with 64.79 MB measured server working set and 2,744.26 ms
+restart recovery. Event, market, travel, tick, backup, metrics, support-view,
+and restart checks passed; the only alert was the explicitly allowed
+`market_backlog` boundary. This extends monitored evidence for the bounded
+regional serving path, but does not establish the GDD's several-hundred-client
+capacity target.
