@@ -1,5 +1,5 @@
-use super::repo;
-use crate::config::ServerConfig;
+use super::{guest, repo};
+use crate::config::{ServerConfig, MAX_WORLD_TILES};
 use crate::repository::models::RepositoryState;
 use crate::repository::WorldRepository;
 use tarrowyn_protocol::GuestSessionRequest;
@@ -71,4 +71,26 @@ fn guest_identity_and_session_ids_stay_at_the_numeric_ceiling() {
     let state = repository.state.lock().unwrap();
     assert_eq!(state.next_guest, u64::MAX);
     assert_eq!(state.next_token, u64::MAX);
+}
+
+#[test]
+fn direct_snapshot_endpoints_fail_closed_for_an_unbounded_world() {
+    let defaults = ServerConfig::default();
+    let oversized_width = (MAX_WORLD_TILES / u64::from(defaults.world_height) + 1) as u32;
+    let repository = crate::repository::WorldRepository::new(ServerConfig {
+        world_width: oversized_width,
+        ..defaults
+    });
+    let session = guest(&repository, "unbounded-snapshot-endpoints");
+
+    let world_error = repository
+        .world(&session.account_token)
+        .expect_err("world snapshots should reject an unbounded configuration");
+    let state_error = repository
+        .state(&session.account_token)
+        .expect_err("state snapshots should reject an unbounded configuration");
+    for error in [world_error, state_error] {
+        assert_eq!(error.status, 500);
+        assert_eq!(error.error.code, "invalid_world_configuration");
+    }
 }

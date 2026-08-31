@@ -4519,6 +4519,16 @@ deployment, and catalog synchronization. No full workspace suite was repeated
 for this isolated server-startup safety slice, and no new external or
 deferred work was opened.
 
+The direct repository snapshot boundary was validated on 2026-08-31. The
+public `world` and `state` endpoints now repeat the runtime dimension guard so
+callers that construct `WorldRepository` directly cannot reach unbounded tile
+enumeration outside the HTTP startup path. The focused endpoint regression
+passed 1 test with 489 filtered; server-package formatting, clippy, Rust
+file-size, and diff checks passed. The project publisher also passed
+Windows/WebGL release builds, packaging, Preview deployment, and catalog
+synchronization. No full workspace suite was repeated for this isolated
+snapshot-allocation boundary, and no new external or deferred work was opened.
+
 The online tile-coordinate boundary was validated on 2026-08-31. State
 projection now rejects out-of-bounds and duplicate tile coordinates instead of
 silently accepting a partial world while rebuilding the map. The focused

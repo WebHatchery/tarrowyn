@@ -250,6 +250,7 @@ impl WorldRepository {
         let mut state = self.state.lock().expect("world repository lock poisoned");
         self.expire_and_persist_sessions(&mut state)?;
         authenticate(&mut state, token, &self.config)?;
+        self.validate_snapshot_configuration()?;
         let players = sorted_presences(&state);
         Ok(ApiResponse {
             meta: meta(state.tick, None, Some(state.cursor)),
@@ -261,6 +262,7 @@ impl WorldRepository {
         let mut state = self.state.lock().expect("world repository lock poisoned");
         self.expire_and_persist_sessions(&mut state)?;
         let key = authenticate(&mut state, token, &self.config)?;
+        self.validate_snapshot_configuration()?;
         let player = player_projection(&state, &key);
         let world = snapshot(&state, &self.config, sorted_presences(&state));
         Ok(ApiResponse {
@@ -450,6 +452,18 @@ impl WorldRepository {
             meta: meta(state.tick, None, Some(state.cursor)),
             data: feed(&state),
         })
+    }
+
+    fn validate_snapshot_configuration(&self) -> Result<(), RepositoryError> {
+        self.config
+            .validate_runtime_content_bounds()
+            .map_err(|error| {
+                RepositoryError::new(
+                    500,
+                    "invalid_world_configuration",
+                    format!("The world snapshot configuration is invalid: {error}"),
+                )
+            })
     }
 }
 
