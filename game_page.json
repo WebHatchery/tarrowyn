@@ -4,7 +4,7 @@
   "roost_slug": "rust_tarrowyn",
   "status": { "text": "Phase 6 Release Candidate", "class": "in-development" },
   "canvas_rendering": "pixelated",
-  "controls_hint": "Every required online action has a visible touch target; keyboard input is optional.",
+  "controls_hint": "Every required online action has a visible touch target; on a phone, tap Play full screen for a larger layout; keyboard input is optional.",
   "about": [
     "Share a persistent regional world with other players. Farm, trade, travel, take contracts, recover from danger, and leave your mark on a living settlement network."
   ],
