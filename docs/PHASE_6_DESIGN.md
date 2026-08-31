@@ -43,6 +43,10 @@ including frontier, civic, market, skill, and direct-trade responses, and
 rewrites composite moderation audit targets before replacing the guest.
 Restore normalization applies the same former-resident treatment to orphaned
 exact and composite audit targets from older snapshots before readiness checks.
+It also learns orphaned display names from retained account-linked trade,
+frontier, governance, claim, service, lesson, and market records so chronicle
+text from a legacy snapshot cannot preserve a departed resident merely because
+its structured event was already trimmed.
 Account IDs and display names embedded in retained audit notes are migrated or
 anonymised with their structured audit references; message evidence remains
 bounded and intact, and rewritten notes are re-truncated to the 240-character
