@@ -4285,3 +4285,13 @@ regression filter passed 1 test:
 Server-package formatting, clippy, Rust file-size, and diff checks passed. No
 full workspace suite was repeated for this isolated audit migration slice, and
 no new external or deferred work was opened.
+
+The development-guest reset replay privacy correction was validated on
+2026-08-31. Resetting a guest now anonymises shared frontier, market, and civic
+replay payloads, invalidates retained direct-trade responses, and rewrites
+composite moderation audit targets before the old identity is replaced. The
+focused reset regression passed 1 test:
+`guest_reset_anonymises_shared_replays_and_composite_audits`.
+Server-package formatting, clippy, Rust file-size, and diff checks passed. No
+full workspace suite was repeated for this isolated development-fixture
+privacy slice, and no new external or deferred work was opened.

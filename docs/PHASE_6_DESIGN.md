@@ -37,7 +37,10 @@ tap arms the action and the second tap sends it. A scheduled deletion clears
 the client session and returns the player to the visible Reconnect path. The
 deletion worker also removes persisted Phase 4 account-keyed and Phase 5
 identity-keyed replay payloads, so private command responses do not survive
-the private-state boundary.
+the private-state boundary. The development reset fixture applies the same
+boundary to shared replay payloads retained under other guest identities,
+including frontier, civic, market, skill, and direct-trade responses, and
+rewrites composite moderation audit targets before replacing the guest.
 
 All mutation endpoints validate bounded request IDs and 64 KiB JSON request
 bodies, while the HTTP worker rejects request URLs above 8 KiB before cloning

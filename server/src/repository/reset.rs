@@ -1,8 +1,8 @@
 use super::models::RepositoryState;
 use std::collections::HashSet;
 use tarrowyn_protocol::{
-    ClaimLifecycleStatus, ClaimStatus, ExpeditionStatus, FrontierEvent, ProposalStatus,
-    ServiceOrderStatus, WorldEvent,
+    ClaimLifecycleStatus, ClaimRecord, ClaimStatus, ExpeditionStatus, FrontierEvent,
+    GovernanceState, LandClaim, ProposalStatus, ServiceOrder, ServiceOrderStatus, WorldEvent,
 };
 
 const RESET_ACCOUNT: &str = "former-resident";
@@ -101,16 +101,25 @@ pub(super) fn reset_guest(state: &mut RepositoryState, identity_key: &str) {
     state.phase5.request_results.retain(|key, response| {
         !super::phase5::is_exact_request_cache_for_identity(key, identity_key, response)
     });
+    anonymize_phase3_replay_frontier(state, &old_account_id);
+    anonymize_phase4_replay_claims(state, &old_account_id);
+    anonymize_phase4_replay_service_orders(state, &old_account_id);
+    anonymize_phase4_replay_governance(state, &old_account_id);
+    anonymize_phase4_replay_knowledge(state, &old_account_id);
+    anonymize_phase4_replay_skill_lessons(state, &old_account_id);
+    invalidate_trade_replays(state, &old_account_id);
     state.trades.retain(|_, trade| {
         trade.creator_account_id != old_account_id && trade.recipient_account_id != old_account_id
     });
     super::phase5::close_deleted_account_orders(state, &old_account_id);
+    anonymize_phase5_replay_orders(state, &old_account_id);
     reset_phase3_public_ownership(state, &old_account_id);
     reset_phase4_public_ownership(state, &old_account_id);
     anonymize_public_history(state, &old_account_id, &old_display_name);
     state.phase6.audits.retain(|record| {
         record.actor_account_id != old_account_id && record.target != old_account_id
     });
+    anonymize_audit_targets(&mut state.phase6.audits, &old_account_id);
     state.phase6.moderation_results.retain(|key, response| {
         key != &format!("moderation:{identity_key}:{}", response.request_id)
     });
@@ -130,6 +139,247 @@ pub(super) fn reset_guest(state: &mut RepositoryState, identity_key: &str) {
         !super::phase6::is_support_replay_key_for_account(key, &old_account_id, response)
     });
     state.identities.remove(identity_key);
+}
+
+fn anonymize_phase3_replay_frontier(state: &mut RepositoryState, account_id: &str) {
+    for response in state.phase3.request_results.values_mut() {
+        match response {
+            super::phase3::Phase3Response::Claim(response) => {
+                if let Some(claim) = response.claim.as_mut() {
+                    anonymize_phase3_replay_claim(claim, account_id);
+                }
+            }
+            super::phase3::Phase3Response::Expedition(response) => {
+                if let Some(expedition) = response.expedition.as_mut() {
+                    reset_expedition(expedition, account_id);
+                }
+            }
+            super::phase3::Phase3Response::Contract(_)
+            | super::phase3::Phase3Response::Combat(_)
+            | super::phase3::Phase3Response::Recovery(_) => {}
+        }
+    }
+}
+
+fn anonymize_phase3_replay_claim(claim: &mut LandClaim, account_id: &str) {
+    if claim.owner_account_id == account_id {
+        claim.owner_account_id = RESET_ACCOUNT.to_owned();
+        claim.owner_name = RESET_NAME.to_owned();
+        claim.status = ClaimStatus::Reclaimed;
+    }
+}
+
+fn anonymize_phase4_replay_claims(state: &mut RepositoryState, account_id: &str) {
+    for response in state.phase4.request_results.values_mut() {
+        let super::phase4::Phase4Response::Claim(response) = response else {
+            continue;
+        };
+        let mut released_positions = Vec::new();
+        if let Some(claim) = response.claim.as_mut() {
+            if anonymize_phase4_replay_claim(claim, account_id, state.tick) {
+                released_positions.push(claim.position);
+            }
+        }
+        for claim in &mut response.claims.claims {
+            if anonymize_phase4_replay_claim(claim, account_id, state.tick) {
+                released_positions.push(claim.position);
+            }
+        }
+        for position in released_positions {
+            if !response.claims.available_plots.contains(&position) {
+                response.claims.available_plots.push(position);
+            }
+        }
+    }
+}
+
+fn anonymize_phase4_replay_claim(
+    claim: &mut ClaimRecord,
+    account_id: &str,
+    current_tick: u64,
+) -> bool {
+    let owner_reset = claim.owner_account_id.as_deref() == Some(account_id);
+    if owner_reset {
+        claim.owner_account_id = None;
+        claim.owner_name = None;
+        claim.status = ClaimLifecycleStatus::Reclaimed;
+        claim.building_access = false;
+        claim.last_active_tick = current_tick;
+        claim.inspection_note =
+            "The development identity was reset; this plot is available again.".to_owned();
+    }
+    if claim.approved_by.as_deref() == Some(account_id) {
+        claim.approved_by = None;
+    }
+    owner_reset
+}
+
+fn anonymize_phase4_replay_service_orders(state: &mut RepositoryState, account_id: &str) {
+    for response in state.phase4.request_results.values_mut() {
+        let super::phase4::Phase4Response::Profession(response) = response else {
+            continue;
+        };
+        if let Some(order) = response.order.as_mut() {
+            anonymize_phase4_replay_service_order(order, account_id);
+        }
+        for order in &mut response.professions.orders {
+            anonymize_phase4_replay_service_order(order, account_id);
+        }
+    }
+}
+
+fn anonymize_phase4_replay_service_order(order: &mut ServiceOrder, account_id: &str) {
+    if order.requester_account_id == account_id {
+        order.requester_account_id = RESET_ACCOUNT.to_owned();
+        order.requester_name = RESET_NAME.to_owned();
+        if matches!(
+            order.status,
+            ServiceOrderStatus::Open | ServiceOrderStatus::Accepted
+        ) {
+            order.status = ServiceOrderStatus::Cancelled;
+        }
+    }
+    if order.provider_account_id.as_deref() == Some(account_id) {
+        order.provider_account_id = None;
+        order.provider_name = None;
+        if order.status == ServiceOrderStatus::Accepted {
+            order.status = ServiceOrderStatus::Cancelled;
+        }
+    }
+}
+
+fn anonymize_phase4_replay_governance(state: &mut RepositoryState, account_id: &str) {
+    for response in state.phase4.request_results.values_mut() {
+        let super::phase4::Phase4Response::Governance(response) = response else {
+            continue;
+        };
+        reset_governance(&mut response.governance, account_id);
+    }
+}
+
+fn reset_governance(governance: &mut GovernanceState, account_id: &str) {
+    for office in &mut governance.offices {
+        if office.holder_account_id.as_deref() == Some(account_id) {
+            office.holder_account_id = None;
+            office.holder_name = None;
+            office.vacant = true;
+            office.vacancy_reason = Some(
+                "The development office-holder was reset; a new player may take responsibility."
+                    .to_owned(),
+            );
+        }
+    }
+    for proposal in &mut governance.proposals {
+        if proposal.proposer_account_id == account_id {
+            proposal.proposer_account_id = RESET_ACCOUNT.to_owned();
+            proposal.proposer_name = RESET_NAME.to_owned();
+            if proposal.status == ProposalStatus::Proposed {
+                proposal.status = ProposalStatus::Rejected;
+            }
+        }
+        if proposal.approved_by.as_deref() == Some(account_id) {
+            proposal.approved_by = None;
+        }
+    }
+    for decision in &mut governance.decisions {
+        if decision.actor_account_id == account_id {
+            decision.actor_account_id = RESET_ACCOUNT.to_owned();
+            decision.actor_name = RESET_NAME.to_owned();
+        }
+    }
+    for receipt in &mut governance.tax_ledger {
+        if receipt.payer_account_id == account_id {
+            receipt.payer_account_id = RESET_ACCOUNT.to_owned();
+            receipt.payer_name = RESET_NAME.to_owned();
+        }
+    }
+    if let Some(policy) = governance.taxation.as_mut() {
+        if policy.payer == account_id {
+            policy.payer = RESET_ACCOUNT.to_owned();
+        }
+        if policy.recipient == account_id {
+            policy.recipient = RESET_ACCOUNT.to_owned();
+        }
+    }
+}
+
+fn anonymize_phase4_replay_knowledge(state: &mut RepositoryState, account_id: &str) {
+    for response in state.phase4.request_results.values_mut() {
+        let super::phase4::Phase4Response::Knowledge(response) = response else {
+            continue;
+        };
+        for item in &mut response.knowledge.items {
+            item.discovered_by.retain(|id| id != account_id);
+        }
+    }
+}
+
+fn anonymize_phase4_replay_skill_lessons(state: &mut RepositoryState, account_id: &str) {
+    for response in state.phase4.request_results.values_mut() {
+        let super::phase4::Phase4Response::Skill(response) = response else {
+            continue;
+        };
+        let lesson_was_removed = response.lesson.as_ref().is_some_and(|lesson| {
+            lesson.teacher_account_id == account_id || lesson.learner_account_id == account_id
+        });
+        response.skills.lessons.retain(|lesson| {
+            lesson.teacher_account_id != account_id && lesson.learner_account_id != account_id
+        });
+        if lesson_was_removed {
+            response.lesson = None;
+            response.target_account_id = None;
+            response.message =
+                "This school lesson is no longer available after a development identity reset."
+                    .to_owned();
+        } else if response.target_account_id.as_deref() == Some(account_id) {
+            response.target_account_id = None;
+        }
+    }
+}
+
+fn invalidate_trade_replays(state: &mut RepositoryState, account_id: &str) {
+    for identity in state.identities.values_mut() {
+        for response in identity.trade_results.values_mut() {
+            let Some(trade) = response.trade.as_ref() else {
+                continue;
+            };
+            if trade.creator_account_id == account_id || trade.recipient_account_id == account_id {
+                response.accepted = false;
+                response.trade = None;
+                response.reason = Some(
+                    "That trade is no longer available after a development identity reset."
+                        .to_owned(),
+                );
+            }
+        }
+    }
+}
+
+fn anonymize_phase5_replay_orders(state: &mut RepositoryState, account_id: &str) {
+    for response in state.phase5.request_results.values_mut() {
+        let super::phase5::Phase5Response::Market(response) = response else {
+            continue;
+        };
+        let Some(order) = response.order.as_mut() else {
+            continue;
+        };
+        if order.owner_account_id == account_id {
+            order.owner_account_id = RESET_ACCOUNT.to_owned();
+            order.owner_name = RESET_NAME.to_owned();
+        }
+    }
+}
+
+fn anonymize_audit_targets(
+    audits: &mut std::collections::VecDeque<tarrowyn_protocol::AuditRecord>,
+    account_id: &str,
+) {
+    let prefix = format!("{account_id} (");
+    for audit in audits {
+        if let Some(suffix) = audit.target.strip_prefix(&prefix) {
+            audit.target = format!("{RESET_ACCOUNT} ({suffix}");
+        }
+    }
 }
 
 fn anonymize_public_history(state: &mut RepositoryState, old_account_id: &str, old_name: &str) {
@@ -261,49 +511,7 @@ fn reset_phase4_public_ownership(state: &mut RepositoryState, old_account_id: &s
             claim.approved_by = None;
         }
     }
-    for office in &mut state.phase4.governance.offices {
-        if office.holder_account_id.as_deref() == Some(old_account_id) {
-            office.holder_account_id = None;
-            office.holder_name = None;
-            office.vacant = true;
-            office.vacancy_reason = Some(
-                "The development office-holder was reset; a new player may take responsibility."
-                    .to_owned(),
-            );
-        }
-    }
-    for proposal in &mut state.phase4.governance.proposals {
-        if proposal.proposer_account_id == old_account_id {
-            proposal.proposer_account_id = RESET_ACCOUNT.to_owned();
-            proposal.proposer_name = RESET_NAME.to_owned();
-            if proposal.status == ProposalStatus::Proposed {
-                proposal.status = ProposalStatus::Rejected;
-            }
-        }
-        if proposal.approved_by.as_deref() == Some(old_account_id) {
-            proposal.approved_by = None;
-        }
-    }
-    for decision in &mut state.phase4.governance.decisions {
-        if decision.actor_account_id == old_account_id {
-            decision.actor_account_id = RESET_ACCOUNT.to_owned();
-            decision.actor_name = RESET_NAME.to_owned();
-        }
-    }
-    for receipt in &mut state.phase4.governance.tax_ledger {
-        if receipt.payer_account_id == old_account_id {
-            receipt.payer_account_id = RESET_ACCOUNT.to_owned();
-            receipt.payer_name = RESET_NAME.to_owned();
-        }
-    }
-    if let Some(policy) = state.phase4.governance.taxation.as_mut() {
-        if policy.payer == old_account_id {
-            policy.payer = RESET_ACCOUNT.to_owned();
-        }
-        if policy.recipient == old_account_id {
-            policy.recipient = RESET_ACCOUNT.to_owned();
-        }
-    }
+    reset_governance(&mut state.phase4.governance, old_account_id);
     for index in 0..state.phase4.orders.len() {
         let requester_reset = state.phase4.orders[index].requester_account_id == old_account_id;
         let provider_reset =

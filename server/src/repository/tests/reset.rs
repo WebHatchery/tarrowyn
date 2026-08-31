@@ -1,10 +1,188 @@
 use super::super::WorldRepository;
 use crate::ServerConfig;
 use tarrowyn_protocol::{
-    AuthRevokeRequest, ChatRequest, ClaimLifecycleAction, ClaimLifecycleRequest, FrontierEvent,
-    GuestSessionRequest, MarketOrderAction, MarketOrderRequest, ModerationReportRequest,
-    ProfessionAction, ProfessionKind, ProfessionRequest, TravelAction, TravelRequest, WorldEvent,
+    AuthRevokeRequest, ChatRequest, ClaimAction, ClaimLifecycleAction, ClaimLifecycleRequest,
+    ClaimRequest, FrontierEvent, GuestSessionRequest, MarketOrderAction, MarketOrderRequest,
+    ModerationReportRequest, ProfessionAction, ProfessionKind, ProfessionRequest, TradeAction,
+    TradeBundle, TradeRequest, TravelAction, TravelRequest, WorldEvent,
 };
+
+#[test]
+fn guest_reset_anonymises_shared_replays_and_composite_audits() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let reset_guest = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("reset-replay-owner".to_owned()),
+            reset: false,
+        })
+        .expect("reset guest")
+        .data;
+    let observer = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("reset-replay-observer".to_owned()),
+            reset: false,
+        })
+        .expect("observer guest")
+        .data;
+
+    repository
+        .claim(
+            &reset_guest.account_token,
+            ClaimRequest {
+                request_id: "reset-replay-claim-request".to_owned(),
+                action: ClaimAction::Request,
+            },
+        )
+        .expect("the reset guest should claim frontier land");
+    let claim_inspect = ClaimRequest {
+        request_id: "reset-replay-claim-inspect".to_owned(),
+        action: ClaimAction::Inspect,
+    };
+    let original_claim = repository
+        .claim(&observer.account_token, claim_inspect.clone())
+        .expect("the observer should cache the frontier claim")
+        .data
+        .claim
+        .expect("the cached claim should be present");
+    assert_eq!(original_claim.owner_account_id, reset_guest.account_id);
+
+    let market = repository
+        .market_order(
+            &reset_guest.account_token,
+            MarketOrderRequest {
+                request_id: "reset-replay-market-create".to_owned(),
+                action: MarketOrderAction::Create,
+                order_id: None,
+                destination_location_id: Some("whisperwood-outpost".to_owned()),
+                commodity: Some(tarrowyn_protocol::CommodityKind::Seeds),
+                quantity: Some(1),
+            },
+        )
+        .expect("the reset guest should create a market order")
+        .data
+        .order
+        .expect("market order");
+    let market_review = MarketOrderRequest {
+        request_id: "reset-replay-market-review".to_owned(),
+        action: MarketOrderAction::Fulfil,
+        order_id: Some(market.order_id),
+        destination_location_id: None,
+        commodity: None,
+        quantity: None,
+    };
+    repository
+        .market_order(&observer.account_token, market_review.clone())
+        .expect("the observer should cache the market response");
+
+    let trade = repository
+        .trade(
+            &reset_guest.account_token,
+            TradeRequest {
+                request_id: "reset-replay-trade-create".to_owned(),
+                action: TradeAction::Create,
+                trade_id: None,
+                recipient_account_id: Some(observer.account_id.clone()),
+                offer: Some(TradeBundle {
+                    seeds: 1,
+                    ..TradeBundle::default()
+                }),
+                request: Some(TradeBundle {
+                    gold: 1,
+                    ..TradeBundle::default()
+                }),
+            },
+        )
+        .expect("the reset guest should create a trade")
+        .data
+        .trade
+        .expect("trade offer");
+    let trade_review = TradeRequest {
+        request_id: "reset-replay-trade-review".to_owned(),
+        action: TradeAction::Review,
+        trade_id: Some(trade.trade_id),
+        recipient_account_id: None,
+        offer: None,
+        request: None,
+    };
+    repository
+        .trade(&observer.account_token, trade_review.clone())
+        .expect("the observer should cache the trade response");
+
+    let message_id = repository
+        .chat(
+            &reset_guest.account_token,
+            ChatRequest {
+                request_id: "reset-replay-message".to_owned(),
+                channel: "settlement".to_owned(),
+                text: "This audit target should lose its old account.".to_owned(),
+            },
+        )
+        .expect("the reset guest should create a message")
+        .data
+        .message
+        .expect("message")
+        .message_id;
+    repository
+        .moderation_report(
+            &observer.account_token,
+            ModerationReportRequest {
+                request_id: "reset-replay-report".to_owned(),
+                target_account_id: Some(reset_guest.account_id.clone()),
+                message_id: Some(message_id),
+                category: "harassment".to_owned(),
+                note: "The target should remain safe after a development reset.".to_owned(),
+            },
+        )
+        .expect("the observer should create a moderation audit");
+
+    repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some(reset_guest.client_key),
+            reset: true,
+        })
+        .expect("guest reset");
+
+    let replayed_claim = repository
+        .claim(&observer.account_token, claim_inspect)
+        .expect("the claim replay should remain available")
+        .data
+        .claim
+        .expect("replayed claim");
+    assert_eq!(replayed_claim.owner_account_id, "former-resident");
+    assert_eq!(replayed_claim.owner_name, "Former resident");
+    assert_eq!(
+        replayed_claim.status,
+        tarrowyn_protocol::ClaimStatus::Reclaimed
+    );
+
+    let replayed_market = repository
+        .market_order(&observer.account_token, market_review)
+        .expect("the market replay should remain available")
+        .data
+        .order
+        .expect("replayed market order");
+    assert_eq!(replayed_market.owner_account_id, "former-resident");
+    assert_eq!(replayed_market.owner_name, "Former resident");
+
+    let replayed_trade = repository
+        .trade(&observer.account_token, trade_review)
+        .expect("the trade replay should remain available")
+        .data;
+    assert!(!replayed_trade.accepted);
+    assert!(replayed_trade.trade.is_none());
+
+    let state = repository.state.lock().expect("repository state");
+    let audit = state
+        .phase6
+        .audits
+        .iter()
+        .find(|audit| audit.action == "moderation.report:harassment")
+        .expect("moderation audit");
+    assert_eq!(
+        audit.target,
+        format!("former-resident (message {message_id})")
+    );
+}
 
 #[test]
 fn guest_reset_keeps_moderation_replays_for_identity_prefix_collisions() {
