@@ -3502,3 +3502,12 @@ with server-package clippy with warnings denied, package formatting,
 `git diff --check`, and the Rust file-size scan. No publisher or full workspace
 gate is repeated because this is test-source organization maintenance, and no
 new external or deferred work is opened.
+
+Phase 3 chronicle retention and cursor-boundary tests now live in
+`repository/phase3/tests/chronicle.rs`, reducing the phase test root from 673
+to 604 lines while preserving archive search and stale/ahead cursor contracts.
+The focused chronicle filter passes (2 tests), along with server-package clippy
+with warnings denied, package formatting, `git diff --check`, and the Rust
+file-size scan. No publisher or full workspace gate is repeated because this is
+test-source organization maintenance, and no new external or deferred work is
+opened.
