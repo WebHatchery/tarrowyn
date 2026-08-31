@@ -18,6 +18,7 @@ pub struct ServerConfig {
     pub tick_interval: Duration,
     pub world_seconds_per_tick: f32,
     pub session_ttl_seconds: u32,
+    pub guest_session_burst_limit: u16,
     pub movement_cooldown_ticks: u64,
     pub combat_action_cooldown_ticks: u64,
     pub chat_max_length: usize,
@@ -61,6 +62,7 @@ impl Default for ServerConfig {
             tick_interval: Duration::from_millis(250),
             world_seconds_per_tick: 0.25,
             session_ttl_seconds: 30,
+            guest_session_burst_limit: 32,
             movement_cooldown_ticks: 1,
             combat_action_cooldown_ticks: 1,
             chat_max_length: 160,
@@ -119,6 +121,11 @@ impl ServerConfig {
                 "TARROWYN_SESSION_TTL_SECONDS",
                 defaults.session_ttl_seconds,
             ),
+            guest_session_burst_limit: env_u16(
+                "TARROWYN_GUEST_SESSION_BURST_LIMIT",
+                defaults.guest_session_burst_limit,
+            )
+            .max(1),
             movement_cooldown_ticks: env_u64(
                 "TARROWYN_MOVEMENT_COOLDOWN_TICKS",
                 defaults.movement_cooldown_ticks,

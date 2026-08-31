@@ -109,6 +109,9 @@ backup/restore drill, and rollback path pass on the target environment.
 The acceptance script also creates and removes a uniquely named disposable
 restore database before starting the server, so its database account needs
 `CREATE/DROP DATABASE` permission in addition to access to `DB_DATABASE`.
+The HTTP worker keeps the guest-session burst limit at 32 attempts per source
+by default; set `TARROWYN_GUEST_SESSION_BURST_LIMIT` only when the deployment's
+known client bootstrap rate requires a different bounded value.
 
 The shared `protocol/` crate is versioned at protocol `6`. Every successful or
 error response carries protocol version and server tick metadata; cursor-based

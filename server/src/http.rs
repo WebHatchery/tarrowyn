@@ -35,9 +35,9 @@ use request::{
 #[cfg(test)]
 use request::{parse_bearer_header, read_bounded_body};
 
-#[derive(Default)]
 struct GuestSessionRateLimiter {
     windows: HashMap<IpAddr, GuestSessionRateWindow>,
+    burst_limit: u16,
 }
 
 struct GuestSessionRateWindow {
@@ -46,6 +46,13 @@ struct GuestSessionRateWindow {
 }
 
 impl GuestSessionRateLimiter {
+    fn new(burst_limit: u16) -> Self {
+        Self {
+            windows: HashMap::new(),
+            burst_limit: burst_limit.max(1),
+        }
+    }
+
     fn allow(&mut self, request: &Request) -> bool {
         self.allow_ip(
             request.remote_addr().map(|address| address.ip()),
@@ -87,11 +94,17 @@ impl GuestSessionRateLimiter {
             window.started_at = now;
             window.attempts = 0;
         }
-        if window.attempts >= GUEST_SESSION_BURST_LIMIT {
+        if window.attempts >= self.burst_limit {
             return false;
         }
         window.attempts += 1;
         true
+    }
+}
+
+impl Default for GuestSessionRateLimiter {
+    fn default() -> Self {
+        Self::new(GUEST_SESSION_BURST_LIMIT)
     }
 }
 
@@ -125,7 +138,9 @@ pub fn serve(config: crate::config::ServerConfig) -> Result<(), String> {
     let request_worker_count = request_worker_count();
     let (request_sender, request_receiver) = mpsc::sync_channel(REQUEST_QUEUE_CAPACITY);
     let request_receiver = Arc::new(Mutex::new(request_receiver));
-    let guest_session_limiter = Arc::new(Mutex::new(GuestSessionRateLimiter::default()));
+    let guest_session_limiter = Arc::new(Mutex::new(GuestSessionRateLimiter::new(
+        config.guest_session_burst_limit,
+    )));
     let mut workers = Vec::with_capacity(request_worker_count);
     for _ in 0..request_worker_count {
         let request_receiver = Arc::clone(&request_receiver);

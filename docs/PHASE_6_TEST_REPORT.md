@@ -3681,9 +3681,17 @@ requests to progress concurrently. The focused worker-boundary regression
 passed (1 test), and the 24-client one-round mixed-load check passed with 240
 requests, no operational alerts, 72.4 MB measured server working set, and
 2,739.61 ms restart recovery. The full milestone gate also passed: content
-validation, 16 protocol tests, 443 server tests, 243 client tests, asset and
+validation, 16 protocol tests, 444 server tests, 243 client tests, asset and
 code-standard checks, workspace clippy, Windows/WebGL release builds,
 packaging, and Preview deployment. This improves the locked scale direction's
 serving path but does not promote the 24-client evidence to the GDD's
 several-hundred-player target; target topology and multi-worker ownership
 remain in the follow-up register.
+
+The same bounded pool then completed an exploratory 50-client one-round probe
+after the load harness explicitly raised its per-source guest bootstrap limit:
+500 requests in 9,177.11 ms, 62.61 MB measured server working set, and
+2,795.53 ms restart recovery. The only alert was the explicitly allowed
+`market_backlog` boundary. This demonstrates that the previous fixed-32
+bootstrap failure is resolved, but remains monitored capacity evidence rather
+than proof of the GDD's several-hundred-client direction.

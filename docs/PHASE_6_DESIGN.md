@@ -250,6 +250,10 @@ private service address; TLS,
 provider secrets, and support credentials are environment or deployment-secret
 inputs, never checked into the repository. Development guest identities use a
 separate fixture state path and must not share production data.
+Guest-session admission is limited to 32 attempts per source by default and is
+configurable through `TARROWYN_GUEST_SESSION_BURST_LIMIT`; capacity probes may
+raise that bound explicitly for their controlled client bootstrap, but the
+setting does not change the one-worker ownership boundary.
 
 Authentication also fails closed when a restored session points at a missing
 character record: the dangling session is evicted and the request receives the

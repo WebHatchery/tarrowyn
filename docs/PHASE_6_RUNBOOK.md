@@ -22,8 +22,13 @@ the points where integration risk changes.
 
 Configuration is environment-specific. Set `TARROWYN_STATE_PATH`,
 `TARROWYN_BACKUP_PATH`, `TARROWYN_PRODUCTION_SESSION_TTL_SECONDS`,
-`TARROWYN_REFRESH_TTL_SECONDS`, and the identity-gateway deployment secret in
-the secret manager. Set `TARROWYN_SUPPORT_OPERATOR_ACCOUNTS` to a comma-separated
+`TARROWYN_REFRESH_TTL_SECONDS`, and
+`TARROWYN_GUEST_SESSION_BURST_LIMIT` when the deployment needs a different
+per-source guest-session burst than the secure default of 32. Set the latter
+only to the smallest value needed for the expected client bootstrap rate; the
+Phase 6 load harness sets it explicitly for controlled local capacity probes.
+Keep the identity-gateway deployment secret in the secret manager. Set
+`TARROWYN_SUPPORT_OPERATOR_ACCOUNTS` to a comma-separated
 allowlist of operator account IDs; an empty value fails closed. Keep development
 guests on a separate state path.
 

@@ -146,6 +146,18 @@ fn guest_session_rate_limiter_bounds_a_source_window() {
 }
 
 #[test]
+fn guest_session_rate_limiter_honours_a_configured_burst_limit() {
+    let mut limiter = GuestSessionRateLimiter::new(3);
+    let source = "192.0.2.12".parse().expect("test source address");
+    let now = Instant::now();
+
+    for _ in 0..3 {
+        assert!(limiter.allow_ip(Some(source), now));
+    }
+    assert!(!limiter.allow_ip(Some(source), now));
+}
+
+#[test]
 fn guest_session_rate_limiter_does_not_block_unaddressed_fixture_clients() {
     let mut limiter = GuestSessionRateLimiter::default();
     let now = Instant::now();

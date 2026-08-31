@@ -73,6 +73,11 @@ measured working set, and 2,739.61 ms restart recovery. The pool improves
 request-service concurrency inside the regional worker, but does not change
 the one-worker ownership boundary or establish several-hundred-player
 capacity.
+The post-pool 50-client one-round probe also completed 500 requests in
+9,177.11 ms with 62.61 MB measured working set and 2,795.53 ms restart
+recovery; its only alert was the explicitly allowed `market_backlog` boundary.
+Guest bootstrap for that controlled probe raised the configurable per-source
+burst limit, while the secure production default remains 32.
 The latest 24-client baseline additionally recorded 67.06 MB of server working
 set after load and 2,837.56 ms from worker stop through restart readiness. These
 local measurements inform the target-environment gate but are not production
