@@ -75,12 +75,14 @@ fn anonymize_orphaned_audits(
         if is_orphaned_account(&audit.actor_account_id, account_ids) {
             audit.actor_account_id = RESET_ACCOUNT.to_owned();
         }
-        if let Some((account_id, suffix)) = audit.target.split_once(" (") {
+        if let Some((account_id, suffix)) = audit_target_account_reference(audit) {
             if is_orphaned_account(account_id, account_ids) {
-                audit.target = format!("{RESET_ACCOUNT} ({suffix}");
+                audit.target = if let Some(suffix) = suffix {
+                    format!("{RESET_ACCOUNT} ({suffix}")
+                } else {
+                    RESET_ACCOUNT.to_owned()
+                };
             }
-        } else if is_orphaned_account(&audit.target, account_ids) {
-            audit.target = RESET_ACCOUNT.to_owned();
         }
         audit.note = audit.note.chars().take(240).collect();
     }
@@ -94,18 +96,37 @@ fn orphaned_audit_accounts(
     if is_orphaned_account(&audit.actor_account_id, account_ids) {
         account_ids_to_scrub.push(audit.actor_account_id.clone());
     }
-    if let Some((account_id, _)) = audit.target.split_once(" (") {
+    if let Some((account_id, _)) = audit_target_account_reference(audit) {
         if is_orphaned_account(account_id, account_ids)
             && !account_ids_to_scrub.iter().any(|id| id == account_id)
         {
             account_ids_to_scrub.push(account_id.to_owned());
         }
-    } else if is_orphaned_account(&audit.target, account_ids)
-        && !account_ids_to_scrub.iter().any(|id| id == &audit.target)
-    {
-        account_ids_to_scrub.push(audit.target.clone());
     }
     account_ids_to_scrub
+}
+
+fn audit_target_account_reference(
+    audit: &tarrowyn_protocol::AuditRecord,
+) -> Option<(&str, Option<&str>)> {
+    let target = audit.target.as_str();
+    if audit.action.starts_with("auth.")
+        || matches!(
+            audit.action.as_str(),
+            "account.delete.requested" | "account.delete.completed" | "support.repair"
+        )
+    {
+        return Some((target, None));
+    }
+    if audit.action.starts_with("moderation.report:") {
+        if let Some((account_id, suffix)) = target.split_once(" (") {
+            return suffix
+                .starts_with("message ")
+                .then_some((account_id, Some(suffix)));
+        }
+        return (!target.starts_with("message ") && target != "message").then_some((target, None));
+    }
+    None
 }
 
 pub(super) fn reset_guest(state: &mut RepositoryState, identity_key: &str) {

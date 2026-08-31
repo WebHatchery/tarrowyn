@@ -4335,3 +4335,13 @@ test: `restored_state_anonymises_orphaned_audit_targets`. Server-package
 formatting, clippy, Rust file-size, and diff checks passed. No full workspace
 suite was repeated for this isolated restore-privacy slice, and no new external
 or deferred work was opened.
+
+The semantic-audit target correction was validated on 2026-08-31. Restore
+normalization now classifies account-bearing audit targets by their action before
+anonymising orphaned exact or composite references, so targets such as
+`tax-policy` and message-only moderation evidence retain their meaning. The
+focused reset regression passed 1 test:
+`restored_state_anonymises_orphaned_audit_targets`. Server-package formatting,
+clippy, Rust file-size, and diff checks passed. No full workspace suite was
+repeated for this isolated restore-normalization slice, and no new external or
+deferred work was opened.

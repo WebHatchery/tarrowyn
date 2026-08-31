@@ -30,6 +30,15 @@ fn restored_state_anonymises_orphaned_audit_targets() {
         tick: 2,
         note: "An orphaned composite target orphan-account must not survive restore.".to_owned(),
     });
+    stored.phase6.audits.push_back(AuditRecord {
+        audit_id: "audit-semantic-target".to_owned(),
+        actor_account_id: "former-resident".to_owned(),
+        action: "governance.tax".to_owned(),
+        target: "tax-policy".to_owned(),
+        outcome: "accepted".to_owned(),
+        tick: 3,
+        note: "The tax-policy target keeps its audit meaning after restore.".to_owned(),
+    });
 
     let restored = super::super::models::RepositoryState::from_stored(stored, &config);
     assert_eq!(
@@ -41,6 +50,7 @@ fn restored_state_anonymises_orphaned_audit_targets() {
         restored.phase6.audits[1].target,
         "former-resident (message 7)"
     );
+    assert_eq!(restored.phase6.audits[2].target, "tax-policy");
     assert!(restored
         .phase6
         .audits
