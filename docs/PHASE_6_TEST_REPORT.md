@@ -4031,3 +4031,10 @@ not at a lower declared depth, while preserving the existing prerequisite-cycle
 diagnostic. The focused server skills filter passed all 15 matching tests, and
 the affected server package formatting and clippy checks passed. No full
 workspace suite was repeated for this bounded content-validation change.
+
+The launch skill-catalogue guard was validated on 2026-08-31 at commit
+`e5f58ab`. The server validator now requires every GDD launch root discipline
+and both initial advanced discoveries, with focused regressions for missing
+entries. The focused server skills filter passed all 17 matching tests, and the
+affected server package formatting, clippy, and diff checks passed. No full
+workspace suite was repeated for this bounded content-contract change.
