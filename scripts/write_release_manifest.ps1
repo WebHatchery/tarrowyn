@@ -3,13 +3,15 @@
     Writes immutable identity and checksum records for the release archives.
 
 .DESCRIPTION
-    Validates the publisher's Windows and WebGL ZIPs, records every archive
-    entry, and writes an external manifest plus SHA-256 sidecars. The manifest
-    is release evidence, not a public-launch approval.
+    Validates the publisher's Windows and WebGL ZIPs plus the host-targeted
+    server ZIP, records every archive entry, and writes an external manifest
+    plus SHA-256 sidecars. The manifest is release evidence, not a public-
+    launch approval.
 #>
 param(
     [string]$WindowsArchivePath = "dist\years_of_tarrowyn_windows.zip",
     [string]$WebGLArchivePath = "dist\tarrowyn_webgl.zip",
+    [string]$ServerArchivePath = "dist\tarrowyn_server.zip",
     [string]$OutputPath = "dist\tarrowyn_release_manifest.json",
     [switch]$AllowDirty
 )
@@ -102,7 +104,7 @@ function Read-ArchiveRecord {
         }
     }
 
-    if ($Target -eq 'windows') {
+    if ($Target -in @('windows', 'server')) {
         $executables = @($files | Where-Object {
             [IO.Path]::GetExtension([string]$_.path) -ieq '.exe' -and
             -not ([string]$_.path).Contains('/')
@@ -131,6 +133,7 @@ $projectDir = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $distDir = [IO.Path]::GetFullPath((Join-Path $projectDir 'dist'))
 $windowsArchive = Resolve-DistPath $projectDir $distDir $WindowsArchivePath
 $webglArchive = Resolve-DistPath $projectDir $distDir $WebGLArchivePath
+$serverArchive = Resolve-DistPath $projectDir $distDir $ServerArchivePath
 $outputPath = Resolve-DistPath $projectDir $distDir $OutputPath
 
 $commit = (& git -C $projectDir rev-parse HEAD).Trim()
@@ -157,6 +160,11 @@ try {
 
 $windowsRecord = Read-ArchiveRecord $windowsArchive 'windows' @('years_of_tarrowyn.exe')
 $webglRecord = Read-ArchiveRecord $webglArchive 'webgl' @('index.html')
+$serverRecord = Read-ArchiveRecord $serverArchive 'server' @(
+    'BUILD_INFO.json',
+    'server/migrations/0001_initial_world.sql',
+    'docs/SERVER_DEPLOYMENT.md'
+)
 $shortCommit = $commit.Substring(0, 12)
 $dirtySuffix = if ($isDirty) { '-dirty' } else { '' }
 $manifest = [ordered]@{
@@ -168,7 +176,7 @@ $manifest = [ordered]@{
     git_commit = $commit
     working_tree_dirty = $isDirty
     built_utc = [DateTime]::UtcNow.ToString('yyyy-MM-ddTHH:mm:ssZ')
-    archives = @($windowsRecord, $webglRecord)
+    archives = @($windowsRecord, $webglRecord, $serverRecord)
     excluded_runtime_state = @(
         'dist/tarrowyn-server-state.json',
         'dist/tarrowyn-server-state.json.backup'
@@ -182,7 +190,7 @@ if (-not (Test-Path -LiteralPath $outputDirectory)) {
 }
 [IO.File]::WriteAllText($outputPath, ($manifest | ConvertTo-Json -Depth 8) + [Environment]::NewLine, $utf8NoBom)
 
-foreach ($record in @($windowsRecord, $webglRecord)) {
+foreach ($record in @($windowsRecord, $webglRecord, $serverRecord)) {
     $archivePath = Join-Path $distDir $record.filename
     $sidecarPath = "$archivePath.sha256"
     $sidecar = "$($record.sha256)  $($record.filename)$([Environment]::NewLine)"
@@ -193,4 +201,5 @@ Write-Host "Release manifest written for $($manifest.build_id):" -ForegroundColo
 Write-Host "  Manifest: $outputPath"
 Write-Host "  Windows:  $($windowsRecord.sha256)"
 Write-Host "  WebGL:    $($webglRecord.sha256)"
+Write-Host "  Server:   $($serverRecord.sha256)"
 Write-Host "  Runtime state excluded: yes"

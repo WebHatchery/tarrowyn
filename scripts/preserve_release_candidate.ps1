@@ -65,7 +65,7 @@ $commit = [string]$manifest.git_commit
 if ($commit -notmatch '^[0-9a-f]{40}$') { throw 'Release manifest has an invalid Git commit.' }
 
 $archiveRecords = @($manifest.archives)
-if ($archiveRecords.Count -ne 2) { throw 'Release manifest must identify exactly two archives.' }
+if ($archiveRecords.Count -ne 3) { throw 'Release manifest must identify exactly three archives.' }
 foreach ($record in $archiveRecords) {
     $filename = [string]$record.filename
     if ([string]::IsNullOrWhiteSpace($filename) -or

@@ -23,6 +23,8 @@ try {
     Invoke-NativeChecked "cargo clippy" { cargo clippy --workspace --all-targets --all-features -- -D warnings }
     & "$projectRoot\publish.ps1"
     if (-not $?) { throw "Publishing failed." }
+    & "$projectRoot\scripts\package_server_release.ps1"
+    if (-not $?) { throw "Server release packaging failed." }
     & "$projectRoot\scripts\write_release_manifest.ps1"
     if (-not $?) { throw "Release manifest generation failed." }
     Write-Host "Tarrowyn release gate passed."

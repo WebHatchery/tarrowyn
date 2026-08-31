@@ -6,7 +6,8 @@ Run `scripts/validate_content.ps1`, then
 `scripts/run_release_gate.ps1`. The gate checks formatting, workspace tests,
 clippy, content IDs, `publish.ps1`, and the archive identity manifest. The
 output directory is a release artifact; do not copy a live state file into the
-browser bundle.
+browser bundle. The gate also builds the host-targeted `tarrowyn-server` ZIP;
+the production server OS or container remains a target deployment decision.
 
 ## Scoped change checks
 
@@ -212,8 +213,9 @@ Before the first deployment of a clean candidate, preserve its exact archives:
 .\scripts\preserve_release_candidate.ps1
 ```
 
-The command stores the manifest, checksum sidecars, Windows archive, and WebGL
-archive under `dist/history/<full-commit>`. It refuses dirty candidates,
+The command stores the manifest, checksum sidecars, Windows archive, WebGL
+archive, and authoritative server archive under `dist/history/<full-commit>`.
+It refuses dirty candidates,
 checksum mismatches, and replacement of different evidence. After a distinct
 patch candidate has been built, run:
 
@@ -221,9 +223,11 @@ patch candidate has been built, run:
 .\scripts\rehearse_release_rollback.ps1 -PreservedDir <full-preserved-directory>
 ```
 
-This copies the exact Windows archive through an isolated temporary directory
-as patch → rollback → patch restored, verifies the external manifest and
-sidecar at every switch, and leaves machine-readable evidence under `target/`.
+This copies the exact Windows and authoritative server archives through an
+isolated temporary directory as patch → rollback → patch restored, verifies the
+external manifest, package identities, and sidecars at every switch, and leaves
+machine-readable evidence under `target/`. The server archive must be built for
+the same target as the worker being replaced.
 It does not start a server, modify world state, or contact a deployment target.
 
 Chronicle support is split between the normal settlement view and the
