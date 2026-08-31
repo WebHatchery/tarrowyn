@@ -32,6 +32,13 @@ fn config() -> GameConfig {
 }
 
 #[test]
+fn persistence_unavailable_is_safe_to_retry_with_the_same_request() {
+    assert!(super::is_transient_transport_error(
+        "HTTP API error in 'POST /v1/farming/actions' [persistence_unavailable]: The settlement could not be durably saved."
+    ));
+}
+
+#[test]
 fn connection_failure_exposes_recovery_and_reconnect_cooldown() {
     let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
     let mut notices = Vec::new();

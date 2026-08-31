@@ -152,6 +152,8 @@ backup alert; raw storage errors remain in server logs rather than crossing the
 API boundary. A failed mutation is rejected with `503 persistence_unavailable`
 and the repository restores its last successfully persisted state, so a client
 cannot receive an accepted response for a mutation that exists only in memory.
+The client treats this specific structured failure as retryable and resubmits
+the same request ID within its bounded command retry window.
 The tick persists its authoritative state before writing a scheduled backup and
 persists the successful backup marker afterward. A later successful backup
 clears the backup failure state. Restore drills validate the backup as JSON

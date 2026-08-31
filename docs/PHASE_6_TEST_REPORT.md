@@ -3790,3 +3790,9 @@ formatting, diff, and Rust file-size checks. The full release gate, including
 the protocol/client suite and Windows/WebGL publisher, also passed for this
 major durability milestone. The target MySQL migration, restore, and deployment
 gates remain open in the follow-up register.
+
+The client now classifies `persistence_unavailable` as a retryable structured
+server failure, matching the repository rollback contract so command queues can
+resubmit the same request ID after a transient durable-write outage. The focused
+network error-classification regression passed; no broader client suite was
+repeated for this one-condition follow-up.
