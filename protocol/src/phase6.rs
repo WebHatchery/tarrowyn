@@ -203,6 +203,8 @@ pub struct OpsMetricsResponse {
     pub http_queue_peak: u32,
     #[serde(default)]
     pub http_queue_full_events: u64,
+    #[serde(default)]
+    pub mysql_pool_max_connections: u32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]

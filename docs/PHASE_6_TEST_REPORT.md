@@ -3753,3 +3753,10 @@ one pooled connection. Focused server configuration tests and the MySQL
 repository package checks are the appropriate validation for this isolated
 backend guard; no full workspace or publisher gate is repeated because the
 change does not alter protocol, content, or release artifacts.
+
+The operator-metrics follow-up adds the effective MySQL pool maximum as an
+additive `OpsMetricsResponse` field, while JSON fixture workers report zero so
+the metric cannot imply a live database pool. Older metrics payloads default
+the field safely. The focused protocol compatibility, server metrics, package
+clippy, formatting, diff, and Rust file-size checks cover this observability
+slice; no full workspace or publisher gate is repeated.

@@ -61,7 +61,7 @@ fn operations_health_defaults_new_integrity_details_for_older_payloads() {
 }
 
 #[test]
-fn operations_metrics_default_new_http_pool_details_for_older_payloads() {
+fn operations_metrics_default_new_pool_details_for_older_payloads() {
     let json = serde_json::json!({
         "server_tick": 12,
         "connected_sessions": 1,
@@ -91,6 +91,7 @@ fn operations_metrics_default_new_http_pool_details_for_older_payloads() {
     assert_eq!(metrics.http_queue_depth, 0);
     assert_eq!(metrics.http_queue_peak, 0);
     assert_eq!(metrics.http_queue_full_events, 0);
+    assert_eq!(metrics.mysql_pool_max_connections, 0);
 }
 
 #[test]

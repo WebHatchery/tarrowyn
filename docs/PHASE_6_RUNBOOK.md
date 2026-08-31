@@ -141,6 +141,8 @@ effective values and queue pressure counters are exposed through
    `alert_flags`. Also watch `http_request_workers`,
    `http_request_queue_capacity`, `http_active_requests`, `http_queue_depth`,
    `http_queue_peak`, and `http_queue_full_events` for transport pressure.
+   For MySQL workers, also check `mysql_pool_max_connections` against the
+   measured database connection budget; JSON fixture workers report zero.
    Watch average price index, scarce goods, NPC fallback households, open
    market fallback orders, abandoned claims, declining settlements, and
    `newcomer_access` as well.
