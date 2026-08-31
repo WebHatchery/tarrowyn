@@ -108,7 +108,10 @@ rotation cannot invalidate a newly sent request or leave a same-frame
 projection using the old bearer token.
 Those command queues preserve their exact request ID and retry a transport failure
 within the same bounded limit, allowing the server's durable replay result to
-confirm a committed action.
+confirm a committed action. During the retry delay, the failed command remains
+in its in-flight slot instead of re-entering a full queue; dispatch resumes it
+before taking another queued command, so the 32-entry queue bound also holds
+while a request is being retried.
 Refresh replay results retain their account ownership separately from the live
 session table so deletion also removes rotated responses after their access
 session has expired. On reload, older snapshots rebuild that ownership from the

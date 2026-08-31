@@ -4090,3 +4090,13 @@ return a structured 414 response. The focused HTTP module suite passed all 19
 tests, including the exact URL boundary, followed by the affected server
 formatter, clippy, Rust file-size, and diff checks. No full workspace suite was
 repeated for this isolated request-bound correction.
+
+The client command-retry backpressure correction was validated on 2026-08-31 at
+commit `178eaff`. Transient Phase 4, Phase 5, and frontier failures now retain
+the exact command in the in-flight slot during the retry delay, preventing a
+full 32-entry command deque from being exceeded while preserving session-only
+dispatch ordering. The three focused bounded-retry regressions passed, followed
+by client-package clippy, formatting, Rust file-size, diff, and publisher
+checks. No full workspace suite was repeated because this was a bounded client
+retry/backpressure maintenance slice, and no new external or deferred work was
+opened.

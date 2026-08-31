@@ -126,7 +126,9 @@ current one-worker snapshot bridge to the several-hundred-player direction.
 The browser client also caps each movement, chat, farming, trade, and
 cross-phase command buffer at 32 pending entries. A saturated buffer leaves
 the current action state retryable instead of advertising a request that was
-never queued.
+never queued. When a transport retry is due, the failed action stays in the
+in-flight slot during its delay and resumes before another queued action, so
+retry handling cannot overfill that bound.
 
 ### Long-term world and content operations
 
