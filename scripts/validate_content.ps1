@@ -223,7 +223,7 @@ foreach ($event in $eventRecords) {
             throw "Events must use a supported intervention choice: $intervention"
         }
         if ($eventInterventionLocations.ContainsKey($interventionName) -and
-            @($eventInterventionLocations[$interventionName] | Where-Object { $affectedLocations -contains $_ }).Count -eq 0) {
+            @($eventInterventionLocations[$interventionName] | Where-Object { $affectedLocations -contains $_ }).Count -ne $eventInterventionLocations[$interventionName].Count) {
             throw "Event $($event.id) must include a location affected by $interventionName."
         }
     }
