@@ -3979,3 +3979,14 @@ candidate was preserved, and the expanded client/server rollback rehearsal
 against `35efc9c` passed. This was a major cross-subsystem release milestone,
 so the full workspace suite was run here; subsequent documentation-only
 refreshes continue to use focused checks.
+
+The packaged-server verifier hardening was validated on 2026-08-31 at commit
+`5d579ba`. The verifier rejected a wrong-package ZIP, cleaned its temporary
+directory, launched the current server package on an ephemeral loopback port,
+and confirmed isolated JSON readiness. All project PowerShell scripts parsed,
+no server process remained, and the clean package, manifest, preservation, and
+three-archive rollback rehearsal passed. The malformed-path fixture could not
+be created because the shell safety policy blocked the traversal-shaped test
+input before file creation; the verifier's archive-path guard remains covered
+by source-level review and the safe wrong-package probe. No full workspace
+suite was repeated for this isolated verifier hardening.
