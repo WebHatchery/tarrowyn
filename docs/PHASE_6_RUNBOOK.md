@@ -6,7 +6,7 @@ Run `scripts/validate_content.ps1`, then
 `scripts/run_release_gate.ps1`. The gate checks formatting, workspace tests,
 clippy, content IDs, `publish.ps1`, and the archive identity manifest. The
 output directory is a release artifact; do not copy a live state file into the
-browser bundle. The gate also builds the host-targeted `tarrowyn-server` ZIP;
+browser bundle. The gate also builds a target-specific `tarrowyn-server` ZIP;
 the current Rust host is the default, and an installed target can be supplied
 with `scripts/package_server_release.ps1 -Target <rust-target>`. The
 production server OS or container remains a target deployment decision. The

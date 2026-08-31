@@ -3,7 +3,7 @@
     Writes immutable identity and checksum records for the release archives.
 
 .DESCRIPTION
-    Validates the publisher's Windows and WebGL ZIPs plus the host-targeted
+    Validates the publisher's Windows and WebGL ZIPs plus the target-specific
     server ZIP, records every archive entry, and writes an external manifest
     plus SHA-256 sidecars. The manifest is release evidence, not a public-
     launch approval.
