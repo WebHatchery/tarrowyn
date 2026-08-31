@@ -3720,3 +3720,11 @@ That load check reported 16 workers, a 128-request queue, queue peak 1, and 0
 full events with no operational alerts. No full workspace gate was repeated
 because this was a bounded observability addition within the already gated
 scale milestone.
+
+A repeat 250-client one-round probe exercised those telemetry counters under
+the largest local boundary load: 2,500 requests, 101,053.55 ms mixed-load wall
+time, 75.75 MB measured server working set, and 13,064.87 ms restart recovery.
+It reported 16 workers, a queue peak of 92/128, and 0 queue-full events, while
+event, market, travel, tick, backup, metrics, support-view, and restart checks
+passed with no operational alerts. The longer restart measurement is retained
+as local variance, not promoted to a production recovery SLO.

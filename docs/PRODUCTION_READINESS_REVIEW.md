@@ -88,6 +88,11 @@ The post-pool 250-client one-round probe completed 2,500 requests in
 recovery, with no operational alerts. This is the largest post-pool local
 observation, not a production capacity claim; the one-worker ownership
 boundary and target several-hundred-player gate remain open.
+A repeat 250-client probe exercising the new counters completed 2,500 requests
+in 101,053.55 ms with 75.75 MB measured working set and 13,064.87 ms restart
+recovery. It reported 16 workers, a 92/128 queue peak, and 0 queue-full events
+with no operational alerts. The longer restart measurement is retained as
+local variance and is not a production recovery SLO.
 The latest 24-client baseline additionally recorded 67.06 MB of server working
 set after load and 2,837.56 ms from worker stop through restart readiness. These
 local measurements inform the target-environment gate but are not production
