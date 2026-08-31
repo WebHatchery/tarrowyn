@@ -2,7 +2,7 @@
 
 use super::models::{RepositoryState, MAX_REPLAY_CACHE};
 use super::*;
-use std::collections::{HashSet, VecDeque};
+use std::collections::{HashMap, HashSet, VecDeque};
 use tarrowyn_protocol::{
     ApiResponse, AuditRecord, AuthLinkRequest, AuthLinkResponse, AuthRefreshRequest,
     AuthRefreshResponse, AuthRevokeRequest, AuthRevokeResponse, AuthSession, SupportRepairResponse,
@@ -63,6 +63,18 @@ pub(super) fn is_support_replay_key_for_account(
 
 pub(super) fn trim_auth_link_tokens(phase6: &mut Phase6State) {
     retention::trim_auth_link_tokens(phase6);
+}
+
+pub(super) fn backfill_auth_refresh_accounts(phase6: &mut Phase6State) {
+    let mut accounts = HashMap::new();
+    phase6.auth_refresh_results.retain(|key, response| {
+        let Some(session) = phase6.sessions.get(&response.session.account_token) else {
+            return false;
+        };
+        accounts.insert(key.clone(), session.account_id.clone());
+        true
+    });
+    phase6.auth_refresh_accounts = accounts;
 }
 
 pub(super) fn trim_audits(audits: &mut VecDeque<AuditRecord>) {

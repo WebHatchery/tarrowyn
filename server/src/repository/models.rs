@@ -216,9 +216,7 @@ impl RepositoryState {
         trim_replay_cache(&mut phase6.auth_link_results);
         super::phase6::trim_auth_link_tokens(&mut phase6);
         trim_replay_cache(&mut phase6.auth_refresh_results);
-        phase6
-            .auth_refresh_accounts
-            .retain(|key, _| phase6.auth_refresh_results.contains_key(key));
+        super::phase6::backfill_auth_refresh_accounts(&mut phase6);
         trim_replay_cache(&mut phase6.auth_revoke_results);
         trim_replay_cache(&mut phase6.auth_revoke_guest_tokens);
         trim_replay_cache(&mut phase6.moderation_results);
