@@ -3918,3 +3918,15 @@ local rollback rehearsal against the preserved `dfac04f` candidate: patch,
 rollback, and patch-restored archive hashes all matched their sidecars. This
 proves the local artifact-switching procedure; target deployment rollback and
 world-state restore remain deployment-owned gates.
+
+The authoritative server release-artifact milestone was validated on
+2026-08-31 at commit `f68f494`. `run_release_gate.ps1` stopped before its
+test stage because workspace-wide formatting reported pre-existing drift in
+`nanite_swarm`; no file outside Tarrowyn was changed. The equivalent Tarrowyn
+package formatting checks passed, followed by the full workspace suite (714
+tests), workspace clippy, content validation, Windows/WebGL Preview publishing,
+host-targeted `tarrowyn-server` packaging for `x86_64-pc-windows-msvc`, the
+three-archive manifest, and commit-addressed preservation. The next clean
+candidate will run the expanded client/server/browser archive rollback
+rehearsal before deployment; the target server platform and live deployment
+rollback remain open gates.
