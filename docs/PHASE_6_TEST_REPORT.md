@@ -3212,3 +3212,14 @@ package clippy, formatting, `git diff --check`, the Rust file-size scan, and
 the project publisher also pass. No full workspace gate is repeated because
 this remains a bounded copy correction, and no new external or deferred work
 was opened.
+
+The online Hearth feed now treats the permanent startup board notice as a
+fallback, allowing the current authoritative wilderness or household rumour
+to surface when no newer actionable notice exists. The focused
+`ui::ui_online::tests::tavern_feed::startup_board_notice_yields_to_the_current_rumour`
+regression passes, along with client-package clippy, formatting,
+`git diff --check`, and the Rust file-size scan. The project `publish.ps1`
+Windows/WebGL build, packaging, Preview deployment, tracker recording, and
+catalog synchronization pass. No full workspace gate is repeated because
+this is a bounded tavern-feed selection correction, and no new external or
+deferred work was opened.

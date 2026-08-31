@@ -1,5 +1,8 @@
 use super::*;
 
+#[path = "tests/tavern_feed.rs"]
+mod tavern_feed;
+
 #[test]
 fn recovery_risk_label_stays_compact_without_losing_the_seed_rule() {
     assert_eq!(

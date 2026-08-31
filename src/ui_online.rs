@@ -621,13 +621,20 @@ pub(super) fn tavern_feed_line(
     notices
         .iter()
         .rev()
-        .find(|notice| !notice.text.trim().is_empty())
+        .find(|notice| notice.kind != "settlement" && !notice.text.trim().is_empty())
         .map(|notice| format!("Tavern notice: {}", compact_feed_text(&notice.text)))
         .or_else(|| {
             rumours
                 .iter()
                 .find(|rumour| !rumour.trim().is_empty())
                 .map(|rumour| format!("Tavern rumour: {}", compact_feed_text(rumour)))
+        })
+        .or_else(|| {
+            notices
+                .iter()
+                .rev()
+                .find(|notice| !notice.text.trim().is_empty())
+                .map(|notice| format!("Tavern notice: {}", compact_feed_text(&notice.text)))
         })
 }
 
