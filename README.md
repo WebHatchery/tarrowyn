@@ -137,6 +137,9 @@ the server-owned root catalogue, vague merger hints, authoritative
 per-character mastery, a touchable chooser for every available root practice, a
 school lesson action for qualified nearby players, and varied adventurer
 credentials in player projections. See the Phase 5 and Phase 6 runbooks.
+The operator metrics response also exposes the bounded HTTP worker count,
+queue capacity, active requests, current and peak queue depth, and queue-full
+events for target-environment pressure checks.
 
 ## Phase 5 and 6 release validation
 

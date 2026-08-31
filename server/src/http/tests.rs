@@ -128,6 +128,28 @@ fn request_worker_count_stays_within_the_bounded_pool() {
 }
 
 #[test]
+fn request_pool_telemetry_tracks_depth_peak_activity_and_saturation() {
+    let telemetry = RequestPoolTelemetry::default();
+
+    telemetry.record_enqueue();
+    telemetry.record_enqueue();
+    telemetry.record_queue_full();
+    telemetry.record_dequeue();
+    telemetry.record_request_start();
+
+    let snapshot = telemetry.snapshot();
+    assert_eq!(snapshot.active_requests, 1);
+    assert_eq!(snapshot.queue_depth, 1);
+    assert_eq!(snapshot.queue_peak, 2);
+    assert_eq!(snapshot.queue_full_events, 1);
+
+    telemetry.record_request_finish();
+    telemetry.record_dequeue();
+    assert_eq!(telemetry.snapshot().active_requests, 0);
+    assert_eq!(telemetry.snapshot().queue_depth, 0);
+}
+
+#[test]
 fn guest_session_rate_limiter_bounds_a_source_window() {
     let mut limiter = GuestSessionRateLimiter::default();
     let source = "192.0.2.10".parse().expect("test source address");

@@ -191,6 +191,18 @@ pub struct OpsMetricsResponse {
     pub declining_settlements: u32,
     pub newcomer_access: bool,
     pub alert_flags: Vec<String>,
+    #[serde(default)]
+    pub http_request_workers: u32,
+    #[serde(default)]
+    pub http_request_queue_capacity: u32,
+    #[serde(default)]
+    pub http_active_requests: u32,
+    #[serde(default)]
+    pub http_queue_depth: u32,
+    #[serde(default)]
+    pub http_queue_peak: u32,
+    #[serde(default)]
+    pub http_queue_full_events: u64,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]

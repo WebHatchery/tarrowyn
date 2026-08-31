@@ -3710,3 +3710,13 @@ restart recovery. Event, market, travel, tick, backup, metrics, support-view,
 and restart checks passed with no operational alerts. This is the largest
 post-pool local observation, but it remains monitored capacity evidence rather
 than proof of the GDD's several-hundred-client direction.
+
+The operator observability slice added additive HTTP-pool fields to
+`/v1/ops/metrics`: configured worker count, queue capacity, active requests,
+current and peak queue depth, and queue-full events. The focused protocol
+compatibility regression, focused server telemetry regression, worker-count
+regression, package formatting, and the 24-client one-round load check passed.
+That load check reported 16 workers, a 128-request queue, queue peak 1, and 0
+full events with no operational alerts. No full workspace gate was repeated
+because this was a bounded observability addition within the already gated
+scale milestone.

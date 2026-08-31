@@ -271,7 +271,10 @@ the worker resumes ticking.
 integrity check. Authenticated `/v1/ops/metrics` reports sessions, accounts,
 regional visibility, event backlog, open orders, travel recovery load, command
 rejections, and measured tick latency through an exponentially weighted average,
-the latest duration, and a drift count. Alerts are raised for persistence write
+the latest duration, and a drift count. It also reports the bounded HTTP worker
+count, queue capacity, active requests, current and peak queue depth, and
+queue-full events so target capacity checks can observe transport pressure.
+Alerts are raised for persistence write
 failures, integrity failures, market backlog, interrupted-travel backlog, tick
 drift, regional event backlog, and economy invariants that no longer reconcile.
 The same operator projection reports average regional price pressure, distinct

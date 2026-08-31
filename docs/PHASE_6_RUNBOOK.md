@@ -119,9 +119,12 @@ fails the drill.
    degraded, and do not edit a live snapshot in place.
 2. Check authenticated `/v1/ops/metrics` for the measured average and latest
    tick durations, `tick_drift_count`, regional event backlog, and
-   `alert_flags`. Also watch average price index, scarce goods, NPC fallback
-   households, open market fallback orders, abandoned claims, declining
-   settlements, and `newcomer_access`.
+   `alert_flags`. Also watch `http_request_workers`,
+   `http_request_queue_capacity`, `http_active_requests`, `http_queue_depth`,
+   `http_queue_peak`, and `http_queue_full_events` for transport pressure.
+   Watch average price index, scarce goods, NPC fallback households, open
+   market fallback orders, abandoned claims, declining settlements, and
+   `newcomer_access` as well.
    Route persistence, backup, tick-drift, regional-backlog, and economy-anomaly
    alerts to the deployment on-call. Client connection failures must be reported
    by client/deployment telemetry.

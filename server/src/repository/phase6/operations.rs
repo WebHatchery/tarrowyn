@@ -330,6 +330,12 @@ impl WorldRepository {
                     backup_failed,
                     telemetry.last_tick_drift,
                 ),
+                http_request_workers: 0,
+                http_request_queue_capacity: 0,
+                http_active_requests: 0,
+                http_queue_depth: 0,
+                http_queue_peak: 0,
+                http_queue_full_events: 0,
             },
         })
     }

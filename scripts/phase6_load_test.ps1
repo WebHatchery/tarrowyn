@@ -340,14 +340,23 @@ try {
     foreach ($metricField in @(
         "average_price_index_percent", "scarce_goods_count", "npc_fallback_households",
         "open_market_fallback_orders", "abandoned_claims", "declining_settlements",
-        "newcomer_access", "alert_flags"
+        "newcomer_access", "alert_flags", "http_request_workers",
+        "http_request_queue_capacity", "http_active_requests", "http_queue_depth",
+        "http_queue_peak", "http_queue_full_events"
     )) {
         Assert-True ($null -ne $metrics.data.$metricField) "the operational metrics omitted $metricField"
     }
+    Assert-True ([int]$metrics.data.http_request_workers -ge 4) "the operational metrics reported no bounded HTTP workers"
+    Assert-True ([int]$metrics.data.http_request_queue_capacity -ge 128) "the operational metrics reported no bounded HTTP queue"
+    Assert-True ([int]$metrics.data.http_active_requests -ge 1) "the operational metrics reported no active HTTP request"
+    Assert-True ([int]$metrics.data.http_queue_peak -ge [int]$metrics.data.http_queue_depth) "the HTTP queue peak was below its current depth"
     Assert-ForbiddenGet "/v1/ops/metrics" $ordinaryHeaders "an ordinary player could read operational metrics"
     $alertFlags = @($metrics.data.alert_flags)
     $unexpectedAlertFlags = @($alertFlags | Where-Object { $AllowedAlertFlags -notcontains $_ })
     Assert-True ($unexpectedAlertFlags.Count -eq 0) ("the mixed load raised unexpected alerts: " + ($unexpectedAlertFlags -join ", "))
+    $poolSummary = "HTTP pool {0} workers, queue peak {1}/{2}, {3} full events" -f `
+        $metrics.data.http_request_workers, $metrics.data.http_queue_peak,
+        $metrics.data.http_request_queue_capacity, $metrics.data.http_queue_full_events
 
     $normalTickMs = $env:TARROWYN_TICK_MS
     Stop-Phase6Server $server
@@ -384,8 +393,8 @@ try {
 
     $alertSummary = if ($alertFlags.Count -eq 0) { "no operational alerts" } else { "allowed alerts: $($alertFlags -join ', ')" }
     $workingSetMb = [math]::Round($serverWorkingSetBytes / 1MB, 2)
-    Write-Host ("Phase 6 load test passed: {0} clients, {1} rounds, {2} requests, {3} accepted, {4} rejected, {5} ms mixed-load wall time, {6} MB server working set, {7} ms restart recovery; event, market, travel, tick, backup, metrics, support-view, and restart checks passed ({8})." -f `
-        $ClientCount, $Rounds, $load.requests, $load.accepted, $load.rejected, $load.elapsed_ms, $workingSetMb, $restartRecoveryMs, $alertSummary) -ForegroundColor Green
+    Write-Host ("Phase 6 load test passed: {0} clients, {1} rounds, {2} requests, {3} accepted, {4} rejected, {5} ms mixed-load wall time, {6} MB server working set, {7} ms restart recovery; {8}; event, market, travel, tick, backup, metrics, support-view, and restart checks passed ({9})." -f `
+        $ClientCount, $Rounds, $load.requests, $load.accepted, $load.rejected, $load.elapsed_ms, $workingSetMb, $restartRecoveryMs, $poolSummary, $alertSummary) -ForegroundColor Green
 } finally {
     try {
         if ($null -ne $server -and -not $server.HasExited) { Stop-Phase6Server $server }

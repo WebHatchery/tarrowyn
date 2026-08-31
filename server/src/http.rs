@@ -22,11 +22,12 @@ const GUEST_SESSION_RATE_WINDOW: Duration = Duration::from_secs(60);
 const GUEST_SESSION_BURST_LIMIT: u16 = 32;
 const MAX_TRACKED_GUEST_SOURCES: usize = 4096;
 const GUEST_SESSION_RETRY_AFTER_SECONDS: &str = "60";
-const MIN_REQUEST_WORKERS: usize = 4;
-const MAX_REQUEST_WORKERS: usize = 32;
-const REQUEST_QUEUE_CAPACITY: usize = 128;
 
+mod pool;
 mod request;
+use pool::{request_worker_count, RequestPoolTelemetry, REQUEST_QUEUE_CAPACITY};
+#[cfg(test)]
+use pool::{MAX_REQUEST_WORKERS, MIN_REQUEST_WORKERS};
 #[cfg(test)]
 pub(super) use request::MAX_REQUEST_BODY_BYTES;
 use request::{
@@ -138,6 +139,7 @@ pub fn serve(config: crate::config::ServerConfig) -> Result<(), String> {
     let request_worker_count = request_worker_count();
     let (request_sender, request_receiver) = mpsc::sync_channel(REQUEST_QUEUE_CAPACITY);
     let request_receiver = Arc::new(Mutex::new(request_receiver));
+    let request_pool_telemetry = Arc::new(RequestPoolTelemetry::default());
     let guest_session_limiter = Arc::new(Mutex::new(GuestSessionRateLimiter::new(
         config.guest_session_burst_limit,
     )));
@@ -145,6 +147,7 @@ pub fn serve(config: crate::config::ServerConfig) -> Result<(), String> {
     for _ in 0..request_worker_count {
         let request_receiver = Arc::clone(&request_receiver);
         let repository = Arc::clone(&repository);
+        let request_pool_telemetry = Arc::clone(&request_pool_telemetry);
         let guest_session_limiter = Arc::clone(&guest_session_limiter);
         workers.push(thread::spawn(move || loop {
             let request = request_receiver
@@ -154,12 +157,33 @@ pub fn serve(config: crate::config::ServerConfig) -> Result<(), String> {
             let Ok(request) = request else {
                 break;
             };
-            handle_request(request, Arc::clone(&repository), &guest_session_limiter);
+            request_pool_telemetry.record_dequeue();
+            request_pool_telemetry.record_request_start();
+            handle_request(
+                request,
+                Arc::clone(&repository),
+                &guest_session_limiter,
+                &request_pool_telemetry,
+                request_worker_count,
+            );
+            request_pool_telemetry.record_request_finish();
         }));
     }
     for request in server.incoming_requests() {
-        if request_sender.send(request).is_err() {
-            break;
+        request_pool_telemetry.record_enqueue();
+        match request_sender.try_send(request) {
+            Ok(()) => {}
+            Err(mpsc::TrySendError::Full(request)) => {
+                request_pool_telemetry.record_queue_full();
+                if request_sender.send(request).is_err() {
+                    request_pool_telemetry.record_dequeue();
+                    break;
+                }
+            }
+            Err(mpsc::TrySendError::Disconnected(_)) => {
+                request_pool_telemetry.record_dequeue();
+                break;
+            }
         }
     }
     drop(request_sender);
@@ -167,13 +191,6 @@ pub fn serve(config: crate::config::ServerConfig) -> Result<(), String> {
         let _ = worker.join();
     }
     Ok(())
-}
-
-fn request_worker_count() -> usize {
-    thread::available_parallelism()
-        .map(|parallelism| parallelism.get())
-        .unwrap_or(8)
-        .clamp(MIN_REQUEST_WORKERS, MAX_REQUEST_WORKERS)
 }
 
 fn monotonic_tick_wait(deadline: &mut Instant, interval: Duration) {
@@ -196,6 +213,8 @@ fn handle_request(
     mut request: Request,
     repository: Arc<WorldRepository>,
     guest_session_limiter: &Mutex<GuestSessionRateLimiter>,
+    request_pool_telemetry: &RequestPoolTelemetry,
+    request_worker_count: usize,
 ) {
     if request.method() == &Method::Options {
         let _ = request.respond(with_cors(Response::empty(StatusCode(204))));
@@ -268,9 +287,17 @@ fn handle_request(
                 Err(error) => error_response(400, "invalid_json", error, repository.health().meta),
             }
         }
-        (Method::Get, "/v1/ops/metrics") => {
-            authenticated(&request, &repository, |token| repository.ops_metrics(token))
-        }
+        (Method::Get, "/v1/ops/metrics") => authenticated(&request, &repository, |token| {
+            let mut response = repository.ops_metrics(token)?;
+            let telemetry = request_pool_telemetry.snapshot();
+            response.data.http_request_workers = request_worker_count as u32;
+            response.data.http_request_queue_capacity = REQUEST_QUEUE_CAPACITY as u32;
+            response.data.http_active_requests = telemetry.active_requests;
+            response.data.http_queue_depth = telemetry.queue_depth;
+            response.data.http_queue_peak = telemetry.queue_peak;
+            response.data.http_queue_full_events = telemetry.queue_full_events;
+            Ok(response)
+        }),
         (Method::Get, "/v1/support/account") => match query_value_result(&query, "account_id") {
             Ok(account_id) => {
                 let account_id = account_id.unwrap_or_default();

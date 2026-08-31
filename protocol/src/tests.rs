@@ -61,6 +61,39 @@ fn operations_health_defaults_new_integrity_details_for_older_payloads() {
 }
 
 #[test]
+fn operations_metrics_default_new_http_pool_details_for_older_payloads() {
+    let json = serde_json::json!({
+        "server_tick": 12,
+        "connected_sessions": 1,
+        "accounts": 1,
+        "region_entities_visible": 3,
+        "event_cursor": 4,
+        "regional_event_backlog": 0,
+        "open_market_orders": 0,
+        "travelling_players": 0,
+        "rejected_commands": 0,
+        "completed_commands": 0,
+        "average_tick_ms": 1,
+        "last_tick_ms": 1,
+        "tick_drift_count": 0,
+        "average_price_index_percent": 100,
+        "scarce_goods_count": 0,
+        "npc_fallback_households": 1,
+        "abandoned_claims": 0,
+        "declining_settlements": 0,
+        "newcomer_access": true,
+        "alert_flags": []
+    });
+    let metrics: OpsMetricsResponse = serde_json::from_value(json).unwrap();
+    assert_eq!(metrics.http_request_workers, 0);
+    assert_eq!(metrics.http_request_queue_capacity, 0);
+    assert_eq!(metrics.http_active_requests, 0);
+    assert_eq!(metrics.http_queue_depth, 0);
+    assert_eq!(metrics.http_queue_peak, 0);
+    assert_eq!(metrics.http_queue_full_events, 0);
+}
+
+#[test]
 fn position_distance_saturates_malformed_coordinates() {
     assert_eq!(
         Position {
