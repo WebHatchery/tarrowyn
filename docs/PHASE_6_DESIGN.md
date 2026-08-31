@@ -116,7 +116,8 @@ Refresh replay results retain their account ownership separately from the live
 session table so deletion also removes rotated responses after their access
 session has expired. On reload, older snapshots rebuild that ownership from the
 persisted session that issued each cached response; replay entries whose issued
-session has already been retired are discarded as non-authoritative cache data.
+session has already been revoked or whose refresh window has ended are discarded
+as non-authoritative cache data.
 Refresh replay lookup expires sessions before consulting that cache and only
 returns a cached response while its replacement refresh session remains live;
 once that refresh window closes, the stale replay is removed and the request

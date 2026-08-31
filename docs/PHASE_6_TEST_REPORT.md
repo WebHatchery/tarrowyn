@@ -4069,13 +4069,14 @@ collection, topology, and settlement-location checks. The focused
 affected server package formatter, clippy, Rust file-size, and diff checks. No
 full workspace suite was repeated for this test-coverage-only maintenance slice.
 
-The legacy refresh-replay migration was validated on 2026-08-31 at commit
-`bda026e`. Reload now rebuilds the account-owner mirror for cached refresh
-responses from their persisted production sessions and drops replay entries
-whose issued sessions are gone. The focused `refresh_migration` filter passed
-its regression, followed by the affected server formatter, clippy, Rust
-file-size, and diff checks. No full workspace suite was repeated for this
-bounded persistence-migration correction.
+The legacy refresh-replay migration was validated on 2026-08-31 at commits
+`bda026e` and `a395268`. Reload now rebuilds the account-owner mirror for cached
+refresh responses from their persisted production sessions and drops replay
+entries whose issued sessions are gone, revoked, or beyond their refresh
+window. The focused `refresh_migration` filter passed both its surviving-owner
+and revoked-session regressions, followed by the affected server formatter,
+clippy, Rust file-size, and diff checks. No full workspace suite was repeated
+for this bounded persistence-migration correction.
 
 The Bearer credential boundary was validated on 2026-08-31 at commit
 `5789e10`. HTTP authentication now accepts credentials through 512 characters
