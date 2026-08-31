@@ -346,7 +346,7 @@ impl Game {
                 self.chat_draft.clear();
                 self.sync_camera(TilePos::new(8, 6));
                 self.notifications
-                    .info("Offline fixture enabled; no online state is used.");
+                    .info("Offline first evening enabled; it does not connect to the shared road.");
             }
             UiAction::UseOnline => {
                 self.mode = ClientMode::Online(Box::new(OnlineClient::new(

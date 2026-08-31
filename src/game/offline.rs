@@ -4,7 +4,7 @@ impl Game {
     pub(super) fn save_game(&mut self) {
         let ClientMode::Offline(session) = &self.mode else {
             self.notifications
-                .warning("Online world state is not stored in local save slots.");
+                .warning("Online world progress is saved on the shared road, not in local slots.");
             return;
         };
         let save = session.to_save(&self.data.config.version);
@@ -16,7 +16,7 @@ impl Game {
         ) {
             Ok(()) => {
                 self.notifications
-                    .success("The offline fixture is written to local memory.");
+                    .success("The offline first evening is saved on this device.");
                 self.refresh_save_state();
             }
             Err(err) => self.notifications.danger(format!("Save failed: {err}")),
@@ -26,7 +26,7 @@ impl Game {
     pub(super) fn load_game(&mut self) {
         if !matches!(self.mode, ClientMode::Offline(_)) {
             self.notifications
-                .warning("Online world state is not loaded from local save slots.");
+                .warning("Online world progress is loaded from the shared road, not local slots.");
             return;
         }
         let loaded: Result<SaveData, String> = load_from_slot_with_migration(

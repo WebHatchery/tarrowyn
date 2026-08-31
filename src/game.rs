@@ -126,7 +126,7 @@ impl Game {
             ClientMode::Offline(session) => {
                 if session.update_clock(&self.data.config, dt) {
                     self.notifications.info(format!(
-                        "Day {} begins; the fixture settlement stirs.",
+                        "Day {} begins; the Hearth settlement stirs.",
                         session.day
                     ));
                 }
@@ -374,7 +374,7 @@ impl Game {
                     status_message: session.last_activity(),
                     expedition: None,
                     expedition_requirements: tarrowyn_protocol::ExpeditionRequirements::default(),
-                    identity_name: Some("Local first-evening fixture"),
+                    identity_name: Some("Local first evening"),
                     offline: true,
                     save_exists: self.save_exists,
                     save_slots: &self.save_slots,

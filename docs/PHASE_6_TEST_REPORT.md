@@ -3878,3 +3878,15 @@ refresh-success regressions passed (1 test each). Package clippy, formatting,
 Rust file-size, diff, and `publish.ps1` checks also passed. No full workspace
 suite was repeated for this isolated presentation change. The deployment
 gateway remains the only previously recorded external online-bootstrap gate.
+
+The public WebGL host metadata now presents Tarrowyn as a Regional Preview
+with shared-world controls and a separate offline first evening; it no longer
+exposes the Phase 6 label or the development server implementation. The
+refreshed preview page parsed the updated metadata, and the canvas visibly
+showed the matching shared-road and offline-first-evening copy. Package clippy,
+formatting, diff, and `publish.ps1` checks passed. The preview remained
+disconnected because no local authority server was running, so this check does
+not claim online-bootstrap coverage and no full workspace suite was repeated.
+The renamed canvas control was also tapped once; it switched to the local
+playable evening and displayed the new offline header, footer, and save-state
+copy.

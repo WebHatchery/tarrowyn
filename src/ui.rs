@@ -149,9 +149,9 @@ fn draw_header(ctx: &UiContext<'_>) {
     );
     draw_ui_text_ex(
         if ctx.offline {
-            "A local first-evening fixture • never shared with the server"
+            "A local first evening • never shared online"
         } else {
-            "The shared road • server-owned world projection"
+            "The shared road • world state shared with others"
         },
         rect.x + 20.0,
         rect.y + 51.0,
@@ -465,9 +465,9 @@ fn draw_footer(ctx: &UiContext<'_>) {
     );
     draw_ui_text_ex(
         if ctx.offline {
-            "OFFLINE DEVELOPMENT FIXTURE"
+            "OFFLINE FIRST EVENING"
         } else {
-            "SERVER CHRONICLE"
+            "SHARED CHRONICLE"
         },
         rect.x + 16.0,
         rect.y + 22.0,
@@ -487,7 +487,7 @@ fn draw_footer(ctx: &UiContext<'_>) {
         if ctx.offline {
             "LOCAL ONLY"
         } else {
-            "AUTHORITATIVE ROAD"
+            "SHARED ROAD"
         },
         rect.x + 600.0,
         rect.y + 22.0,
@@ -495,7 +495,7 @@ fn draw_footer(ctx: &UiContext<'_>) {
     );
     let footer_detail = if ctx.offline {
         format!(
-            "No online state is mixed into this fixture\n{} crop types • {} assets • {} saved slot(s)",
+            "This first evening is separate from the online world\n{} crop types • {} assets • {} saved slot(s)",
             ctx.data.crops.len(),
             ctx.loaded_assets,
             ctx.save_slots.len()

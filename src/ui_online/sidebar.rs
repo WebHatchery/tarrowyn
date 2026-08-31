@@ -509,7 +509,12 @@ pub fn draw_sidebar(ctx: &UiContext<'_>, content: Rect, mouse: Vec2, actions: &m
         mouse,
         &[
             ("reconnect", "Reconnect", true, ButtonTone::Primary),
-            ("offline", "Offline fixture", true, ButtonTone::Secondary),
+            (
+                "offline",
+                "Offline first evening",
+                true,
+                ButtonTone::Secondary,
+            ),
         ],
         ctx,
         actions,
