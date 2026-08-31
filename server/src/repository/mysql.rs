@@ -73,16 +73,16 @@ impl MysqlStore {
         config: &ServerConfig,
     ) -> Result<Option<RepositoryState>, PersistenceBackendError> {
         let mut connection = self.connection()?;
-        let snapshot: Option<(u32, u64, u64, String)> = connection
+        let snapshot: Option<(u32, u64, u64, u64)> = connection
             .exec_first(
-                "SELECT storage_version, world_tick, event_cursor, state_json
+                "SELECT storage_version, world_tick, event_cursor, OCTET_LENGTH(state_json)
                  FROM tarrowyn_world_state WHERE id = 1",
                 (),
             )
             .map_err(|_| {
                 PersistenceBackendError::new("the MySQL world snapshot could not be read")
             })?;
-        let Some((storage_version, world_tick, event_cursor, state_json)) = snapshot else {
+        let Some((storage_version, world_tick, event_cursor, state_bytes)) = snapshot else {
             let index_count: Option<u64> = connection
                 .exec_first(
                     "SELECT COUNT(*) FROM tarrowyn_identity_index WHERE state_id = 1",
@@ -98,11 +98,24 @@ impl MysqlStore {
             }
             return Ok(None);
         };
-        if u64::try_from(state_json.len()).unwrap_or(u64::MAX) > MAX_PERSISTED_STATE_BYTES {
+        if state_bytes > MAX_PERSISTED_STATE_BYTES {
             return Err(PersistenceBackendError::new(
                 "the MySQL world snapshot exceeds the 128 MiB restore limit",
             ));
         }
+        let Some(state_json): Option<String> = connection
+            .exec_first(
+                "SELECT state_json FROM tarrowyn_world_state WHERE id = 1",
+                (),
+            )
+            .map_err(|_| {
+                PersistenceBackendError::new("the MySQL world snapshot could not be read")
+            })?
+        else {
+            return Err(PersistenceBackendError::new(
+                "the MySQL world snapshot disappeared during read",
+            ));
+        };
         let identity_index: Vec<(String, String)> = connection
             .query(
                 "SELECT account_id, character_id
