@@ -3905,3 +3905,14 @@ movement guidance. The four focused regressions for those affected paths all
 passed, package clippy/formatting/file-size/diff checks passed, and
 `publish.ps1` completed the Windows/WebGL Preview build and deployment. No
 full workspace suite was repeated for this presentation-only maintenance.
+
+The Phase 6 release-artifact milestone then passed the full gate on 2026-08-31
+for commit `dfac04f`: content validation, 714 workspace tests (17 protocol,
+448 server, 247 client, one asset-registry test, and one code-standard test),
+workspace clippy, Windows/WebGL packaging, Preview deployment, and catalog
+synchronization. The gate generated the clean archive manifest
+`0.1.0+gdfac04fc408a` with per-entry hashes and `.sha256` sidecars, and the
+exact candidate was preserved under its full commit in ignored
+`dist/history/`. The local rollback harness is implemented and documented but
+was not claimed as a rehearsal because this repository has no second distinct
+clean candidate yet; its first run belongs after the next release candidate.
