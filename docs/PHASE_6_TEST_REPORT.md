@@ -3512,6 +3512,16 @@ with server-package clippy with warnings denied, package formatting,
 gate is repeated because this is test-source organization maintenance, and no
 new external or deferred work is opened.
 
+The Phase 6 operator account-view integration regression now lives in
+`repository/phase6/tests/integration/support_account.rs`, reducing the
+integration test root from 633 to 553 lines while preserving operator-only,
+secret-free account, claim, trade, chronicle, and missing-account contracts.
+The focused support-account filter passes (1 test), along with server-package
+clippy with warnings denied, package formatting, `git diff --check`, and the
+Rust file-size scan. No publisher or full workspace gate is repeated because
+this is test-source organization maintenance, and no new external or deferred
+work is opened.
+
 The Phase 4 farming counter, knockout, and same-beat tending regressions now
 live in `repository/phase4/tests/farming/guards.rs`, reducing the farming test
 root from 658 to 502 lines while preserving numeric saturation, recovery
