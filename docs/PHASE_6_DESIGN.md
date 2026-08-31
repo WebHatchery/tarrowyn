@@ -267,6 +267,9 @@ message before replay.
 Direct-trade responses retained under another identity are invalidated when
 either party is deleted, because the live trade is removed rather than kept as
 public history.
+Retained frontier claim and expedition responses receive the same public-history
+anonymization as the live registry, so a cached inspect or join response cannot
+restore a departed owner or expedition member.
 When a provider leaves while holding an accepted service order, the surviving
 requester's typed material and tool escrow is returned before that order is
 cancelled; an order owned by the departing requester is instead removed with

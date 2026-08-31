@@ -4258,3 +4258,12 @@ regression filter passed 1 test:
 Server-package formatting, clippy, Rust file-size, and diff checks passed. No
 full workspace suite was repeated for this isolated trade-deletion boundary
 slice, and no new external or deferred work was opened.
+
+The deleted-account frontier replay privacy correction was validated on
+2026-08-31. Retained Phase 3 claim and expedition responses now apply the same
+former-resident, released-plot, and departed-member treatment as live frontier
+history; the focused exact regression filter passed 1 test:
+`account_deletion_anonymises_frontier_replays_kept_by_another_identity`.
+Server-package formatting, clippy, Rust file-size, and diff checks passed. No
+full workspace suite was repeated for this isolated frontier-deletion boundary
+slice, and no new external or deferred work was opened.

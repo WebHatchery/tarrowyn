@@ -19,6 +19,7 @@ mod account_validation;
 mod audit_retention;
 mod chronicle_search;
 mod deletion_queue;
+mod frontier_replays;
 mod input_bounds;
 mod integration;
 mod long_session;

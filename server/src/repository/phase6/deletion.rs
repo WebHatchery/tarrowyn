@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use tarrowyn_protocol::{
     AccountDeletionResponse, ClaimLifecycleStatus, ClaimRecord, ClaimStatus, FrontierEvent,
-    GovernanceState, ProposalStatus, ServiceOrder, ServiceOrderStatus, WorldEvent,
+    GovernanceState, LandClaim, ProposalStatus, ServiceOrder, ServiceOrderStatus, WorldEvent,
 };
 
 const DELETED_ACCOUNT: &str = "former-resident";
@@ -114,6 +114,7 @@ fn erase_account(state: &mut RepositoryState, request: &PendingAccountDeletion) 
     anonymize_phase5_replay_orders(state, &request.account_id);
 
     anonymize_public_history(state, request, &deleted_display_name);
+    anonymize_phase3_replay_frontier(state, &request.account_id);
     state.phase6.auth_link_results.retain(|key, response| {
         key != &format!("{}:{}", request.identity_key, response.request_id)
             && response.account_id != request.account_id
@@ -363,6 +364,34 @@ fn invalidate_deleted_trade_replays(state: &mut RepositoryState, account_id: &st
                 );
             }
         }
+    }
+}
+
+fn anonymize_phase3_replay_frontier(state: &mut RepositoryState, account_id: &str) {
+    for response in state.phase3.request_results.values_mut() {
+        match response {
+            super::super::phase3::Phase3Response::Claim(response) => {
+                if let Some(claim) = response.claim.as_mut() {
+                    anonymize_phase3_replay_claim(claim, account_id);
+                }
+            }
+            super::super::phase3::Phase3Response::Expedition(response) => {
+                if let Some(expedition) = response.expedition.as_mut() {
+                    anonymize_expedition(expedition, account_id);
+                }
+            }
+            super::super::phase3::Phase3Response::Contract(_)
+            | super::super::phase3::Phase3Response::Combat(_)
+            | super::super::phase3::Phase3Response::Recovery(_) => {}
+        }
+    }
+}
+
+fn anonymize_phase3_replay_claim(claim: &mut LandClaim, account_id: &str) {
+    if claim.owner_account_id == account_id {
+        claim.owner_account_id = DELETED_ACCOUNT.to_owned();
+        claim.owner_name = DELETED_NAME.to_owned();
+        claim.status = ClaimStatus::Abandoned;
     }
 }
 
