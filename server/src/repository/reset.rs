@@ -20,11 +20,7 @@ pub(super) fn anonymize_orphaned_public_history(state: &mut RepositoryState) {
             anonymize_chat(message, &account_id);
         }
     }
-    for audit in &mut state.phase6.audits {
-        if is_orphaned_account(&audit.actor_account_id, &account_ids) {
-            audit.actor_account_id = RESET_ACCOUNT.to_owned();
-        }
-    }
+    anonymize_orphaned_audits(&mut state.phase6.audits, &account_ids);
     for event in &mut state.events {
         let orphaned_ids = orphaned_event_accounts(&event.event, &account_ids);
         for account_id in orphaned_ids {
@@ -65,6 +61,24 @@ fn orphaned_event_accounts(event: &WorldEvent, account_ids: &HashSet<String>) ->
 
 fn is_orphaned_account(account_id: &str, account_ids: &HashSet<String>) -> bool {
     account_id != RESET_ACCOUNT && !account_ids.contains(account_id)
+}
+
+fn anonymize_orphaned_audits(
+    audits: &mut std::collections::VecDeque<tarrowyn_protocol::AuditRecord>,
+    account_ids: &HashSet<String>,
+) {
+    for audit in audits {
+        if is_orphaned_account(&audit.actor_account_id, account_ids) {
+            audit.actor_account_id = RESET_ACCOUNT.to_owned();
+        }
+        if let Some((account_id, suffix)) = audit.target.split_once(" (") {
+            if is_orphaned_account(account_id, account_ids) {
+                audit.target = format!("{RESET_ACCOUNT} ({suffix}");
+            }
+        } else if is_orphaned_account(&audit.target, account_ids) {
+            audit.target = RESET_ACCOUNT.to_owned();
+        }
+    }
 }
 
 pub(super) fn reset_guest(state: &mut RepositoryState, identity_key: &str) {

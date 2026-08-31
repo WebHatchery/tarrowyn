@@ -41,6 +41,8 @@ the private-state boundary. The development reset fixture applies the same
 boundary to shared replay payloads retained under other guest identities,
 including frontier, civic, market, skill, and direct-trade responses, and
 rewrites composite moderation audit targets before replacing the guest.
+Restore normalization applies the same former-resident treatment to orphaned
+exact and composite audit targets from older snapshots before readiness checks.
 
 All mutation endpoints validate bounded request IDs and 64 KiB JSON request
 bodies, while the HTTP worker rejects request URLs above 8 KiB before cloning

@@ -4295,3 +4295,12 @@ focused reset regression passed 1 test:
 Server-package formatting, clippy, Rust file-size, and diff checks passed. No
 full workspace suite was repeated for this isolated development-fixture
 privacy slice, and no new external or deferred work was opened.
+
+The restore-audit privacy correction was validated on 2026-08-31. Legacy
+snapshot normalization now anonymises orphaned exact and composite audit
+targets, preserving message evidence while preventing an absent account ID
+from reappearing after restore. The focused reset regression passed 1 test:
+`restored_state_anonymises_orphaned_audit_targets`.
+Server-package formatting, clippy, Rust file-size, and diff checks passed. No
+full workspace suite was repeated for this isolated restore-normalization
+slice, and no new external or deferred work was opened.

@@ -1,11 +1,47 @@
 use super::super::WorldRepository;
 use crate::ServerConfig;
 use tarrowyn_protocol::{
-    AuthRevokeRequest, ChatRequest, ClaimAction, ClaimLifecycleAction, ClaimLifecycleRequest,
-    ClaimRequest, FrontierEvent, GuestSessionRequest, MarketOrderAction, MarketOrderRequest,
-    ModerationReportRequest, ProfessionAction, ProfessionKind, ProfessionRequest, TradeAction,
-    TradeBundle, TradeRequest, TravelAction, TravelRequest, WorldEvent,
+    AuditRecord, AuthRevokeRequest, ChatRequest, ClaimAction, ClaimLifecycleAction,
+    ClaimLifecycleRequest, ClaimRequest, FrontierEvent, GuestSessionRequest, MarketOrderAction,
+    MarketOrderRequest, ModerationReportRequest, ProfessionAction, ProfessionKind,
+    ProfessionRequest, TradeAction, TradeBundle, TradeRequest, TravelAction, TravelRequest,
+    WorldEvent,
 };
+
+#[test]
+fn restored_state_anonymises_orphaned_audit_targets() {
+    let config = ServerConfig::default();
+    let mut stored = super::super::models::RepositoryState::fresh(&config).to_stored();
+    stored.phase6.audits.push_back(AuditRecord {
+        audit_id: "audit-orphan-exact".to_owned(),
+        actor_account_id: "orphan-account".to_owned(),
+        action: "support.repair".to_owned(),
+        target: "orphan-account".to_owned(),
+        outcome: "accepted".to_owned(),
+        tick: 1,
+        note: "An orphaned exact target must not survive restore.".to_owned(),
+    });
+    stored.phase6.audits.push_back(AuditRecord {
+        audit_id: "audit-orphan-composite".to_owned(),
+        actor_account_id: "operator-account".to_owned(),
+        action: "moderation.report:harassment".to_owned(),
+        target: "orphan-account (message 7)".to_owned(),
+        outcome: "accepted".to_owned(),
+        tick: 2,
+        note: "An orphaned composite target must not survive restore.".to_owned(),
+    });
+
+    let restored = super::super::models::RepositoryState::from_stored(stored, &config);
+    assert_eq!(
+        restored.phase6.audits[0].actor_account_id,
+        "former-resident"
+    );
+    assert_eq!(restored.phase6.audits[0].target, "former-resident");
+    assert_eq!(
+        restored.phase6.audits[1].target,
+        "former-resident (message 7)"
+    );
+}
 
 #[test]
 fn guest_reset_anonymises_shared_replays_and_composite_audits() {
