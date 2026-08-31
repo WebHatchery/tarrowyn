@@ -3503,6 +3503,15 @@ with server-package clippy with warnings denied, package formatting,
 gate is repeated because this is test-source organization maintenance, and no
 new external or deferred work is opened.
 
+The repository's validated farm-layout and legacy-migration regressions now
+live in `repository/tests/farm_migration.rs`, reducing the shared repository
+test root from 667 to 599 lines while preserving fresh-manifest, empty-legacy,
+and populated-legacy crop-state contracts. The focused farm-migration filter
+passes (3 tests), along with server-package clippy with warnings denied,
+package formatting, `git diff --check`, and the Rust file-size scan. No
+publisher or full workspace gate is repeated because this is test-source
+organization maintenance, and no new external or deferred work is opened.
+
 Phase 3 chronicle retention and cursor-boundary tests now live in
 `repository/phase3/tests/chronicle.rs`, reducing the phase test root from 673
 to 604 lines while preserving archive search and stale/ahead cursor contracts.
