@@ -3351,3 +3351,12 @@ The focused governance, tax, infrastructure-history, and upkeep-boundary tests
 `git diff --check`, and the Rust file-size scan pass. No publisher or full
 workspace gate is repeated because this is source organization maintenance,
 and no new external or deferred work is opened.
+
+The client loop now keeps offline save, load, delete, and save-slot refresh
+behavior in `game/offline.rs`, reducing `game.rs` from 725 to 665 lines without
+changing the online or offline action contract. Client-package clippy with
+warnings denied, package formatting, `git diff --check`, and the Rust file-size
+scan pass; no focused runtime suite was added because this move changes no
+behavior. No publisher or full workspace gate is repeated because this is
+source organization maintenance, and no new external or deferred work is
+opened.
