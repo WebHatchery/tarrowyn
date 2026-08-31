@@ -4076,3 +4076,10 @@ whose issued sessions are gone. The focused `refresh_migration` filter passed
 its regression, followed by the affected server formatter, clippy, Rust
 file-size, and diff checks. No full workspace suite was repeated for this
 bounded persistence-migration correction.
+
+The Bearer credential boundary was validated on 2026-08-31 at commit
+`5789e10`. HTTP authentication now accepts credentials through 512 characters
+and rejects oversized values before lookup. The focused
+`bearer_credentials_stay_within` filter passed, followed by the affected
+server formatter, clippy, and diff checks. No full workspace suite was
+repeated for this isolated HTTP input-bound correction.

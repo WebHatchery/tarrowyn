@@ -51,9 +51,10 @@ selectors, regional route, travel, market, and event selectors, event
 intervention text, plus moderation target IDs and notes,
 support account and repair selector IDs, and operator notes, use the same
 bounded control-free audit boundary. Refresh tokens use a separate bounded
-secret boundary and are never copied into support/player projections or audit
-records; the link and refresh responses are the deliberate authenticated
-credential handoff. Chat
+secret boundary, and Bearer credentials are capped at 512 characters before
+authentication lookup. Refresh tokens are never copied into support/player
+projections or audit records; the link and refresh responses are the deliberate
+authenticated credential handoff. Chat
 also has length and per-tick limits, and chronicle search accepts only bounded
 control-free queries while preserving an empty query for browsing;
 chat metadata, trades, claims, governance, moderation, and support repairs are
