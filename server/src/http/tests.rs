@@ -272,5 +272,5 @@ fn guest_session_rate_limiter_keeps_source_table_bounded_without_global_lockout(
         let source = IpAddr::V6(std::net::Ipv6Addr::from(source_id as u128));
         assert!(limiter.allow_ip(Some(source), now));
     }
-    assert_eq!(limiter.windows.len(), MAX_TRACKED_GUEST_SOURCES);
+    assert_eq!(limiter.tracked_source_count(), MAX_TRACKED_GUEST_SOURCES);
 }

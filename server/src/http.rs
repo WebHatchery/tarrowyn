@@ -1,7 +1,7 @@
 use crate::repository::{RepositoryError, WorldRepository};
 use serde::Serialize;
-use std::collections::HashMap;
 use std::io::Read;
+#[cfg(test)]
 use std::net::IpAddr;
 use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
@@ -18,20 +18,21 @@ use tarrowyn_protocol::{
 use tiny_http::{Header, Method, Request, Response, Server, StatusCode};
 
 type JsonResponse = Response<std::io::Cursor<Vec<u8>>>;
-const GUEST_SESSION_RATE_WINDOW: Duration = Duration::from_secs(60);
-const GUEST_SESSION_BURST_LIMIT: u16 = 32;
-const MAX_TRACKED_GUEST_SOURCES: usize = 4096;
 const GUEST_SESSION_RETRY_AFTER_SECONDS: &str = "60";
 const DEFAULT_MAINTENANCE_MESSAGE: &str =
     "The settlement is in maintenance; try again once service recovers.";
 
 mod pool;
+mod rate_limit;
 mod request;
 #[cfg(test)]
 use crate::config::{MAX_HTTP_REQUEST_QUEUE_CAPACITY, MIN_HTTP_REQUEST_QUEUE_CAPACITY};
 use pool::{request_queue_capacity, request_worker_count, RequestPoolTelemetry};
 #[cfg(test)]
 use pool::{MAX_REQUEST_WORKERS, MIN_REQUEST_WORKERS};
+use rate_limit::GuestSessionRateLimiter;
+#[cfg(test)]
+use rate_limit::{GUEST_SESSION_BURST_LIMIT, GUEST_SESSION_RATE_WINDOW, MAX_TRACKED_GUEST_SOURCES};
 #[cfg(test)]
 pub(super) use request::MAX_REQUEST_BODY_BYTES;
 use request::{
@@ -42,79 +43,6 @@ use request::{
 use request::{
     parse_bearer_header, read_bounded_body, MAX_BEARER_TOKEN_CHARS, MAX_REQUEST_URL_BYTES,
 };
-
-struct GuestSessionRateLimiter {
-    windows: HashMap<IpAddr, GuestSessionRateWindow>,
-    burst_limit: u16,
-}
-
-struct GuestSessionRateWindow {
-    started_at: Instant,
-    attempts: u16,
-}
-
-impl GuestSessionRateLimiter {
-    fn new(burst_limit: u16) -> Self {
-        Self {
-            windows: HashMap::new(),
-            burst_limit: burst_limit.max(1),
-        }
-    }
-
-    fn allow(&mut self, request: &Request) -> bool {
-        self.allow_ip(
-            request.remote_addr().map(|address| address.ip()),
-            Instant::now(),
-        )
-    }
-
-    fn allow_ip(&mut self, source: Option<IpAddr>, now: Instant) -> bool {
-        let Some(source) = source else {
-            return true;
-        };
-        self.windows.retain(|_, window| {
-            now.checked_duration_since(window.started_at)
-                .unwrap_or_default()
-                < GUEST_SESSION_RATE_WINDOW
-        });
-        if !self.windows.contains_key(&source) && self.windows.len() >= MAX_TRACKED_GUEST_SOURCES {
-            let oldest_source = self
-                .windows
-                .iter()
-                .min_by_key(|(_, window)| window.started_at)
-                .map(|(source, _)| *source);
-            if let Some(oldest_source) = oldest_source {
-                self.windows.remove(&oldest_source);
-            }
-        }
-        let window = self
-            .windows
-            .entry(source)
-            .or_insert(GuestSessionRateWindow {
-                started_at: now,
-                attempts: 0,
-            });
-        if now
-            .checked_duration_since(window.started_at)
-            .unwrap_or_default()
-            >= GUEST_SESSION_RATE_WINDOW
-        {
-            window.started_at = now;
-            window.attempts = 0;
-        }
-        if window.attempts >= self.burst_limit {
-            return false;
-        }
-        window.attempts += 1;
-        true
-    }
-}
-
-impl Default for GuestSessionRateLimiter {
-    fn default() -> Self {
-        Self::new(GUEST_SESSION_BURST_LIMIT)
-    }
-}
 
 #[cfg(test)]
 mod tests;

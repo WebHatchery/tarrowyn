@@ -4418,3 +4418,13 @@ suite at 591 lines. The moved regression passed 1 focused test with 485 filtered
 server-package formatting, clippy, Rust file-size, and diff checks passed. No
 publisher or full workspace suite was repeated because this was test organization
 only, and no new external or deferred work was opened.
+
+The HTTP boundary maintenance seam was validated on 2026-08-31. The guest
+session rate limiter now lives in `server/src/http/rate_limit.rs`, reducing the
+HTTP entry module from 730 to 655 lines while preserving its bounded source
+window and burst behavior. The focused limiter filter passed 4 tests with 482
+filtered; server-package formatting, clippy, Rust file-size, and diff checks
+passed. The project publisher also passed Windows/WebGL release builds,
+packaging, Preview deployment, catalog synchronization, and the deployed WASM
+hash check. No full workspace suite was repeated for this behavior-preserving
+organization slice, and no new external or deferred work was opened.
