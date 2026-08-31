@@ -3414,3 +3414,12 @@ deletion-queue suite (3 tests), server-package clippy with warnings denied,
 package formatting, `git diff --check`, and the Rust file-size scan pass. No
 publisher or full workspace gate is repeated because this is source
 organization maintenance, and no new external or deferred work is opened.
+
+Phase 5 commodity inventory, regional stock notes, indexed pricing, and season
+helpers now live in `phase5/logic/commodities.rs`, reducing the regional logic
+module from 674 to 510 lines while preserving the market and projection
+boundaries. The focused market-history suite (3 tests) and price-boundary test
+(1 test) pass, along with server-package clippy with warnings denied, package
+formatting, `git diff --check`, and the Rust file-size scan. No publisher or
+full workspace gate is repeated because this is source organization
+maintenance, and no new external or deferred work is opened.
