@@ -422,6 +422,18 @@ fn movement_tooltip_names_the_next_visible_recovery_path() {
 }
 
 #[test]
+fn map_tooltip_names_the_modal_gate_before_movement() {
+    assert_eq!(
+        super::movement_tooltip_for_overlay(true, "Tap a walkable tile"),
+        "Close the open panel to use road controls"
+    );
+    assert_eq!(
+        super::movement_tooltip_for_overlay(false, "Tap a walkable tile"),
+        "Tap a walkable tile"
+    );
+}
+
+#[test]
 fn companion_count_ignores_own_stale_and_offline_presence() {
     let players = vec![
         RemotePlayer {

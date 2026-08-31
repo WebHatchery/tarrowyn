@@ -3254,3 +3254,13 @@ Windows/WebGL build, packaging, Preview deployment, tracker recording, and
 catalog synchronization also pass. No full workspace gate is repeated because
 this is a bounded modal-input correction, and no new external or deferred work
 is opened.
+
+The world-map tooltip now agrees with the modal input gate: when an inspection,
+account, skill, school, chronicle, or woodworking panel is open, it tells the
+player to close that panel instead of suggesting a map tap that will be
+ignored. The focused tooltip regression passes, along with client-package
+clippy, formatting, `git diff --check`, and the Rust file-size scan. The
+project `publish.ps1` Windows/WebGL build, packaging, Preview deployment,
+tracker recording, and catalog synchronization also pass. No full workspace
+gate is repeated because this is a bounded guidance correction, and no new
+external or deferred work is opened.

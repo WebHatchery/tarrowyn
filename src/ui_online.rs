@@ -30,6 +30,17 @@ pub(super) fn gameplay_modal_open(ctx: &UiContext<'_>) -> bool {
     panels::sidebar_modal_open(ctx)
 }
 
+pub(super) fn movement_tooltip_for_overlay(
+    modal_open: bool,
+    movement_tooltip: &'static str,
+) -> &'static str {
+    if modal_open {
+        "Close the open panel to use road controls"
+    } else {
+        movement_tooltip
+    }
+}
+
 #[cfg(test)]
 #[path = "ui_online/tests.rs"]
 mod tests;
@@ -64,13 +75,14 @@ pub(super) fn draw_sidebar(
     );
 
     draw_ui_text_ex(
-        if modal_open {
-            "Close the open panel to use road controls"
-        } else if movement_enabled(ctx) {
-            "Tap a tile or use arrows to walk"
-        } else {
-            movement_tooltip(ctx)
-        },
+        movement_tooltip_for_overlay(
+            modal_open,
+            if movement_enabled(ctx) {
+                "Tap a tile or use arrows to walk"
+            } else {
+                movement_tooltip(ctx)
+            },
+        ),
         content.x,
         top + 57.0,
         TextStyle::new(12.0, CREAM).params(),

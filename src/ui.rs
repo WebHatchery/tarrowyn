@@ -207,7 +207,13 @@ fn draw_world_panel(ctx: &UiContext<'_>, mouse: Vec2) -> Rect {
     let map = Rect::new(panel.x + 18.0, panel.y + 61.0, panel.w - 36.0, 398.0);
     draw_map(ctx, map);
     if map.contains_point(mouse) {
-        draw_tooltip(ui_online::movement_tooltip(ctx), mouse);
+        draw_tooltip(
+            ui_online::movement_tooltip_for_overlay(
+                ui_online::gameplay_modal_open(ctx),
+                ui_online::movement_tooltip(ctx),
+            ),
+            mouse,
+        );
     }
 
     draw_text_right(
