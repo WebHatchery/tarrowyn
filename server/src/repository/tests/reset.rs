@@ -1,11 +1,11 @@
 use super::super::WorldRepository;
 use crate::ServerConfig;
 use tarrowyn_protocol::{
-    AuditRecord, AuthRevokeRequest, ChatRequest, ClaimAction, ClaimLifecycleAction,
-    ClaimLifecycleRequest, ClaimRequest, FrontierEvent, GuestSessionRequest, MarketOrderAction,
-    MarketOrderRequest, ModerationReportRequest, ProfessionAction, ProfessionKind,
-    ProfessionRequest, TradeAction, TradeBundle, TradeRequest, TravelAction, TravelRequest,
-    WorldEvent,
+    AuditRecord, AuthRevokeRequest, ChatMessage, ChatRequest, ChronicleEntry, ClaimAction,
+    ClaimLifecycleAction, ClaimLifecycleRequest, ClaimRequest, FrontierEvent, GuestSessionRequest,
+    MarketOrderAction, MarketOrderRequest, ModerationReportRequest, ProfessionAction,
+    ProfessionKind, ProfessionRequest, TradeAction, TradeBundle, TradeRequest, TravelAction,
+    TravelRequest, WorldEvent,
 };
 
 #[test]
@@ -56,6 +56,45 @@ fn restored_state_anonymises_orphaned_audit_targets() {
         .audits
         .iter()
         .all(|audit| !audit.note.contains("orphan-account")));
+}
+
+#[test]
+fn restored_state_anonymises_orphaned_chronicle_names() {
+    let config = ServerConfig::default();
+    let mut stored = super::super::models::RepositoryState::fresh(&config).to_stored();
+    stored.chat_history.push_back(ChatMessage {
+        message_id: 1,
+        account_id: "orphan-account".to_owned(),
+        display_name: "Orphan resident".to_owned(),
+        channel: "settlement".to_owned(),
+        text: "A retained public message.".to_owned(),
+        cursor: 1,
+    });
+    let history = ChronicleEntry {
+        event_id: "orphan-chronicle".to_owned(),
+        kind: "social".to_owned(),
+        title: "Orphan resident keeps the road".to_owned(),
+        text: "The Hearth remembers Orphan resident beside the road.".to_owned(),
+        created_tick: 1,
+        cursor: 1,
+    };
+    stored.phase3.chronicle.push_back(history.clone());
+    stored.phase5.settlements[0].chronicle.push(history);
+
+    let restored = super::super::models::RepositoryState::from_stored(stored, &config);
+    assert_eq!(restored.chat_history[0].display_name, "Former resident");
+    assert!(!restored.phase3.chronicle[0]
+        .title
+        .contains("Orphan resident"));
+    assert!(!restored.phase3.chronicle[0]
+        .text
+        .contains("Orphan resident"));
+    assert!(!restored.phase5.settlements[0].chronicle[0]
+        .title
+        .contains("Orphan resident"));
+    assert!(!restored.phase5.settlements[0].chronicle[0]
+        .text
+        .contains("Orphan resident"));
 }
 
 #[test]

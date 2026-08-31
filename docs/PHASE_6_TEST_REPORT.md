@@ -4366,3 +4366,13 @@ repeated for this isolated persisted-history validation slice. The project
 publisher also passed Windows/WebGL release builds, packaging, Preview
 deployment, and catalog synchronization; no new external or deferred work was
 opened.
+
+The orphaned-chronicle privacy correction was validated on 2026-08-31. Restore
+normalization now collects names from orphaned structured public records before
+scrubbing, then anonymises matching Phase 3 recent/archive, Phase 5 settlement,
+and retained chronicle-event text without replacing names still used by active
+identities. The focused reset regression passed 1 test:
+`restored_state_anonymises_orphaned_chronicle_names`. Server-package formatting,
+clippy, Rust file-size, and diff checks passed. No full workspace suite was
+repeated for this isolated restore-privacy slice, and no new external or
+deferred work was opened.
