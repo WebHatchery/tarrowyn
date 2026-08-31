@@ -27,6 +27,11 @@ Useful server configuration variables are:
 | `TARROWYN_SESSION_TTL_SECONDS` | `30` | Guest session expiry window. |
 | `TARROWYN_CHAT_MAX_LENGTH` | `160` | Server chat bound. |
 
+The server keeps the validated calendar day at 4,800 seconds and requires the
+runtime world to be at least the manifest's 18x11 dimensions. A larger runtime
+map remains valid for experiments; an undersized map or mismatched day length
+fails startup before the HTTP listener is opened.
+
 The deterministic local backend is a versioned JSON repository. Shared preview
 can select the transactional MySQL backend with `DB_DRIVER=mysql`; both are
 isolated behind `WorldRepository` so the protocol and HTTP handlers stay

@@ -22,6 +22,31 @@ fn default_server_world_values_match_the_shared_game_config_manifest() {
 }
 
 #[test]
+fn runtime_content_bounds_reject_an_undersized_map_or_unlocked_day_length() {
+    let defaults = ServerConfig::default();
+    let config = ServerConfig {
+        world_width: defaults.world_width - 1,
+        ..defaults
+    };
+    assert!(config.validate_runtime_content_bounds().is_err());
+
+    let defaults = ServerConfig::default();
+    let config = ServerConfig {
+        day_length_seconds: 1.0,
+        ..defaults
+    };
+    assert!(config.validate_runtime_content_bounds().is_err());
+
+    let defaults = ServerConfig::default();
+    let config = ServerConfig {
+        world_width: defaults.world_width + 4,
+        world_height: defaults.world_height + 3,
+        ..defaults
+    };
+    assert!(config.validate_runtime_content_bounds().is_ok());
+}
+
+#[test]
 fn oversized_unsigned_environment_values_fall_back_instead_of_wrapping() {
     assert_eq!(bounded_u32(u64::MAX, 17), 17);
     assert_eq!(bounded_u16(u64::MAX, 3306), 3306);

@@ -49,6 +49,7 @@ mod tests;
 
 pub fn serve(config: crate::config::ServerConfig) -> Result<(), String> {
     crate::content::validate().map_err(|error| format!("content validation failed: {error}"))?;
+    config.validate_runtime_content_bounds()?;
     let repository = Arc::new(
         WorldRepository::try_new(config.clone())
             .map_err(|error| format!("repository startup failed: {error}"))?,

@@ -255,6 +255,25 @@ impl ServerConfig {
         let tick_seconds = self.tick_interval.as_secs_f32().max(0.001);
         ((self.refresh_ttl_seconds as f32 / tick_seconds).ceil() as u64).max(1)
     }
+
+    pub(crate) fn validate_runtime_content_bounds(&self) -> Result<(), String> {
+        let content = crate::content::game_config_defaults();
+        if self.world_width < content.world_width || self.world_height < content.world_height {
+            return Err(format!(
+                "runtime world dimensions must be at least {}x{} for the validated region content",
+                content.world_width, content.world_height
+            ));
+        }
+        if !self.day_length_seconds.is_finite()
+            || self.day_length_seconds != content.day_length_seconds
+        {
+            return Err(format!(
+                "runtime day length must remain {} seconds for the validated calendar",
+                content.day_length_seconds
+            ));
+        }
+        Ok(())
+    }
 }
 
 fn env_string(name: &str, default: String) -> String {
