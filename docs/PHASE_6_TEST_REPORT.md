@@ -3812,3 +3812,7 @@ emits repeated `glBindTexture called with an already deleted texture ID 20!`
 messages from the shared `mq_js_bundle.js` while the game renders; that shared
 runtime warning is recorded as a pre-launch follow-up rather than claimed as a
 Tarrowyn-owned rendering failure.
+
+A fresh published Frontier comparison tab using the same shell and bundle
+produced no texture warning, so ownership remains unresolved between the
+Tarrowyn render workload, the shared runtime, and the in-app browser.

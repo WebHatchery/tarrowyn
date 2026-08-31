@@ -26,3 +26,9 @@ The register does not authorize a public launch by itself. The target-required
 rows remain deployment gates; the deliberately deferred rows remain product
 choices rather than missing implementation. Any new row should name its owner,
 evidence, and exit condition before code or content is added.
+
+The WebGL warning was reproduced in a fresh Tarrowyn preview tab, while a fresh
+Frontier comparison using the same shell and bundle was clean. Ownership is
+therefore still open between the Tarrowyn render workload, the shared runtime,
+and the in-app browser; the warning is not yet claimed as a Tarrowyn-owned
+rendering failure.
