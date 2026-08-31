@@ -243,6 +243,43 @@ fn missing_production_session_mirror_degrades_readiness() {
 }
 
 #[test]
+fn orphaned_production_refresh_replay_degrades_readiness() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let guest = super::guest(&repository, "integrity-orphaned-refresh");
+    let linked = repository
+        .auth_link(
+            &guest.account_token,
+            AuthLinkRequest {
+                request_id: "integrity-orphaned-refresh-link".to_owned(),
+                provider: "webhatchery-identity-oidc".to_owned(),
+                subject: "integrity-orphaned-refresh-subject".to_owned(),
+                display_name: None,
+            },
+        )
+        .expect("production account link")
+        .data;
+    let refreshed = repository
+        .auth_refresh(AuthRefreshRequest {
+            request_id: "integrity-orphaned-refresh-request".to_owned(),
+            refresh_token: linked.session.refresh_token,
+        })
+        .expect("production refresh")
+        .data;
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state
+            .phase6
+            .sessions
+            .remove(&refreshed.session.account_token);
+        state.sessions.remove(&refreshed.session.account_token);
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
 fn invalid_audit_outcome_degrades_readiness() {
     let repository = WorldRepository::new(ServerConfig::default());
     let guest = super::guest(&repository, "integrity-production-audit");

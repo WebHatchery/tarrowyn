@@ -362,7 +362,7 @@ fn cached_session_matches_account(
         .phase6
         .sessions
         .get(&session.account_token)
-        .is_none_or(|stored| {
+        .is_some_and(|stored| {
             stored.account_id == account_id
                 && stored.refresh_token == session.refresh_token
                 && stored.expires_at_tick == session.expires_at_tick

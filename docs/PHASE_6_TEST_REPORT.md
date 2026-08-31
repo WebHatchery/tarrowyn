@@ -4139,3 +4139,10 @@ Server clippy, formatting, Rust file-size, and diff checks plus the publisher
 passed. No full workspace suite was repeated for this bounded Phase 6
 credential-retention maintenance slice, and no new external or deferred work
 was opened.
+
+The orphaned refresh-replay integrity correction was validated on 2026-08-31.
+Production readiness now requires each retained refresh response to resolve to
+its issuing session with matching account and credential metadata; the focused
+`orphaned_production_refresh_replay_degrades_readiness` server filter passed.
+No full workspace suite was repeated for this isolated integrity predicate
+maintenance slice, and no new external or deferred work was opened.
