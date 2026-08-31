@@ -55,7 +55,7 @@ pub(super) fn migrate_guest_account_references(
     }
     for audit in &mut state.phase6.audits {
         replace_id(&mut audit.actor_account_id, old_account_id, new_account_id);
-        replace_id(&mut audit.target, old_account_id, new_account_id);
+        migrate_audit_target(&mut audit.target, old_account_id, new_account_id);
     }
 }
 
@@ -523,6 +523,16 @@ fn migrate_chronicle(
     if !old_display_name.is_empty() && old_display_name != new_display_name {
         entry.title = entry.title.replace(old_display_name, new_display_name);
         entry.text = entry.text.replace(old_display_name, new_display_name);
+    }
+}
+
+fn migrate_audit_target(target: &mut String, old_account_id: &str, new_account_id: &str) {
+    if replace_id(target, old_account_id, new_account_id) {
+        return;
+    }
+    let prefix = format!("{old_account_id} (");
+    if let Some(suffix) = target.strip_prefix(&prefix) {
+        *target = format!("{new_account_id} ({suffix}");
     }
 }
 

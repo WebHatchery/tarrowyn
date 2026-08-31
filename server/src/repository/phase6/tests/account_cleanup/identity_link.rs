@@ -1,4 +1,5 @@
 use super::*;
+use tarrowyn_protocol::{ChatRequest, ModerationReportRequest};
 
 #[test]
 fn account_link_preserves_phase4_and_skill_replay_idempotency() {
@@ -213,5 +214,77 @@ fn account_link_migrates_trade_replays_kept_by_another_identity() {
 
     assert_eq!(replay.creator_account_id, linked.account_id);
     assert_eq!(replay.creator_name, "Linked trade creator");
+    assert!(repository.ops_health().data.ready);
+}
+
+#[test]
+fn account_link_migrates_composite_moderation_audit_targets() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let target = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("audit-link-target".to_owned()),
+            reset: false,
+        })
+        .expect("target guest session")
+        .data;
+    let reporter = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("audit-link-reporter".to_owned()),
+            reset: false,
+        })
+        .expect("reporter guest session")
+        .data;
+    let message_id = repository
+        .chat(
+            &target.account_token,
+            ChatRequest {
+                request_id: "audit-link-message".to_owned(),
+                channel: "settlement".to_owned(),
+                text: "A message retained for the audit target fixture.".to_owned(),
+            },
+        )
+        .expect("target chat")
+        .data
+        .message
+        .expect("target message")
+        .message_id;
+    repository
+        .moderation_report(
+            &reporter.account_token,
+            ModerationReportRequest {
+                request_id: "audit-link-report".to_owned(),
+                target_account_id: Some(target.account_id.clone()),
+                message_id: Some(message_id),
+                category: "harassment".to_owned(),
+                note: "The audit target should follow the account link.".to_owned(),
+            },
+        )
+        .expect("moderation report");
+
+    let linked = repository
+        .auth_link(
+            &target.account_token,
+            AuthLinkRequest {
+                request_id: "audit-link-auth".to_owned(),
+                provider: "webhatchery-identity-oidc".to_owned(),
+                subject: "audit-link-subject".to_owned(),
+                display_name: Some("Linked audit resident".to_owned()),
+            },
+        )
+        .expect("account link")
+        .data;
+    let state = repository.state.lock().expect("repository lock");
+    let audit = state
+        .phase6
+        .audits
+        .iter()
+        .find(|audit| audit.action == "moderation.report:harassment")
+        .expect("moderation audit");
+
+    assert_eq!(
+        audit.target,
+        format!("{} (message {message_id})", linked.account_id)
+    );
+    drop(state);
     assert!(repository.ops_health().data.ready);
 }

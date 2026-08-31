@@ -4276,3 +4276,12 @@ the focused exact regression filter passed 1 test:
 Server-package formatting, clippy, Rust file-size, and diff checks passed. No
 full workspace suite was repeated for this isolated account-link migration
 slice, and no new external or deferred work was opened.
+
+The linked-account composite-audit correction was validated on 2026-08-31.
+Moderation audit targets that combine an account ID with message evidence now
+follow the account's new production ID during guest linking; the focused exact
+regression filter passed 1 test:
+`account_link_migrates_composite_moderation_audit_targets`.
+Server-package formatting, clippy, Rust file-size, and diff checks passed. No
+full workspace suite was repeated for this isolated audit migration slice, and
+no new external or deferred work was opened.
