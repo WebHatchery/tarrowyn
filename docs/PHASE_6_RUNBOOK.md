@@ -7,6 +7,19 @@ Run `scripts/validate_content.ps1`, then
 clippy, content IDs, and `publish.ps1`. The output directory is a reproducible
 release artifact; do not copy a live state file into the browser bundle.
 
+## Scoped change checks
+
+For a change confined to one package or subsystem, run the narrowest matching
+`cargo test` filter, then the affected package's clippy and formatting checks,
+`git diff --check`, and the Rust file-size scan. Keep unrelated tests filtered
+out and record the exact filter and result in `docs/PHASE_6_TEST_REPORT.md`.
+
+Reserve `scripts/run_release_gate.ps1` and `publish.ps1` for a major milestone,
+a cross-package or cross-subsystem change, content/schema changes that affect
+the release artifact, or the scheduled release-readiness check. This keeps
+ordinary maintenance feedback proportional while retaining a complete gate at
+the points where integration risk changes.
+
 Configuration is environment-specific. Set `TARROWYN_STATE_PATH`,
 `TARROWYN_BACKUP_PATH`, `TARROWYN_PRODUCTION_SESSION_TTL_SECONDS`,
 `TARROWYN_REFRESH_TTL_SECONDS`, and the identity-gateway deployment secret in
