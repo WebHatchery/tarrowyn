@@ -4458,3 +4458,13 @@ passed. The project publisher also passed Windows/WebGL release builds, packagin
 Preview deployment, and catalog synchronization. No full workspace suite was
 repeated for this isolated projection-boundary slice, and no new external or
 deferred work was opened.
+
+The regional event cache cursor correction was validated on 2026-08-31. Incremental
+regional merges now ignore records at or before the applied regional cursor, only
+replace known events with newer cursors, keep the cache cursor monotonic, and sort
+initial history before exposing the newest event. The focused client regional-event
+filter passed 9 tests with 241 filtered; client-package formatting, clippy, Rust
+file-size, and diff checks passed. The project publisher also passed Windows/WebGL
+release builds, packaging, Preview deployment, and catalog synchronization. No
+full workspace suite was repeated for this isolated regional projection-boundary
+slice, and no new external or deferred work was opened.

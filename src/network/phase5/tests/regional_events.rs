@@ -138,6 +138,39 @@ fn regional_event_cursor_merges_updates_without_dropping_known_events() {
 }
 
 #[test]
+fn regional_event_merge_ignores_stale_updates_and_cursor_regressions() {
+    let mut current = Some(RegionalEventsResponse {
+        events: vec![regional_event(
+            "event-1",
+            tarrowyn_protocol::RegionalEventStage::Escalation,
+            7,
+        )],
+        cursor: 8,
+    });
+
+    merge_regional_events(
+        &mut current,
+        RegionalEventsResponse {
+            events: vec![regional_event(
+                "event-1",
+                tarrowyn_protocol::RegionalEventStage::Signal,
+                6,
+            )],
+            cursor: 7,
+        },
+    );
+
+    let current = current.expect("regional events should remain cached");
+    assert_eq!(current.cursor, 8);
+    assert_eq!(current.events.len(), 1);
+    assert_eq!(current.events[0].event_id, "event-1");
+    assert_eq!(
+        current.events[0].stage,
+        tarrowyn_protocol::RegionalEventStage::Escalation
+    );
+}
+
+#[test]
 fn regional_event_cache_stays_bounded_after_incremental_updates() {
     let mut current = Some(RegionalEventsResponse {
         events: Vec::new(),

@@ -107,6 +107,7 @@ pub(super) fn merge_regional_events(
 ) {
     let Some(current) = current else {
         let mut incoming = incoming;
+        incoming.events.sort_by_key(|event| event.cursor);
         let excess = incoming
             .events
             .len()
@@ -117,18 +118,35 @@ pub(super) fn merge_regional_events(
         *current = Some(incoming);
         return;
     };
-    current.cursor = incoming.cursor;
-    for event in incoming.events {
+    let RegionalEventsResponse {
+        events,
+        cursor: incoming_cursor,
+    } = incoming;
+    let existing_cursor = current.cursor;
+    for event in events {
+        if event.cursor <= existing_cursor {
+            continue;
+        }
         if let Some(existing) = current
             .events
             .iter_mut()
             .find(|existing| existing.event_id == event.event_id)
         {
-            *existing = event;
+            if event.cursor > existing.cursor {
+                *existing = event;
+            }
         } else {
             current.events.push(event);
         }
     }
+    current.cursor = current.cursor.max(incoming_cursor).max(
+        current
+            .events
+            .iter()
+            .map(|event| event.cursor)
+            .max()
+            .unwrap_or(0),
+    );
     current.events.sort_by_key(|event| event.cursor);
     let excess = current
         .events
