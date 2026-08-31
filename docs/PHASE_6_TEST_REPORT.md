@@ -3784,7 +3784,9 @@ The authoritative mutation boundary now rejects a failed JSON or MySQL snapshot
 write with `503 persistence_unavailable` and restores the last successfully
 persisted in-memory state before returning. Scheduled ticks persist their world
 state before writing a backup, then persist the successful backup marker after
-the backup file is replaced. The focused persistence-failure regression passed,
+the backup file is replaced; the focused fixture also proves a failed tick does
+not emit a newer backup and that backup resumes after recovery. The focused
+persistence-failure regression passed,
 followed by the full server-library suite (448 tests), server clippy, package
 formatting, diff, and Rust file-size checks. The full release gate, including
 the protocol/client suite and Windows/WebGL publisher, also passed for this

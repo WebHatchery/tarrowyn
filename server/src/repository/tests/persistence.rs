@@ -116,9 +116,15 @@ fn persistence_failure_rejects_the_command_and_keeps_the_durable_state() {
         "tarrowyn-persistence-failure-{}.json",
         std::process::id()
     ));
+    let backup_path = std::env::temp_dir().join(format!(
+        "tarrowyn-persistence-failure-backup-{}.json",
+        std::process::id()
+    ));
+    let _ = std::fs::remove_file(&backup_path);
     let repository = WorldRepository::new(ServerConfig {
         persistence_path: Some(state_path.to_string_lossy().into_owned()),
-        backup_path: None,
+        backup_path: Some(backup_path.to_string_lossy().into_owned()),
+        backup_interval_ticks: 1,
         ..ServerConfig::default()
     });
     std::fs::remove_file(&state_path).unwrap();
@@ -139,6 +145,8 @@ fn persistence_failure_rejects_the_command_and_keeps_the_durable_state() {
         .expect("repository lock")
         .identities
         .is_empty());
+    repository.tick();
+    assert!(!backup_path.exists());
 
     let health = repository.ops_health().data;
     assert!(!health.ready);
@@ -156,8 +164,11 @@ fn persistence_failure_rejects_the_command_and_keeps_the_durable_state() {
             reset: false,
         })
         .expect("the command should succeed after durable storage recovers");
+    repository.tick();
     assert!(repository.ops_health().data.ready);
+    assert!(backup_path.is_file());
     let _ = std::fs::remove_file(&state_path);
+    let _ = std::fs::remove_file(backup_path);
 }
 
 #[test]
