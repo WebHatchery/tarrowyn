@@ -4352,8 +4352,9 @@ and text at the existing 512-character history-field limit after replacing a
 display name. The focused account-lifecycle regression passed 1 test:
 `account_link_keeps_expanded_history_fields_bounded`. Server-package formatting,
 clippy, Rust file-size, and diff checks passed. No full workspace suite was
-repeated for this isolated chronicle-boundary slice, and no new external or
-deferred work was opened.
+repeated for this isolated chronicle-boundary slice. The project publisher also
+passed Windows/WebGL release builds, packaging, Preview deployment, and catalog
+synchronization; no new external or deferred work was opened.
 
 The persisted chronicle integrity correction was validated on 2026-08-31. The
 Phase 3 recent and archived history validator now enforces the same bounded
@@ -4361,5 +4362,7 @@ identifier, kind, title, and text fields as live chronicle events. The focused
 readiness regression passed 1 test:
 `oversized_phase3_chronicle_text_degrades_readiness`. Server-package formatting,
 clippy, Rust file-size, and diff checks passed. No full workspace suite was
-repeated for this isolated persisted-history validation slice, and no new
-external or deferred work was opened.
+repeated for this isolated persisted-history validation slice. The project
+publisher also passed Windows/WebGL release builds, packaging, Preview
+deployment, and catalog synchronization; no new external or deferred work was
+opened.
