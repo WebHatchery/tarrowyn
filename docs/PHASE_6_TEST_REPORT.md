@@ -4122,3 +4122,11 @@ the changed client retry-classifier test also passed. Affected-package clippy,
 Tarrowyn-only formatting, Rust file-size, diff, and publisher checks passed.
 No full workspace suite was repeated for this bounded runtime-readiness
 maintenance slice, and no new external or deferred work was opened.
+
+The preflight request-target follow-up was validated on 2026-08-31 at commit
+`890ee00`. Oversized `OPTIONS` targets now pass through the same 8 KiB boundary
+before the server emits its CORS response. The focused `http::` server filter
+again passed all 22 tests, followed by server clippy, formatting, Rust
+file-size, and diff checks plus the publisher. No full workspace suite was
+repeated for this isolated HTTP input-bound correction, and no new external or
+deferred work was opened.
