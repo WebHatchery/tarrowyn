@@ -3335,7 +3335,7 @@ this is source organization maintenance, and no new external or deferred work
 is opened.
 
 Frontier expedition cycle tests now live in `network/frontier/tests/expedition.rs`,
-reducing the frontier test root from 712 to 502 lines while preserving the
+reducing the frontier test root from 712 to 557 lines while preserving the
 finished-cycle, missing-role, and retreat-notice contracts. The focused
 frontier expedition filter passes (5 matching tests, including the remaining
 expedition control regression), along with client-package clippy with warnings
@@ -3493,3 +3493,12 @@ passes, along with server-package clippy with warnings denied, package
 formatting, `git diff --check`, and the Rust file-size scan. No publisher or
 full workspace gate is repeated because this evidence-only change targets one
 GDD crafting contract, and no new external or deferred work is opened.
+
+Phase 6 backup and readiness integration tests now live in
+`repository/phase6/tests/integration/backup.rs`, reducing the integration test
+root from 710 to 633 lines while preserving the complete-snapshot and failed-
+backup recovery contracts. The focused backup filter passes (2 tests), along
+with server-package clippy with warnings denied, package formatting,
+`git diff --check`, and the Rust file-size scan. No publisher or full workspace
+gate is repeated because this is test-source organization maintenance, and no
+new external or deferred work is opened.
