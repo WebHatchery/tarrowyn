@@ -3476,3 +3476,11 @@ clippy with warnings denied, package formatting, `git diff --check`, and the
 Rust file-size scan. No publisher or full workspace gate is repeated because
 this is source organization maintenance, and no new external or deferred work
 is opened.
+
+The crafting authority regression now submits a zero timing score and confirms
+an accepted completion still produces positive bounded quality without changing
+the requester's escrowed materials. The focused profession test (1 test)
+passes, along with server-package clippy with warnings denied, package
+formatting, `git diff --check`, and the Rust file-size scan. No publisher or
+full workspace gate is repeated because this evidence-only change targets one
+GDD crafting contract, and no new external or deferred work is opened.

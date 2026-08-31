@@ -303,6 +303,15 @@ fn field_tool_condition_connects_active_farming_to_a_repair_order() {
         .data
         .order
         .unwrap();
+    let escrowed_materials = repo
+        .state
+        .lock()
+        .expect("repository lock")
+        .phase4
+        .materials
+        .get(&requester.client_key)
+        .copied()
+        .expect("requester materials");
     assert!(
         repo.profession_order(
             &provider.account_token,
@@ -337,8 +346,8 @@ fn field_tool_condition_connects_active_farming_to_a_repair_order() {
         .data
         .accepted
     );
-    assert!(
-        repo.profession_order(
+    let completed = repo
+        .profession_order(
             &provider.account_token,
             ProfessionRequest {
                 request_id: "tool-complete".to_owned(),
@@ -347,13 +356,26 @@ fn field_tool_condition_connects_active_farming_to_a_repair_order() {
                 profession: None,
                 capability_id: None,
                 service: None,
-                timing_score: Some(100),
+                timing_score: Some(0),
             },
         )
         .unwrap()
-        .data
-        .accepted
-    );
+        .data;
+    assert!(completed.accepted);
+    assert!(completed
+        .order
+        .as_ref()
+        .is_some_and(|order| order.quality > 0));
+    let materials_after_completion = repo
+        .state
+        .lock()
+        .expect("repository lock")
+        .phase4
+        .materials
+        .get(&requester.client_key)
+        .copied()
+        .expect("requester materials");
+    assert_eq!(materials_after_completion, escrowed_materials);
     assert_eq!(
         repo.inventory(&requester.account_token)
             .unwrap()
