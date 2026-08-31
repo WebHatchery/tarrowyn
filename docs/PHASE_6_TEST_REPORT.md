@@ -3530,3 +3530,13 @@ test), along with server-package clippy with warnings denied, package
 formatting, `git diff --check`, and the Rust file-size scan. No publisher or
 full workspace gate is repeated because this is test-source organization
 maintenance, and no new external or deferred work is opened.
+
+The account-cleanup privacy regression now lives in
+`repository/phase6/tests/account_cleanup/settlement_history.rs`, reducing the
+account-cleanup test root from 651 to 588 lines while preserving copied
+settlement-history name updates across identity linking and deletion. The
+focused settlement-history filter passes (1 test), along with server-package
+clippy with warnings denied, package formatting, `git diff --check`, and the
+Rust file-size scan. No publisher or full workspace gate is repeated because
+this is test-source organization maintenance, and no new external or deferred
+work is opened.
