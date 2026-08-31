@@ -17,6 +17,10 @@ It preserves structured API error codes through the shared toolkit and, when a
 restore or retained-history boundary invalidates its event cursor, clears stale
 history projections and reloads the authoritative state from cursor zero while
 keeping the road open.
+Durable mutation failures are also explicit: the repository restores its last
+successful persistence point and returns `503 persistence_unavailable` instead
+of acknowledging an in-memory-only command, while the client retries that
+structured failure with the same request ID inside its bounded retry window.
 
 The readiness projection now validates every durable layer represented by the
 regional release candidate: world clock, players, crops, trades, event history,
