@@ -35,6 +35,31 @@ function Get-FreePort {
     }
 }
 
+function Assert-SafeArchive {
+    param([string]$Path)
+
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    $archive = [IO.Compression.ZipFile]::OpenRead($Path)
+    try {
+        $seen = @{}
+        foreach ($entry in $archive.Entries) {
+            $normalized = $entry.FullName.Replace('\', '/')
+            if ([string]::IsNullOrWhiteSpace($normalized) -or
+                $normalized.StartsWith('/') -or
+                $normalized -match '^[A-Za-z]:/' -or
+                $normalized -match '(^|/)\.\.(/|$)') {
+                throw "Unsafe path in server release archive: $normalized"
+            }
+            if ($seen.ContainsKey($normalized)) {
+                throw "Duplicate path in server release archive: $normalized"
+            }
+            $seen[$normalized] = $true
+        }
+    } finally {
+        $archive.Dispose()
+    }
+}
+
 function Get-JsonEndpoint {
     param([string]$Url)
 
@@ -68,6 +93,7 @@ if (-not (Test-Path -LiteralPath $archive -PathType Leaf)) {
 if ([IO.Path]::GetExtension($archive) -ine '.zip') {
     throw "Server release archive must be a ZIP file: $archive"
 }
+Assert-SafeArchive $archive
 
 $runDir = Join-Path $targetDir ('.tarrowyn-server-release-' + [Guid]::NewGuid().ToString('N'))
 $stdoutPath = Join-Path $runDir 'server.stdout.log'
@@ -103,9 +129,19 @@ try {
         [string]$buildInfo.package -ne 'tarrowyn-server') {
         throw 'Packaged server identity is not a Tarrowyn server package.'
     }
+    $target = [string]$buildInfo.target
+    if ($target -notmatch '^[A-Za-z0-9][A-Za-z0-9_.-]*$') {
+        throw "Packaged server target is invalid: $target"
+    }
     $executable = [string]$buildInfo.executable
     if ($executable -notmatch '^tarrowyn-server(?:\.exe)?$') {
         throw "Packaged server executable is invalid: $executable"
+    }
+    if ($target -match 'windows' -and $executable -ne 'tarrowyn-server.exe') {
+        throw 'Windows server targets must package tarrowyn-server.exe.'
+    }
+    if ($target -notmatch 'windows' -and $executable -eq 'tarrowyn-server.exe') {
+        throw 'Non-Windows server targets must package tarrowyn-server without the Windows extension.'
     }
     $binary = Join-Path $runDir $executable
     Assert-ChildPath $runDir $binary
@@ -129,8 +165,17 @@ try {
     $env:DB_DRIVER = 'json'
     Remove-Item Env:DB_HOST, Env:DB_PORT, Env:DB_DATABASE, Env:DB_USERNAME, Env:DB_PASSWORD -ErrorAction SilentlyContinue
 
-    $process = Start-Process -FilePath $binary -WorkingDirectory $runDir -PassThru `
-        -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath -WindowStyle Hidden
+    $startArguments = @{
+        FilePath = $binary
+        WorkingDirectory = $runDir
+        PassThru = $true
+        RedirectStandardOutput = $stdoutPath
+        RedirectStandardError = $stderrPath
+    }
+    if ($env:OS -eq 'Windows_NT' -or $IsWindows) {
+        $startArguments.WindowStyle = 'Hidden'
+    }
+    $process = Start-Process @startArguments
     $baseUrl = "http://127.0.0.1:$port"
     $deadline = [DateTime]::UtcNow.AddSeconds($TimeoutSeconds)
     $ready = $null
