@@ -3942,3 +3942,12 @@ host-targeted `tarrowyn-server` packaging, and the three-archive manifest.
 This was a major Phase 6 milestone, so the full workspace suite was run here;
 future isolated changes continue to use focused checks until the next
 cross-subsystem milestone.
+
+The server packaging follow-up was validated on 2026-08-31 at commit
+`f6049c3`. The package script accepted the installed host target explicitly,
+recorded `x86_64-pc-windows-msvc` in `BUILD_INFO.json`, rejected a path-shaped
+target, and still passed its default current-host package path. PowerShell
+script parsing, ZIP identity inspection, and `git diff --check` passed; the
+clean package, three-archive manifest, preservation, and rollback rehearsal
+against `8fffcbe` also passed. This was isolated release tooling, so no full
+workspace suite was repeated after the previously recorded major milestone.
