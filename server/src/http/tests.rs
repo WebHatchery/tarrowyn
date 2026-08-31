@@ -62,6 +62,15 @@ fn bearer_credentials_stay_within_the_authentication_boundary() {
 }
 
 #[test]
+fn request_urls_stay_within_the_request_target_boundary() {
+    let accepted = "x".repeat(MAX_REQUEST_URL_BYTES);
+    let rejected = "x".repeat(MAX_REQUEST_URL_BYTES + 1);
+
+    assert!(request_url_is_bounded(&accepted));
+    assert!(!request_url_is_bounded(&rejected));
+}
+
+#[test]
 fn history_cursors_reject_malformed_values_instead_of_resetting() {
     assert_eq!(query_cursor("since=12", "since"), Ok(12));
     assert_eq!(query_cursor("q=road", "since"), Ok(0));

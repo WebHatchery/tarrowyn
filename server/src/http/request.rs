@@ -4,6 +4,11 @@ use tiny_http::Request;
 
 pub(crate) const MAX_REQUEST_BODY_BYTES: usize = 64 * 1024;
 pub(crate) const MAX_BEARER_TOKEN_CHARS: usize = 512;
+pub(crate) const MAX_REQUEST_URL_BYTES: usize = 8 * 1024;
+
+pub(super) fn request_url_is_bounded(url: &str) -> bool {
+    url.len() <= MAX_REQUEST_URL_BYTES
+}
 
 pub(super) fn read_json<T: DeserializeOwned>(request: &mut Request) -> Result<T, String> {
     let mut reader = request.as_reader();

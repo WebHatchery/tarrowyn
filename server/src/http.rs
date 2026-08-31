@@ -33,10 +33,13 @@ use pool::{MAX_REQUEST_WORKERS, MIN_REQUEST_WORKERS};
 #[cfg(test)]
 pub(super) use request::MAX_REQUEST_BODY_BYTES;
 use request::{
-    bearer_token, query_cursor, query_value_result, read_json, read_json_or_default, split_url,
+    bearer_token, query_cursor, query_value_result, read_json, read_json_or_default,
+    request_url_is_bounded, split_url,
 };
 #[cfg(test)]
-use request::{parse_bearer_header, read_bounded_body, MAX_BEARER_TOKEN_CHARS};
+use request::{
+    parse_bearer_header, read_bounded_body, MAX_BEARER_TOKEN_CHARS, MAX_REQUEST_URL_BYTES,
+};
 
 struct GuestSessionRateLimiter {
     windows: HashMap<IpAddr, GuestSessionRateWindow>,
@@ -223,6 +226,15 @@ fn handle_request(
 ) {
     if request.method() == &Method::Options {
         let _ = request.respond(with_cors(Response::empty(StatusCode(204))));
+        return;
+    }
+    if !request_url_is_bounded(request.url()) {
+        let _ = request.respond(error_response(
+            414,
+            "uri_too_long",
+            "The request URL exceeds the 8 KiB server boundary.".to_owned(),
+            repository.health().meta,
+        ));
         return;
     }
     let (path, query) = split_url(request.url());
