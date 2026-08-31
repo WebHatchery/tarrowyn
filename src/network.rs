@@ -437,8 +437,16 @@ impl OnlineClient {
                     self.pending_state = Some(self.api.get("/v1/state"));
                     return;
                 }
-                self.projection
-                    .apply_state(response.data, response.meta.server_tick);
+                if !self
+                    .projection
+                    .apply_state(response.data, response.meta.server_tick)
+                {
+                    self.connection_failed(
+                        "The shared road sent an invalid world snapshot.".to_owned(),
+                        notices,
+                    );
+                    return;
+                }
                 self.had_world = true;
                 self.state_reload_pending = false;
                 self.state = maintenance::state_after_snapshot(self.readiness_degraded);

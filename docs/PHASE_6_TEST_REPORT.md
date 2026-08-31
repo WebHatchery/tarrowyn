@@ -4496,3 +4496,14 @@ Rust file-size, and diff checks passed. The project publisher also passed
 Windows/WebGL release builds, packaging, Preview deployment, and catalog
 synchronization. No full workspace suite was repeated for this isolated input
 boundary, and no new external or deferred work was opened.
+
+The online snapshot allocation boundary was validated on 2026-08-31. State
+projection now checks that the declared world dimensions have a safe,
+non-empty tile count matching the payload before allocating a new grid; an
+invalid response returns through the existing degraded/reconnect path. The
+focused oversized-snapshot regression passed 1 test with 252 filtered;
+client-package formatting, clippy, Rust file-size, and diff checks passed. The
+project publisher also passed Windows/WebGL release builds, packaging, Preview
+deployment, and catalog synchronization. No full workspace suite was repeated
+for this isolated response-validation boundary, and no new external or
+deferred work was opened.

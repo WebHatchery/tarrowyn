@@ -52,12 +52,25 @@ impl WorldProjection {
         self.time_of_day().is_night()
     }
 
-    fn apply_snapshot(&mut self, snapshot: WorldSnapshot, own_account: &str, server_tick: u64) {
-        let mut tiles = FlatGrid::new(
-            snapshot.width as usize,
-            snapshot.height as usize,
-            TileKind::Meadow,
-        );
+    fn apply_snapshot(
+        &mut self,
+        snapshot: WorldSnapshot,
+        own_account: &str,
+        server_tick: u64,
+    ) -> bool {
+        let Some(width) = usize::try_from(snapshot.width).ok() else {
+            return false;
+        };
+        let Some(height) = usize::try_from(snapshot.height).ok() else {
+            return false;
+        };
+        let Some(tile_count) = width.checked_mul(height) else {
+            return false;
+        };
+        if width == 0 || height == 0 || tile_count != snapshot.tiles.len() {
+            return false;
+        }
+        let mut tiles = FlatGrid::new(width, height, TileKind::Meadow);
         for tile in snapshot.tiles {
             let position = TilePos::new(tile.position.x, tile.position.y);
             if tiles.is_valid(position) {
@@ -89,15 +102,19 @@ impl WorldProjection {
         {
             self.set_authoritative_player_position(player.position);
         }
+        true
     }
 
-    pub(super) fn apply_state(&mut self, snapshot: StateSnapshot, server_tick: u64) {
+    pub(super) fn apply_state(&mut self, snapshot: StateSnapshot, server_tick: u64) -> bool {
         let position = snapshot.player.position;
-        self.apply_snapshot(snapshot.world, &snapshot.player.account_id, server_tick);
+        if !self.apply_snapshot(snapshot.world, &snapshot.player.account_id, server_tick) {
+            return false;
+        }
         self.player = Some(snapshot.player);
         self.set_authoritative_player_position(TilePos::new(position.x, position.y));
         self.feed = snapshot.feed;
         self.chat = self.feed.chat.clone();
+        true
     }
 
     pub(super) fn apply_events(

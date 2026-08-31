@@ -179,3 +179,64 @@ fn older_state_snapshot_is_reloaded_instead_of_opening_the_world() {
         StateSnapshotDisposition::Apply
     );
 }
+
+#[test]
+fn oversized_state_snapshot_is_rejected_before_grid_allocation() {
+    let mut projection = WorldProjection::new(&config());
+    let snapshot = StateSnapshot {
+        world: WorldSnapshot {
+            width: u32::MAX,
+            height: u32::MAX,
+            tiles: Vec::new(),
+            clock: WorldClock {
+                day: 1,
+                seconds: 0.0,
+                day_length_seconds: 180.0,
+            },
+            players: Vec::new(),
+            plots: Vec::new(),
+            animals: Vec::new(),
+            tavern_position: Position { x: 8, y: 5 },
+            cursor: 1,
+            wilderness: None,
+            outpost: None,
+            claim: None,
+            expedition: None,
+            expedition_requirements: ExpeditionRequirements::default(),
+        },
+        player: PlayerProjection {
+            account_id: "account".to_owned(),
+            character_id: "character".to_owned(),
+            display_name: "Traveller".to_owned(),
+            position: Position { x: 8, y: 6 },
+            gold: 12,
+            field_tool_condition: 3,
+            field_weather: tarrowyn_protocol::FieldWeather::Clear,
+            field_pest_pressure: 0,
+            animal_condition: 10,
+            animal_max_condition: 10,
+            skill: 1,
+            reputation: 0,
+            adventurer_rank: tarrowyn_protocol::AdventurerRank::Unproven,
+            adventurer_credentials: Vec::new(),
+            inventory: tarrowyn_protocol::Inventory::default(),
+            weapon: tarrowyn_protocol::WeaponKind::IronSword,
+            knocked_out: false,
+            injuries: 0,
+            recovery_cost: 0,
+        },
+        feed: TavernFeedResponse {
+            notices: Vec::new(),
+            rumours: Vec::new(),
+            chat: Vec::new(),
+            cursor: 0,
+        },
+        cursor: 1,
+    };
+
+    assert!(!projection.apply_state(snapshot, 1));
+    assert_eq!(projection.world.tiles.width, config().world_width);
+    assert_eq!(projection.world.tiles.height, config().world_height);
+    assert_eq!(projection.cursor, 0);
+    assert!(projection.player.is_none());
+}
