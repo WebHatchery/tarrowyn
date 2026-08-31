@@ -95,6 +95,9 @@ function Assert-SkillRecords([object[]]$records) {
             if ($skillIds -notcontains $prerequisite) {
                 throw "Skill $skillId names an unknown prerequisite: $prerequisite."
             }
+            if ([int]$skills[$prerequisite].depth -ge $depth) {
+                throw "Skill $skillId must build on lower-depth prerequisites."
+            }
         }
 
         $practiceKey = [string]$skill.practice_key
