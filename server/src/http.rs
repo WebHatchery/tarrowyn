@@ -11,7 +11,7 @@ use tarrowyn_protocol::{
     AuthRefreshRequest, AuthRevokeRequest, ChatRequest, ClaimLifecycleRequest, ClaimRequest,
     CombatRequest, ContractRequest, ExpeditionRequest, FarmingRequest, GovernanceAction,
     GovernanceRequest, KnowledgeAction, KnowledgeRequest, LocalCombatRequest, MarketOrderRequest,
-    ModerationReportRequest, MovementIntent, ProfessionRequest, RecoveryRequest,
+    ModerationReportRequest, MovementIntent, OpsHealthResponse, ProfessionRequest, RecoveryRequest,
     RegionalEventRequest, RouteRequest, SkillRequest, SupportRepairRequest, TradeRequest,
     TravelRequest, PROTOCOL_VERSION,
 };
@@ -22,6 +22,8 @@ const GUEST_SESSION_RATE_WINDOW: Duration = Duration::from_secs(60);
 const GUEST_SESSION_BURST_LIMIT: u16 = 32;
 const MAX_TRACKED_GUEST_SOURCES: usize = 4096;
 const GUEST_SESSION_RETRY_AFTER_SECONDS: &str = "60";
+const DEFAULT_MAINTENANCE_MESSAGE: &str =
+    "The settlement is in maintenance; try again once service recovers.";
 
 mod pool;
 mod request;
@@ -240,6 +242,12 @@ fn handle_request(
     let (path, query) = split_url(request.url());
     let path = path.to_owned();
     let query = query.to_owned();
+    if readiness_required_for_path(&path) {
+        if let Some(response) = readiness_response(&repository) {
+            let _ = request.respond(response);
+            return;
+        }
+    }
     let result = match (request.method(), path.as_str()) {
         (Method::Get, "/health") => json_response(StatusCode(200), repository.health()),
         (Method::Get, "/v1/ops/health") => json_response(StatusCode(200), repository.ops_health()),
@@ -636,6 +644,32 @@ where
             },
         ),
     }
+}
+
+fn readiness_required_for_path(path: &str) -> bool {
+    path.starts_with("/v1/")
+        && !matches!(
+            path,
+            "/v1/ops/health" | "/v1/ops/metrics" | "/v1/support/account" | "/v1/support/repair"
+        )
+}
+
+fn readiness_response(repository: &WorldRepository) -> Option<JsonResponse> {
+    readiness_error_response(repository.ops_health())
+}
+
+fn readiness_error_response(health: ApiResponse<OpsHealthResponse>) -> Option<JsonResponse> {
+    if health.data.ready {
+        return None;
+    }
+    let message = health
+        .data
+        .maintenance_message
+        .as_deref()
+        .filter(|message| !message.trim().is_empty())
+        .unwrap_or(DEFAULT_MAINTENANCE_MESSAGE)
+        .to_owned();
+    Some(error_response(503, "maintenance", message, health.meta))
 }
 
 fn json_response<T: Serialize>(status: StatusCode, value: T) -> JsonResponse {

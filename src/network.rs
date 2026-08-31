@@ -24,7 +24,8 @@ pub(crate) struct MutationContext {
 }
 
 pub(super) fn is_transient_transport_error(error: &str) -> bool {
-    error.contains("persistence_unavailable")
+    error.contains("[maintenance]")
+        || error.contains("persistence_unavailable")
         || error.contains(" timed out after ")
         || (error.contains("HTTP request '") && error.contains("' failed:"))
 }

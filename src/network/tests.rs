@@ -34,9 +34,12 @@ fn config() -> GameConfig {
 }
 
 #[test]
-fn persistence_unavailable_is_safe_to_retry_with_the_same_request() {
+fn retryable_service_failures_are_safe_to_retry_with_the_same_request() {
     assert!(super::is_transient_transport_error(
         "HTTP API error in 'POST /v1/farming/actions' [persistence_unavailable]: The settlement could not be durably saved."
+    ));
+    assert!(super::is_transient_transport_error(
+        "HTTP API error in 'GET /v1/state' [maintenance]: The settlement is in maintenance; try again once service recovers."
     ));
 }
 

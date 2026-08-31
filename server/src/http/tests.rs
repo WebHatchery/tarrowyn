@@ -1,6 +1,9 @@
 use super::*;
+use crate::config::ServerConfig;
+use crate::repository::WorldRepository;
 use std::io::Cursor;
 use std::time::{Duration, Instant};
+use tarrowyn_protocol::{ApiMeta, ApiResponse, OpsHealthResponse};
 
 #[test]
 fn bounded_body_accepts_the_configured_limit() {
@@ -68,6 +71,51 @@ fn request_urls_stay_within_the_request_target_boundary() {
 
     assert!(request_url_is_bounded(&accepted));
     assert!(!request_url_is_bounded(&rejected));
+}
+
+#[test]
+fn readiness_gate_preserves_recovery_routes_but_blocks_player_routes() {
+    assert!(readiness_required_for_path("/v1/session/guest"));
+    assert!(readiness_required_for_path("/v1/state"));
+    assert!(!readiness_required_for_path("/health"));
+    assert!(!readiness_required_for_path("/v1/ops/health"));
+    assert!(!readiness_required_for_path("/v1/ops/metrics"));
+    assert!(!readiness_required_for_path("/v1/support/account"));
+    assert!(!readiness_required_for_path("/v1/support/repair"));
+}
+
+#[test]
+fn degraded_readiness_returns_maintenance_without_exposing_integrity_details() {
+    let health = ApiResponse {
+        meta: ApiMeta::at(9),
+        data: OpsHealthResponse {
+            status: "degraded".to_owned(),
+            ready: false,
+            storage_version: 20,
+            protocol_version: "6".to_owned(),
+            last_backup_tick: None,
+            last_backup_path: None,
+            integrity_ok: false,
+            integrity_failures: vec!["sessions".to_owned()],
+            persistence_error: None,
+            backup_error: None,
+            maintenance_message: Some("The gate is closed for the night.".to_owned()),
+        },
+    };
+
+    let response = readiness_error_response(health).expect("degraded repository is gated");
+    assert_eq!(response.status_code(), StatusCode(503));
+    let body = String::from_utf8(response.into_reader().into_inner()).expect("UTF-8 response");
+    assert!(body.contains("\"code\":\"maintenance\""));
+    assert!(body.contains("The gate is closed for the night."));
+    assert!(!body.contains("sessions"));
+}
+
+#[test]
+fn healthy_readiness_does_not_add_a_maintenance_response() {
+    let repository = WorldRepository::new(ServerConfig::default());
+
+    assert!(readiness_response(&repository).is_none());
 }
 
 #[test]
