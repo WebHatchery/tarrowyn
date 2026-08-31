@@ -25,7 +25,9 @@ const GUEST_SESSION_RETRY_AFTER_SECONDS: &str = "60";
 
 mod pool;
 mod request;
-use pool::{request_worker_count, RequestPoolTelemetry, REQUEST_QUEUE_CAPACITY};
+#[cfg(test)]
+use crate::config::{MAX_HTTP_REQUEST_QUEUE_CAPACITY, MIN_HTTP_REQUEST_QUEUE_CAPACITY};
+use pool::{request_queue_capacity, request_worker_count, RequestPoolTelemetry};
 #[cfg(test)]
 use pool::{MAX_REQUEST_WORKERS, MIN_REQUEST_WORKERS};
 #[cfg(test)]
@@ -136,8 +138,9 @@ pub fn serve(config: crate::config::ServerConfig) -> Result<(), String> {
         PROTOCOL_VERSION,
         config.tick_interval.as_millis()
     );
-    let request_worker_count = request_worker_count();
-    let (request_sender, request_receiver) = mpsc::sync_channel(REQUEST_QUEUE_CAPACITY);
+    let request_worker_count = request_worker_count(config.http_request_workers);
+    let request_queue_capacity = request_queue_capacity(config.http_request_queue_capacity);
+    let (request_sender, request_receiver) = mpsc::sync_channel(request_queue_capacity);
     let request_receiver = Arc::new(Mutex::new(request_receiver));
     let request_pool_telemetry = Arc::new(RequestPoolTelemetry::default());
     let guest_session_limiter = Arc::new(Mutex::new(GuestSessionRateLimiter::new(
@@ -165,6 +168,7 @@ pub fn serve(config: crate::config::ServerConfig) -> Result<(), String> {
                 &guest_session_limiter,
                 &request_pool_telemetry,
                 request_worker_count,
+                request_queue_capacity,
             );
             request_pool_telemetry.record_request_finish();
         }));
@@ -215,6 +219,7 @@ fn handle_request(
     guest_session_limiter: &Mutex<GuestSessionRateLimiter>,
     request_pool_telemetry: &RequestPoolTelemetry,
     request_worker_count: usize,
+    request_queue_capacity: usize,
 ) {
     if request.method() == &Method::Options {
         let _ = request.respond(with_cors(Response::empty(StatusCode(204))));
@@ -291,7 +296,7 @@ fn handle_request(
             let mut response = repository.ops_metrics(token)?;
             let telemetry = request_pool_telemetry.snapshot();
             response.data.http_request_workers = request_worker_count as u32;
-            response.data.http_request_queue_capacity = REQUEST_QUEUE_CAPACITY as u32;
+            response.data.http_request_queue_capacity = request_queue_capacity as u32;
             response.data.http_active_requests = telemetry.active_requests;
             response.data.http_queue_depth = telemetry.queue_depth;
             response.data.http_queue_peak = telemetry.queue_peak;

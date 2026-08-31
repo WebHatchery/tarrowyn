@@ -31,3 +31,19 @@ fn oversized_unsigned_environment_values_fall_back_instead_of_wrapping() {
         assert_eq!(bounded_usize(u64::MAX, 17), 17);
     }
 }
+
+#[test]
+fn http_pool_settings_preserve_auto_mode_and_bounded_limits() {
+    assert_eq!(bounded_http_worker_setting(0, 0), 0);
+    assert_eq!(bounded_http_worker_setting(1, 0), MIN_HTTP_REQUEST_WORKERS);
+    assert_eq!(bounded_http_worker_setting(33, 0), MAX_HTTP_REQUEST_WORKERS);
+
+    assert_eq!(
+        bounded_http_queue_capacity(0, DEFAULT_HTTP_REQUEST_QUEUE_CAPACITY),
+        MIN_HTTP_REQUEST_QUEUE_CAPACITY
+    );
+    assert_eq!(
+        bounded_http_queue_capacity(99_999, DEFAULT_HTTP_REQUEST_QUEUE_CAPACITY),
+        MAX_HTTP_REQUEST_QUEUE_CAPACITY
+    );
+}

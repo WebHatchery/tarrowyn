@@ -3735,3 +3735,12 @@ verified shared farming, a direct supply exchange, tavern coordination, a
 repeatable contract, and regional travel in one run. This strengthens the
 automated prototype evidence without claiming the human multi-session
 playthrough that remains open in the follow-up register.
+
+The HTTP pool configuration slice added bounded deployment controls: automatic
+host sizing or an explicit 4–32 worker count through
+`TARROWYN_HTTP_REQUEST_WORKERS`, plus a 16–4096 queue capacity through
+`TARROWYN_HTTP_QUEUE_CAPACITY` with a default of 128. The focused configuration
+and pool-boundary regressions passed, as did the 24-client smoke harness using
+automatic workers and the default queue. No full workspace gate was repeated
+because this was a scale-configuration change inside the already gated
+request-pool milestone.

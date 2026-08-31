@@ -114,6 +114,11 @@ tavern, the adventurer completes the repeatable contract, and the wayfarer
 completes a regional journey. This remains automated evidence; record a human
 multi-session playthrough separately before treating the social promise as
 proven.
+Before a target capacity check, set `TARROWYN_HTTP_REQUEST_WORKERS` to `0` for
+automatic host sizing or to a measured value from 4 through 32, and set
+`TARROWYN_HTTP_QUEUE_CAPACITY` to a measured value from 16 through 4096. The
+effective values and queue pressure counters are exposed through
+`/v1/ops/metrics`.
 
 ## Deploy, rollback, and maintenance
 

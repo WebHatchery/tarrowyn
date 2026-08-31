@@ -112,6 +112,10 @@ restore database before starting the server, so its database account needs
 The HTTP worker keeps the guest-session burst limit at 32 attempts per source
 by default; set `TARROWYN_GUEST_SESSION_BURST_LIMIT` only when the deployment's
 known client bootstrap rate requires a different bounded value.
+The HTTP pool selects host parallelism automatically and clamps it to 4–32
+workers; deployments may set `TARROWYN_HTTP_REQUEST_WORKERS` to `0` for that
+automatic mode or a measured value in the same range. Queue capacity defaults
+to 128 and is clamped to 16–4096 through `TARROWYN_HTTP_QUEUE_CAPACITY`.
 
 The shared `protocol/` crate is versioned at protocol `6`. Every successful or
 error response carries protocol version and server tick metadata; cursor-based

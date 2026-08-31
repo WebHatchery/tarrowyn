@@ -1,9 +1,8 @@
 use std::sync::atomic::{AtomicU32, AtomicU64, Ordering};
 use std::thread;
 
-pub(super) const MIN_REQUEST_WORKERS: usize = 4;
-pub(super) const MAX_REQUEST_WORKERS: usize = 32;
-pub(super) const REQUEST_QUEUE_CAPACITY: usize = 128;
+pub(super) const MIN_REQUEST_WORKERS: usize = crate::config::MIN_HTTP_REQUEST_WORKERS;
+pub(super) const MAX_REQUEST_WORKERS: usize = crate::config::MAX_HTTP_REQUEST_WORKERS;
 
 #[derive(Clone, Copy)]
 pub(super) struct RequestPoolTelemetrySnapshot {
@@ -64,9 +63,20 @@ impl RequestPoolTelemetry {
     }
 }
 
-pub(super) fn request_worker_count() -> usize {
-    thread::available_parallelism()
+pub(super) fn request_worker_count(configured: usize) -> usize {
+    let detected = thread::available_parallelism()
         .map(|parallelism| parallelism.get())
-        .unwrap_or(8)
-        .clamp(MIN_REQUEST_WORKERS, MAX_REQUEST_WORKERS)
+        .unwrap_or(8);
+    if configured == 0 {
+        detected.clamp(MIN_REQUEST_WORKERS, MAX_REQUEST_WORKERS)
+    } else {
+        configured.clamp(MIN_REQUEST_WORKERS, MAX_REQUEST_WORKERS)
+    }
+}
+
+pub(super) fn request_queue_capacity(configured: usize) -> usize {
+    configured.clamp(
+        crate::config::MIN_HTTP_REQUEST_QUEUE_CAPACITY,
+        crate::config::MAX_HTTP_REQUEST_QUEUE_CAPACITY,
+    )
 }

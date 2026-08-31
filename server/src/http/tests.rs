@@ -124,7 +124,15 @@ fn rate_limited_guest_sessions_advertise_the_retry_window() {
 
 #[test]
 fn request_worker_count_stays_within_the_bounded_pool() {
-    assert!((MIN_REQUEST_WORKERS..=MAX_REQUEST_WORKERS).contains(&request_worker_count()));
+    assert!((MIN_REQUEST_WORKERS..=MAX_REQUEST_WORKERS).contains(&request_worker_count(0)));
+    assert_eq!(request_worker_count(1), MIN_REQUEST_WORKERS);
+    assert_eq!(request_worker_count(usize::MAX), MAX_REQUEST_WORKERS);
+    assert_eq!(request_queue_capacity(0), MIN_HTTP_REQUEST_QUEUE_CAPACITY);
+    assert_eq!(request_queue_capacity(128), 128);
+    assert_eq!(
+        request_queue_capacity(usize::MAX),
+        MAX_HTTP_REQUEST_QUEUE_CAPACITY
+    );
 }
 
 #[test]

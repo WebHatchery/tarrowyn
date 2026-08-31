@@ -3,9 +3,18 @@ use std::time::Duration;
 #[cfg(test)]
 mod tests;
 
+pub(crate) const MIN_HTTP_REQUEST_WORKERS: usize = 4;
+pub(crate) const MAX_HTTP_REQUEST_WORKERS: usize = 32;
+pub(crate) const DEFAULT_HTTP_REQUEST_QUEUE_CAPACITY: usize = 128;
+pub(crate) const MIN_HTTP_REQUEST_QUEUE_CAPACITY: usize = 16;
+pub(crate) const MAX_HTTP_REQUEST_QUEUE_CAPACITY: usize = 4096;
+
 #[derive(Debug, Clone)]
 pub struct ServerConfig {
     pub bind_addr: String,
+    /// Zero selects the host's bounded automatic worker count.
+    pub http_request_workers: usize,
+    pub http_request_queue_capacity: usize,
     pub db_driver: String,
     pub db_host: String,
     pub db_port: u16,
@@ -50,6 +59,8 @@ impl Default for ServerConfig {
         let content = crate::content::game_config_defaults();
         Self {
             bind_addr: "127.0.0.1:8787".to_owned(),
+            http_request_workers: 0,
+            http_request_queue_capacity: DEFAULT_HTTP_REQUEST_QUEUE_CAPACITY,
             db_driver: "json".to_owned(),
             db_host: "localhost".to_owned(),
             db_port: 3306,
@@ -103,6 +114,20 @@ impl ServerConfig {
         );
         Self {
             bind_addr: env_string("TARROWYN_SERVER_ADDR", defaults.bind_addr),
+            http_request_workers: bounded_http_worker_setting(
+                env_u64(
+                    "TARROWYN_HTTP_REQUEST_WORKERS",
+                    defaults.http_request_workers as u64,
+                ),
+                defaults.http_request_workers,
+            ),
+            http_request_queue_capacity: bounded_http_queue_capacity(
+                env_u64(
+                    "TARROWYN_HTTP_QUEUE_CAPACITY",
+                    defaults.http_request_queue_capacity as u64,
+                ),
+                defaults.http_request_queue_capacity,
+            ),
             db_driver: env_string("DB_DRIVER", defaults.db_driver),
             db_host: env_string("DB_HOST", defaults.db_host),
             db_port: env_u16("DB_PORT", defaults.db_port),
@@ -260,6 +285,22 @@ fn bounded_u16(value: u64, default: u16) -> u16 {
 
 fn bounded_usize(value: u64, default: usize) -> usize {
     usize::try_from(value).unwrap_or(default)
+}
+
+fn bounded_http_worker_setting(value: u64, default: usize) -> usize {
+    let value = bounded_usize(value, default);
+    if value == 0 {
+        0
+    } else {
+        value.clamp(MIN_HTTP_REQUEST_WORKERS, MAX_HTTP_REQUEST_WORKERS)
+    }
+}
+
+fn bounded_http_queue_capacity(value: u64, default: usize) -> usize {
+    bounded_usize(value, default).clamp(
+        MIN_HTTP_REQUEST_QUEUE_CAPACITY,
+        MAX_HTTP_REQUEST_QUEUE_CAPACITY,
+    )
 }
 
 fn env_f32(name: &str, default: f32) -> f32 {

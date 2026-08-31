@@ -253,7 +253,10 @@ separate fixture state path and must not share production data.
 Guest-session admission is limited to 32 attempts per source by default and is
 configurable through `TARROWYN_GUEST_SESSION_BURST_LIMIT`; capacity probes may
 raise that bound explicitly for their controlled client bootstrap, but the
-setting does not change the one-worker ownership boundary.
+setting does not change the one-worker ownership boundary. HTTP worker count is
+automatic when `TARROWYN_HTTP_REQUEST_WORKERS=0` and remains clamped to 4–32
+when overridden; `TARROWYN_HTTP_QUEUE_CAPACITY` defaults to 128 and remains
+clamped to 16–4096. These deployment controls are visible in operator metrics.
 
 Authentication also fails closed when a restored session points at a missing
 character record: the dangling session is evicted and the request receives the
