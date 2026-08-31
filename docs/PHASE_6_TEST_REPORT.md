@@ -3993,10 +3993,12 @@ suite was repeated for this isolated verifier hardening.
 
 The packaged-server contract tightening was validated on 2026-08-31 at commit
 `8b01b59`. The verifier now requires the exact four-file server package and
-confirms the Tarrowyn service plus protocol-6 identity from both health
+adds Tarrowyn service and protocol-6 identity assertions to both health
 responses. The current packaged ZIP passed launch/readiness and cleanup, while
-PowerShell parsing and `git diff --check` passed. This was an isolated verifier
-change, so the previously recorded full milestone suite was not repeated.
+PowerShell parsing and `git diff --check` passed. The follow-up entry below
+records the later correction that made every assertion enforceable through the
+readiness deadline. This was an isolated verifier change, so the previously
+recorded full milestone suite was not repeated.
 
 The packaged-server contract enforcement correction was validated on 2026-08-31
 at commit `45f109d`. The verifier now checks the actual operations-health schema
