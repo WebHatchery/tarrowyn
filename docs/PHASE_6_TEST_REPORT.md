@@ -3512,6 +3512,15 @@ with server-package clippy with warnings denied, package formatting,
 gate is repeated because this is test-source organization maintenance, and no
 new external or deferred work is opened.
 
+The event-manifest validation regressions now live in
+`content/tests/events.rs`, reducing the content test root from 575 to 521
+lines while preserving implemented-effect, nonblank-system, and affected-
+location contracts. The focused event-content filter passes (3 tests), along
+with server-package clippy with warnings denied, package formatting,
+`git diff --check`, and the Rust file-size scan. No publisher or full workspace
+gate is repeated because this is test-source organization maintenance, and no
+new external or deferred work is opened.
+
 The Phase 6 operator account-view integration regression now lives in
 `repository/phase6/tests/integration/support_account.rs`, reducing the
 integration test root from 633 to 553 lines while preserving operator-only,
