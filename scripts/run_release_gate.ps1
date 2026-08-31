@@ -18,7 +18,9 @@ function Invoke-NativeChecked {
 try {
     & "$PSScriptRoot\validate_content.ps1"
     if (-not $?) { throw "Content validation failed." }
-    Invoke-NativeChecked "cargo fmt" { cargo fmt --all -- --check }
+    Invoke-NativeChecked "client cargo fmt" { cargo fmt --package years_of_tarrowyn -- --check }
+    Invoke-NativeChecked "protocol cargo fmt" { cargo fmt --manifest-path protocol\Cargo.toml -- --check }
+    Invoke-NativeChecked "server cargo fmt" { cargo fmt --manifest-path server\Cargo.toml -- --check }
     Invoke-NativeChecked "cargo test" { cargo test --workspace }
     Invoke-NativeChecked "cargo clippy" { cargo clippy --workspace --all-targets --all-features -- -D warnings }
     & "$projectRoot\publish.ps1"
