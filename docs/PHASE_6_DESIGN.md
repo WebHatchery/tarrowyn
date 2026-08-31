@@ -219,11 +219,13 @@ JSON, while server startup parses typed action, crop, item, event, settlement,
 region, household, infrastructure, NPC-household, recipe, calendar, and game-
 config records. Startup rejects duplicate IDs, incomplete records, unknown
 route or settlement locations, missing launch IDs, incompatible launch route
-and settlement links, invalid event stages, and a day-length mismatch. The
-validator protects future content additions; the authenticated skills read
-also rechecks stored prerequisite practice and qualifying history, persisting a
-newly eligible discovery after a content release without requiring repeated
-play.
+and settlement links, invalid event stages, and a day-length mismatch. Skill
+content also rejects prerequisite cycles and requires every merger prerequisite
+to have a lower declared depth, preserving the layered discovery model as new
+content is added. The validator protects future content additions; the
+authenticated skills read also rechecks stored prerequisite practice and
+qualifying history, persisting a newly eligible discovery after a content
+release without requiring repeated play.
 
 The crop manifest used by server planting follows that validated order.
 Regional event seeding consumes the validated event narrative and affected

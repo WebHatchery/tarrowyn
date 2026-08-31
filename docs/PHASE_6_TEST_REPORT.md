@@ -4024,3 +4024,10 @@ deployment recheck reported HTTP 404 for both routes. PowerShell parsing and
 `git diff --check` passed. This was focused release-tooling maintenance, so no
 runtime or full workspace suite was repeated; the gateway deployment gap
 remains documented in the follow-up register.
+
+The skill content layering guard was validated on 2026-08-31 at commit
+`a73824b`. Server startup validation now rejects a merger whose prerequisite is
+not at a lower declared depth, while preserving the existing prerequisite-cycle
+diagnostic. The focused server skills filter passed all 15 matching tests, and
+the affected server package formatting and clippy checks passed. No full
+workspace suite was repeated for this bounded content-validation change.
