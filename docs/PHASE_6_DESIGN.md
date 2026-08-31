@@ -40,8 +40,9 @@ identity-keyed replay payloads, so private command responses do not survive
 the private-state boundary.
 
 All mutation endpoints validate bounded request IDs and 64 KiB JSON request
-bodies, use server authorization, and retain idempotent results where retries
-can happen. Durable identity and player-provided labels such as account-deletion
+bodies, while the HTTP worker rejects request URLs above 8 KiB before cloning
+their path and query. Endpoints use server authorization and retain idempotent
+results where retries can happen. Durable identity and player-provided labels such as account-deletion
 account IDs, linked display names, expedition outpost names, and public proposal
 targets are trimmed,
 bounded, and rejected when they contain control characters; chat text and

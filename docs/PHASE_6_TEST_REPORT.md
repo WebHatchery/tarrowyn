@@ -4083,3 +4083,10 @@ and rejects oversized values before lookup. The focused
 `bearer_credentials_stay_within` filter passed, followed by the affected
 server formatter, clippy, and diff checks. No full workspace suite was
 repeated for this isolated HTTP input-bound correction.
+
+The HTTP request-target boundary was validated on 2026-08-31 at commit
+`cc24cb5`. Request URLs are rejected above 8 KiB before path/query cloning and
+return a structured 414 response. The focused HTTP module suite passed all 19
+tests, including the exact URL boundary, followed by the affected server
+formatter, clippy, Rust file-size, and diff checks. No full workspace suite was
+repeated for this isolated request-bound correction.
