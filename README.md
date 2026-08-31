@@ -235,4 +235,7 @@ exists, rehearse the isolated patch, rollback, and patch-restoration sequence
 with `scripts/rehearse_release_rollback.ps1 -PreservedDir <directory>`. These
 records contain archive hashes and source identity only; the ignored server
 state and backup files are never release inputs. The server package is still
-host-targeted until the production OS or container contract is selected.
+host-targeted by default until the production OS or container contract is
+selected. An installed Rust target can be exercised explicitly with
+`scripts/package_server_release.ps1 -Target <rust-target>`; this does not by
+itself select or approve a production platform.

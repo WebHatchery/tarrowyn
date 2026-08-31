@@ -1,14 +1,17 @@
 <#
 .SYNOPSIS
-    Builds and packages the authoritative server for the current Rust host.
+    Builds and packages the authoritative server for a Rust target.
 
 .DESCRIPTION
     Produces a target-specific internal server ZIP containing the release
-    binary, build identity, migration record, and safe deployment notes. It
-    never copies credentials, live state, or backup files into the package.
+    binary, build identity, migration record, and safe deployment notes. The
+    current Rust host is the default target; an explicit installed target can
+    be supplied for a deployment preflight. It never copies credentials, live
+    state, or backup files into the package.
 #>
 param(
     [string]$OutputPath = 'dist\tarrowyn_server.zip',
+    [string]$Target,
     [switch]$AllowDirty
 )
 
@@ -56,13 +59,21 @@ if ($isDirty -and -not $AllowDirty) {
     throw 'The working tree is dirty. Commit the server candidate or pass -AllowDirty for internal testing.'
 }
 
-$target = $null
+$hostTarget = $null
 foreach ($line in (& rustc -vV)) {
     if ($line -match '^host:\s+(.+)$') {
-        $target = $Matches[1].Trim()
+        $hostTarget = $Matches[1].Trim()
         break
     }
 }
+$targetWasExplicit = $PSBoundParameters.ContainsKey('Target')
+if ($targetWasExplicit) {
+    $Target = $Target.Trim()
+    if ([string]::IsNullOrWhiteSpace($Target) -or $Target -notmatch '^[A-Za-z0-9][A-Za-z0-9_.-]*$') {
+        throw "Target must be a Rust target triple without path separators: $Target"
+    }
+}
+$target = if ($targetWasExplicit) { $Target } else { $hostTarget }
 if ([string]::IsNullOrWhiteSpace($target)) { throw 'Could not resolve the Rust host target.' }
 $binaryName = if ($target -match 'windows') { 'tarrowyn-server.exe' } else { 'tarrowyn-server' }
 
@@ -75,13 +86,20 @@ try {
     $version = [string]$packages[0].version
     $targetDir = [IO.Path]::GetFullPath([string]$metadata.target_directory)
 
-    & cargo build -p tarrowyn-server --release
+    $buildArguments = @('build', '-p', 'tarrowyn-server', '--release')
+    if ($targetWasExplicit) { $buildArguments += @('--target', $target) }
+    & cargo @buildArguments
     if ($LASTEXITCODE -ne 0) { throw 'The authoritative server release build failed.' }
 } finally {
     Pop-Location
 }
 
-$binary = Join-Path $targetDir (Join-Path 'release' $binaryName)
+$releaseDir = if ($targetWasExplicit) {
+    Join-Path $targetDir (Join-Path $target 'release')
+} else {
+    Join-Path $targetDir 'release'
+}
+$binary = Join-Path $releaseDir $binaryName
 $migration = Join-Path $projectDir 'server\migrations\0001_initial_world.sql'
 $deploymentNotes = Join-Path $projectDir 'docs\SERVER_DEPLOYMENT.md'
 foreach ($required in @($binary, $migration, $deploymentNotes)) {

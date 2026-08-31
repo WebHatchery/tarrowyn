@@ -1,18 +1,21 @@
 # Tarrowyn authoritative server package
 
-This directory is packaged with the host-targeted `tarrowyn-server` release
+This directory is packaged with the target-specific `tarrowyn-server` release
 binary and its build identity. The package is an internal deployment artifact,
 not a production approval. It contains no database credentials, live state, or
 backup data.
 
 ## Package contract
 
-The server package is built for the Rust host target reported by `rustc -vV`.
-Do not copy it to a different operating-system or architecture target. Choose
-the production server target and process supervisor before treating this
-package as a deployment candidate. The binary embeds the validated content
-catalogues and the MySQL migration; `server/migrations/0001_initial_world.sql`
-is included as an operator-visible schema record.
+The server package defaults to the Rust host target reported by `rustc -vV`.
+For an installed deployment target, pass `-Target <rust-target>` to
+`scripts/package_server_release.ps1`; the package records that exact target in
+`BUILD_INFO.json`. Do not copy a package to a different operating-system or
+architecture target. Choose the production server target and process
+supervisor before treating this package as a deployment candidate. The binary
+embeds the validated content catalogues and the MySQL migration;
+`server/migrations/0001_initial_world.sql` is included as an operator-visible
+schema record.
 
 Inject environment values through the target secret manager or process
 supervisor. At minimum, a shared MySQL world needs `DB_DRIVER=mysql`,
