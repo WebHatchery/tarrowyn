@@ -4389,5 +4389,6 @@ passed 3 tests: `restored_state_anonymises_orphaned_governance_chronicle_names`,
 `restored_state_anonymises_orphaned_audit_targets`. Server-package formatting,
 clippy, Rust file-size, and diff checks passed. No full workspace suite was
 repeated for this isolated restore-privacy slice. The project publisher remains
-green from the preceding runtime change, and no new external or deferred work
-was opened.
+green for this runtime change as well, passing Windows/WebGL release builds,
+packaging, Preview deployment, catalog synchronization, and the deployed WASM
+hash check. No new external or deferred work was opened.
