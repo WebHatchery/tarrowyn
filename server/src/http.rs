@@ -226,10 +226,6 @@ fn handle_request(
     request_worker_count: usize,
     request_queue_capacity: usize,
 ) {
-    if request.method() == &Method::Options {
-        let _ = request.respond(with_cors(Response::empty(StatusCode(204))));
-        return;
-    }
     if !request_url_is_bounded(request.url()) {
         let _ = request.respond(error_response(
             414,
@@ -237,6 +233,10 @@ fn handle_request(
             "The request URL exceeds the 8 KiB server boundary.".to_owned(),
             repository.health().meta,
         ));
+        return;
+    }
+    if request.method() == &Method::Options {
+        let _ = request.respond(with_cors(Response::empty(StatusCode(204))));
         return;
     }
     let (path, query) = split_url(request.url());
