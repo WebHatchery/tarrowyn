@@ -23,6 +23,12 @@ $env:TARROWYN_SERVER_URL = "http://127.0.0.1:8787"
 cargo run -p years_of_tarrowyn
 ```
 
+The native client honors `TARROWYN_SERVER_URL`, but a static browser WASM
+artifact cannot read the server process environment at runtime. The deployment
+must therefore provide the browser build an explicit HTTPS API origin or
+same-origin reverse-proxy route; `http://127.0.0.1:8787` is only the local
+development fallback and is not a production endpoint.
+
 The client never performs a blocking HTTP call on the render thread. Guest,
 state, event, movement, chat, farming, trade, frontier, travel, market, event,
 and account requests are retained as toolkit `Pending<T>` values and polled

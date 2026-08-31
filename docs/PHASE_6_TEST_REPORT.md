@@ -3831,3 +3831,12 @@ repeat the check against the deployment target before public launch. With a
 disposable local release JSON server healthy, a fresh Chrome session reached
 `ONLINE` with zero deleted-texture warnings and zero request errors. The local
 server was stopped and its disposable state removed after the check.
+
+The documented production page was also checked in Chrome at
+`https://webhatchery.au/games/tarrowyn/`. It rendered with zero deleted-texture
+warnings, but the browser artifact attempted `http://127.0.0.1:8787` and could
+not complete online bootstrap because static WASM cannot read the server process
+environment. This opens a target-owned browser API-origin gate: serve an
+explicit HTTPS endpoint or same-origin reverse-proxy route, then repeat
+guest-session bootstrap and one online action. No full workspace suite was
+repeated for this deployment-boundary finding.

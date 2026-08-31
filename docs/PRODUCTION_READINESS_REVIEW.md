@@ -118,6 +118,14 @@ still be available for one deployment-target online session before public
 launch. A disposable local release JSON server also produced an `ONLINE`
 Chrome session with zero deleted-texture warnings and zero request errors.
 
+The production static page at `https://webhatchery.au/games/tarrowyn/` renders
+and remains free of the deleted-texture warning, but its browser client still
+falls back to `http://127.0.0.1:8787` because a static WASM artifact cannot read
+the server process environment at runtime. The native `TARROWYN_SERVER_URL`
+override and a disposable local release JSON server prove the client can use a
+configured endpoint; the deployment still needs an explicit HTTPS API origin
+or same-origin reverse-proxy route and a successful online bootstrap.
+
 The complete list of target-environment gates, desired human evidence, and
 deliberate product deferrals is maintained in
 [`PHASE_6_FOLLOW_UP_REGISTER.md`](PHASE_6_FOLLOW_UP_REGISTER.md); this review

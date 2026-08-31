@@ -563,6 +563,13 @@ deployment-owned gates rather than client assumptions. The current server
 enforces one MySQL world authority at a time until that later topology is
 designed and tested.
 
+The browser build also needs a deployment-provided API origin: process
+environment is available to the native development client but is not a runtime
+configuration channel for a static WASM page. A release must therefore publish
+an explicit HTTPS server origin or same-origin reverse-proxy route and verify
+the guest-session bootstrap there; `127.0.0.1:8787` remains a local development
+fallback only.
+
 Mutation endpoints validate bounded request IDs and request bodies, use server
 authorization, and retain idempotent results where retries can happen.
 Linked identity-provider subjects are trimmed, bounded, and rejected when they
