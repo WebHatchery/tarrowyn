@@ -4392,3 +4392,7 @@ repeated for this isolated restore-privacy slice. The project publisher remains
 green for this runtime change as well, passing Windows/WebGL release builds,
 packaging, Preview deployment, catalog synchronization, and the deployed WASM
 hash check. No new external or deferred work was opened.
+The account-cleanup test source is now 759 physical lines; before adding more
+account-lifecycle coverage, extract cohesive child modules so it remains below
+the repository's 800-line Rust limit. This is a local maintenance trigger, not
+an additional release gate.
