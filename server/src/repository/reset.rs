@@ -81,6 +81,7 @@ fn anonymize_orphaned_audits(
         for account_id in orphaned_audit_accounts(audit, account_ids) {
             audit.note = audit.note.replace(&account_id, RESET_ACCOUNT);
         }
+        audit.note = audit.note.chars().take(240).collect();
     }
 }
 
@@ -423,6 +424,7 @@ fn anonymize_audit_targets(
         if !display_name.is_empty() {
             audit.note = audit.note.replace(display_name, RESET_NAME);
         }
+        audit.note = audit.note.chars().take(240).collect();
     }
 }
 

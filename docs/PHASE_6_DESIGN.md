@@ -45,7 +45,8 @@ Restore normalization applies the same former-resident treatment to orphaned
 exact and composite audit targets from older snapshots before readiness checks.
 Account IDs and display names embedded in retained audit notes are migrated or
 anonymised with their structured audit references; message evidence remains
-bounded and intact.
+bounded and intact, and rewritten notes are re-truncated to the 240-character
+audit limit before the snapshot can be served.
 
 All mutation endpoints validate bounded request IDs and 64 KiB JSON request
 bodies, while the HTTP worker rejects request URLs above 8 KiB before cloning

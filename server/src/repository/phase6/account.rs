@@ -554,6 +554,7 @@ fn migrate_audit_note(
     if !old_display_name.is_empty() && old_display_name != new_display_name {
         *note = note.replace(old_display_name, new_display_name);
     }
+    *note = note.chars().take(240).collect();
 }
 
 fn replace_option_id(value: &mut Option<String>, old_account_id: &str, new_account_id: &str) {

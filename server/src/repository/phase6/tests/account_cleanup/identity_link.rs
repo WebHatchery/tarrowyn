@@ -257,8 +257,10 @@ fn account_link_migrates_composite_moderation_audit_targets() {
                 message_id: Some(message_id),
                 category: "harassment".to_owned(),
                 note: format!(
-                    "The audit target {} named {} should follow the account link.",
-                    target.account_id, target.display_name
+                    "The audit target {} named {} should follow the account link. {}",
+                    target.account_id,
+                    target.display_name,
+                    "Guest 1 ".repeat(18)
                 ),
             },
         )
@@ -292,6 +294,7 @@ fn account_link_migrates_composite_moderation_audit_targets() {
     assert!(!audit.note.contains(&target.display_name));
     assert!(audit.note.contains(&linked.account_id));
     assert!(audit.note.contains("Linked audit resident"));
+    assert!(audit.note.chars().count() <= 240);
     drop(state);
     assert!(repository.ops_health().data.ready);
 }

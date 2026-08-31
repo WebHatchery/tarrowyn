@@ -4317,3 +4317,12 @@ regressions passed 1 test each:
 clippy, Rust file-size, and diff checks passed. No full workspace suite was
 repeated for this isolated audit-note privacy slice, and no new external or
 deferred work was opened.
+
+The audit-note bound correction was validated on 2026-08-31. Identity-link,
+reset, deletion, and orphan-restore rewrites now reapply the 240-character
+audit-note limit after account or display-name substitution; the focused link
+regression passed 1 test with an input that expands during migration:
+`account_link_migrates_composite_moderation_audit_targets`. Server-package
+formatting, clippy, Rust file-size, and diff checks passed. No full workspace
+suite was repeated for this isolated audit-invariant slice, and no new external
+or deferred work was opened.

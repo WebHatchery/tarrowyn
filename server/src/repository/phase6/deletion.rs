@@ -413,6 +413,7 @@ fn anonymize_audit_targets(
         if !display_name.is_empty() {
             audit.note = audit.note.replace(display_name, DELETED_NAME);
         }
+        audit.note = audit.note.chars().take(240).collect();
     }
 }
 
