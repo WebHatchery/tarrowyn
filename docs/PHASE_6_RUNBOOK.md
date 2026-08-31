@@ -9,7 +9,9 @@ output directory is a release artifact; do not copy a live state file into the
 browser bundle. The gate also builds the host-targeted `tarrowyn-server` ZIP;
 the current Rust host is the default, and an installed target can be supplied
 with `scripts/package_server_release.ps1 -Target <rust-target>`. The
-production server OS or container remains a target deployment decision.
+production server OS or container remains a target deployment decision. The
+complete gate forwards an explicit target with
+`scripts/run_release_gate.ps1 -ServerTarget <rust-target>`.
 
 ## Scoped change checks
 

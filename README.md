@@ -239,3 +239,5 @@ host-targeted by default until the production OS or container contract is
 selected. An installed Rust target can be exercised explicitly with
 `scripts/package_server_release.ps1 -Target <rust-target>`; this does not by
 itself select or approve a production platform.
+The complete gate accepts the same target through
+`scripts/run_release_gate.ps1 -ServerTarget <rust-target>`.
