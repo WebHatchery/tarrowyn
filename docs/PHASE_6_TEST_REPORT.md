@@ -3512,6 +3512,16 @@ with server-package clippy with warnings denied, package formatting,
 gate is repeated because this is test-source organization maintenance, and no
 new external or deferred work is opened.
 
+The shared regional route and settlement topology integrity regressions now
+live in `repository/tests/integrity/regional_topology.rs`, reducing the
+integrity test root from 638 to 574 lines while preserving bounds, collection,
+reference, and duplicate-location readiness contracts. The focused regional-
+topology filter passes (5 tests), along with server-package clippy with
+warnings denied, package formatting, `git diff --check`, and the Rust file-size
+scan. No publisher or full workspace gate is repeated because this is
+test-source organization maintenance, and no new external or deferred work is
+opened.
+
 The Phase 5 travel lock regression now lives beside the existing travel
 percentage boundary in `repository/phase5/tests/travel_boundary.rs`, reducing
 the Phase 5 test root from 600 to 544 lines while preserving server-arrival
