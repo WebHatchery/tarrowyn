@@ -32,7 +32,7 @@ pub(super) fn market_success_message(
             "The fallback shipment was cancelled; no player goods were escrowed."
         }
         Some(MarketOrderAction::Cancel) => "The shipment was cancelled and its escrow returned.",
-        None => "The regional market accepted the command.",
+        None => "The regional market accepted the action.",
     }
 }
 

@@ -3898,3 +3898,10 @@ client regressions passed (degraded recovery, farming feedback, readiness
 reload, and movement guidance), followed by package clippy, formatting, Rust
 file-size, diff, and `publish.ps1` checks. No full workspace suite was
 repeated for this final presentation-only cluster.
+
+The final recovery wording pass also removes the remaining player-visible
+server and authority labels from reconnect, farming, readiness, trade, and
+movement guidance. The four focused regressions for those affected paths all
+passed, package clippy/formatting/file-size/diff checks passed, and
+`publish.ps1` completed the Windows/WebGL Preview build and deployment. No
+full workspace suite was repeated for this presentation-only maintenance.

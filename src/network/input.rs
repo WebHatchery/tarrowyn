@@ -150,7 +150,7 @@ impl OnlineClient {
             self.pending_request_type = Some(format!("farming::{action:?}"));
             self.pending_request_id = Some(request_id);
             self.action_awaiting_confirmation = true;
-            self.status_message = "Command sent; waiting for the settlement ledger…".to_owned();
+            self.status_message = "Action sent; waiting for the settlement ledger…".to_owned();
         } else {
             self.status_message =
                 "The settlement ledger is busy; wait for current actions before trying again."

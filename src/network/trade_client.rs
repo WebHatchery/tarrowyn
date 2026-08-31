@@ -117,7 +117,7 @@ impl OnlineClient {
             return;
         }
         if super::queue::try_push(&mut self.trade_queue, request) {
-            self.status_message = "Trade command sent; waiting for the ledger…".to_owned();
+            self.status_message = "Trade action sent; waiting for the ledger…".to_owned();
         } else {
             self.status_message =
                 "The trade ledger is busy; wait for current actions before trying again."
