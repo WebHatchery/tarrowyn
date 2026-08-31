@@ -12,6 +12,9 @@ with `scripts/package_server_release.ps1 -Target <rust-target>`. The
 production server OS or container remains a target deployment decision. The
 complete gate forwards an explicit target with
 `scripts/run_release_gate.ps1 -ServerTarget <rust-target>`.
+It launches the packaged server on an ephemeral loopback port and verifies
+`/health` plus `/v1/ops/health` against isolated JSON state before writing the
+manifest; run that launch check on a host that can execute the selected target.
 
 ## Scoped change checks
 

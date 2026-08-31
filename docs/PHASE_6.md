@@ -89,7 +89,8 @@ requirements.
   asset validation, `publish.ps1`, and archive identity generation; its clean
   Windows/WebGL/server candidates can be preserved and rollback-rehearsed. The
   server package defaults to the current host and accepts an explicit installed
-  target, while the production OS or container contract remains open.
+  target; the gate also launches it with isolated JSON state and checks both
+  health endpoints. The production OS or container contract remains open.
 - Maintain operator runbooks for launch, rollback, incident response,
   maintenance windows, restore, moderation, and communication of a service
   interruption.

@@ -201,6 +201,7 @@ cargo clippy --workspace --all-targets --all-features -- -D warnings
 .\scripts\verify_mysql.ps1
 .\publish.ps1
 .\scripts\package_server_release.ps1
+.\scripts\verify_server_release.ps1
 .\scripts\write_release_manifest.ps1
 ```
 
@@ -242,3 +243,5 @@ selected. An installed Rust target can be exercised explicitly with
 itself select or approve a production platform.
 The complete gate accepts the same target through
 `scripts/run_release_gate.ps1 -ServerTarget <rust-target>`.
+The packaged server launch check uses an ephemeral loopback port and isolated
+JSON state; it must run on a host that can execute the selected server target.

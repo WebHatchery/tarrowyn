@@ -35,6 +35,8 @@ try {
     }
     & "$projectRoot\scripts\package_server_release.ps1" @packageArguments
     if (-not $?) { throw "Server release packaging failed." }
+    & "$projectRoot\scripts\verify_server_release.ps1" -ArchivePath 'dist\tarrowyn_server.zip'
+    if (-not $?) { throw "Packaged server launch verification failed." }
     & "$projectRoot\scripts\write_release_manifest.ps1"
     if (-not $?) { throw "Release manifest generation failed." }
     Write-Host "Tarrowyn release gate passed."

@@ -30,6 +30,13 @@ worker until the documented multi-worker handoff design is proven. The
 gateway registration and browser API-origin checks remain separate deployment
 steps.
 
+For a local package contract check, run
+`scripts/verify_server_release.ps1`. It launches the packaged binary on an
+ephemeral loopback port, uses isolated JSON state and backup paths, verifies
+both health endpoints, and removes its temporary process and files. Run it on
+a host that can execute the target recorded in `BUILD_INFO.json`; it is not a
+substitute for target-environment MySQL or deployment acceptance.
+
 ## Rollback boundary
 
 Stop the worker after its current persistence write completes, record the
