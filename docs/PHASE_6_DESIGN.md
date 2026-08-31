@@ -253,6 +253,9 @@ The same boundary applies to retained claim inspection replays: matching claim
 owners are converted to the released-plot form used by live deletion cleanup,
 and deleted approver identifiers are cleared before another identity can replay
 the cached response.
+The same replay boundary scrubs deleted requesters and providers from retained
+service-order snapshots, cancelling open or accepted snapshots in step with
+the live order cleanup.
 When a provider leaves while holding an accepted service order, the surviving
 requester's typed material and tool escrow is returned before that order is
 cancelled; an order owned by the departing requester is instead removed with

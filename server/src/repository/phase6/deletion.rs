@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use tarrowyn_protocol::{
     AccountDeletionResponse, ClaimLifecycleStatus, ClaimRecord, ClaimStatus, FrontierEvent,
-    ProposalStatus, ServiceOrderStatus, WorldEvent,
+    ProposalStatus, ServiceOrder, ServiceOrderStatus, WorldEvent,
 };
 
 const DELETED_ACCOUNT: &str = "former-resident";
@@ -101,6 +101,7 @@ fn erase_account(state: &mut RepositoryState, request: &PendingAccountDeletion) 
 
     erase_private_phase4_state(state, request);
     anonymize_phase4_replay_claims(state, &request.account_id);
+    anonymize_phase4_replay_service_orders(state, &request.account_id);
     state.trades.retain(|_, trade| {
         trade.creator_account_id != request.account_id
             && trade.recipient_account_id != request.account_id
@@ -219,6 +220,40 @@ fn anonymize_phase4_replay_claim(
         claim.approved_by = None;
     }
     owner_deleted
+}
+
+fn anonymize_phase4_replay_service_orders(state: &mut RepositoryState, account_id: &str) {
+    for response in state.phase4.request_results.values_mut() {
+        let super::super::phase4::Phase4Response::Profession(response) = response else {
+            continue;
+        };
+        if let Some(order) = response.order.as_mut() {
+            anonymize_phase4_replay_service_order(order, account_id);
+        }
+        for order in &mut response.professions.orders {
+            anonymize_phase4_replay_service_order(order, account_id);
+        }
+    }
+}
+
+fn anonymize_phase4_replay_service_order(order: &mut ServiceOrder, account_id: &str) {
+    if order.requester_account_id == account_id {
+        order.requester_account_id = DELETED_ACCOUNT.to_owned();
+        order.requester_name = DELETED_NAME.to_owned();
+        if matches!(
+            order.status,
+            ServiceOrderStatus::Open | ServiceOrderStatus::Accepted
+        ) {
+            order.status = ServiceOrderStatus::Cancelled;
+        }
+    }
+    if order.provider_account_id.as_deref() == Some(account_id) {
+        order.provider_account_id = None;
+        order.provider_name = None;
+        if order.status == ServiceOrderStatus::Accepted {
+            order.status = ServiceOrderStatus::Cancelled;
+        }
+    }
 }
 
 fn anonymize_audit_targets(

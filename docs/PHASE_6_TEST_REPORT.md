@@ -1779,6 +1779,16 @@ Windows/WebGL builds, packaging, Preview deployment, and catalog sync. No full
 workspace gate was repeated because this was a bounded client contract-feedback
 slice, and no new external or deferred work was opened.
 
+The deleted-account service replay privacy correction was validated on
+2026-08-31. Account deletion now scrubs matching requesters and providers in
+retained Phase 4 service-order responses and cancels open or accepted replayed
+orders consistently with live cleanup; the focused exact regression filter
+passed 1 test:
+`account_deletion_anonymises_service_replays_kept_by_another_identity`.
+Server-package formatting, clippy, Rust file-size, and diff checks passed. No
+full workspace suite was repeated for this isolated service-order deletion
+boundary slice, and no new external or deferred work was opened.
+
 Accepted route responses now state the resulting road condition in the visible
 notice: its player-facing status, condition percentage, and risk percentage.
 The focused route-detail regression passes, client clippy and the Rust
