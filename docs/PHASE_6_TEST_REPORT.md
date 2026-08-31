@@ -3300,3 +3300,11 @@ file-size scan pass. The project `publish.ps1` Windows/WebGL build, packaging,
 Preview deployment, tracker recording, and catalog synchronization also pass.
 No full workspace gate is repeated because this is a bounded chronicle-search
 fix, and no new external or deferred work is opened.
+
+The repository's shared error, request-text, optional-identifier, and event-
+cursor boundaries now live in a dedicated child module, reducing the core
+repository source from 726 to 641 lines without changing its authority
+behavior. Server-package clippy with warnings denied, server formatting,
+`git diff --check`, and the Rust file-size scan pass. This is source
+organization maintenance, so no focused runtime suite, publisher, or full
+workspace gate is repeated, and no new external or deferred work is opened.
