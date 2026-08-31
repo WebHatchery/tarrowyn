@@ -55,18 +55,28 @@ impl Phase5Client {
             && !another_mutation_pending
             && self.command_retry_timer <= 0.0
         {
-            let command_index = if session_only {
-                self.commands.iter().position(is_session_command)
-            } else if self.commands.is_empty() {
-                None
-            } else {
-                Some(0)
-            };
-            if let Some(command_index) = command_index {
-                let command = self
-                    .commands
-                    .remove(command_index)
-                    .expect("queued command index exists");
+            let retry_command = (!session_only
+                || self
+                    .in_flight_command
+                    .as_ref()
+                    .is_some_and(is_session_command))
+            .then(|| self.in_flight_command.take())
+            .flatten();
+            let command = retry_command.or_else(|| {
+                let command_index = if session_only {
+                    self.commands.iter().position(is_session_command)
+                } else if self.commands.is_empty() {
+                    None
+                } else {
+                    Some(0)
+                };
+                command_index.map(|command_index| {
+                    self.commands
+                        .remove(command_index)
+                        .expect("queued command index exists")
+                })
+            });
+            if let Some(command) = command {
                 self.pending_market_action = match &command {
                     Phase5Command::Market(request) => Some(request.action),
                     _ => None,

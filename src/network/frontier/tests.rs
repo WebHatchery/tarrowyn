@@ -358,7 +358,7 @@ fn frontier_refresh_error_keeps_an_api_rejection_code() {
 }
 
 #[test]
-fn transient_frontier_action_requeues_the_same_request() {
+fn transient_frontier_action_stays_bounded_during_retry() {
     let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
     let request = ClaimRequest {
         request_id: "frontier-retry".to_owned(),
@@ -368,14 +368,27 @@ fn transient_frontier_action_requeues_the_same_request() {
         "HTTP request 'POST /v1/claims' timed out after 6.0 seconds",
     ));
     client.frontier.in_flight_command = Some(FrontierCommand::Claim(request));
+    for _ in 0..super::super::queue::MAX_PENDING_COMMANDS {
+        client
+            .frontier
+            .commands
+            .push_back(FrontierCommand::Claim(ClaimRequest {
+                request_id: "queued-claim".to_owned(),
+                action: ClaimAction::Request,
+            }));
+    }
 
     let mut notices = Vec::new();
     client
         .frontier
         .update(&mut client.projection, 0.0, true, &mut notices);
 
+    assert_eq!(
+        client.frontier.commands.len(),
+        super::super::queue::MAX_PENDING_COMMANDS
+    );
     assert!(matches!(
-        client.frontier.commands.front(),
+        client.frontier.in_flight_command,
         Some(FrontierCommand::Claim(request)) if request.request_id == "frontier-retry"
     ));
     assert_eq!(client.frontier.command_retry_count, 1);

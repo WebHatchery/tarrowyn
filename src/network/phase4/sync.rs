@@ -172,8 +172,7 @@ impl Phase4Client {
                         && self.command_retry_count < MAX_COMMAND_RETRIES
                         && in_flight_command.is_some() =>
                 {
-                    self.commands
-                        .push_front(in_flight_command.expect("command exists"));
+                    self.in_flight_command = in_flight_command;
                     self.command_retry_count += 1;
                     self.command_retry_timer = COMMAND_RETRY_DELAY_SECONDS;
                     notices.push(NetworkNotice::Warning(format!(
@@ -251,7 +250,11 @@ impl Phase4Client {
             && !self.regional.dispatch_blocked()
             && self.command_retry_timer <= 0.0
         {
-            if let Some(command) = self.commands.pop_front() {
+            let command = self
+                .in_flight_command
+                .take()
+                .or_else(|| self.commands.pop_front());
+            if let Some(command) = command {
                 self.pending_command = Some(match &command {
                     Phase4Command::Governance(request) => {
                         api.post_json("/v1/settlement/governance", &request)

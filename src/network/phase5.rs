@@ -304,7 +304,7 @@ impl Phase5Client {
                 Err(error) if is_transient_transport_error(&error) => {
                     if self.command_retry_count < MAX_COMMAND_RETRIES {
                         if let Some(command) = in_flight_command {
-                            self.commands.push_front(command);
+                            self.in_flight_command = Some(command);
                             self.command_retry_count += 1;
                             self.command_retry_timer = COMMAND_RETRY_DELAY_SECONDS;
                             notices.push(NetworkNotice::Warning(format!(

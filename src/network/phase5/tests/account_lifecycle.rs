@@ -308,7 +308,7 @@ fn revoke_response_discards_authenticated_state() {
 }
 
 #[test]
-fn transient_command_failure_requeues_the_same_request() {
+fn transient_command_failure_stays_bounded_during_retry() {
     let mut client = Phase5Client::new();
     let request = tarrowyn_protocol::AuthLinkRequest {
         request_id: "link-retry".to_owned(),
@@ -320,6 +320,16 @@ fn transient_command_failure_requeues_the_same_request() {
         "HTTP request 'POST /v1/auth/link' timed out after 6.0 seconds",
     ));
     client.in_flight_command = Some(Phase5Command::Link(request));
+    for _ in 0..super::super::super::queue::MAX_PENDING_COMMANDS {
+        client
+            .commands
+            .push_back(Phase5Command::Link(tarrowyn_protocol::AuthLinkRequest {
+                request_id: "queued-link".to_owned(),
+                provider: "webhatchery-identity-oidc".to_owned(),
+                subject: "queued-subject".to_owned(),
+                display_name: None,
+            }));
+    }
 
     let mut api = HttpClient::new("https://example.test");
     let data = crate::data::GameData::load().expect("embedded game data should load");
@@ -327,8 +337,12 @@ fn transient_command_failure_requeues_the_same_request() {
     let mut notices = Vec::new();
     client.update(0.0, &mut api, &mut projection, true, false, &mut notices);
 
+    assert_eq!(
+        client.commands.len(),
+        super::super::super::queue::MAX_PENDING_COMMANDS
+    );
     assert!(matches!(
-        client.commands.front(),
+        client.in_flight_command,
         Some(Phase5Command::Link(request)) if request.request_id == "link-retry"
     ));
     assert_eq!(client.command_retry_count, 1);

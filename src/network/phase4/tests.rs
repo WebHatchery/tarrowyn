@@ -57,7 +57,7 @@ fn phase_four_reset_discards_cached_ledgers() {
 }
 
 #[test]
-fn transient_phase_four_action_requeues_the_same_request() {
+fn transient_phase_four_action_stays_bounded_during_retry() {
     let mut client = Phase4Client::new();
     let request = ProfessionRequest {
         request_id: "phase4-retry".to_owned(),
@@ -72,6 +72,11 @@ fn transient_phase_four_action_requeues_the_same_request() {
         "HTTP request 'POST /v1/professions/orders' timed out after 6.0 seconds",
     ));
     client.in_flight_command = Some(Phase4Command::Profession(request.clone()));
+    for _ in 0..super::super::queue::MAX_PENDING_COMMANDS {
+        client
+            .commands
+            .push_back(Phase4Command::Profession(request.clone()));
+    }
 
     let mut api = HttpClient::new("https://example.test");
     let data = crate::data::GameData::load().expect("embedded game data should load");
@@ -79,8 +84,12 @@ fn transient_phase_four_action_requeues_the_same_request() {
     let mut notices = Vec::new();
     client.update(0.0, &mut api, &mut projection, true, false, &mut notices);
 
+    assert_eq!(
+        client.commands.len(),
+        super::super::queue::MAX_PENDING_COMMANDS
+    );
     assert!(matches!(
-        client.commands.front(),
+        client.in_flight_command,
         Some(Phase4Command::Profession(request)) if request.request_id == "phase4-retry"
     ));
     assert_eq!(client.command_retry_count, 1);
