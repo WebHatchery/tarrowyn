@@ -3744,3 +3744,12 @@ and pool-boundary regressions passed, as did the 24-client smoke harness using
 automatic workers and the default queue. No full workspace gate was repeated
 because this was a scale-configuration change inside the already gated
 request-pool milestone.
+
+The MySQL pool configuration slice now bounds the native driver pool to a
+default maximum of four connections, with a measured deployment override from
+2–32 through `TARROWYN_MYSQL_POOL_MAX_CONNECTIONS`. The minimum of two keeps a
+second checkout available while the process-lifetime world-authority lock owns
+one pooled connection. Focused server configuration tests and the MySQL
+repository package checks are the appropriate validation for this isolated
+backend guard; no full workspace or publisher gate is repeated because the
+change does not alter protocol, content, or release artifacts.

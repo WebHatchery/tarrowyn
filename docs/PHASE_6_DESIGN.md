@@ -137,8 +137,11 @@ also compares the denormalized storage version, world tick, and event cursor
 with the JSON document and compares every indexed account/character pair with
 the snapshot identities, failing closed on any mismatch. It keeps the existing
 protocol and repository rules intact while the schema is being proven against a
-live environment. Startup also rejects a migration table written by a newer
-server binary rather than attempting to run an older schema against it.
+live environment. The bridge uses a bounded driver pool, reserving one
+connection for the process-lifetime world-authority lock and defaulting the
+pool maximum to four; `TARROWYN_MYSQL_POOL_MAX_CONNECTIONS` allows a measured
+2–32 deployment override. Startup also rejects a migration table written by a
+newer server binary rather than attempting to run an older schema against it.
 The server writes a scheduled backup to the configured backup path and reports
 the last successful tick through `/v1/ops/health`. A failed authoritative write
 or scheduled backup degrades operator readiness and adds a safe persistence or

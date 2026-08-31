@@ -8,6 +8,9 @@ pub(crate) const MAX_HTTP_REQUEST_WORKERS: usize = 32;
 pub(crate) const DEFAULT_HTTP_REQUEST_QUEUE_CAPACITY: usize = 128;
 pub(crate) const MIN_HTTP_REQUEST_QUEUE_CAPACITY: usize = 16;
 pub(crate) const MAX_HTTP_REQUEST_QUEUE_CAPACITY: usize = 4096;
+pub(crate) const MIN_MYSQL_POOL_CONNECTIONS: usize = 2;
+pub(crate) const DEFAULT_MYSQL_POOL_CONNECTIONS: usize = 4;
+pub(crate) const MAX_MYSQL_POOL_CONNECTIONS: usize = 32;
 
 #[derive(Debug, Clone)]
 pub struct ServerConfig {
@@ -15,6 +18,7 @@ pub struct ServerConfig {
     /// Zero selects the host's bounded automatic worker count.
     pub http_request_workers: usize,
     pub http_request_queue_capacity: usize,
+    pub mysql_pool_max_connections: usize,
     pub db_driver: String,
     pub db_host: String,
     pub db_port: u16,
@@ -61,6 +65,7 @@ impl Default for ServerConfig {
             bind_addr: "127.0.0.1:8787".to_owned(),
             http_request_workers: 0,
             http_request_queue_capacity: DEFAULT_HTTP_REQUEST_QUEUE_CAPACITY,
+            mysql_pool_max_connections: DEFAULT_MYSQL_POOL_CONNECTIONS,
             db_driver: "json".to_owned(),
             db_host: "localhost".to_owned(),
             db_port: 3306,
@@ -127,6 +132,13 @@ impl ServerConfig {
                     defaults.http_request_queue_capacity as u64,
                 ),
                 defaults.http_request_queue_capacity,
+            ),
+            mysql_pool_max_connections: bounded_mysql_pool_connections(
+                env_u64(
+                    "TARROWYN_MYSQL_POOL_MAX_CONNECTIONS",
+                    defaults.mysql_pool_max_connections as u64,
+                ),
+                defaults.mysql_pool_max_connections,
             ),
             db_driver: env_string("DB_DRIVER", defaults.db_driver),
             db_host: env_string("DB_HOST", defaults.db_host),
@@ -301,6 +313,10 @@ fn bounded_http_queue_capacity(value: u64, default: usize) -> usize {
         MIN_HTTP_REQUEST_QUEUE_CAPACITY,
         MAX_HTTP_REQUEST_QUEUE_CAPACITY,
     )
+}
+
+fn bounded_mysql_pool_connections(value: u64, default: usize) -> usize {
+    bounded_usize(value, default).clamp(MIN_MYSQL_POOL_CONNECTIONS, MAX_MYSQL_POOL_CONNECTIONS)
 }
 
 fn env_f32(name: &str, default: f32) -> f32 {

@@ -4,7 +4,7 @@ use super::models::{RepositoryState, StoredState};
 use super::persistence::PersistenceBackendError;
 use crate::config::ServerConfig;
 use mysql::prelude::Queryable;
-use mysql::{OptsBuilder, Pool, TxOpts};
+use mysql::{OptsBuilder, Pool, PoolConstraints, PoolOpts, TxOpts};
 use std::sync::Mutex;
 
 const MIGRATION_VERSION: u32 = 1;
@@ -47,7 +47,13 @@ impl MysqlStore {
             .tcp_port(config.db_port)
             .db_name(Some(config.db_database.as_str()))
             .user(Some(config.db_username.as_str()))
-            .pass(Some(config.db_password.as_str()));
+            .pass(Some(config.db_password.as_str()))
+            .pool_opts(
+                PoolOpts::default().with_constraints(
+                    PoolConstraints::new(1, config.mysql_pool_max_connections)
+                        .expect("MySQL pool maximum is bounded above its reserved connection"),
+                ),
+            );
         let pool = Pool::new(options).map_err(|_| {
             PersistenceBackendError::new("the MySQL connection pool could not be created")
         })?;

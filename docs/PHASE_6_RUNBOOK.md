@@ -27,6 +27,11 @@ Configuration is environment-specific. Set `TARROWYN_STATE_PATH`,
 per-source guest-session burst than the secure default of 32. Set the latter
 only to the smallest value needed for the expected client bootstrap rate; the
 Phase 6 load harness sets it explicitly for controlled local capacity probes.
+The MySQL bridge keeps one connection for its world-authority lock and uses a
+bounded pool of up to 4 connections by default. Set
+`TARROWYN_MYSQL_POOL_MAX_CONNECTIONS` only after measuring the target database;
+the accepted range is 2–32 so persistence can still check out a connection
+while the authority lock is held.
 Keep the identity-gateway deployment secret in the secret manager. Set
 `TARROWYN_SUPPORT_OPERATOR_ACCOUNTS` to a comma-separated
 allowlist of operator account IDs; an empty value fails closed. Keep development

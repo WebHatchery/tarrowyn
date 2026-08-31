@@ -47,3 +47,15 @@ fn http_pool_settings_preserve_auto_mode_and_bounded_limits() {
         MAX_HTTP_REQUEST_QUEUE_CAPACITY
     );
 }
+
+#[test]
+fn mysql_pool_size_stays_above_the_authority_connection_and_bounded() {
+    assert_eq!(
+        bounded_mysql_pool_connections(0, DEFAULT_MYSQL_POOL_CONNECTIONS),
+        MIN_MYSQL_POOL_CONNECTIONS
+    );
+    assert_eq!(
+        bounded_mysql_pool_connections(99_999, DEFAULT_MYSQL_POOL_CONNECTIONS),
+        MAX_MYSQL_POOL_CONNECTIONS
+    );
+}
