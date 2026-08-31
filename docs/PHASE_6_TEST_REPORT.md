@@ -3960,3 +3960,12 @@ default. The parameter surface, all PowerShell script parsing, and
 preservation, and rollback rehearsal also passed. This was argument plumbing
 in the release workflow, so no full workspace suite was repeated after the
 previous major milestone.
+
+The release manifest integrity correction was validated on 2026-08-31 at
+commit `4f41d78`. A preserved server archive from an older commit was rejected
+when its `BUILD_INFO.json` did not match the current candidate, while a fresh
+current-host package was accepted and recorded its target triple in the
+manifest. The server executable contract now also accepts the target-specific
+non-Windows name. Focused PowerShell parsing, stale-archive rejection, clean
+package/manifest generation, preservation, and three-archive rollback passed;
+no full workspace suite was repeated for this release-tooling change.
