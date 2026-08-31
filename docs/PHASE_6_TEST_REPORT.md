@@ -3798,3 +3798,17 @@ server failure, matching the repository rollback contract so command queues can
 resubmit the same request ID after a transient durable-write outage. The focused
 network error-classification regression passed; no broader client suite was
 repeated for this one-condition follow-up.
+
+The published-preview touch audit exercised the visible offline fixture, crop
+planting, save, fresh-evening reset, saved-chronicle load, and online reconnect
+fallback at `http://127.0.0.1/games/tarrowyn/`. At a temporary 390x844 viewport,
+the visible `Play full screen` control expanded the game into a large touch
+layout with a visible `Done` exit, and the offline fixture remained usable.
+The page metadata now tells phone players to use that control, and the focused
+JSON parse plus the project `publish.ps1` Windows/WebGL build, packaging,
+deployment, and preview-text check passed. No full workspace suite was repeated
+for this isolated metadata and evidence update. A clean preview reload still
+emits repeated `glBindTexture called with an already deleted texture ID 20!`
+messages from the shared `mq_js_bundle.js` while the game renders; that shared
+runtime warning is recorded as a pre-launch follow-up rather than claimed as a
+Tarrowyn-owned rendering failure.
