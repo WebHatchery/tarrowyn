@@ -649,3 +649,98 @@ fn account_deletion_removes_refresh_replay_after_access_expiry() {
         .values()
         .all(|account| account != &account_id));
 }
+
+#[test]
+fn account_deletion_anonymises_knowledge_replays_kept_by_another_identity() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let owner_guest = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("knowledge-replay-owner".to_owned()),
+            reset: false,
+        })
+        .expect("owner guest session")
+        .data;
+    let owner = repository
+        .auth_link(
+            &owner_guest.account_token,
+            AuthLinkRequest {
+                request_id: "knowledge-replay-owner-link".to_owned(),
+                provider: "webhatchery-identity-oidc".to_owned(),
+                subject: "knowledge-replay-owner-subject".to_owned(),
+                display_name: Some("Departing archivist".to_owned()),
+            },
+        )
+        .expect("owner link")
+        .data;
+    let owner_account_id = owner.account_id.clone();
+    let observer = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("knowledge-replay-observer".to_owned()),
+            reset: false,
+        })
+        .expect("observer guest session")
+        .data;
+    repository
+        .knowledge(
+            &owner.session.account_token,
+            KnowledgeRequest {
+                request_id: "knowledge-replay-discover".to_owned(),
+                action: KnowledgeAction::Discover,
+                knowledge_id: Some("moonberry-tending".to_owned()),
+                target_account_id: None,
+            },
+        )
+        .expect("knowledge discovery");
+    repository
+        .knowledge(
+            &owner.session.account_token,
+            KnowledgeRequest {
+                request_id: "knowledge-replay-record".to_owned(),
+                action: KnowledgeAction::Record,
+                knowledge_id: Some("moonberry-tending".to_owned()),
+                target_account_id: None,
+            },
+        )
+        .expect("knowledge recording");
+    let apply_request = KnowledgeRequest {
+        request_id: "knowledge-replay-apply".to_owned(),
+        action: KnowledgeAction::Apply,
+        knowledge_id: Some("moonberry-tending".to_owned()),
+        target_account_id: None,
+    };
+    let applied = repository
+        .knowledge(&observer.account_token, apply_request.clone())
+        .expect("knowledge application")
+        .data;
+    assert!(applied.knowledge.items.iter().any(|item| {
+        item.knowledge_id == "moonberry-tending"
+            && item.discovered_by.iter().any(|id| id == &owner_account_id)
+    }));
+
+    repository
+        .account_delete(
+            &owner.session.account_token,
+            AccountDeletionRequest {
+                request_id: "knowledge-replay-owner-delete".to_owned(),
+                account_id: owner.account_id,
+            },
+        )
+        .expect("schedule owner deletion");
+    repository.tick();
+
+    let replay = repository
+        .knowledge(&observer.account_token, apply_request)
+        .expect("knowledge replay")
+        .data;
+    let replayed = replay
+        .knowledge
+        .items
+        .iter()
+        .find(|item| item.knowledge_id == "moonberry-tending")
+        .expect("replayed knowledge");
+    assert!(!replayed
+        .discovered_by
+        .iter()
+        .any(|id| id == &owner_account_id));
+    assert!(repository.ops_health().data.ready);
+}

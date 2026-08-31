@@ -103,6 +103,7 @@ fn erase_account(state: &mut RepositoryState, request: &PendingAccountDeletion) 
     anonymize_phase4_replay_claims(state, &request.account_id);
     anonymize_phase4_replay_service_orders(state, &request.account_id);
     anonymize_phase4_replay_governance(state, &request.account_id);
+    anonymize_phase4_replay_knowledge(state, &request.account_id);
     state.trades.retain(|_, trade| {
         trade.creator_account_id != request.account_id
             && trade.recipient_account_id != request.account_id
@@ -308,6 +309,18 @@ fn anonymize_governance(governance: &mut GovernanceState, account_id: &str) {
         }
         if policy.recipient == account_id {
             policy.recipient = DELETED_ACCOUNT.to_owned();
+        }
+    }
+}
+
+fn anonymize_phase4_replay_knowledge(state: &mut RepositoryState, account_id: &str) {
+    for response in state.phase4.request_results.values_mut() {
+        let super::super::phase4::Phase4Response::Knowledge(response) = response else {
+            continue;
+        };
+        for item in &mut response.knowledge.items {
+            item.discovered_by
+                .retain(|discovered_by| discovered_by != account_id);
         }
     }
 }
