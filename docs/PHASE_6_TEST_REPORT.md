@@ -4111,3 +4111,14 @@ session remains live, and remove stale replay data before returning
 followed by server-package clippy, formatting, Rust file-size, and diff checks.
 No full workspace suite was repeated for this bounded Phase 6 session-boundary
 maintenance slice, and no new external or deferred work was opened.
+
+The runtime readiness boundary was validated on 2026-08-31 at commit `ffb9a3e`.
+The HTTP worker now blocks player API routes with structured `503 maintenance`
+when the durable readiness projection is degraded, including guest-session
+admission, while leaving public health, operator metrics, and support inspection
+and repair available. The focused `http::` server filter passed all 22 tests,
+including the recovery-route boundary and non-sensitive maintenance response;
+the changed client retry-classifier test also passed. Affected-package clippy,
+Tarrowyn-only formatting, Rust file-size, diff, and publisher checks passed.
+No full workspace suite was repeated for this bounded runtime-readiness
+maintenance slice, and no new external or deferred work was opened.

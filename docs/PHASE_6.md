@@ -75,10 +75,13 @@ candidate before admitting traffic: world clock, players, crops, trades,
 event history, frontier records, Phase 4 civic state, Phase 5 regional state,
 and Phase 6 identity, session, audit, moderation, replay, deletion, and backup
 metadata. Broken cross-references report degraded readiness rather than being
-served as authoritative state. These checks are covered by focused repository
-regressions and the recorded cross-subsystem gate; they do not close the
-target-environment MySQL, topology, identity-gateway, TLS, scale, or rollback
-requirements.
+served as authoritative state. The runtime HTTP boundary now returns a safe
+503 maintenance response for player API routes while readiness is degraded,
+including anonymous session creation; public health, operator metrics, and
+support inspection and repair remain available for recovery. These checks are
+covered by focused repository and HTTP regressions and the recorded
+cross-subsystem gate; they do not close the target-environment MySQL, topology,
+identity-gateway, TLS, scale, or rollback requirements.
 
 ### Deployment and operations
 

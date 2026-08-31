@@ -13,6 +13,10 @@ two-tap linked-account deletion control that clears the session and exposes
 Reconnect after the server schedules the authoritative deletion tick.
 The client also polls readiness and turns configured maintenance or degraded
 health into visible next-step status guidance.
+The server now enforces the same boundary for direct callers: degraded
+readiness returns `503 maintenance` for player API routes, including guest
+session admission, while health, operator metrics, and support recovery routes
+remain available.
 It preserves structured API error codes through the shared toolkit and, when a
 restore or retained-history boundary invalidates its event cursor, clears stale
 history projections and reloads the authoritative state from cursor zero while

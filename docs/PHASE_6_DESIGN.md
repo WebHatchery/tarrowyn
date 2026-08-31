@@ -166,6 +166,11 @@ and the repository restores its last successfully persisted state, so a client
 cannot receive an accepted response for a mutation that exists only in memory.
 The client treats this specific structured failure as retryable and resubmits
 the same request ID within its bounded command retry window.
+When readiness is degraded, the HTTP boundary rejects player API traffic with
+`503 maintenance`, including guest-session admission, instead of allowing a
+direct caller to bypass the client's readiness poll. `/health`,
+`/v1/ops/health`, `/v1/ops/metrics`, and support inspection/repair routes remain
+available so operators can observe and repair the service.
 The tick persists its authoritative state before writing a scheduled backup and
 persists the successful backup marker afterward. A later successful backup
 clears the backup failure state. Restore drills validate the backup as JSON
