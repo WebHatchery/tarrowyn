@@ -3264,3 +3264,13 @@ project `publish.ps1` Windows/WebGL build, packaging, Preview deployment,
 tracker recording, and catalog synchronization also pass. No full workspace
 gate is repeated because this is a bounded guidance correction, and no new
 external or deferred work is opened.
+
+The linked-account deletion confirmation now remains armed when the bounded
+client command queue is full; the failed enqueue is reported so the player can
+retry without silently losing the safety confirmation. The focused normal and
+full-queue deletion regressions pass, along with client-package clippy,
+formatting, `git diff --check`, and the Rust file-size scan. The project
+`publish.ps1` Windows/WebGL build, packaging, Preview deployment, tracker
+recording, and catalog synchronization also pass. No full workspace gate is
+repeated because this is a bounded account-safety correction, and no new
+external or deferred work is opened.

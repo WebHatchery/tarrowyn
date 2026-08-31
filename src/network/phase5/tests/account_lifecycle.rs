@@ -349,6 +349,33 @@ fn account_deletion_requires_two_taps_for_a_linked_account() {
 }
 
 #[test]
+fn account_deletion_confirmation_survives_a_full_command_queue() {
+    let mut client = Phase5Client::new();
+    client.account = Some(account_response(false));
+
+    assert!(client.queue_cycle("delete-account"));
+    assert!(client.deletion_armed);
+    for index in 0..super::super::super::queue::MAX_PENDING_COMMANDS {
+        client.commands.push_back(Phase5Command::Report(
+            tarrowyn_protocol::ModerationReportRequest {
+                request_id: format!("queued-report-{index}"),
+                target_account_id: None,
+                message_id: None,
+                category: "player_report".to_owned(),
+                note: "queue pressure fixture".to_owned(),
+            },
+        ));
+    }
+
+    assert!(!client.queue_cycle("delete-account"));
+    assert!(client.deletion_armed);
+    assert_eq!(
+        client.commands.len(),
+        super::super::super::queue::MAX_PENDING_COMMANDS
+    );
+}
+
+#[test]
 fn report_queue_keeps_selected_account_and_chat_evidence() {
     let mut client = Phase5Client::new();
 

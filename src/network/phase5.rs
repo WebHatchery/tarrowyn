@@ -331,6 +331,7 @@ impl Phase5Client {
         let queue_len = self.commands.len();
         let refresh_region = id == "region-map";
         let request_id = self.next_id();
+        let mut confirmation_started = false;
         match id {
             "region-map" => self.refresh_timer = 0.0,
             "travel" => self.queue_travel(request_id),
@@ -385,16 +386,19 @@ impl Phase5Client {
                     return false;
                 };
                 if self.deletion_armed {
-                    self.deletion_armed = false;
-                    super::queue::try_push(
+                    let queued = super::queue::try_push(
                         &mut self.commands,
                         Phase5Command::Delete(AccountDeletionRequest {
                             request_id,
                             account_id: account.account_id.clone(),
                         }),
                     );
+                    if queued {
+                        self.deletion_armed = false;
+                    }
                 } else {
                     self.deletion_armed = true;
+                    confirmation_started = true;
                 }
             }
             "route-repair" => {
@@ -408,9 +412,7 @@ impl Phase5Client {
             }
             _ => {}
         }
-        self.commands.len() > queue_len
-            || refresh_region
-            || (id == "delete-account" && self.deletion_armed)
+        self.commands.len() > queue_len || refresh_region || confirmation_started
     }
 
     pub(super) fn queue_report(
