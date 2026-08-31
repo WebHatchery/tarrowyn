@@ -36,7 +36,7 @@ use request::{
     bearer_token, query_cursor, query_value_result, read_json, read_json_or_default, split_url,
 };
 #[cfg(test)]
-use request::{parse_bearer_header, read_bounded_body};
+use request::{parse_bearer_header, read_bounded_body, MAX_BEARER_TOKEN_CHARS};
 
 struct GuestSessionRateLimiter {
     windows: HashMap<IpAddr, GuestSessionRateWindow>,

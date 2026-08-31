@@ -3,6 +3,7 @@ use std::io::Read;
 use tiny_http::Request;
 
 pub(crate) const MAX_REQUEST_BODY_BYTES: usize = 64 * 1024;
+pub(crate) const MAX_BEARER_TOKEN_CHARS: usize = 512;
 
 pub(super) fn read_json<T: DeserializeOwned>(request: &mut Request) -> Result<T, String> {
     let mut reader = request.as_reader();
@@ -51,8 +52,10 @@ pub(super) fn parse_bearer_header(value: &str) -> Option<String> {
         return None;
     }
     let credentials = credentials.trim();
-    (!credentials.is_empty() && !credentials.chars().any(char::is_control))
-        .then(|| credentials.to_owned())
+    (!credentials.is_empty()
+        && credentials.chars().count() <= MAX_BEARER_TOKEN_CHARS
+        && !credentials.chars().any(char::is_control))
+    .then(|| credentials.to_owned())
 }
 
 pub(super) fn split_url(url: &str) -> (&str, &str) {

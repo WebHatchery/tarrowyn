@@ -53,6 +53,15 @@ fn bearer_scheme_is_case_insensitive_but_credentials_must_be_present() {
 }
 
 #[test]
+fn bearer_credentials_stay_within_the_authentication_boundary() {
+    let accepted = format!("Bearer {}", "x".repeat(MAX_BEARER_TOKEN_CHARS));
+    let rejected = format!("Bearer {}", "x".repeat(MAX_BEARER_TOKEN_CHARS + 1));
+
+    assert!(parse_bearer_header(&accepted).is_some());
+    assert!(parse_bearer_header(&rejected).is_none());
+}
+
+#[test]
 fn history_cursors_reject_malformed_values_instead_of_resetting() {
     assert_eq!(query_cursor("since=12", "since"), Ok(12));
     assert_eq!(query_cursor("q=road", "since"), Ok(0));
