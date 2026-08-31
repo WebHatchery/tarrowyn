@@ -131,7 +131,10 @@ degrades the service boundary instead of being treated as healthy until the
 next trim.
 Link replay tombstones must also refer to access tokens that are no longer in
 either live session table; a token cannot be both an active session and a
-credential-replay key.
+credential-replay key. A cache hit also requires its issuing production
+session's refresh window to remain live, so revoking a linked session cannot
+return its old credentials through the retired guest token before the next
+maintenance tick.
 Revoked-guest replay fingerprints follow the same rule: a fingerprinted token
 must no longer be present in the live guest-session table.
 Moderation cooldowns are identity-lifecycle state rather than replay history:

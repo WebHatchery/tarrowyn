@@ -48,7 +48,7 @@ fn trim_expired_auth_replays(state: &mut RepositoryState) {
         .retain(|_, response| replay_session_is_live(sessions, &response.session, current_tick));
 }
 
-fn replay_session_is_live(
+pub(super) fn replay_session_is_live(
     sessions: &std::collections::HashMap<String, ProductionSession>,
     response: &AuthSession,
     current_tick: u64,

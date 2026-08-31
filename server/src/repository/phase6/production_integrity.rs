@@ -373,6 +373,11 @@ fn cached_session_matches_account(
             stored.account_id == account_id
                 && stored.refresh_token == session.refresh_token
                 && stored.expires_at_tick == session.expires_at_tick
+                && super::maintenance::replay_session_is_live(
+                    &state.phase6.sessions,
+                    session,
+                    state.tick,
+                )
         })
 }
 

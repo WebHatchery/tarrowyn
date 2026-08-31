@@ -295,6 +295,47 @@ fn revocation_removes_refresh_replay_credentials() {
 }
 
 #[test]
+fn revocation_does_not_replay_link_credentials_through_the_old_guest_token() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let guest = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("revoke-link-replay".to_owned()),
+            reset: false,
+        })
+        .expect("guest session")
+        .data;
+    let link_request = AuthLinkRequest {
+        request_id: "revoke-link-replay-request".to_owned(),
+        provider: "webhatchery-identity-oidc".to_owned(),
+        subject: "revoke-link-replay-subject".to_owned(),
+        display_name: None,
+    };
+    let linked = repository
+        .auth_link(&guest.account_token, link_request.clone())
+        .expect("linked session")
+        .data;
+
+    repository
+        .auth_revoke(
+            &linked.session.account_token,
+            AuthRevokeRequest {
+                request_id: "revoke-link-replay-revoke".to_owned(),
+                revoke_all: true,
+            },
+        )
+        .expect("revoked session");
+
+    let error = repository
+        .auth_link(&guest.account_token, link_request)
+        .unwrap_err();
+    assert_eq!(error.status, 401);
+    assert_eq!(error.error.code, "unauthorized");
+    let state = repository.state.lock().expect("world repository lock");
+    assert!(state.phase6.auth_link_results.is_empty());
+    assert!(state.phase6.auth_link_tokens.is_empty());
+}
+
+#[test]
 fn revocation_counts_only_sessions_it_revokes_after_refresh_rotation() {
     let repository = WorldRepository::new(ServerConfig::default());
     let guest = repository

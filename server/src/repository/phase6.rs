@@ -146,10 +146,18 @@ impl WorldRepository {
         }
         let cache_key = format!("{}:{}", guest_key, request.request_id);
         if let Some(previous) = state.phase6.auth_link_results.get(&cache_key).cloned() {
-            return Ok(ApiResponse {
-                meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
-                data: previous,
-            });
+            if maintenance::replay_session_is_live(
+                &state.phase6.sessions,
+                &previous.session,
+                state.tick,
+            ) {
+                return Ok(ApiResponse {
+                    meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
+                    data: previous,
+                });
+            }
+            state.phase6.auth_link_results.remove(&cache_key);
+            state.phase6.auth_link_tokens.remove(token);
         }
         if replay_only {
             return Err(RepositoryError::unauthorized());

@@ -4165,3 +4165,13 @@ tests, including `live_session_cannot_remain_an_auth_revoke_tombstone`.
 Server-package formatting, clippy, Rust file-size, and diff checks passed. No
 full workspace suite was repeated for this isolated replay-integrity predicate
 maintenance slice, and no new external or deferred work was opened.
+
+The revoked link-replay boundary correction was validated on 2026-08-31.
+An old guest link token no longer returns cached production credentials after
+the linked session is revoked; the focused `session_integrity` filter passed
+all 13 tests, including
+`revocation_does_not_replay_link_credentials_through_the_old_guest_token`.
+The focused `production_integrity` filter also passed all 12 tests. Server
+package formatting, clippy, Rust file-size, and diff checks passed. No full
+workspace suite was repeated for this isolated authentication replay slice,
+and no new external or deferred work was opened.
