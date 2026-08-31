@@ -279,10 +279,13 @@ impl GameSession {
     }
 
     pub fn move_player(&mut self, dx: i32, dy: i32) -> bool {
-        let next = TilePos::new(
-            self.player.position.x + dx.signum(),
-            self.player.position.y + dy.signum(),
-        );
+        let Some(next_x) = self.player.position.x.checked_add(dx.signum()) else {
+            return false;
+        };
+        let Some(next_y) = self.player.position.y.checked_add(dy.signum()) else {
+            return false;
+        };
+        let next = TilePos::new(next_x, next_y);
         if !self.world.tiles.is_valid(next)
             || !self
                 .world
@@ -299,9 +302,13 @@ impl GameSession {
     }
 
     pub fn move_toward(&mut self, target: TilePos) -> bool {
-        let dx = target.x - self.player.position.x;
-        let dy = target.y - self.player.position.y;
-        if dx.abs() >= dy.abs() && dx != 0 {
+        let Some(dx) = target.x.checked_sub(self.player.position.x) else {
+            return false;
+        };
+        let Some(dy) = target.y.checked_sub(self.player.position.y) else {
+            return false;
+        };
+        if dx.unsigned_abs() >= dy.unsigned_abs() && dx != 0 {
             self.move_player(dx.signum(), 0)
         } else if dy != 0 {
             self.move_player(0, dy.signum())

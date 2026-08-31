@@ -39,6 +39,18 @@ fn water_blocks_movement_but_the_path_is_open() {
 }
 
 #[test]
+fn malformed_saved_position_cannot_overflow_local_walk() {
+    let mut session = GameSession::new(&test_config());
+    session.player.position = TilePos::new(i32::MAX, i32::MAX);
+
+    assert!(!session.move_player(1, 1));
+    assert!(!session.move_toward(TilePos::new(i32::MIN, i32::MIN)));
+
+    session.player.position = TilePos::new(0, 0);
+    assert!(!session.move_toward(TilePos::new(i32::MIN, i32::MIN)));
+}
+
+#[test]
 fn offline_fixture_uses_the_configured_starting_seed_count() {
     let mut config = test_config();
     config.starting_seeds = 9;

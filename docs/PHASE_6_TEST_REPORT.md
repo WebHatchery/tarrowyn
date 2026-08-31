@@ -4468,3 +4468,13 @@ file-size, and diff checks passed. The project publisher also passed Windows/Web
 release builds, packaging, Preview deployment, and catalog synchronization. No
 full workspace suite was repeated for this isolated regional projection-boundary
 slice, and no new external or deferred work was opened.
+
+The offline save-position boundary was validated on 2026-08-31. Local movement
+and target deltas now fail closed when a malformed saved position would overflow
+integer arithmetic, allowing the grid validity check to reject the step safely.
+The focused offline-position regression passed 1 test with 250 filtered;
+client-package formatting, clippy, Rust file-size, and diff checks passed. The
+project publisher also passed Windows/WebGL release builds, packaging, Preview
+deployment, and catalog synchronization. No full workspace suite was repeated
+for this isolated offline-save safety slice, and no new external or deferred
+work was opened.
