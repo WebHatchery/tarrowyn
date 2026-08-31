@@ -21,7 +21,7 @@ pub(super) struct SkillManifest {
 }
 
 #[derive(Debug, Clone, Deserialize)]
-pub(super) struct SkillDefinition {
+pub(crate) struct SkillDefinition {
     pub(super) id: String,
     pub(super) name: String,
     pub(super) family: SkillFamily,

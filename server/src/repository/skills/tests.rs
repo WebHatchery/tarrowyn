@@ -1,4 +1,5 @@
 use super::*;
+use crate::repository::models::SkillLedger;
 use crate::{ServerConfig, WorldRepository};
 use tarrowyn_protocol::{GuestSessionRequest, SkillAction, SkillRequest, SkillStatus};
 

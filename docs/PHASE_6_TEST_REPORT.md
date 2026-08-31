@@ -3308,3 +3308,11 @@ behavior. Server-package clippy with warnings denied, server formatting,
 `git diff --check`, and the Rust file-size scan pass. This is source
 organization maintenance, so no focused runtime suite, publisher, or full
 workspace gate is repeated, and no new external or deferred work is opened.
+
+The server skills entrypoints now keep discovery, mastery, qualifying-history,
+and teaching rules in `skills/logic.rs`, reducing the endpoint module from 722
+lines while preserving its catalogue and cross-phase hooks. The focused skills
+suite (13 tests), server-package clippy with warnings denied, server formatting,
+`git diff --check`, and the Rust file-size scan pass. This is source
+organization maintenance, so no publisher or full workspace gate is repeated,
+and no new external or deferred work is opened.
