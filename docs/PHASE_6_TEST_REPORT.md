@@ -3503,6 +3503,15 @@ with server-package clippy with warnings denied, package formatting,
 gate is repeated because this is test-source organization maintenance, and no
 new external or deferred work is opened.
 
+The Phase 5 travel lock regression now lives beside the existing travel
+percentage boundary in `repository/phase5/tests/travel_boundary.rs`, reducing
+the Phase 5 test root from 600 to 544 lines while preserving server-arrival
+gating and large-route progress contracts. The focused travel-boundary filter
+passes (2 tests), along with server-package clippy with warnings denied,
+package formatting, `git diff --check`, and the Rust file-size scan. No
+publisher or full workspace gate is repeated because this is test-source
+organization maintenance, and no new external or deferred work is opened.
+
 The repository's validated farm-layout and legacy-migration regressions now
 live in `repository/tests/farm_migration.rs`, reducing the shared repository
 test root from 667 to 599 lines while preserving fresh-manifest, empty-legacy,
