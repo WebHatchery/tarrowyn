@@ -18,16 +18,23 @@ const REFRESH_RETRY_DELAY_SECONDS: f32 = 1.0;
 mod auth;
 mod commands;
 mod events;
+mod feedback;
 mod lifecycle;
 mod location;
 mod market;
 mod online;
 mod pending;
+mod polling;
 mod routes;
 mod summary;
 mod sync;
 mod travel;
 use commands::{Phase5Command, Phase5CommandResponse};
+use events::merge_regional_events;
+#[cfg(test)]
+use feedback::market_success_message;
+use feedback::{market_result_message, phase5_notice};
+use polling::{accept_projection_cursor, poll};
 
 pub(super) struct Phase5Client {
     pending_region: Option<Pending<ApiResponse<RegionSnapshot>>>,
@@ -533,42 +540,6 @@ fn refresh_delay(expires_in_seconds: u32) -> f32 {
     (expires_in_seconds as f32 * 0.75).max(1.0)
 }
 
-fn accept_projection_cursor(current: &mut u64, incoming: Option<u64>) -> bool {
-    let Some(incoming) = incoming else {
-        return true;
-    };
-    if incoming < *current {
-        return false;
-    }
-    *current = incoming;
-    true
-}
-
-fn poll<T, F>(
-    pending: &mut Option<Pending<ApiResponse<T>>>,
-    dt: f32,
-    apply: F,
-    notices: &mut Vec<NetworkNotice>,
-    label: &str,
-) where
-    T: serde::de::DeserializeOwned,
-    F: FnOnce(ApiResponse<T>),
-{
-    if let Some(result) = pending
-        .as_mut()
-        .and_then(|pending| pending.poll_timed(dt, REQUEST_TIMEOUT_SECONDS))
-    {
-        *pending = None;
-        match result {
-            Ok(response) => apply(response),
-            Err(error) => notices.push(NetworkNotice::Warning(format!(
-                "The regional {label} could not be refreshed: {}",
-                short_error(&error)
-            ))),
-        }
-    }
-}
-
 impl Phase5Client {
     fn poll_events(
         &mut self,
@@ -604,112 +575,6 @@ impl Phase5Client {
             ))),
         }
     }
-}
-
-fn merge_regional_events(
-    current: &mut Option<RegionalEventsResponse>,
-    incoming: RegionalEventsResponse,
-) {
-    let Some(current) = current else {
-        let mut incoming = incoming;
-        let excess = incoming
-            .events
-            .len()
-            .saturating_sub(MAX_CACHED_REGIONAL_EVENTS);
-        if excess > 0 {
-            incoming.events.drain(..excess);
-        }
-        *current = Some(incoming);
-        return;
-    };
-    current.cursor = incoming.cursor;
-    for event in incoming.events {
-        if let Some(existing) = current
-            .events
-            .iter_mut()
-            .find(|existing| existing.event_id == event.event_id)
-        {
-            *existing = event;
-        } else {
-            current.events.push(event);
-        }
-    }
-    current.events.sort_by_key(|event| event.cursor);
-    let excess = current
-        .events
-        .len()
-        .saturating_sub(MAX_CACHED_REGIONAL_EVENTS);
-    if excess > 0 {
-        current.events.drain(..excess);
-    }
-}
-
-fn phase5_notice(
-    accepted: bool,
-    reason: Option<String>,
-    success: &str,
-    notices: &mut Vec<NetworkNotice>,
-) {
-    if accepted {
-        notices.push(NetworkNotice::Success(success.to_owned()));
-    } else {
-        notices.push(NetworkNotice::Warning(reason.unwrap_or_else(|| {
-            "The regional action was not accepted.".to_owned()
-        })));
-    }
-}
-
-fn market_success_message(action: Option<MarketOrderAction>, fallback_used: bool) -> &'static str {
-    match action {
-        Some(MarketOrderAction::Create) if fallback_used => {
-            "The limited travelling service accepted the shipment at a surcharge."
-        }
-        Some(MarketOrderAction::Create) => "The shipment is on the regional ledger.",
-        Some(MarketOrderAction::Fulfil) if fallback_used => {
-            "The travelling shipment reached its destination and settled."
-        }
-        Some(MarketOrderAction::Fulfil) => "The shipment reached its destination and settled.",
-        Some(MarketOrderAction::Cancel) if fallback_used => {
-            "The fallback shipment was cancelled; no player goods were escrowed."
-        }
-        Some(MarketOrderAction::Cancel) => "The shipment was cancelled and its escrow returned.",
-        None => "The regional market accepted the command.",
-    }
-}
-
-fn market_result_message(
-    action: Option<MarketOrderAction>,
-    fallback_used: bool,
-    order: Option<&MarketOrder>,
-) -> String {
-    let message = market_success_message(action, fallback_used);
-    let Some(order) = order else {
-        return message.to_owned();
-    };
-    format!(
-        "{message} Details: {} from {} to {} • {} gold.",
-        market_quantity_label(order),
-        order.origin_location_id,
-        order.destination_location_id,
-        order.total_price
-    )
-}
-
-fn market_quantity_label(order: &MarketOrder) -> String {
-    let unit = match (order.commodity, order.quantity) {
-        (tarrowyn_protocol::CommodityKind::Turnips, 1) => "turnip",
-        (tarrowyn_protocol::CommodityKind::Moonberries, 1) => "moonberry",
-        (tarrowyn_protocol::CommodityKind::Seeds, 1) => "seed",
-        (tarrowyn_protocol::CommodityKind::Bandages, 1) => "bandage",
-        (tarrowyn_protocol::CommodityKind::Wheat, _) => "wheat",
-        (tarrowyn_protocol::CommodityKind::Turnips, _) => "turnips",
-        (tarrowyn_protocol::CommodityKind::Moonberries, _) => "moonberries",
-        (tarrowyn_protocol::CommodityKind::Seeds, _) => "seeds",
-        (tarrowyn_protocol::CommodityKind::Timber, _) => "timber",
-        (tarrowyn_protocol::CommodityKind::Stone, _) => "stone",
-        (tarrowyn_protocol::CommodityKind::Bandages, _) => "bandages",
-    };
-    format!("{} {unit}", order.quantity)
 }
 
 #[cfg(test)]

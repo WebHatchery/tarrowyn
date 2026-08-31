@@ -100,3 +100,41 @@ impl Phase5Client {
         })
     }
 }
+
+pub(super) fn merge_regional_events(
+    current: &mut Option<RegionalEventsResponse>,
+    incoming: RegionalEventsResponse,
+) {
+    let Some(current) = current else {
+        let mut incoming = incoming;
+        let excess = incoming
+            .events
+            .len()
+            .saturating_sub(MAX_CACHED_REGIONAL_EVENTS);
+        if excess > 0 {
+            incoming.events.drain(..excess);
+        }
+        *current = Some(incoming);
+        return;
+    };
+    current.cursor = incoming.cursor;
+    for event in incoming.events {
+        if let Some(existing) = current
+            .events
+            .iter_mut()
+            .find(|existing| existing.event_id == event.event_id)
+        {
+            *existing = event;
+        } else {
+            current.events.push(event);
+        }
+    }
+    current.events.sort_by_key(|event| event.cursor);
+    let excess = current
+        .events
+        .len()
+        .saturating_sub(MAX_CACHED_REGIONAL_EVENTS);
+    if excess > 0 {
+        current.events.drain(..excess);
+    }
+}
