@@ -12,6 +12,7 @@ use tarrowyn_protocol::{
 const MAX_CACHED_REGIONAL_EVENTS: usize = 2048;
 const MAX_COMMAND_RETRIES: u8 = 3;
 const COMMAND_RETRY_DELAY_SECONDS: f32 = 1.0;
+const SESSION_COMMAND_RECOVERY_DELAY_SECONDS: f32 = 5.0;
 const MAX_REFRESH_RETRIES: u8 = 3;
 const REFRESH_RETRY_DELAY_SECONDS: f32 = 1.0;
 
@@ -311,6 +312,21 @@ impl Phase5Client {
                                 "The regional action could not be confirmed; retrying the same action ({}/{}). {}",
                                 self.command_retry_count,
                                 MAX_COMMAND_RETRIES,
+                                short_error(&error)
+                            )));
+                        }
+                    } else if let Some(command) = in_flight_command {
+                        if sync::is_session_command(&command) {
+                            self.in_flight_command = Some(command);
+                            self.command_retry_timer = SESSION_COMMAND_RECOVERY_DELAY_SECONDS;
+                            notices.push(NetworkNotice::Warning(format!(
+                                "The account action could not be confirmed; holding the same request for recovery. {}",
+                                short_error(&error)
+                            )));
+                        } else {
+                            self.command_retry_count = 0;
+                            notices.push(NetworkNotice::Warning(format!(
+                                "The regional action could not be confirmed: {}",
                                 short_error(&error)
                             )));
                         }

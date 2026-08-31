@@ -99,7 +99,7 @@ impl Phase5Client {
     }
 }
 
-fn is_session_command(command: &Phase5Command) -> bool {
+pub(super) fn is_session_command(command: &Phase5Command) -> bool {
     matches!(
         command,
         Phase5Command::Link(_)

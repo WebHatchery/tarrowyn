@@ -351,6 +351,45 @@ fn transient_command_failure_stays_bounded_during_retry() {
 }
 
 #[test]
+fn session_command_stays_available_for_slow_recovery_after_fast_retries() {
+    let mut client = Phase5Client::new();
+    let request = tarrowyn_protocol::AuthLinkRequest {
+        request_id: "link-recovery".to_owned(),
+        provider: "webhatchery-identity-oidc".to_owned(),
+        subject: "recovery-subject".to_owned(),
+        display_name: None,
+    };
+    client.in_flight_command = Some(Phase5Command::Link(request));
+    let mut api = HttpClient::new("https://example.test");
+    let data = crate::data::GameData::load().expect("embedded game data should load");
+    let mut projection = WorldProjection::new(&data.config);
+
+    for attempt in 0..=super::super::MAX_COMMAND_RETRIES {
+        client.pending_command = Some(Pending::failed(
+            "HTTP request 'POST /v1/auth/link' timed out after 6.0 seconds",
+        ));
+        client.command_retry_timer = 0.0;
+        let mut notices = Vec::new();
+        client.update(0.0, &mut api, &mut projection, true, false, &mut notices);
+        assert_eq!(notices.len(), 1);
+        if attempt < super::super::MAX_COMMAND_RETRIES {
+            assert_eq!(client.command_retry_count, attempt + 1);
+            assert_eq!(client.command_retry_timer, 1.0);
+        }
+    }
+
+    assert!(matches!(
+        client.in_flight_command,
+        Some(Phase5Command::Link(request)) if request.request_id == "link-recovery"
+    ));
+    assert_eq!(
+        client.command_retry_count,
+        super::super::MAX_COMMAND_RETRIES
+    );
+    assert_eq!(client.command_retry_timer, 5.0);
+}
+
+#[test]
 fn account_deletion_requires_two_taps_for_a_linked_account() {
     let mut client = Phase5Client::new();
     client.account = Some(account_response(false));

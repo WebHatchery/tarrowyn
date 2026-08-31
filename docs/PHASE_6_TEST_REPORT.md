@@ -4175,3 +4175,13 @@ The focused `production_integrity` filter also passed all 12 tests. Server
 package formatting, clippy, Rust file-size, and diff checks passed. No full
 workspace suite was repeated for this isolated authentication replay slice,
 and no new external or deferred work was opened.
+
+The session-command recovery boundary was validated on 2026-08-31. After the
+three fast retries are exhausted, the client retains the exact account-bound
+request and schedules a slower recovery retry; the focused `account_lifecycle`
+client filter passed all 23 matching tests, including
+`session_command_stays_available_for_slow_recovery_after_fast_retries`.
+Server-side focused authentication checks were unchanged and remained green
+in the preceding commit. The published client build passed, and no full
+workspace suite was repeated for this isolated client retry-recovery slice;
+no new external or deferred work was opened.
