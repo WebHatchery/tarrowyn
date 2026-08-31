@@ -24,20 +24,20 @@ pub fn draw_school_selection(ctx: &UiContext<'_>, mouse: Vec2, actions: &mut Vec
         2.0,
         CREAM,
     );
-    if ctx.skill_pending {
-        draw_ui_text_ex(
-            "The school ledger is settling; wait for its response before opening another lesson.",
-            panel.x + 20.0,
-            panel.y + 124.0,
-            TextStyle::new(11.0, dark::TEXT_DIM).params(),
-        );
-    }
     let choices: Vec<_> = ctx
         .skills
         .iter()
         .filter(|skill| school_teaching_choice(skill))
         .collect();
-    if choices.is_empty() {
+    if ctx.skill_pending {
+        draw_ui_text_ex(
+            "The school ledger is settling; wait for its response before opening another lesson.",
+            panel.x + 20.0,
+            panel.y + 135.0,
+            TextStyle::new(11.0, dark::TEXT_DIM).params(),
+        );
+        draw_school_choices(panel, &choices, true, mouse, actions);
+    } else if choices.is_empty() {
         draw_ui_text_ex(
             if ctx.skills.is_empty() {
                 "The skill ledger is loading; tap Close and try again shortly."

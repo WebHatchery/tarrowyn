@@ -259,6 +259,20 @@ impl ServerConfig {
     }
 
     pub(crate) fn validate_runtime_content_bounds(&self) -> Result<(), String> {
+        self.validate_runtime_world_bounds()?;
+        let content = crate::content::game_config_defaults();
+        if !self.day_length_seconds.is_finite()
+            || self.day_length_seconds != content.day_length_seconds
+        {
+            return Err(format!(
+                "runtime day length must remain {} seconds for the validated calendar",
+                content.day_length_seconds
+            ));
+        }
+        Ok(())
+    }
+
+    pub(crate) fn validate_runtime_world_bounds(&self) -> Result<(), String> {
         let content = crate::content::game_config_defaults();
         if self.world_width < content.world_width || self.world_height < content.world_height {
             return Err(format!(
@@ -270,14 +284,6 @@ impl ServerConfig {
         if tile_count > MAX_WORLD_TILES {
             return Err(format!(
                 "runtime world dimensions must contain no more than {MAX_WORLD_TILES} tiles"
-            ));
-        }
-        if !self.day_length_seconds.is_finite()
-            || self.day_length_seconds != content.day_length_seconds
-        {
-            return Err(format!(
-                "runtime day length must remain {} seconds for the validated calendar",
-                content.day_length_seconds
             ));
         }
         Ok(())

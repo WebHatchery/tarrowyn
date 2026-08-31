@@ -134,6 +134,7 @@ fn rejected_regional_mutations_replay_after_repository_restart() {
 fn auth_replay_results_survive_repository_restart() {
     let path =
         std::env::temp_dir().join(format!("tarrowyn-auth-replay-{}.json", std::process::id()));
+    let _ = std::fs::remove_file(&path);
     let path_string = path.to_string_lossy().into_owned();
     let config = ServerConfig {
         persistence_path: Some(path_string),
@@ -156,32 +157,35 @@ fn auth_replay_results_survive_repository_restart() {
         request_id: "restart-refresh".to_owned(),
         refresh_token: linked.session.refresh_token.clone(),
     };
-    let refreshed = first.auth_refresh(refresh_request.clone()).unwrap().data;
     drop(first);
 
     let second = WorldRepository::new(config.clone());
     let linked_after_restart = second
-        .auth_link(&refreshed.session.account_token, link_request)
+        .auth_link(&first_guest.account_token, link_request)
         .unwrap()
         .data;
-    let refreshed_after_restart = second.auth_refresh(refresh_request).unwrap().data;
     assert_eq!(linked_after_restart, linked);
+    let refreshed = second.auth_refresh(refresh_request.clone()).unwrap().data;
+    drop(second);
+
+    let third = WorldRepository::new(config.clone());
+    let refreshed_after_restart = third.auth_refresh(refresh_request).unwrap().data;
     assert_eq!(refreshed_after_restart, refreshed);
-    assert!(second
+    assert!(third
         .account(&refreshed_after_restart.session.account_token)
         .is_ok());
     let revoke_request = AuthRevokeRequest {
         request_id: "restart-revoke".to_owned(),
         revoke_all: true,
     };
-    let revoked = second
+    let revoked = third
         .auth_revoke(&refreshed.session.account_token, revoke_request.clone())
         .unwrap()
         .data;
-    drop(second);
+    drop(third);
 
-    let third = WorldRepository::new(config);
-    let revoked_after_restart = third
+    let fourth = WorldRepository::new(config);
+    let revoked_after_restart = fourth
         .auth_revoke(&refreshed.session.account_token, revoke_request)
         .unwrap()
         .data;

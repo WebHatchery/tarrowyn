@@ -456,7 +456,7 @@ impl WorldRepository {
 
     fn validate_snapshot_configuration(&self) -> Result<(), RepositoryError> {
         self.config
-            .validate_runtime_content_bounds()
+            .validate_runtime_world_bounds()
             .map_err(|error| {
                 RepositoryError::new(
                     500,

@@ -242,26 +242,30 @@ pub fn draw_skill_selection(ctx: &UiContext<'_>, mouse: Vec2, actions: &mut Vec<
         2.0,
         CREAM,
     );
-    draw_ui_text_ex(
+    draw_text_block(
         &advanced_skill_line(ctx.skills),
         panel.x + 20.0,
-        panel.y + 131.0,
-        TextStyle::new(10.0, MINT).params(),
+        panel.y + 108.0,
+        panel.w - 40.0,
+        32.0,
+        10.0,
+        1.0,
+        MINT,
     );
-    if ctx.skill_pending {
-        draw_ui_text_ex(
-            "The skill ledger is settling; wait for its response before choosing another discipline.",
-            panel.x + 20.0,
-            panel.y + 145.0,
-            TextStyle::new(11.0, dark::TEXT_DIM).params(),
-        );
-    }
     let choices: Vec<_> = ctx
         .skills
         .iter()
         .filter(|skill| skill_practice_choice(skill))
         .collect();
-    if choices.is_empty() {
+    if ctx.skill_pending {
+        draw_ui_text_ex(
+            "The skill ledger is settling; wait for its response before choosing another discipline.",
+            panel.x + 20.0,
+            panel.y + 150.0,
+            TextStyle::new(11.0, dark::TEXT_DIM).params(),
+        );
+        draw_skill_choices(panel, &choices, true, mouse, actions);
+    } else if choices.is_empty() {
         draw_ui_text_ex(
             if ctx.skills.is_empty() {
                 "The skill ledger is loading; tap Close and try again shortly."
@@ -269,14 +273,14 @@ pub fn draw_skill_selection(ctx: &UiContext<'_>, mouse: Vec2, actions: &mut Vec<
                 "Every depth-one practice is mastered; advanced discoveries remain in the ledger."
             },
             panel.x + 20.0,
-            panel.y + 138.0,
+            panel.y + 150.0,
             TextStyle::new(13.0, dark::TEXT_DIM).params(),
         );
     } else {
         draw_ui_text_ex(
             &format!("{} depth-one practices available", choices.len()),
             panel.x + 20.0,
-            panel.y + 133.0,
+            panel.y + 150.0,
             TextStyle::new(11.0, MINT).params(),
         );
         draw_skill_choices(panel, &choices, ctx.skill_pending, mouse, actions);
@@ -309,7 +313,7 @@ fn draw_skill_choices(
         if virtual_button(
             Rect::new(
                 panel.x + 20.0 + column as f32 * (width + gap),
-                panel.y + 148.0 + row as f32 * (height + gap),
+                panel.y + 160.0 + row as f32 * (height + gap),
                 width,
                 height,
             ),
@@ -385,7 +389,7 @@ pub fn draw_combat_status(ctx: &UiContext<'_>, content: Rect, top: f32) {
         Rect::new(
             content.x,
             top + 101.0,
-            content.w,
+            content.w - 128.0,
             if combat.status == tarrowyn_protocol::LocalCombatStatus::KnockedOut {
                 55.0
             } else {

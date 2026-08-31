@@ -216,19 +216,28 @@ fn draw_world_panel(ctx: &UiContext<'_>, mouse: Vec2) -> Rect {
         );
     }
 
-    draw_text_right(
-        &format!(
-            "{} ready plots  •  {} reachable tiles  •  zoom {:.1}x",
-            ctx.world
-                .crops
-                .data()
-                .iter()
-                .filter_map(|crop| *crop)
-                .filter(CropState::mature)
-                .count(),
+    let ready_plots = ctx
+        .world
+        .crops
+        .data()
+        .iter()
+        .filter_map(|crop| *crop)
+        .filter(CropState::mature)
+        .count();
+    let map_status = if ctx.offline {
+        format!(
+            "{ready_plots} ready plots  •  {} reachable tiles  •  zoom {:.1}x",
             ctx.world.reachable.len(),
             ctx.camera_zoom
-        ),
+        )
+    } else {
+        format!(
+            "{ready_plots} ready plots  •  server-stepped travel  •  zoom {:.1}x",
+            ctx.camera_zoom
+        )
+    };
+    draw_text_right(
+        &map_status,
         panel.right() - 18.0,
         panel.bottom() - 17.0,
         TextStyle::new(13.0, dark::TEXT_DIM),

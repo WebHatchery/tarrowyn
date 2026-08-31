@@ -4520,14 +4520,14 @@ for this isolated server-startup safety slice, and no new external or
 deferred work was opened.
 
 The direct repository snapshot boundary was validated on 2026-08-31. The
-public `world` and `state` endpoints now repeat the runtime dimension guard so
+public `world` and `state` endpoints now repeat the runtime world-dimension guard so
 callers that construct `WorldRepository` directly cannot reach unbounded tile
-enumeration outside the HTTP startup path. The focused endpoint regression
-passed 1 test with 489 filtered; server-package formatting, clippy, Rust
-file-size, and diff checks passed. The project publisher also passed
-Windows/WebGL release builds, packaging, Preview deployment, and catalog
-synchronization. No full workspace suite was repeated for this isolated
-snapshot-allocation boundary, and no new external or deferred work was opened.
+enumeration outside the HTTP startup path without rejecting otherwise valid
+accelerated test clocks. A full-review workspace run exposed and corrected the
+over-broad calendar validation, and the restart replay fixture now clears its
+process-scoped temporary snapshot before use so a prior interrupted run cannot
+pollute the next run. The complete workspace result and publisher result are
+recorded in the review entry below.
 
 The persisted-state input boundary was validated on 2026-09-01. JSON restore
 now checks file metadata, reads through a bounded 128 MiB window, and rejects
@@ -4540,6 +4540,31 @@ project publisher also passed Windows/WebGL release builds, packaging, Preview
 deployment, and catalog synchronization. No full workspace suite was repeated
 for this isolated restore-input boundary, and no new external or deferred work
 was opened.
+
+The full code and visual review was completed on 2026-09-01. The first complete
+workspace run exposed three failures hidden by the earlier focused checks: the
+direct snapshot guard also rejected accelerated test calendars, and the auth
+replay restart scenario attempted to replay a stale link response after session
+rotation. The snapshot endpoint now applies only the world-allocation boundary,
+while startup retains the complete content/calendar validation; the restart
+test now proves link, refresh, and revoke replay at their valid session
+boundaries and clears stale process-scoped fixture state. The corrected
+workspace passed 491 server tests, 254 client tests, 17 protocol tests, the two
+integration checks, and all documentation tests. Workspace clippy with all
+targets, all features, and warnings denied passed; formatting, diff, and Rust
+file-size checks passed. The project publisher passed Windows and WebGL release
+builds, packaging, Preview deployment, Project Roost recording, and catalog
+synchronization.
+
+The published WebGL build was exercised online against an isolated local
+protocol-6 server and in the offline first-evening fallback. The main shared
+road, Practice, School, Chronicle, Account, regional inspection, and offline
+screens were checked at full-screen and inline desktop sizes with no browser
+console warnings or errors. The review corrected a combat card that covered the
+visible Down movement control, separated overlapping Practice chooser status
+lines, prevented pending School copy from colliding with its choice count, and
+replaced the misleading online `0 reachable tiles` label with server-stepped
+travel language. Final captures are stored in `docs/verification/`.
 
 The online tile-coordinate boundary was validated on 2026-08-31. State
 projection now rejects out-of-bounds and duplicate tile coordinates instead of
