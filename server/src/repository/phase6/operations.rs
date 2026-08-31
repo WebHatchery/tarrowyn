@@ -14,6 +14,14 @@ const MAX_SUPPORT_CHRONICLE_ENTRIES: usize = 128;
 mod integrity;
 use integrity::{alert_flags, integrity_failures};
 
+pub(super) fn mysql_pool_max_metric(config: &crate::config::ServerConfig) -> u32 {
+    if config.db_driver.trim().eq_ignore_ascii_case("mysql") {
+        u32::try_from(config.mysql_pool_max_connections).unwrap_or(u32::MAX)
+    } else {
+        0
+    }
+}
+
 fn validate_chronicle_search_cursor(
     state: &RepositoryState,
     since: u64,
@@ -336,11 +344,7 @@ impl WorldRepository {
                 http_queue_depth: 0,
                 http_queue_peak: 0,
                 http_queue_full_events: 0,
-                mysql_pool_max_connections: if self.config.db_driver.eq_ignore_ascii_case("mysql") {
-                    u32::try_from(self.config.mysql_pool_max_connections).unwrap_or(u32::MAX)
-                } else {
-                    0
-                },
+                mysql_pool_max_connections: mysql_pool_max_metric(&self.config),
             },
         })
     }

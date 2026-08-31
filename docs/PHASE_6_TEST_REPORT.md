@@ -3766,3 +3766,9 @@ four-connection pool default after clearing inherited overrides. Its existing
 target-database privilege and clean-schema gates remain unchanged. PowerShell
 parsing and diff checks pass; the live acceptance remains target-required and
 is not rerun for this harness-only determinism correction.
+
+The MySQL pool metric now shares the persistence selector's trimmed,
+case-insensitive backend check and saturates malformed oversized configuration
+when crossing into the protocol's `u32` field. Its focused pure-helper
+regression passes alongside the existing operator-metrics check; no broader
+client or workspace test is repeated for this edge-case correction.

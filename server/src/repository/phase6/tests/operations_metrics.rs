@@ -2,6 +2,21 @@ use super::super::super::{ServerConfig, WorldRepository};
 use tarrowyn_protocol::{AuthLinkRequest, GuestSessionRequest, MovementIntent};
 
 #[test]
+fn mysql_pool_metric_matches_the_selected_backend_safely() {
+    let mut config = ServerConfig::default();
+    assert_eq!(super::super::operations::mysql_pool_max_metric(&config), 0);
+
+    config.db_driver = " MySQL ".to_owned();
+    assert_eq!(super::super::operations::mysql_pool_max_metric(&config), 4);
+
+    config.mysql_pool_max_connections = usize::MAX;
+    assert_eq!(
+        super::super::operations::mysql_pool_max_metric(&config),
+        u32::MAX
+    );
+}
+
+#[test]
 fn operational_metrics_require_a_configured_support_operator() {
     let repository = WorldRepository::new(ServerConfig {
         support_operator_accounts: vec!["dev-account-1".to_owned()],
