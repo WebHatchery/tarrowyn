@@ -48,6 +48,13 @@ fn malformed_saved_position_cannot_overflow_local_walk() {
 
     session.player.position = TilePos::new(0, 0);
     assert!(!session.move_toward(TilePos::new(i32::MIN, i32::MIN)));
+
+    session.player.position = TilePos::new(i32::MAX, i32::MAX);
+    assert!(
+        !session
+            .apply_action(&action("listen", ActionKind::Listen))
+            .success
+    );
 }
 
 #[test]

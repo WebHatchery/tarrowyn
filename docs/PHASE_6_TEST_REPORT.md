@@ -4478,3 +4478,11 @@ project publisher also passed Windows/WebGL release builds, packaging, Preview
 deployment, and catalog synchronization. No full workspace suite was repeated
 for this isolated offline-save safety slice, and no new external or deferred
 work was opened.
+
+The shared coordinate safety boundary was validated on 2026-08-31. The common
+`TilePos::manhattan_distance` helper now handles extreme persisted coordinates
+without signed subtraction overflow, so Tarrowyn's range-gated offline actions
+fail safely as well. The focused malformed-position regression passed 1 test
+with 250 filtered; client-package formatting, clippy, Rust file-size, and diff
+checks passed. No publisher run or full workspace suite was repeated for this
+test-only integration slice, and no new external or deferred work was opened.
