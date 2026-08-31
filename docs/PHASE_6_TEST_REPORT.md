@@ -4377,3 +4377,17 @@ clippy, Rust file-size, and diff checks passed. No full workspace suite was
 repeated for this isolated restore-privacy slice. The project publisher also
 passed Windows/WebGL release builds, packaging, Preview deployment, and
 catalog synchronization; no new external or deferred work was opened.
+
+The legacy chronicle-name source correction was validated on 2026-08-31. Restore
+normalization now discovers orphaned display names from persisted account-linked
+records in core trades, frontier state, Phase 4 governance, claims, service
+orders, lessons, and Phase 5 market orders, then applies the existing bounded
+scrub across retained public chronicle surfaces. The public-history normalizer
+was extracted from the near-limit reset module. The focused reset regressions
+passed 3 tests: `restored_state_anonymises_orphaned_governance_chronicle_names`,
+`restored_state_anonymises_orphaned_chronicle_names`, and
+`restored_state_anonymises_orphaned_audit_targets`. Server-package formatting,
+clippy, Rust file-size, and diff checks passed. No full workspace suite was
+repeated for this isolated restore-privacy slice. The project publisher remains
+green from the preceding runtime change, and no new external or deferred work
+was opened.

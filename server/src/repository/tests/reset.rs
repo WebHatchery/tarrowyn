@@ -2,10 +2,10 @@ use super::super::WorldRepository;
 use crate::ServerConfig;
 use tarrowyn_protocol::{
     AuditRecord, AuthRevokeRequest, ChatMessage, ChatRequest, ChronicleEntry, ClaimAction,
-    ClaimLifecycleAction, ClaimLifecycleRequest, ClaimRequest, FrontierEvent, GuestSessionRequest,
-    MarketOrderAction, MarketOrderRequest, ModerationReportRequest, ProfessionAction,
-    ProfessionKind, ProfessionRequest, TradeAction, TradeBundle, TradeRequest, TravelAction,
-    TravelRequest, WorldEvent,
+    ClaimLifecycleAction, ClaimLifecycleRequest, ClaimRequest, FrontierEvent, GovernanceDecision,
+    GuestSessionRequest, MarketOrderAction, MarketOrderRequest, ModerationReportRequest,
+    ProfessionAction, ProfessionKind, ProfessionRequest, PublicAction, TradeAction, TradeBundle,
+    TradeRequest, TravelAction, TravelRequest, WorldEvent,
 };
 
 #[test]
@@ -95,6 +95,38 @@ fn restored_state_anonymises_orphaned_chronicle_names() {
     assert!(!restored.phase5.settlements[0].chronicle[0]
         .text
         .contains("Orphan resident"));
+}
+
+#[test]
+fn restored_state_anonymises_orphaned_governance_chronicle_names() {
+    let config = ServerConfig::default();
+    let mut stored = super::super::models::RepositoryState::fresh(&config).to_stored();
+    stored.phase4.governance.decisions.push(GovernanceDecision {
+        decision_id: "decision-orphan".to_owned(),
+        actor_account_id: "orphan-account".to_owned(),
+        actor_name: "Orphan registrar".to_owned(),
+        action: PublicAction::RepairRoad,
+        proposal_id: "proposal-orphan".to_owned(),
+        cost: 4,
+        service_affected: "north road".to_owned(),
+        created_tick: 1,
+    });
+    stored.phase3.chronicle.push_back(ChronicleEntry {
+        event_id: "orphan-governance-chronicle".to_owned(),
+        kind: "governance".to_owned(),
+        title: "Orphan registrar steadies the road".to_owned(),
+        text: "The ledger remembers Orphan registrar's public repair.".to_owned(),
+        created_tick: 1,
+        cursor: 1,
+    });
+
+    let restored = super::super::models::RepositoryState::from_stored(stored, &config);
+    assert!(!restored.phase3.chronicle[0]
+        .title
+        .contains("Orphan registrar"));
+    assert!(!restored.phase3.chronicle[0]
+        .text
+        .contains("Orphan registrar"));
 }
 
 #[test]
