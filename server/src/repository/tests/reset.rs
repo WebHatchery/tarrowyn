@@ -19,7 +19,7 @@ fn restored_state_anonymises_orphaned_audit_targets() {
         target: "orphan-account".to_owned(),
         outcome: "accepted".to_owned(),
         tick: 1,
-        note: "An orphaned exact target must not survive restore.".to_owned(),
+        note: "An orphaned exact target orphan-account must not survive restore.".to_owned(),
     });
     stored.phase6.audits.push_back(AuditRecord {
         audit_id: "audit-orphan-composite".to_owned(),
@@ -28,7 +28,7 @@ fn restored_state_anonymises_orphaned_audit_targets() {
         target: "orphan-account (message 7)".to_owned(),
         outcome: "accepted".to_owned(),
         tick: 2,
-        note: "An orphaned composite target must not survive restore.".to_owned(),
+        note: "An orphaned composite target orphan-account must not survive restore.".to_owned(),
     });
 
     let restored = super::super::models::RepositoryState::from_stored(stored, &config);
@@ -41,6 +41,11 @@ fn restored_state_anonymises_orphaned_audit_targets() {
         restored.phase6.audits[1].target,
         "former-resident (message 7)"
     );
+    assert!(restored
+        .phase6
+        .audits
+        .iter()
+        .all(|audit| !audit.note.contains("orphan-account")));
 }
 
 #[test]

@@ -68,6 +68,10 @@ fn anonymize_orphaned_audits(
     account_ids: &HashSet<String>,
 ) {
     for audit in audits {
+        let orphaned_ids = orphaned_audit_accounts(audit, account_ids);
+        for account_id in orphaned_ids {
+            audit.note = audit.note.replace(&account_id, RESET_ACCOUNT);
+        }
         if is_orphaned_account(&audit.actor_account_id, account_ids) {
             audit.actor_account_id = RESET_ACCOUNT.to_owned();
         }
@@ -77,9 +81,6 @@ fn anonymize_orphaned_audits(
             }
         } else if is_orphaned_account(&audit.target, account_ids) {
             audit.target = RESET_ACCOUNT.to_owned();
-        }
-        for account_id in orphaned_audit_accounts(audit, account_ids) {
-            audit.note = audit.note.replace(&account_id, RESET_ACCOUNT);
         }
         audit.note = audit.note.chars().take(240).collect();
     }

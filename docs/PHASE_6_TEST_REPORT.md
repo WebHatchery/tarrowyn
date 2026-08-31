@@ -4326,3 +4326,12 @@ regression passed 1 test with an input that expands during migration:
 formatting, clippy, Rust file-size, and diff checks passed. No full workspace
 suite was repeated for this isolated audit-invariant slice, and no new external
 or deferred work was opened.
+
+The orphaned-audit note scrub correction was validated on 2026-08-31. Restore
+normalization now collects orphaned actor and target IDs before replacing the
+structured references, so those IDs are also removed from retained audit notes
+while message evidence remains bounded. The focused reset regression passed 1
+test: `restored_state_anonymises_orphaned_audit_targets`. Server-package
+formatting, clippy, Rust file-size, and diff checks passed. No full workspace
+suite was repeated for this isolated restore-privacy slice, and no new external
+or deferred work was opened.
