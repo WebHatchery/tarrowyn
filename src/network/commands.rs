@@ -94,7 +94,7 @@ impl OnlineClient {
                         response
                             .data
                             .reason
-                            .unwrap_or_else(|| "The server rejected that step.".to_owned()),
+                            .unwrap_or_else(|| "The shared road rejected that step.".to_owned()),
                     ));
                 }
             }
@@ -152,7 +152,7 @@ impl OnlineClient {
                     )));
                 } else {
                     notices.push(NetworkNotice::Warning(response.data.reason.unwrap_or_else(
-                        || "The server rejected that farm action.".to_owned(),
+                        || "The shared road rejected that farm action.".to_owned(),
                     )));
                 }
             }
@@ -165,7 +165,7 @@ impl OnlineClient {
                 pending.retry_timer = COMMAND_RETRY_DELAY_SECONDS;
                 self.pending_farming = Some(pending);
                 notices.push(NetworkNotice::Warning(format!(
-                    "The farm action could not be confirmed; retrying the same request ({retries}/{MAX_COMMAND_RETRIES})."
+                    "The farm action could not be confirmed; retrying the same action ({retries}/{MAX_COMMAND_RETRIES})."
                 )));
             }
             Err(error) => {
@@ -214,12 +214,9 @@ impl OnlineClient {
                         "Message sent to the settlement.".to_owned(),
                     ));
                 } else {
-                    notices.push(NetworkNotice::Warning(
-                        response
-                            .data
-                            .reason
-                            .unwrap_or_else(|| "The server rejected that message.".to_owned()),
-                    ));
+                    notices.push(NetworkNotice::Warning(response.data.reason.unwrap_or_else(
+                        || "The shared road rejected that message.".to_owned(),
+                    )));
                 }
             }
             Err(error)

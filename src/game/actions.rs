@@ -400,7 +400,7 @@ impl Game {
                 }
                 ClientMode::Online(_) => self
                     .notifications
-                    .warning("The server owns the online world; use Reconnect to recover it."),
+                    .warning("The shared road owns the online world; use Reconnect to recover it."),
             },
             UiAction::Save => self.save_game(),
             UiAction::Load => self.load_game(),

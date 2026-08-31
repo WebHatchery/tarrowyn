@@ -204,7 +204,7 @@ impl OnlineClient {
                 pending.retry_timer = super::commands::COMMAND_RETRY_DELAY_SECONDS;
                 self.pending_trade = Some(pending);
                 notices.push(NetworkNotice::Warning(format!(
-                    "The trade command could not be confirmed; retrying the same request ({retries}/{}).",
+                    "The trade action could not be confirmed; retrying the same action ({retries}/{}).",
                     super::commands::MAX_COMMAND_RETRIES
                 )));
             }

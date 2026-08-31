@@ -132,6 +132,11 @@ fn refresh_failure_discards_authenticated_projections() {
     assert!(client.market.is_none());
     assert!(client.logged_out);
     assert_eq!(notices.len(), 1);
+    assert!(matches!(
+        notices.first(),
+        Some(NetworkNotice::Warning(message))
+            if message.contains("sign-in is required")
+    ));
 }
 
 #[test]
@@ -156,6 +161,11 @@ fn refreshed_session_requests_a_fresh_account_projection() {
 
     assert!(client.pending_account.is_some());
     assert_eq!(client.refresh_timer, 1.5);
+    assert!(matches!(
+        notices.first(),
+        Some(NetworkNotice::Success(message))
+            if message == "Your linked session was refreshed safely."
+    ));
 }
 
 #[test]

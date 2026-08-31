@@ -397,9 +397,10 @@ impl Game {
                     chronicle_search_next_cursor: None,
                     chronicle_search_pending: false,
                     opportunities: &[],
-                    phase4_summary: "Phase 4 ledgers are available only on the shared road.",
+                    phase4_summary:
+                        "The wider regional ledgers are available only on the shared road.",
                     phase5_summary:
-                        "Regional map and production account are available on the shared road.",
+                        "Regional map and linked account are available on the shared road.",
                     account_deletion_armed: false,
                     account_deletion_available: false,
                     account_link_available: false,

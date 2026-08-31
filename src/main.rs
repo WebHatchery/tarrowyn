@@ -1,4 +1,4 @@
-//! The Years of Tarrowyn — Phase 6 release-candidate client entry point.
+//! The Years of Tarrowyn client entry point.
 
 use macroquad::prelude::*;
 use macroquad_toolkit::capture;
@@ -17,7 +17,7 @@ const UI_FONT_SIZES: &[u16] = &[8, 9, 10, 11, 12, 13, 14, 16, 17, 18, 20, 28];
 fn window_conf() -> Conf {
     capture::capture_window_conf(
         "TARROWYN",
-        "The Years of Tarrowyn — Phase 6",
+        "The Years of Tarrowyn",
         ui::LOGICAL_WIDTH as i32,
         ui::LOGICAL_HEIGHT as i32,
     )

@@ -308,7 +308,7 @@ impl Phase5Client {
                             self.command_retry_count += 1;
                             self.command_retry_timer = COMMAND_RETRY_DELAY_SECONDS;
                             notices.push(NetworkNotice::Warning(format!(
-                                "The regional command could not be confirmed; retrying the same request ({}/{}). {}",
+                                "The regional action could not be confirmed; retrying the same action ({}/{}). {}",
                                 self.command_retry_count,
                                 MAX_COMMAND_RETRIES,
                                 short_error(&error)
@@ -317,7 +317,7 @@ impl Phase5Client {
                     } else {
                         self.command_retry_count = 0;
                         notices.push(NetworkNotice::Warning(format!(
-                            "The regional command could not be confirmed: {}",
+                            "The regional action could not be confirmed: {}",
                             short_error(&error)
                         )));
                     }
@@ -325,7 +325,7 @@ impl Phase5Client {
                 Err(error) => {
                     self.command_retry_count = 0;
                     notices.push(NetworkNotice::Warning(format!(
-                        "The regional command could not be confirmed: {}",
+                        "The regional action could not be confirmed: {}",
                         short_error(&error)
                     )));
                 }

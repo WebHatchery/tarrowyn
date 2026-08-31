@@ -56,7 +56,7 @@ impl Phase5Client {
                 self.auth_refresh_timer = 0.0;
                 self.refresh_retry_timer = REFRESH_RETRY_DELAY_SECONDS;
                 notices.push(NetworkNotice::Warning(format!(
-                    "The production session refresh could not be confirmed; retrying the same request ({}/{}). {}",
+                    "Your linked session could not be refreshed; trying again ({}/{}). {}",
                     self.refresh_retry_count,
                     MAX_REFRESH_RETRIES,
                     short_error(&error)
@@ -80,7 +80,7 @@ impl Phase5Client {
         self.refresh_retry_count = 0;
         self.refreshed_session = Some(session);
         notices.push(NetworkNotice::Success(
-            "The production session was refreshed safely.".to_owned(),
+            "Your linked session was refreshed safely.".to_owned(),
         ));
     }
 
@@ -115,7 +115,7 @@ impl Phase5Client {
         self.deletion_armed = false;
         self.logged_out = true;
         notices.push(NetworkNotice::Warning(format!(
-            "The production session could not be refreshed: {}; provider sign-in is required.",
+            "Your linked session could not be refreshed: {}; sign-in is required.",
             short_error(&error)
         )));
     }

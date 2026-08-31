@@ -29,7 +29,7 @@ pub(super) fn poll_projection<T, F>(
         match result {
             Ok(response) => apply(response),
             Err(error) => notices.push(NetworkNotice::Warning(format!(
-                "The Phase 4 {label} could not be refreshed: {}",
+                "The {label} could not be refreshed: {}",
                 short_error(&error)
             ))),
         }

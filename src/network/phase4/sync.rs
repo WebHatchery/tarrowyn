@@ -177,7 +177,7 @@ impl Phase4Client {
                     self.command_retry_count += 1;
                     self.command_retry_timer = COMMAND_RETRY_DELAY_SECONDS;
                     notices.push(NetworkNotice::Warning(format!(
-                        "The Phase 4 action could not be confirmed; retrying the same request ({}/{}). {}",
+                        "The settlement action could not be confirmed; retrying the same action ({}/{}). {}",
                         self.command_retry_count,
                         MAX_COMMAND_RETRIES,
                         short_error(&error)
@@ -186,7 +186,7 @@ impl Phase4Client {
                 Err(error) => {
                     self.command_retry_count = 0;
                     notices.push(NetworkNotice::Warning(format!(
-                        "The Phase 4 action could not be confirmed: {}",
+                        "The settlement action could not be confirmed: {}",
                         short_error(&error)
                     )));
                 }

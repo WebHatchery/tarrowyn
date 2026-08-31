@@ -178,8 +178,7 @@ impl Phase5Client {
                 self.account = None;
                 self.reset_identity_projections();
                 notices.push(NetworkNotice::Success(
-                    "Account linked; the character boundary and session are now production-ready."
-                        .to_owned(),
+                    "Account linked; your character and session are safely connected.".to_owned(),
                 ));
             }
             Phase5CommandResponse::Revoke(response) => {

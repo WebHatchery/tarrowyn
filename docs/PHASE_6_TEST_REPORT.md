@@ -3870,3 +3870,11 @@ The read-only `scripts/verify_gateway.ps1` was added as the repeatable target
 check for these two hops. Its PowerShell syntax parses successfully; it is
 expected to fail until the gateway health and Tarrowyn proxy routes are
 deployed, and it performs no session creation or world mutation.
+
+The player surface now removes remaining development-only labels from the
+window title, offline regional summaries, linked-session recovery messages,
+and settlement retry notices. The focused reconnect, refresh-failure, and
+refresh-success regressions passed (1 test each). Package clippy, formatting,
+Rust file-size, diff, and `publish.ps1` checks also passed. No full workspace
+suite was repeated for this isolated presentation change. The deployment
+gateway remains the only previously recorded external online-bootstrap gate.

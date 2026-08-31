@@ -71,6 +71,7 @@ fn connection_failure_exposes_recovery_and_reconnect_cooldown() {
     client.update(2.0);
     assert!(client.reconnect());
     assert_eq!(client.state, ConnectionState::Connecting);
+    assert_eq!(client.status_message, "Restoring your linked session…");
 
     client.had_world = true;
     client.connection_failed("server stopped".to_owned(), &mut notices);

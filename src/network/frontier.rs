@@ -214,7 +214,7 @@ impl FrontierClient {
                     self.command_retry_count += 1;
                     self.command_retry_timer = COMMAND_RETRY_DELAY_SECONDS;
                     notices.push(NetworkNotice::Warning(format!(
-                        "The frontier command could not be confirmed; retrying the same request ({}/{}). {}",
+                        "The frontier action could not be confirmed; retrying the same action ({}/{}). {}",
                         self.command_retry_count,
                         MAX_COMMAND_RETRIES,
                         short_error(&error)
@@ -223,7 +223,7 @@ impl FrontierClient {
                 Err(error) => {
                     self.command_retry_count = 0;
                     notices.push(NetworkNotice::Warning(format!(
-                        "The frontier command could not be confirmed: {}",
+                        "The frontier action could not be confirmed: {}",
                         short_error(&error)
                     )));
                 }

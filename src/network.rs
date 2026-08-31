@@ -325,7 +325,7 @@ impl OnlineClient {
         self.retry_count = 0;
         if production_reconnect {
             self.state = ConnectionState::Online;
-            self.status_message = "Restoring the production session…".to_owned();
+            self.status_message = "Restoring your linked session…".to_owned();
             self.pending_ops_health = Some(self.api.get("/v1/ops/health"));
             self.phase4.begin_reconnect(&mut self.api);
         } else {
