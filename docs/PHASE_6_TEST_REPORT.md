@@ -3440,3 +3440,12 @@ with warnings denied, package formatting, `git diff --check`, and the Rust
 file-size scan. No publisher or full workspace gate is repeated because this
 is source organization maintenance, and no new external or deferred work is
 opened.
+
+The frontier client now keeps command-response projection updates and player
+notices in `network/frontier/feedback.rs`, reducing the frontier orchestration
+module from 667 to 440 lines while preserving contract, combat, recovery,
+expedition, and homestead response handling. The focused frontier feedback
+tests pass, along with client-package clippy with warnings denied, package
+formatting, `git diff --check`, and the Rust file-size scan. No publisher or
+full workspace gate is repeated because this is source organization
+maintenance, and no new external or deferred work is opened.
