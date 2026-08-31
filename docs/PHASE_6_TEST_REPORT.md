@@ -3512,6 +3512,17 @@ with server-package clippy with warnings denied, package formatting,
 gate is repeated because this is test-source organization maintenance, and no
 new external or deferred work is opened.
 
+The Phase 5 client route and travel command-boundary regressions now live in
+`network/phase5/tests/movement_controls.rs`, reducing the client phase test
+root from 430 to 266 lines while preserving route repair selection, queued and
+in-flight command gating, travel-route availability, recovery locking, and the
+empty-cycle contract. The focused movement-controls filter passes (6 tests,
+with 237 unrelated tests filtered), along with client-package clippy with
+warnings denied, package formatting, `git diff --check`, and the Rust file-size
+scan. No publisher or full workspace gate is repeated because this is
+test-source organization maintenance, and no new external or deferred work is
+opened.
+
 The Phase 5 client market-control regressions now live in
 `network/phase5/tests/market_controls.rs`, reducing the client phase test root
 from 584 to 430 lines while preserving destination selection, owner-order
