@@ -4100,3 +4100,13 @@ by client-package clippy, formatting, Rust file-size, diff, and publisher
 checks. No full workspace suite was repeated because this was a bounded client
 retry/backpressure maintenance slice, and no new external or deferred work was
 opened.
+
+The expired refresh-replay correction was validated on 2026-08-31 at commit
+`95150ca`. Refresh requests now expire session records before consulting their
+idempotency cache, return a cached response only while its replacement refresh
+session remains live, and remove stale replay data before returning
+`invalid_refresh`. The focused
+`expired_refresh_replay_is_not_returned_as_a_success` server filter passed,
+followed by server-package clippy, formatting, Rust file-size, and diff checks.
+No full workspace suite was repeated for this bounded Phase 6 session-boundary
+maintenance slice, and no new external or deferred work was opened.

@@ -117,6 +117,10 @@ session table so deletion also removes rotated responses after their access
 session has expired. On reload, older snapshots rebuild that ownership from the
 persisted session that issued each cached response; replay entries whose issued
 session has already been retired are discarded as non-authoritative cache data.
+Refresh replay lookup expires sessions before consulting that cache and only
+returns a cached response while its replacement refresh session remains live;
+once that refresh window closes, the stale replay is removed and the request
+returns the normal invalid-refresh result.
 Moderation cooldowns are identity-lifecycle state rather than replay history:
 they remain for every extant identity and are removed only when that identity
 leaves the world, so report rate limits are not defeated by cache eviction.
