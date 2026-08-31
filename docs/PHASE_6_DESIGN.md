@@ -256,6 +256,9 @@ the cached response.
 The same replay boundary scrubs deleted requesters and providers from retained
 service-order snapshots, cancelling open or accepted snapshots in step with
 the live order cleanup.
+Governance snapshots use the same policy: departing office holders are vacated,
+public proposal and decision records use the former-resident marker, and
+deleted approver or tax identities are cleared before replay.
 When a provider leaves while holding an accepted service order, the surviving
 requester's typed material and tool escrow is returned before that order is
 cancelled; an order owned by the departing requester is instead removed with

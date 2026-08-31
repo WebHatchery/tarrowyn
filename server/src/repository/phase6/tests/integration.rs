@@ -6,7 +6,7 @@ use std::fs;
 use tarrowyn_protocol::{
     AccountDeletionRequest, AuthLinkRequest, ChatRequest, ClaimLifecycleAction,
     ClaimLifecycleRequest, CommodityKind, GovernanceAction, GovernanceRequest, GuestSessionRequest,
-    MarketOrderAction, MarketOrderRequest, MarketOrderStatus, SupportRepairAction,
+    MarketOrderAction, MarketOrderRequest, MarketOrderStatus, PublicAction, SupportRepairAction,
     SupportRepairRequest, TradeAction, TradeBundle, TradeRequest,
 };
 
@@ -222,6 +222,99 @@ fn account_deletion_removes_private_state_and_anonymizes_public_history() {
         .all(|record| record.actor_account_id != account_id && record.target != account_id));
     drop(state);
     let _ = std::fs::remove_file(state_path);
+}
+
+#[test]
+fn account_deletion_anonymises_governance_replays_kept_by_another_identity() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let owner_guest = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("governance-replay-owner".to_owned()),
+            reset: false,
+        })
+        .expect("owner guest session")
+        .data;
+    let owner = repository
+        .auth_link(
+            &owner_guest.account_token,
+            AuthLinkRequest {
+                request_id: "governance-replay-owner-link".to_owned(),
+                provider: "webhatchery-identity-oidc".to_owned(),
+                subject: "governance-replay-owner-subject".to_owned(),
+                display_name: Some("Departing steward".to_owned()),
+            },
+        )
+        .expect("owner link")
+        .data;
+    let observer = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("governance-replay-observer".to_owned()),
+            reset: false,
+        })
+        .expect("observer guest session")
+        .data;
+    let claimed = repository
+        .governance(
+            &owner.session.account_token,
+            GovernanceRequest {
+                request_id: "governance-replay-claim".to_owned(),
+                action: GovernanceAction::ClaimOffice,
+                office_id: Some("steward".to_owned()),
+                proposal_id: None,
+                public_action: None,
+                target: None,
+                cost: None,
+                tax_rate_percent: None,
+            },
+        )
+        .expect("claim office")
+        .data;
+    assert!(claimed.accepted);
+    let proposal_request = GovernanceRequest {
+        request_id: "governance-replay-propose".to_owned(),
+        action: GovernanceAction::Propose,
+        office_id: None,
+        proposal_id: None,
+        public_action: Some(PublicAction::HostFestival),
+        target: None,
+        cost: Some(1),
+        tax_rate_percent: None,
+    };
+    let proposed = repository
+        .governance(&observer.account_token, proposal_request.clone())
+        .expect("proposal")
+        .data;
+    assert!(proposed
+        .governance
+        .offices
+        .iter()
+        .any(|office| office.holder_account_id.as_deref() == Some(owner.account_id.as_str())));
+
+    repository
+        .account_delete(
+            &owner.session.account_token,
+            AccountDeletionRequest {
+                request_id: "governance-replay-owner-delete".to_owned(),
+                account_id: owner.account_id,
+            },
+        )
+        .expect("schedule owner deletion");
+    repository.tick();
+
+    let replay = repository
+        .governance(&observer.account_token, proposal_request)
+        .expect("governance replay")
+        .data;
+    let steward = replay
+        .governance
+        .offices
+        .iter()
+        .find(|office| office.office_id == "steward")
+        .expect("steward office");
+    assert!(steward.holder_account_id.is_none());
+    assert!(steward.holder_name.is_none());
+    assert!(steward.vacant);
+    assert!(repository.ops_health().data.ready);
 }
 
 #[test]

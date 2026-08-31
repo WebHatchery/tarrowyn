@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
 use tarrowyn_protocol::{
     AccountDeletionResponse, ClaimLifecycleStatus, ClaimRecord, ClaimStatus, FrontierEvent,
-    ProposalStatus, ServiceOrder, ServiceOrderStatus, WorldEvent,
+    GovernanceState, ProposalStatus, ServiceOrder, ServiceOrderStatus, WorldEvent,
 };
 
 const DELETED_ACCOUNT: &str = "former-resident";
@@ -102,6 +102,7 @@ fn erase_account(state: &mut RepositoryState, request: &PendingAccountDeletion) 
     erase_private_phase4_state(state, request);
     anonymize_phase4_replay_claims(state, &request.account_id);
     anonymize_phase4_replay_service_orders(state, &request.account_id);
+    anonymize_phase4_replay_governance(state, &request.account_id);
     state.trades.retain(|_, trade| {
         trade.creator_account_id != request.account_id
             && trade.recipient_account_id != request.account_id
@@ -256,6 +257,61 @@ fn anonymize_phase4_replay_service_order(order: &mut ServiceOrder, account_id: &
     }
 }
 
+fn anonymize_phase4_replay_governance(state: &mut RepositoryState, account_id: &str) {
+    for response in state.phase4.request_results.values_mut() {
+        let super::super::phase4::Phase4Response::Governance(response) = response else {
+            continue;
+        };
+        anonymize_governance(&mut response.governance, account_id);
+    }
+}
+
+fn anonymize_governance(governance: &mut GovernanceState, account_id: &str) {
+    for office in &mut governance.offices {
+        if office.holder_account_id.as_deref() == Some(account_id) {
+            office.holder_account_id = None;
+            office.holder_name = None;
+            office.vacant = true;
+            office.vacancy_reason = Some(
+                "The former office-holder left the settlement; a new player may take responsibility."
+                    .to_owned(),
+            );
+        }
+    }
+    for proposal in &mut governance.proposals {
+        if proposal.proposer_account_id == account_id {
+            proposal.proposer_account_id = DELETED_ACCOUNT.to_owned();
+            proposal.proposer_name = DELETED_NAME.to_owned();
+            if proposal.status == ProposalStatus::Proposed {
+                proposal.status = ProposalStatus::Rejected;
+            }
+        }
+        if proposal.approved_by.as_deref() == Some(account_id) {
+            proposal.approved_by = None;
+        }
+    }
+    for decision in &mut governance.decisions {
+        if decision.actor_account_id == account_id {
+            decision.actor_account_id = DELETED_ACCOUNT.to_owned();
+            decision.actor_name = DELETED_NAME.to_owned();
+        }
+    }
+    for receipt in &mut governance.tax_ledger {
+        if receipt.payer_account_id == account_id {
+            receipt.payer_account_id = DELETED_ACCOUNT.to_owned();
+            receipt.payer_name = DELETED_NAME.to_owned();
+        }
+    }
+    if let Some(policy) = governance.taxation.as_mut() {
+        if policy.payer == account_id {
+            policy.payer = DELETED_ACCOUNT.to_owned();
+        }
+        if policy.recipient == account_id {
+            policy.recipient = DELETED_ACCOUNT.to_owned();
+        }
+    }
+}
+
 fn anonymize_audit_targets(
     audits: &mut std::collections::VecDeque<tarrowyn_protocol::AuditRecord>,
     account_id: &str,
@@ -295,59 +351,7 @@ fn erase_private_phase4_state(state: &mut RepositoryState, request: &PendingAcco
             claim.approved_by = None;
         }
     }
-    for office in &mut state.phase4.governance.offices {
-        if office.holder_account_id.as_deref() == Some(request.account_id.as_str()) {
-            office.holder_account_id = None;
-            office.holder_name = None;
-            office.vacant = true;
-            office.vacancy_reason = Some(
-                "The former office-holder left the settlement; a new player may take responsibility."
-                    .to_owned(),
-            );
-        }
-    }
-    for proposal in &mut state.phase4.governance.proposals {
-        if proposal.proposer_account_id == request.account_id {
-            proposal.proposer_account_id = DELETED_ACCOUNT.to_owned();
-            proposal.proposer_name = DELETED_NAME.to_owned();
-            if proposal.status == ProposalStatus::Proposed {
-                proposal.status = ProposalStatus::Rejected;
-            }
-        }
-        if proposal.approved_by.as_deref() == Some(request.account_id.as_str()) {
-            proposal.approved_by = None;
-        }
-    }
-    for decision in &mut state.phase4.governance.decisions {
-        if decision.actor_account_id == request.account_id {
-            decision.actor_account_id = DELETED_ACCOUNT.to_owned();
-            decision.actor_name = DELETED_NAME.to_owned();
-        }
-    }
-    for receipt in &mut state.phase4.governance.tax_ledger {
-        if receipt.payer_account_id == request.account_id {
-            receipt.payer_account_id = DELETED_ACCOUNT.to_owned();
-            receipt.payer_name = DELETED_NAME.to_owned();
-        }
-    }
-    if state
-        .phase4
-        .governance
-        .taxation
-        .as_ref()
-        .is_some_and(|policy| {
-            policy.payer == request.account_id || policy.recipient == request.account_id
-        })
-    {
-        if let Some(policy) = state.phase4.governance.taxation.as_mut() {
-            if policy.payer == request.account_id {
-                policy.payer = DELETED_ACCOUNT.to_owned();
-            }
-            if policy.recipient == request.account_id {
-                policy.recipient = DELETED_ACCOUNT.to_owned();
-            }
-        }
-    }
+    anonymize_governance(&mut state.phase4.governance, &request.account_id);
     for index in 0..state.phase4.orders.len() {
         let requester_deleted =
             state.phase4.orders[index].requester_account_id == request.account_id;
