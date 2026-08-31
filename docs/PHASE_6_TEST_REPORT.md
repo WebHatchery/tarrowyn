@@ -4148,3 +4148,12 @@ including `orphaned_production_refresh_replay_degrades_readiness` and
 `orphaned_production_link_replay_degrades_readiness`.
 No full workspace suite was repeated for this isolated integrity predicate
 maintenance slice, and no new external or deferred work was opened.
+
+The live link-tombstone integrity correction was validated on 2026-08-31.
+Readiness now rejects an auth-link replay token that is still present in either
+the guest or production live-session table; the focused `production_integrity`
+filter passed all 11 tests, including
+`live_session_cannot_remain_an_auth_link_replay_tombstone`. Server-package
+formatting, clippy, Rust file-size, and diff checks passed. No full workspace
+suite was repeated for this isolated replay-integrity predicate maintenance
+slice, and no new external or deferred work was opened.

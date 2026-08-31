@@ -129,6 +129,9 @@ The readiness validator also requires every retained link or refresh replay to
 resolve to its issuing production session, so an orphaned credential response
 degrades the service boundary instead of being treated as healthy until the
 next trim.
+Link replay tombstones must also refer to access tokens that are no longer in
+either live session table; a token cannot be both an active session and a
+credential-replay key.
 Moderation cooldowns are identity-lifecycle state rather than replay history:
 they remain for every extant identity and are removed only when that identity
 leaves the world, so report rate limits are not defeated by cache eviction.

@@ -177,6 +177,8 @@ fn replay_caches_ok(state: &RepositoryState, identity_accounts: &HashSet<&str>) 
     });
     let link_tokens_ok = phase6.auth_link_tokens.iter().all(|(token, identity_key)| {
         bounded(token, MAX_TOKEN_CHARS)
+            && !state.sessions.contains_key(token)
+            && !phase6.sessions.contains_key(token)
             && bounded(identity_key, MAX_ACCOUNT_ID_CHARS)
             && state.identities.contains_key(identity_key)
             && phase6

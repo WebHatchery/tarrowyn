@@ -307,6 +307,39 @@ fn orphaned_production_link_replay_degrades_readiness() {
 }
 
 #[test]
+fn live_session_cannot_remain_an_auth_link_replay_tombstone() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let guest = super::guest(&repository, "integrity-live-link-tombstone");
+    let other_guest = super::guest(&repository, "integrity-live-link-observer");
+    repository
+        .auth_link(
+            &guest.account_token,
+            AuthLinkRequest {
+                request_id: "integrity-live-link-request".to_owned(),
+                provider: "webhatchery-identity-oidc".to_owned(),
+                subject: "integrity-live-link-subject".to_owned(),
+                display_name: None,
+            },
+        )
+        .expect("production account link");
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        let observer_session = state
+            .sessions
+            .get(&other_guest.account_token)
+            .cloned()
+            .expect("observer session");
+        state
+            .sessions
+            .insert(guest.account_token.clone(), observer_session);
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
 fn invalid_audit_outcome_degrades_readiness() {
     let repository = WorldRepository::new(ServerConfig::default());
     let guest = super::guest(&repository, "integrity-production-audit");
