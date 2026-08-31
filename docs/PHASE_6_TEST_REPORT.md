@@ -3377,3 +3377,12 @@ construction pass, along with server-package clippy with warnings denied,
 package formatting, `git diff --check`, and the Rust file-size scan. No
 publisher or full workspace gate is repeated because this is source
 organization maintenance, and no new external or deferred work is opened.
+
+Phase 6 account identity reads and deletion scheduling now live in the
+`phase6/account.rs` child alongside guest-account migration, reducing the
+authority root from 694 to 520 lines while preserving the account, privacy,
+and deletion contracts. The focused account-validation suite (4 tests) and
+deletion-queue suite (3 tests), server-package clippy with warnings denied,
+package formatting, `git diff --check`, and the Rust file-size scan pass. No
+publisher or full workspace gate is repeated because this is source
+organization maintenance, and no new external or deferred work is opened.
