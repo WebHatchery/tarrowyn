@@ -41,6 +41,17 @@ fn persistence_unavailable_is_safe_to_retry_with_the_same_request() {
 }
 
 #[test]
+fn online_status_messages_use_player_facing_shared_road_language() {
+    let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
+    assert_eq!(client.status_message, "Contacting the shared road…");
+
+    let mut notices = Vec::new();
+    client.connection_failed("server is unavailable".to_owned(), &mut notices);
+
+    assert_eq!(client.status_message, "The shared road is unavailable.");
+}
+
+#[test]
 fn connection_failure_exposes_recovery_and_reconnect_cooldown() {
     let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
     let mut notices = Vec::new();
@@ -199,7 +210,7 @@ fn explicit_logout_forgets_a_linked_key_before_guest_reconnect() {
     assert!(client.client_key.is_none());
     assert!(client.account.is_none());
     assert_eq!(client.state, ConnectionState::Degraded);
-    assert!(client.status_message.contains("fresh guest fixture"));
+    assert!(client.status_message.contains("fresh guest session"));
 }
 
 #[test]

@@ -144,7 +144,7 @@ pub(super) fn render(client: &Phase5Client) -> String {
         .as_ref()
         .map(|account| {
             if account.guest_fixture {
-                "Guest fixture • tap Account to link"
+                "Guest account • tap Account to link"
             } else {
                 "Linked account • tap Account for details or Logout to leave safely"
             }

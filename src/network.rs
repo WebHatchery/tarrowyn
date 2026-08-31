@@ -127,7 +127,7 @@ impl OnlineClient {
             api: HttpClient::new(server_url),
             projection: WorldProjection::new(config),
             state: ConnectionState::Connecting,
-            status_message: "Contacting the development road…".to_owned(),
+            status_message: "Contacting the shared road…".to_owned(),
             client_key,
             account: None,
             pending_guest: None,
@@ -378,14 +378,14 @@ impl OnlineClient {
         self.api.set_bearer_token(None);
         self.state = ConnectionState::Degraded;
         self.status_message =
-            "Signed out; tap Reconnect to start a fresh guest fixture.".to_owned();
+            "Signed out; tap Reconnect to start a fresh guest session.".to_owned();
     }
 
     fn begin_guest(&mut self, reset: bool) {
         self.state = ConnectionState::Connecting;
         self.maintenance_status = None;
         self.readiness_degraded = false;
-        self.status_message = "Contacting the development road…".to_owned();
+        self.status_message = "Contacting the shared road…".to_owned();
         self.pending_ops_health = Some(self.api.get("/v1/ops/health"));
         self.pending_guest = Some(self.api.post_json(
             "/v1/session/guest",
@@ -496,7 +496,7 @@ impl OnlineClient {
         } else if self.state == ConnectionState::Degraded {
             "The server stopped answering; the last shared road is shown.".to_owned()
         } else {
-            "The development server is unavailable.".to_owned()
+            "The shared road is unavailable.".to_owned()
         };
         self.retry_count = self.retry_count.saturating_add(1);
         self.retry_cooldown = 2.0;

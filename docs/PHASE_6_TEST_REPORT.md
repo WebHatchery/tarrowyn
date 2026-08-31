@@ -3861,6 +3861,11 @@ On 2026-08-31, direct GET checks of
 LiteSpeed HTTP 404. The shared gateway and Tarrowyn proxy route therefore still
 need deployment before the browser online-bootstrap check can pass.
 
+Online connection, logout, and guest-linking messages now use shared-road,
+guest-session, and guest-account language rather than exposing development
+fixture terminology. The two focused client regressions passed, followed by
+package clippy, formatting, Rust file-size, diff, and `publish.ps1` checks.
+
 The read-only `scripts/verify_gateway.ps1` was added as the repeatable target
 check for these two hops. Its PowerShell syntax parses successfully; it is
 expected to fail until the gateway health and Tarrowyn proxy routes are

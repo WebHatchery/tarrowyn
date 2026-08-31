@@ -52,6 +52,17 @@ fn account_summary_names_the_character_boundary_without_session_secrets() {
 }
 
 #[test]
+fn guest_summary_uses_player_language_for_the_linking_path() {
+    let mut client = Phase5Client::new();
+    client.account = Some(account_response(true));
+
+    let summary = client.summary();
+
+    assert!(summary.contains("Guest account • tap Account to link"));
+    assert!(!summary.contains("Guest fixture"));
+}
+
+#[test]
 fn regional_summary_shows_local_condition_and_recovery_signal() {
     let mut client = Phase5Client::new();
     client.region = Some(tarrowyn_protocol::RegionSnapshot {
