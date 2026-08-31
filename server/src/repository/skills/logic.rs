@@ -16,7 +16,7 @@ pub(crate) fn finish_skill_action(
         super::super::phase4::Phase4Response::Skill(response.clone()),
     );
     record_command_outcome(state, response.accepted);
-    repository.persist(state);
+    repository.persist(state)?;
     Ok(ApiResponse {
         meta: meta(
             state.tick,

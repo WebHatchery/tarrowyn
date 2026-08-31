@@ -53,7 +53,7 @@ impl WorldRepository {
         request: RouteRequest,
     ) -> Result<ApiResponse<RouteResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        self.expire_and_persist_sessions(&mut state);
+        self.expire_and_persist_sessions(&mut state)?;
         let key = authenticate(&mut state, token, &self.config)?;
         validate_request_id(&request.request_id)?;
         let route_id = super::validate_bounded_text(
@@ -102,7 +102,7 @@ impl WorldRepository {
                 .request_results
                 .insert(cache_key, Phase5Response::Route(response.clone()));
             record_command_outcome(&mut state, false);
-            self.persist(&state);
+            self.persist(&mut state)?;
             return Ok(ApiResponse {
                 meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
                 data: response,
@@ -195,7 +195,7 @@ impl WorldRepository {
             .request_results
             .insert(cache_key, Phase5Response::Route(response.clone()));
         record_command_outcome(&mut state, response.accepted);
-        self.persist(&state);
+        self.persist(&mut state)?;
         Ok(ApiResponse {
             meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
             data: response,
@@ -208,7 +208,7 @@ impl WorldRepository {
         request: TravelRequest,
     ) -> Result<ApiResponse<TravelResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        self.expire_and_persist_sessions(&mut state);
+        self.expire_and_persist_sessions(&mut state)?;
         let key = authenticate(&mut state, token, &self.config)?;
         validate_request_id(&request.request_id)?;
         let route_id = super::validate_optional_identifier(
@@ -249,7 +249,7 @@ impl WorldRepository {
                 ),
             );
             record_command_outcome(&mut state, false);
-            self.persist(&state);
+            self.persist(&mut state)?;
             return response;
         }
         let mut accepted = false;
@@ -274,7 +274,7 @@ impl WorldRepository {
                         let response =
                             travel_response(&mut state, &key, request, None, false, reason);
                         record_command_outcome(&mut state, false);
-                        self.persist(&state);
+                        self.persist(&mut state)?;
                         return response;
                     };
                     let Some(route) = state
@@ -295,7 +295,7 @@ impl WorldRepository {
                         let response =
                             travel_response(&mut state, &key, request, None, false, reason);
                         record_command_outcome(&mut state, false);
-                        self.persist(&state);
+                        self.persist(&mut state)?;
                         return response;
                     };
                     if route.status == RouteStatus::Closed {
@@ -348,7 +348,7 @@ impl WorldRepository {
                     reason = Some("There is no journey to interrupt.".to_owned());
                     let response = travel_response(&mut state, &key, request, None, false, reason);
                     record_command_outcome(&mut state, false);
-                    self.persist(&state);
+                    self.persist(&mut state)?;
                     return response;
                 };
                 {
@@ -383,7 +383,7 @@ impl WorldRepository {
                     reason = Some("There is no interrupted journey to recover.".to_owned());
                     let response = travel_response(&mut state, &key, request, None, false, reason);
                     record_command_outcome(&mut state, false);
-                    self.persist(&state);
+                    self.persist(&mut state)?;
                     return response;
                 };
                 {
@@ -419,7 +419,7 @@ impl WorldRepository {
             .request_results
             .insert(cache_key, Phase5Response::Travel(response.clone()));
         record_command_outcome(&mut state, response.accepted);
-        self.persist(&state);
+        self.persist(&mut state)?;
         Ok(ApiResponse {
             meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
             data: response,
@@ -428,7 +428,7 @@ impl WorldRepository {
 
     pub fn market(&self, token: &str) -> Result<ApiResponse<MarketSnapshot>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        self.expire_and_persist_sessions(&mut state);
+        self.expire_and_persist_sessions(&mut state)?;
         let key = authenticate(&mut state, token, &self.config)?;
         let location = player_location(&state, &key);
         Ok(ApiResponse {
@@ -448,7 +448,7 @@ impl WorldRepository {
         mut request: MarketOrderRequest,
     ) -> Result<ApiResponse<MarketOrderResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        self.expire_and_persist_sessions(&mut state);
+        self.expire_and_persist_sessions(&mut state)?;
         let key = authenticate(&mut state, token, &self.config)?;
         validate_request_id(&request.request_id)?;
         request.order_id = super::validate_optional_identifier(
@@ -512,7 +512,7 @@ impl WorldRepository {
             .request_results
             .insert(cache_key, Phase5Response::Market(response.clone()));
         record_command_outcome(&mut state, response.accepted);
-        self.persist(&state);
+        self.persist(&mut state)?;
         Ok(ApiResponse {
             meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
             data: response,

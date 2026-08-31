@@ -12,7 +12,7 @@ impl WorldRepository {
         request: RecoveryRequest,
     ) -> Result<ApiResponse<RecoveryResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        self.expire_and_persist_sessions(&mut state);
+        self.expire_and_persist_sessions(&mut state)?;
         let key = authenticate(&mut state, token, &self.config)?;
         super::validate_request_id(&request.request_id)?;
         let cache_key = cache_key(&key, &request.request_id);
@@ -123,7 +123,7 @@ impl WorldRepository {
             .request_results
             .insert(cache_key, Phase3Response::Recovery(response.clone()));
         record_command_outcome(&mut state, response.accepted);
-        self.persist(&state);
+        self.persist(&mut state)?;
         Ok(ApiResponse {
             meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
             data: response,

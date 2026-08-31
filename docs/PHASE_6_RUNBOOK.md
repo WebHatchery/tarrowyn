@@ -141,7 +141,11 @@ effective values and queue pressure counters are exposed through
    support repair. The public response intentionally omits the configured
    backup filesystem path; use the deployment operator's configured path and
    server logs when locating a backup. Do not admit traffic while readiness is
-   degraded, and do not edit a live snapshot in place.
+   degraded, and do not edit a live snapshot in place. A mutation that cannot
+   be durably written returns HTTP 503 with `persistence_unavailable`; the
+   repository rolls back that in-memory command to the last successful
+   persistence point. Retry the original request only after readiness recovers,
+   using its same request ID so the normal replay boundary remains intact.
 2. Check authenticated `/v1/ops/metrics` for the measured average and latest
    tick durations, `tick_drift_count`, regional event backlog, and
    `alert_flags`. Also watch `http_request_workers`,

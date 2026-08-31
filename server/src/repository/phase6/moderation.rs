@@ -12,7 +12,7 @@ impl WorldRepository {
         request: ModerationReportRequest,
     ) -> Result<ApiResponse<ModerationReportResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        self.expire_and_persist_sessions(&mut state);
+        self.expire_and_persist_sessions(&mut state)?;
         let key = authenticate(&mut state, token, &self.config)?;
         validate_request_id(&request.request_id)?;
         let category = validate_bounded_text(
@@ -127,7 +127,7 @@ impl WorldRepository {
             .moderation_last_report_ticks
             .insert(key, report_tick);
         super::super::record_command_outcome(&mut state, true);
-        self.persist(&state);
+        self.persist(&mut state)?;
         Ok(ApiResponse {
             meta: meta(
                 state.tick,

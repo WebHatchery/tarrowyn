@@ -18,7 +18,7 @@ impl WorldRepository {
         request: SupportRepairRequest,
     ) -> Result<ApiResponse<SupportRepairResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        self.expire_and_persist_sessions(&mut state);
+        self.expire_and_persist_sessions(&mut state)?;
         let actor_key = super::super::authenticate(&mut state, token, &self.config)?;
         validate_request_id(&request.request_id)?;
         let actor = state
@@ -112,7 +112,7 @@ impl WorldRepository {
         };
         state.phase6.request_results.insert(cache, response.clone());
         record_command_outcome(&mut state, response.accepted);
-        self.persist(&state);
+        self.persist(&mut state)?;
         Ok(ApiResponse {
             meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
             data: response,

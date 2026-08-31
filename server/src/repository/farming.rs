@@ -8,7 +8,7 @@ impl WorldRepository {
         request: FarmingRequest,
     ) -> Result<ApiResponse<FarmingResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        self.expire_and_persist_sessions(&mut state);
+        self.expire_and_persist_sessions(&mut state)?;
         let identity_key = authenticate(&mut state, token, &self.config)?;
         validate_request_id(&request.request_id)?;
         if let Some(previous) = state
@@ -274,7 +274,7 @@ impl WorldRepository {
             .farming_results
             .insert(request_id.clone(), response.clone());
         record_command_outcome(state, response.accepted);
-        self.persist(state);
+        self.persist(state)?;
         Ok(ApiResponse {
             meta: meta(state.tick, Some(request_id), Some(state.cursor)),
             data: response,

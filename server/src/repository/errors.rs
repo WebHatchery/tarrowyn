@@ -21,6 +21,14 @@ impl RepositoryError {
     pub(super) fn unauthorized() -> Self {
         Self::new(401, "unauthorized", "A valid guest session is required.")
     }
+
+    pub(super) fn persistence_unavailable() -> Self {
+        Self::new(
+            503,
+            "persistence_unavailable",
+            "The settlement could not be durably saved; try again once service recovers.",
+        )
+    }
 }
 
 pub fn validate_request_id(request_id: &str) -> Result<(), RepositoryError> {

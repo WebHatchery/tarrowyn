@@ -149,11 +149,16 @@ The server writes a scheduled backup to the configured backup path and reports
 the last successful tick through `/v1/ops/health`. A failed authoritative write
 or scheduled backup degrades operator readiness and adds a safe persistence or
 backup alert; raw storage errors remain in server logs rather than crossing the
-API boundary. A later successful backup clears the backup failure state. Restore
-drills validate the backup as JSON before serving it as a named state path; a
-restore is never an in-place destructive command. Both JSON and MySQL refuse a
-snapshot from a newer server version, preventing an older rollback binary from
-overwriting unknown durable fields.
+API boundary. A failed mutation is rejected with `503 persistence_unavailable`
+and the repository restores its last successfully persisted state, so a client
+cannot receive an accepted response for a mutation that exists only in memory.
+The tick persists its authoritative state before writing a scheduled backup and
+persists the successful backup marker afterward. A later successful backup
+clears the backup failure state. Restore drills validate the backup as JSON
+before serving it as a named state path; a restore is never an in-place
+destructive command. Both JSON and MySQL refuse a snapshot from a newer server
+version, preventing an older rollback binary from overwriting unknown durable
+fields.
 
 The remaining persistence gate is deliberately explicit: run the MySQL
 migration and restart/duplicate-request/partial-write tests against the target

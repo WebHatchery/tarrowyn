@@ -10,7 +10,7 @@ impl super::super::WorldRepository {
         token: &str,
     ) -> Result<ApiResponse<LocalCombatState>, super::super::RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        self.expire_and_persist_sessions(&mut state);
+        self.expire_and_persist_sessions(&mut state)?;
         let key = super::super::authenticate(&mut state, token, &self.config)?;
         let combat = state
             .phase4
@@ -30,7 +30,7 @@ impl super::super::WorldRepository {
         request: LocalCombatRequest,
     ) -> Result<ApiResponse<LocalCombatResponse>, super::super::RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        self.expire_and_persist_sessions(&mut state);
+        self.expire_and_persist_sessions(&mut state)?;
         let key = super::super::authenticate(&mut state, token, &self.config)?;
         validate_request_id(&request.request_id)?;
         let actor_id = account_id(&state, &key);
@@ -381,7 +381,7 @@ fn finish_local_combat(
         .request_results
         .insert(cache, super::Phase4Response::Combat(response.clone()));
     super::super::record_command_outcome(state, response.accepted);
-    repository.persist(state);
+    repository.persist(state)?;
     Ok(ApiResponse {
         meta: super::super::meta(
             state.tick,

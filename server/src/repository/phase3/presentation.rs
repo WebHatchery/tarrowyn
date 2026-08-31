@@ -8,7 +8,7 @@ impl WorldRepository {
         since: u64,
     ) -> Result<ApiResponse<ChronicleResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        self.expire_and_persist_sessions(&mut state);
+        self.expire_and_persist_sessions(&mut state)?;
         authenticate(&mut state, token, &self.config)?;
         super::super::validate_event_cursor(&state, since, "chronicle")?;
         Ok(ApiResponse {
@@ -32,7 +32,7 @@ impl WorldRepository {
         token: &str,
     ) -> Result<ApiResponse<OpportunitiesResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        self.expire_and_persist_sessions(&mut state);
+        self.expire_and_persist_sessions(&mut state)?;
         authenticate(&mut state, token, &self.config)?;
         Ok(ApiResponse {
             meta: meta(state.tick, None, Some(state.cursor)),

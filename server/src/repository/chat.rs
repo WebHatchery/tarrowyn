@@ -7,7 +7,7 @@ impl WorldRepository {
         request: ChatRequest,
     ) -> Result<ApiResponse<ChatResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        self.expire_and_persist_sessions(&mut state);
+        self.expire_and_persist_sessions(&mut state)?;
         let key = authenticate(&mut state, token, &self.config)?;
         validate_request_id(&request.request_id)?;
         if let Some(previous) = state
@@ -104,7 +104,7 @@ impl WorldRepository {
             "Chat metadata was recorded without retaining message text in the audit stream.",
         );
         record_command_outcome(&mut state, response.accepted);
-        self.persist(&state);
+        self.persist(&mut state)?;
         Ok(ApiResponse {
             meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
             data: response,

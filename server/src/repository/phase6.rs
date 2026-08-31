@@ -88,7 +88,7 @@ impl WorldRepository {
         request: AuthLinkRequest,
     ) -> Result<ApiResponse<AuthLinkResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        self.expire_and_persist_sessions(&mut state);
+        self.expire_and_persist_sessions(&mut state)?;
         let (guest_key, replay_only) = match authenticate(&mut state, token, &self.config) {
             Ok(guest_key) => (guest_key, false),
             Err(error) => {
@@ -265,7 +265,7 @@ impl WorldRepository {
             .auth_link_results
             .insert(cache_key, response.clone());
         record_command_outcome(&mut state, true);
-        self.persist(&state);
+        self.persist(&mut state)?;
         Ok(ApiResponse {
             meta: meta(
                 state.tick,
@@ -299,7 +299,7 @@ impl WorldRepository {
                 data: previous,
             });
         }
-        self.expire_and_persist_sessions(&mut state);
+        self.expire_and_persist_sessions(&mut state)?;
         let Some((old_token, old_session)) = state
             .phase6
             .sessions
@@ -377,7 +377,7 @@ impl WorldRepository {
             .auth_refresh_accounts
             .insert(cache_key, old_session.account_id.clone());
         record_command_outcome(&mut state, true);
-        self.persist(&state);
+        self.persist(&mut state)?;
         Ok(ApiResponse {
             meta: meta(
                 state.tick,
@@ -422,7 +422,7 @@ impl WorldRepository {
                 });
             }
         }
-        self.expire_and_persist_sessions(&mut state);
+        self.expire_and_persist_sessions(&mut state)?;
         let key = authenticate(&mut state, token, &self.config)?;
         let account = state
             .identities
@@ -501,7 +501,7 @@ impl WorldRepository {
             .auth_revoke_results
             .insert(format!("{}:{}", key, request.request_id), response.clone());
         record_command_outcome(&mut state, true);
-        self.persist(&state);
+        self.persist(&mut state)?;
         Ok(ApiResponse {
             meta: meta(
                 state.tick,

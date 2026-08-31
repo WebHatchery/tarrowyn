@@ -44,7 +44,7 @@ impl WorldRepository {
         target_account_id: &str,
     ) -> Result<ApiResponse<SupportAccountResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        self.expire_and_persist_sessions(&mut state);
+        self.expire_and_persist_sessions(&mut state)?;
         let operator_key = authenticate(&mut state, token, &self.config)?;
         let operator_account = state
             .identities
@@ -145,7 +145,7 @@ impl WorldRepository {
 
     pub fn ops_health(&self) -> ApiResponse<OpsHealthResponse> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        self.expire_and_persist_sessions(&mut state);
+        let _ = self.expire_and_persist_sessions(&mut state);
         let persistence_failed = *self
             .persistence_failed
             .lock()
@@ -192,7 +192,7 @@ impl WorldRepository {
         token: &str,
     ) -> Result<ApiResponse<OpsMetricsResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        self.expire_and_persist_sessions(&mut state);
+        self.expire_and_persist_sessions(&mut state)?;
         let key = authenticate(&mut state, token, &self.config)?;
         let account = state
             .identities
@@ -356,7 +356,7 @@ impl WorldRepository {
         since: u64,
     ) -> Result<ApiResponse<ChronicleSearchResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        self.expire_and_persist_sessions(&mut state);
+        self.expire_and_persist_sessions(&mut state)?;
         authenticate(&mut state, token, &self.config)?;
         validate_chronicle_search_cursor(&state, since)?;
         let trimmed_query = query.trim();

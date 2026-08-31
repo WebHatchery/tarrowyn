@@ -10,7 +10,7 @@ impl WorldRepository {
         since: u64,
     ) -> Result<ApiResponse<RegionalEventsResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        self.expire_and_persist_sessions(&mut state);
+        self.expire_and_persist_sessions(&mut state)?;
         authenticate(&mut state, token, &self.config)?;
         super::validate_event_cursor(&state, since, "regional")?;
         if state.phase5.event_history_floor > since {
@@ -41,7 +41,7 @@ impl WorldRepository {
         request: RegionalEventRequest,
     ) -> Result<ApiResponse<RegionalEventResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        self.expire_and_persist_sessions(&mut state);
+        self.expire_and_persist_sessions(&mut state)?;
         let key = authenticate(&mut state, token, &self.config)?;
         validate_request_id(&request.request_id)?;
         let event_id = super::validate_optional_identifier(
@@ -80,7 +80,7 @@ impl WorldRepository {
             .request_results
             .insert(cache_key, Phase5Response::Event(response.clone()));
         record_command_outcome(&mut state, response.accepted);
-        self.persist(&state);
+        self.persist(&mut state)?;
         Ok(ApiResponse {
             meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
             data: response,

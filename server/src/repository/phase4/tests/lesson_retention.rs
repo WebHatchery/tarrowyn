@@ -54,7 +54,7 @@ fn skills_read_persists_expired_lesson_pruning_before_a_restart() {
         let mut expired = lesson(1);
         expired.expires_tick = 1;
         state.phase4.lessons.push(expired);
-        repository.persist(&state);
+        repository.persist(&mut state).expect("fixture persistence");
     }
 
     let response = repository

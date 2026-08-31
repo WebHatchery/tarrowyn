@@ -111,7 +111,7 @@ fn newer_json_snapshot_fails_closed_without_downgrading_the_file() {
 }
 
 #[test]
-fn persistence_failure_degrades_operator_readiness() {
+fn persistence_failure_rejects_the_command_and_keeps_the_durable_state() {
     let state_path = std::env::temp_dir().join(format!(
         "tarrowyn-persistence-failure-{}.json",
         std::process::id()
@@ -124,12 +124,21 @@ fn persistence_failure_degrades_operator_readiness() {
     std::fs::remove_file(&state_path).unwrap();
     std::fs::create_dir(&state_path).unwrap();
 
-    repository
+    let error = repository
         .guest_session(GuestSessionRequest {
             client_key: Some("persistence-failure".to_owned()),
             reset: false,
         })
-        .unwrap();
+        .expect_err("a failed durable write must not acknowledge the command");
+
+    assert_eq!(error.status, 503);
+    assert_eq!(error.error.code, "persistence_unavailable");
+    assert!(repository
+        .state
+        .lock()
+        .expect("repository lock")
+        .identities
+        .is_empty());
 
     let health = repository.ops_health().data;
     assert!(!health.ready);
@@ -140,7 +149,15 @@ fn persistence_failure_degrades_operator_readiness() {
         .as_deref()
         .is_some_and(|message| message.contains("persistence write failed")));
 
-    let _ = std::fs::remove_dir(&state_path);
+    std::fs::remove_dir(&state_path).expect("failed persistence fixture should be removable");
+    repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("persistence-recovery".to_owned()),
+            reset: false,
+        })
+        .expect("the command should succeed after durable storage recovers");
+    assert!(repository.ops_health().data.ready);
+    let _ = std::fs::remove_file(&state_path);
 }
 
 #[test]

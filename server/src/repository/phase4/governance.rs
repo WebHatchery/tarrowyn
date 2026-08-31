@@ -39,7 +39,7 @@ impl super::super::WorldRepository {
         request: GovernanceRequest,
     ) -> Result<ApiResponse<GovernanceResponse>, super::super::RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        self.expire_and_persist_sessions(&mut state);
+        self.expire_and_persist_sessions(&mut state)?;
         let key = super::super::authenticate(&mut state, token, &self.config)?;
         validate_request_id(&request.request_id)?;
         let office_id = validate_optional_identifier(
@@ -340,7 +340,7 @@ impl super::super::WorldRepository {
     ) -> Result<ApiResponse<tarrowyn_protocol::InfrastructureResponse>, super::super::RepositoryError>
     {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        self.expire_and_persist_sessions(&mut state);
+        self.expire_and_persist_sessions(&mut state)?;
         super::super::authenticate(&mut state, token, &self.config)?;
         Ok(ApiResponse {
             meta: super::super::meta(state.tick, None, Some(state.cursor)),
@@ -403,7 +403,7 @@ fn finish(
         .request_results
         .insert(cache, super::Phase4Response::Governance(response.clone()));
     super::super::record_command_outcome(state, response.accepted);
-    repository.persist(state);
+    repository.persist(state)?;
     Ok(ApiResponse {
         meta: super::super::meta(state.tick, Some(request_id), Some(state.cursor)),
         data: response,

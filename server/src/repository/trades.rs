@@ -3,7 +3,7 @@ use super::*;
 impl WorldRepository {
     pub fn trades(&self, token: &str) -> Result<ApiResponse<TradesResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        self.expire_and_persist_sessions(&mut state);
+        self.expire_and_persist_sessions(&mut state)?;
         let identity_key = authenticate(&mut state, token, &self.config)?;
         let account_id = state
             .identities
@@ -35,7 +35,7 @@ impl WorldRepository {
         request: TradeRequest,
     ) -> Result<ApiResponse<TradeResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        self.expire_and_persist_sessions(&mut state);
+        self.expire_and_persist_sessions(&mut state)?;
         let identity_key = authenticate(&mut state, token, &self.config)?;
         validate_request_id(&request.request_id)?;
         let recipient_account_id = validate_optional_identifier(
@@ -100,7 +100,7 @@ impl WorldRepository {
             "A direct player-trade command was recorded in the settlement audit stream.",
         );
         record_command_outcome(&mut state, response.accepted);
-        self.persist(&state);
+        self.persist(&mut state)?;
         Ok(ApiResponse {
             meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
             data: response,

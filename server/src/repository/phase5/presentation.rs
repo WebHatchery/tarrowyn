@@ -11,7 +11,7 @@ const INTEREST_RADIUS: u32 = 12;
 impl WorldRepository {
     pub fn region(&self, token: &str) -> Result<ApiResponse<RegionSnapshot>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        self.expire_and_persist_sessions(&mut state);
+        self.expire_and_persist_sessions(&mut state)?;
         let key = authenticate(&mut state, token, &self.config)?;
         refresh_settlement_facilities(&mut state);
         let location_id = player_location(&state, &key);
@@ -73,7 +73,7 @@ impl WorldRepository {
         token: &str,
     ) -> Result<ApiResponse<SettlementsResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        self.expire_and_persist_sessions(&mut state);
+        self.expire_and_persist_sessions(&mut state)?;
         authenticate(&mut state, token, &self.config)?;
         refresh_settlement_facilities(&mut state);
         Ok(ApiResponse {
@@ -87,7 +87,7 @@ impl WorldRepository {
 
     pub fn routes(&self, token: &str) -> Result<ApiResponse<Vec<RouteRecord>>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        self.expire_and_persist_sessions(&mut state);
+        self.expire_and_persist_sessions(&mut state)?;
         authenticate(&mut state, token, &self.config)?;
         Ok(ApiResponse {
             meta: meta(state.tick, None, Some(state.cursor)),
@@ -100,7 +100,7 @@ impl WorldRepository {
         token: &str,
     ) -> Result<ApiResponse<RegionalHouseholdsResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        self.expire_and_persist_sessions(&mut state);
+        self.expire_and_persist_sessions(&mut state)?;
         authenticate(&mut state, token, &self.config)?;
         Ok(ApiResponse {
             meta: meta(state.tick, None, Some(state.cursor)),
@@ -122,7 +122,7 @@ impl WorldRepository {
         token: &str,
     ) -> Result<ApiResponse<LawBoundaryResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        self.expire_and_persist_sessions(&mut state);
+        self.expire_and_persist_sessions(&mut state)?;
         authenticate(&mut state, token, &self.config)?;
         Ok(ApiResponse {
             meta: meta(state.tick, None, Some(state.cursor)),

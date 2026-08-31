@@ -43,13 +43,20 @@ impl WorldRepository {
         let clock = state.clock.clone();
         push_event(&mut state, WorldEvent::Clock(clock));
         expire_sessions(&mut state, &self.config);
-        if let Some(backup_ok) = phase6::scheduled_backup(&mut state, &self.config) {
-            *self
-                .backup_failed
-                .lock()
-                .expect("backup status lock poisoned") = !backup_ok;
+        if self.persist(&mut state).is_ok() {
+            if let Some(backup_ok) = phase6::scheduled_backup(&mut state, &self.config) {
+                *self
+                    .backup_failed
+                    .lock()
+                    .expect("backup status lock poisoned") = !backup_ok;
+                if backup_ok {
+                    // The backup metadata is part of the authoritative snapshot,
+                    // so persist the successful backup marker after the file is
+                    // safely replaced.
+                    let _ = self.persist(&mut state);
+                }
+            }
         }
-        self.persist(&state);
         drop(state);
         self.record_tick_duration(started.elapsed());
     }
@@ -61,28 +68,46 @@ impl WorldRepository {
             .tick
     }
 
-    pub(super) fn persist(&self, state: &RepositoryState) {
+    pub(super) fn persist(
+        &self,
+        state: &mut RepositoryState,
+    ) -> Result<(), super::RepositoryError> {
         match self.storage.persist(state, &self.config) {
             Ok(()) => {
+                *self
+                    .last_persisted_state
+                    .lock()
+                    .expect("last persisted state lock poisoned") = state.clone();
                 *self
                     .persistence_failed
                     .lock()
                     .expect("persistence status lock poisoned") = false;
+                Ok(())
             }
             Err(error) => {
                 eprintln!("Tarrowyn persistence write failed: {error}");
+                *state = self
+                    .last_persisted_state
+                    .lock()
+                    .expect("last persisted state lock poisoned")
+                    .clone();
                 *self
                     .persistence_failed
                     .lock()
                     .expect("persistence status lock poisoned") = true;
+                Err(super::RepositoryError::persistence_unavailable())
             }
         }
     }
 
-    pub(super) fn expire_and_persist_sessions(&self, state: &mut RepositoryState) {
+    pub(super) fn expire_and_persist_sessions(
+        &self,
+        state: &mut RepositoryState,
+    ) -> Result<(), super::RepositoryError> {
         if expire_sessions(state, &self.config) {
-            self.persist(state);
+            self.persist(state)?;
         }
+        Ok(())
     }
 
     pub(super) fn record_tick_duration(&self, elapsed: Duration) {

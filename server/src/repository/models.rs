@@ -103,7 +103,7 @@ pub(crate) struct StoredState {
     pub(super) phase6: super::phase6::Phase6State,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(crate) struct RepositoryState {
     pub(super) tick: u64,
     pub(super) clock: WorldClock,

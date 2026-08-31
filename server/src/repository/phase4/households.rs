@@ -10,7 +10,7 @@ impl super::super::WorldRepository {
         token: &str,
     ) -> Result<ApiResponse<HouseholdsResponse>, super::super::RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        self.expire_and_persist_sessions(&mut state);
+        self.expire_and_persist_sessions(&mut state)?;
         super::super::authenticate(&mut state, token, &self.config)?;
         Ok(ApiResponse {
             meta: super::super::meta(state.tick, None, Some(state.cursor)),

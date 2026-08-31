@@ -3779,3 +3779,14 @@ exhausted. The existing safe persistence error remains the only outward error
 surface. Focused MySQL repository tests, server clippy, formatting, diff, and
 Rust file-size checks cover this isolated failure-mode change; no full
 workspace or publisher gate is repeated.
+
+The authoritative mutation boundary now rejects a failed JSON or MySQL snapshot
+write with `503 persistence_unavailable` and restores the last successfully
+persisted in-memory state before returning. Scheduled ticks persist their world
+state before writing a backup, then persist the successful backup marker after
+the backup file is replaced. The focused persistence-failure regression passed,
+followed by the full server-library suite (448 tests), server clippy, package
+formatting, diff, and Rust file-size checks. The full release gate, including
+the protocol/client suite and Windows/WebGL publisher, also passed for this
+major durability milestone. The target MySQL migration, restore, and deployment
+gates remain open in the follow-up register.

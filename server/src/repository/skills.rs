@@ -36,12 +36,12 @@ impl WorldRepository {
 
     pub fn skills(&self, token: &str) -> Result<ApiResponse<SkillsResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        self.expire_and_persist_sessions(&mut state);
+        self.expire_and_persist_sessions(&mut state)?;
         let lessons_pruned = super::phase4::prune_school_lessons(&mut state);
         let key = authenticate(&mut state, token, &self.config)?;
         let discovered = discover_eligible(&mut state, &key);
         if discovered || lessons_pruned {
-            self.persist(&state);
+            self.persist(&mut state)?;
         }
         Ok(ApiResponse {
             meta: meta(state.tick, None, Some(state.cursor)),
@@ -55,7 +55,7 @@ impl WorldRepository {
         request: SkillRequest,
     ) -> Result<ApiResponse<SkillResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        self.expire_and_persist_sessions(&mut state);
+        self.expire_and_persist_sessions(&mut state)?;
         super::phase4::prune_school_lessons(&mut state);
         let key = authenticate(&mut state, token, &self.config)?;
         super::phase4::validate_request_id(&request.request_id)?;
@@ -138,7 +138,7 @@ impl WorldRepository {
         request: SkillRequest,
     ) -> Result<ApiResponse<SkillResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        self.expire_and_persist_sessions(&mut state);
+        self.expire_and_persist_sessions(&mut state)?;
         super::phase4::prune_school_lessons(&mut state);
         let key = authenticate(&mut state, token, &self.config)?;
         super::phase4::validate_request_id(&request.request_id)?;
@@ -322,7 +322,7 @@ impl WorldRepository {
         request: SkillRequest,
     ) -> Result<ApiResponse<SkillResponse>, RepositoryError> {
         let mut state = self.state.lock().expect("world repository lock poisoned");
-        self.expire_and_persist_sessions(&mut state);
+        self.expire_and_persist_sessions(&mut state)?;
         super::phase4::prune_school_lessons(&mut state);
         let key = authenticate(&mut state, token, &self.config)?;
         super::phase4::validate_request_id(&request.request_id)?;
