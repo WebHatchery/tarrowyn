@@ -305,13 +305,26 @@ impl WorldRepository {
             request.request_id,
             stable_fingerprint(&refresh_token)
         );
-        if let Some(previous) = state.phase6.auth_refresh_results.get(&cache_key).cloned() {
-            return Ok(ApiResponse {
-                meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
-                data: previous,
-            });
-        }
         self.expire_and_persist_sessions(&mut state)?;
+        if let Some(previous) = state.phase6.auth_refresh_results.get(&cache_key).cloned() {
+            let replay_is_live = state
+                .phase6
+                .sessions
+                .get(&previous.session.account_token)
+                .is_some_and(|session| {
+                    !session.revoked
+                        && session.refresh_token == previous.session.refresh_token
+                        && session.refresh_expires_at_tick > state.tick
+                });
+            if replay_is_live {
+                return Ok(ApiResponse {
+                    meta: meta(state.tick, Some(request.request_id), Some(state.cursor)),
+                    data: previous,
+                });
+            }
+            state.phase6.auth_refresh_results.remove(&cache_key);
+            state.phase6.auth_refresh_accounts.remove(&cache_key);
+        }
         let Some((old_token, old_session)) = state
             .phase6
             .sessions

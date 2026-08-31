@@ -104,6 +104,56 @@ fn direct_refresh_persists_presence_when_access_has_expired() {
 }
 
 #[test]
+fn expired_refresh_replay_is_not_returned_as_a_success() {
+    let repository = WorldRepository::new(ServerConfig {
+        backup_path: None,
+        tick_interval: Duration::from_secs(1),
+        production_session_ttl_seconds: 1,
+        refresh_ttl_seconds: 2,
+        ..ServerConfig::default()
+    });
+    let guest = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("expired-refresh-replay".to_owned()),
+            reset: false,
+        })
+        .expect("guest session")
+        .data;
+    let linked = repository
+        .auth_link(
+            &guest.account_token,
+            AuthLinkRequest {
+                request_id: "expired-refresh-replay-link".to_owned(),
+                provider: "webhatchery-identity-oidc".to_owned(),
+                subject: "expired-refresh-replay-subject".to_owned(),
+                display_name: None,
+            },
+        )
+        .expect("linked session")
+        .data;
+    let refresh_request = AuthRefreshRequest {
+        request_id: "expired-refresh-replay-request".to_owned(),
+        refresh_token: linked.session.refresh_token,
+    };
+    let refreshed = repository
+        .auth_refresh(refresh_request.clone())
+        .expect("refresh should succeed once")
+        .data;
+
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state.tick = refreshed.session.expires_at_tick + 1;
+    }
+
+    let error = repository.auth_refresh(refresh_request).unwrap_err();
+    assert_eq!(error.status, 401);
+    assert_eq!(error.error.code, "invalid_refresh");
+    let state = repository.state.lock().expect("repository lock");
+    assert!(state.phase6.auth_refresh_results.is_empty());
+    assert!(state.phase6.auth_refresh_accounts.is_empty());
+}
+
+#[test]
 fn account_link_emits_the_updated_online_presence_for_other_clients() {
     let repository = WorldRepository::new(ServerConfig::default());
     let guest = repository
