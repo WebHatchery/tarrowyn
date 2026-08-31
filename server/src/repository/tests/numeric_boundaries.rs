@@ -1,6 +1,7 @@
 use super::{guest, repo};
 use crate::config::{ServerConfig, MAX_WORLD_TILES};
 use crate::repository::models::RepositoryState;
+use crate::repository::persistence::MAX_PERSISTED_STATE_BYTES;
 use crate::repository::WorldRepository;
 use tarrowyn_protocol::GuestSessionRequest;
 
@@ -93,4 +94,24 @@ fn direct_snapshot_endpoints_fail_closed_for_an_unbounded_world() {
         assert_eq!(error.status, 500);
         assert_eq!(error.error.code, "invalid_world_configuration");
     }
+}
+
+#[test]
+fn oversized_json_snapshot_is_rejected_before_deserialization() {
+    let path = std::env::temp_dir().join(format!(
+        "tarrowyn-oversized-state-{}.json",
+        std::process::id()
+    ));
+    let file = std::fs::File::create(&path).expect("oversized state fixture");
+    file.set_len(MAX_PERSISTED_STATE_BYTES + 1)
+        .expect("sparse oversized state fixture");
+
+    let config = ServerConfig {
+        persistence_path: Some(path.to_string_lossy().into_owned()),
+        ..ServerConfig::default()
+    };
+    let error = crate::repository::persistence::load_state(&config)
+        .expect_err("an oversized JSON state should fail before deserialization");
+    assert!(error.to_string().contains("128 MiB"));
+    std::fs::remove_file(path).expect("oversized state fixture cleanup");
 }

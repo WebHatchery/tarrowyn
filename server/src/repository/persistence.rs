@@ -4,12 +4,15 @@ use super::models::{RepositoryState, StoredState};
 use super::mysql::MysqlStore;
 use crate::config::ServerConfig;
 use std::fs;
-use std::io::Write;
+use std::io::{Read, Write};
 #[cfg(windows)]
 use std::os::windows::ffi::OsStrExt;
 use std::path::Path;
 #[cfg(windows)]
 use windows_sys::Win32::Storage::FileSystem::{MoveFileExW, MOVEFILE_REPLACE_EXISTING};
+
+/// Bound restore input before deserializing state collections and strings.
+pub(crate) const MAX_PERSISTED_STATE_BYTES: u64 = 128 * 1024 * 1024;
 
 #[derive(Debug)]
 pub(crate) struct PersistenceBackendError(String);
@@ -66,8 +69,8 @@ pub(super) fn load_state(
     let Some(path) = config.persistence_path.as_deref() else {
         return Ok(None);
     };
-    let bytes = match fs::read(path) {
-        Ok(bytes) => bytes,
+    let file = match fs::File::open(path) {
+        Ok(file) => file,
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(None),
         Err(_) => {
             return Err(PersistenceBackendError::new(
@@ -75,6 +78,23 @@ pub(super) fn load_state(
             ));
         }
     };
+    let file_size = file
+        .metadata()
+        .map_err(|_| PersistenceBackendError::new("the JSON world snapshot could not be read"))?;
+    if file_size.len() > MAX_PERSISTED_STATE_BYTES {
+        return Err(PersistenceBackendError::new(
+            "the JSON world snapshot exceeds the 128 MiB restore limit",
+        ));
+    }
+    let mut bytes = Vec::new();
+    file.take(MAX_PERSISTED_STATE_BYTES.saturating_add(1))
+        .read_to_end(&mut bytes)
+        .map_err(|_| PersistenceBackendError::new("the JSON world snapshot could not be read"))?;
+    if bytes.len() as u64 > MAX_PERSISTED_STATE_BYTES {
+        return Err(PersistenceBackendError::new(
+            "the JSON world snapshot exceeds the 128 MiB restore limit",
+        ));
+    }
     let stored: StoredState = serde_json::from_slice(&bytes).map_err(|_| {
         PersistenceBackendError::new("the JSON world snapshot contains invalid state JSON")
     })?;

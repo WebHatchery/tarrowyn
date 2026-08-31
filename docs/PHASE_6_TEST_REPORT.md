@@ -4529,6 +4529,16 @@ Windows/WebGL release builds, packaging, Preview deployment, and catalog
 synchronization. No full workspace suite was repeated for this isolated
 snapshot-allocation boundary, and no new external or deferred work was opened.
 
+The persisted-state input boundary was validated on 2026-08-31. JSON restore
+now checks file metadata, reads through a bounded 128 MiB window, and rejects
+oversized input before deserialization; the MySQL loader applies the same byte
+limit to its stored JSON payload. The focused sparse-file regression passed 1
+test with 490 filtered; server-package formatting, clippy, Rust file-size, and
+diff checks passed. The project publisher also passed Windows/WebGL release
+builds, packaging, Preview deployment, and catalog synchronization. No full
+workspace suite was repeated for this isolated restore-input boundary, and no
+new external or deferred work was opened.
+
 The online tile-coordinate boundary was validated on 2026-08-31. State
 projection now rejects out-of-bounds and duplicate tile coordinates instead of
 silently accepting a partial world while rebuilding the map. The focused

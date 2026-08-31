@@ -1,7 +1,7 @@
 //! Transactional MySQL snapshot storage for the native authoritative server.
 
 use super::models::{RepositoryState, StoredState};
-use super::persistence::PersistenceBackendError;
+use super::persistence::{PersistenceBackendError, MAX_PERSISTED_STATE_BYTES};
 use crate::config::ServerConfig;
 use mysql::prelude::Queryable;
 use mysql::{OptsBuilder, Pool, PoolConstraints, PoolOpts, TxOpts};
@@ -98,6 +98,11 @@ impl MysqlStore {
             }
             return Ok(None);
         };
+        if u64::try_from(state_json.len()).unwrap_or(u64::MAX) > MAX_PERSISTED_STATE_BYTES {
+            return Err(PersistenceBackendError::new(
+                "the MySQL world snapshot exceeds the 128 MiB restore limit",
+            ));
+        }
         let identity_index: Vec<(String, String)> = connection
             .query(
                 "SELECT account_id, character_id
