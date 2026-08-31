@@ -203,41 +203,43 @@ The checked-in content contract is validated twice at release boundaries: the
 PowerShell gate requires the canonical manifest set, exact schema declaration,
 record IDs, required text fields, and required arrays to be present and valid
 JSON, while server startup parses typed action, crop, item, event, settlement,
-region, household, infrastructure, NPC-household, recipe, calendar, and game-config
-records and rejects duplicate IDs, incomplete
-records, unknown route or settlement locations, missing launch IDs, incompatible
-launch route and settlement links, invalid event stages, and a day-length
-mismatch. The validator protects future content additions; wiring
-the skill catalogue into the authenticated skills read also rechecks stored
-prerequisite practice and qualifying history, persisting a newly eligible
-discovery after a content release without requiring repeated play.
-the crop manifest into server planting now follows that validated order, and
-regional event seeding now consumes the validated event narrative and affected
-location scope by manifest order, and settlement projections consume their manifest condition, opportunity,
-and supply profiles. Market base prices also consume the item manifest, which
-now covers every traded commodity. Regional season labels now also follow the
-calendar sequence and season length; the configured real-time day length still
-belongs to the server deployment boundary. Route transport, endpoint topology,
-location roles, resources, names, services, positions, route tuning, and the
-shared farm-plot positions now follow the validated region manifest, while
-fresh regional location, route, settlement, and stock collections consume the
-same validated catalog IDs. The regional snapshot also emits its identity
-from that region manifest rather than a duplicate endpoint constant. The
-launch
-field-tool repair order now consumes a typed recipe manifest for its material,
-tool, reward, and benefit values. The repeatable Brambleback
-contract now consumes a typed contract manifest for its narrative, target,
-required progress, and reward curve. The launch wilderness threat now consumes
-a typed threat manifest for its identity, monster, position, health, risk
-modifier, resource demand, and rumour. The Maren opportunity and regional
-household projections now share a typed household manifest for members,
-movement, service, reasons, and history. Infrastructure projections now consume
-typed infrastructure content for public works, positions, maintenance, quality,
-and recovery notes. The fixed Bellweather household now consumes typed
-NPC-household content; its condition-reactive service lifecycle remains
-authoritative code, while general NPC family simulation remains deferred. Each
-live simulation consumer has a fixture and compatibility test; future content
-additions must preserve the same boundary.
+region, household, infrastructure, NPC-household, recipe, calendar, and game-
+config records. Startup rejects duplicate IDs, incomplete records, unknown
+route or settlement locations, missing launch IDs, incompatible launch route
+and settlement links, invalid event stages, and a day-length mismatch. The
+validator protects future content additions; the authenticated skills read
+also rechecks stored prerequisite practice and qualifying history, persisting a
+newly eligible discovery after a content release without requiring repeated
+play.
+
+The crop manifest used by server planting follows that validated order.
+Regional event seeding consumes the validated event narrative and affected
+location scope by manifest order, while settlement projections consume their
+manifest condition, opportunity, and supply profiles. Market base prices also
+consume the item manifest, which now covers every traded commodity. Regional
+season labels follow the calendar sequence and season length; the configured
+real-time day length still belongs to the server deployment boundary. Route
+transport, endpoint topology, location roles, resources, names, services,
+positions, route tuning, and shared farm-plot positions follow the validated
+region manifest, while fresh regional location, route, settlement, and stock
+collections consume the same validated catalog IDs. The regional snapshot also
+emits its identity from that region manifest rather than a duplicate endpoint
+constant.
+
+The launch field-tool repair order consumes a typed recipe manifest for its
+material, tool, reward, and benefit values. The repeatable Brambleback contract
+consumes a typed contract manifest for its narrative, target, required
+progress, and reward curve. The launch wilderness threat consumes a typed
+threat manifest for its identity, monster, position, health, risk modifier,
+resource demand, and rumour. The Maren opportunity and regional household
+projections share a typed household manifest for members, movement, service,
+reasons, and history. Infrastructure projections consume typed infrastructure
+content for public works, positions, maintenance, quality, and recovery notes.
+The fixed Bellweather household consumes typed NPC-household content; its
+condition-reactive service lifecycle remains authoritative code, while general
+NPC family simulation remains deferred. Each live simulation consumer has a
+fixture and compatibility test; future content additions must preserve the
+same boundary.
 
 ## Hosting and observability
 
