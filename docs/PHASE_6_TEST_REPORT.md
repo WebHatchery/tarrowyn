@@ -4267,3 +4267,12 @@ history; the focused exact regression filter passed 1 test:
 Server-package formatting, clippy, Rust file-size, and diff checks passed. No
 full workspace suite was repeated for this isolated frontier-deletion boundary
 slice, and no new external or deferred work was opened.
+
+The linked-account trade replay correction was validated on 2026-08-31. Guest
+linking now migrates direct-trade snapshots cached under every identity, so a
+recipient retry cannot restore the creator's retired guest account ID or name;
+the focused exact regression filter passed 1 test:
+`account_link_migrates_trade_replays_kept_by_another_identity`.
+Server-package formatting, clippy, Rust file-size, and diff checks passed. No
+full workspace suite was repeated for this isolated account-link migration
+slice, and no new external or deferred work was opened.

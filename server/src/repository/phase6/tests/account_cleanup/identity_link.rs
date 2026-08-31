@@ -141,3 +141,77 @@ fn account_link_preserves_support_replay_idempotency() {
 
     assert_eq!(replayed.audit_id, original.audit_id);
 }
+
+#[test]
+fn account_link_migrates_trade_replays_kept_by_another_identity() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let creator_guest = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("trade-link-creator".to_owned()),
+            reset: false,
+        })
+        .expect("creator guest session")
+        .data;
+    let recipient = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("trade-link-recipient".to_owned()),
+            reset: false,
+        })
+        .expect("recipient guest session")
+        .data;
+    let created = repository
+        .trade(
+            &creator_guest.account_token,
+            TradeRequest {
+                request_id: "trade-link-create".to_owned(),
+                action: TradeAction::Create,
+                trade_id: None,
+                recipient_account_id: Some(recipient.account_id.clone()),
+                offer: Some(TradeBundle {
+                    seeds: 1,
+                    ..TradeBundle::default()
+                }),
+                request: Some(TradeBundle {
+                    gold: 1,
+                    ..TradeBundle::default()
+                }),
+            },
+        )
+        .expect("trade creation")
+        .data;
+    let trade_id = created.trade.expect("created trade").trade_id;
+    let review_request = TradeRequest {
+        request_id: "trade-link-review".to_owned(),
+        action: TradeAction::Review,
+        trade_id: Some(trade_id),
+        recipient_account_id: None,
+        offer: None,
+        request: None,
+    };
+    repository
+        .trade(&recipient.account_token, review_request.clone())
+        .expect("trade review");
+
+    let linked = repository
+        .auth_link(
+            &creator_guest.account_token,
+            AuthLinkRequest {
+                request_id: "trade-link-request".to_owned(),
+                provider: "webhatchery-identity-oidc".to_owned(),
+                subject: "trade-link-subject".to_owned(),
+                display_name: Some("Linked trade creator".to_owned()),
+            },
+        )
+        .expect("creator link")
+        .data;
+    let replay = repository
+        .trade(&recipient.account_token, review_request)
+        .expect("trade replay")
+        .data
+        .trade
+        .expect("replayed trade");
+
+    assert_eq!(replay.creator_account_id, linked.account_id);
+    assert_eq!(replay.creator_name, "Linked trade creator");
+    assert!(repository.ops_health().data.ready);
+}

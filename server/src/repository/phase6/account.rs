@@ -180,14 +180,16 @@ fn migrate_identity_replay_caches(
                 new_display_name,
             );
         }
-        for response in identity.trade_results.values_mut() {
-            if let Some(trade) = response.trade.as_mut() {
-                migrate_trade(trade, old_account_id, new_account_id, new_display_name);
-            }
-        }
         for response in identity.chat_results.values_mut() {
             if let Some(message) = response.message.as_mut() {
                 migrate_chat(message, old_account_id, new_account_id, new_display_name);
+            }
+        }
+    }
+    for identity in state.identities.values_mut() {
+        for response in identity.trade_results.values_mut() {
+            if let Some(trade) = response.trade.as_mut() {
+                migrate_trade(trade, old_account_id, new_account_id, new_display_name);
             }
         }
     }
