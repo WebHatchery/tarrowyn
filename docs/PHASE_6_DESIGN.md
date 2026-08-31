@@ -109,7 +109,9 @@ within the same bounded limit, allowing the server's durable replay result to
 confirm a committed action.
 Refresh replay results retain their account ownership separately from the live
 session table so deletion also removes rotated responses after their access
-session has expired.
+session has expired. On reload, older snapshots rebuild that ownership from the
+persisted session that issued each cached response; replay entries whose issued
+session has already been retired are discarded as non-authoritative cache data.
 Moderation cooldowns are identity-lifecycle state rather than replay history:
 they remain for every extant identity and are removed only when that identity
 leaves the world, so report rate limits are not defeated by cache eviction.

@@ -4068,3 +4068,11 @@ collection, topology, and settlement-location checks. The focused
 `regional_topology` filter passed all 8 matching server tests, followed by the
 affected server package formatter, clippy, Rust file-size, and diff checks. No
 full workspace suite was repeated for this test-coverage-only maintenance slice.
+
+The legacy refresh-replay migration was validated on 2026-08-31 at commit
+`bda026e`. Reload now rebuilds the account-owner mirror for cached refresh
+responses from their persisted production sessions and drops replay entries
+whose issued sessions are gone. The focused `refresh_migration` filter passed
+its regression, followed by the affected server formatter, clippy, Rust
+file-size, and diff checks. No full workspace suite was repeated for this
+bounded persistence-migration correction.
