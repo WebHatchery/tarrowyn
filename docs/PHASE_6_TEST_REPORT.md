@@ -3378,6 +3378,15 @@ package formatting, `git diff --check`, and the Rust file-size scan. No
 publisher or full workspace gate is repeated because this is source
 organization maintenance, and no new external or deferred work is opened.
 
+The Phase 4 client now keeps command-response projection updates and readable
+feedback dispatch in `phase4/commands.rs`, reducing the orchestration root
+from 698 to 623 lines while preserving cursor ordering and touch-facing
+responses. The focused projection-ordering suite (5 tests), client-package
+clippy with warnings denied, package formatting, `git diff --check`, and the
+Rust file-size scan pass. No publisher or full workspace gate is repeated
+because this is source organization maintenance, and no new external or
+deferred work is opened.
+
 Phase 6 account identity reads and deletion scheduling now live in the
 `phase6/account.rs` child alongside guest-account migration, reducing the
 authority root from 694 to 520 lines while preserving the account, privacy,

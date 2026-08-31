@@ -585,7 +585,7 @@ fn phase_four_cycle_reports_when_no_command_is_ready() {
 #[test]
 fn phase_four_error_summary_keeps_an_api_rejection_code() {
     assert_eq!(
-        super::short_error(
+        super::polling::short_error(
             "HTTP API error in 'POST /v1/knowledge' [not_ready]: Record the method first."
         ),
         "HTTP API error in 'POST /v1/knowledge' [not_ready]: Record the method first."

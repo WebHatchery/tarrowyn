@@ -8,7 +8,7 @@ fn claim_success_message_explains_status_and_recovery_path() {
         tarrowyn_protocol::ClaimLifecycleStatus::Active,
     );
     assert_eq!(
-        super::super::claim_success_message(Some(&active)),
+        super::super::feedback::claim_success_message(Some(&active)),
         "Lease active at plot (1, 1); building access is open for 90 days."
     );
 
@@ -18,7 +18,7 @@ fn claim_success_message_explains_status_and_recovery_path() {
         tarrowyn_protocol::ClaimLifecycleStatus::Abandoned,
     );
     assert_eq!(
-        super::super::claim_success_message(Some(&abandoned)),
+        super::super::feedback::claim_success_message(Some(&abandoned)),
         "Lease abandoned at plot (1, 1); use the Registry control to reclaim it after the grace period."
     );
 }
@@ -30,14 +30,14 @@ fn profession_success_message_explains_order_result() {
     order.reward_gold = 12;
     order.benefit = "The field tool is restored.".to_owned();
     assert_eq!(
-        super::super::profession_success_message(Some(&order), None),
+        super::super::feedback::profession_success_message(Some(&order), None),
         "Service order completed: Repair a field tool at 87% quality; 12 gold paid. The field tool is restored."
     );
 
     order.status = tarrowyn_protocol::ServiceOrderStatus::Accepted;
     order.provider_name = Some("Mara".to_owned());
     assert_eq!(
-        super::super::profession_success_message(Some(&order), None),
+        super::super::feedback::profession_success_message(Some(&order), None),
         "Service order accepted: Repair a field tool; Mara is responsible for the 12 gold reward."
     );
 }
@@ -55,7 +55,7 @@ fn profession_success_message_names_a_learned_capability() {
     };
 
     assert_eq!(
-        super::super::profession_success_message(None, Some(&request)),
+        super::super::feedback::profession_success_message(None, Some(&request)),
         "Carpenter capability recorded; its credential is now in the profession ledger."
     );
 }
@@ -102,7 +102,7 @@ fn governance_success_message_explains_completed_public_action() {
     };
 
     assert_eq!(
-        super::super::governance_success_message(&response, Some(&request)),
+        super::super::feedback::governance_success_message(&response, Some(&request)),
         "Public action completed: repair the north road for North road safety; 8 public gold spent."
     );
 }
@@ -180,7 +180,7 @@ fn governance_inspection_message_surfaces_the_public_ledger() {
     };
 
     assert_eq!(
-        super::super::governance_success_message(&response, Some(&request)),
+        super::super::feedback::governance_success_message(&response, Some(&request)),
         "Town hall ledger: 1/2 offices filled • 1 proposals in progress • treasury 18 gold • tax 4% • administration 73%."
     );
 }
@@ -216,7 +216,7 @@ fn knowledge_discovery_notice_names_the_recorded_clue() {
     };
 
     assert_eq!(
-        super::super::knowledge_success_message(&response, Some(&request)),
+        super::super::feedback::knowledge_success_message(&response, Some(&request)),
         "Discovered Moonberry trellis method. Moonberries gain quality when tended."
     );
 }
@@ -225,7 +225,7 @@ fn knowledge_discovery_notice_names_the_recorded_clue() {
 fn phase_four_rejection_without_a_reason_still_leaves_a_visible_notice() {
     let mut notices = Vec::new();
 
-    super::super::phase4_notice(false, None, "unused success", &mut notices);
+    super::super::polling::phase4_notice(false, None, "unused success", &mut notices);
 
     assert!(matches!(
         notices.first(),
