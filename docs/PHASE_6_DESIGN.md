@@ -157,6 +157,9 @@ The shared event stream is also bounded at 2,048 records. Requests whose cursor
 predates the first retained record fail with structured `cursor_stale` rather
 than returning a successful but incomplete stream; the client clears its
 cursor-derived projections and reloads authoritative state and history.
+Regional event records keep strictly increasing cursors within their retained
+window, so a cursor-based regional reload cannot silently skip two records that
+share a boundary.
 The repository now has two selectable backends: JSON with atomic temporary-file
 replacement for deterministic fixtures. A configured JSON snapshot that cannot
 be read or parsed fails closed without being replaced by a fresh world. MySQL

@@ -37,6 +37,7 @@ pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
             .all(|route| route_ok(route, &location_ids, state.tick))
         && route_action_cooldowns_ok(state)
         && unique_event_ids(state)
+        && event_cursors_ordered(state)
         && state.phase5.events.iter().all(|event| {
             event.cursor > state.phase5.event_history_floor
                 && event_ok(event, &location_ids, state.cursor, state.tick)
@@ -121,6 +122,15 @@ fn unique_event_ids(state: &RepositoryState) -> bool {
         .events
         .iter()
         .all(|event| ids.insert(event.event_id.as_str()))
+}
+
+fn event_cursors_ordered(state: &RepositoryState) -> bool {
+    let mut previous_cursor = state.phase5.event_history_floor;
+    state.phase5.events.iter().all(|event| {
+        let ordered = event.cursor > previous_cursor;
+        previous_cursor = event.cursor;
+        ordered
+    })
 }
 
 fn event_ok(

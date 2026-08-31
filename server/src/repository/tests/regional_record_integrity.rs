@@ -65,6 +65,40 @@ fn retained_regional_event_cannot_precede_the_history_floor() {
 }
 
 #[test]
+fn retained_regional_events_cannot_share_a_cursor() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("regional-duplicate-cursor-integrity".to_owned()),
+            reset: false,
+        })
+        .expect("guest session")
+        .data;
+    repository
+        .event_action(
+            &session.account_token,
+            RegionalEventRequest {
+                request_id: "regional-duplicate-cursor-seed".to_owned(),
+                action: RegionalEventAction::Seed,
+                event_id: None,
+                intervention: None,
+            },
+        )
+        .expect("regional event");
+
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        let mut duplicate = state.phase5.events[0].clone();
+        duplicate.event_id = "regional-duplicate-cursor-copy".to_owned();
+        state.phase5.events.push(duplicate);
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
 fn travelling_record_cannot_be_past_its_eta() {
     let repository = WorldRepository::new(ServerConfig::default());
     let session = repository

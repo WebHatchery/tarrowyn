@@ -4185,3 +4185,12 @@ Server-side focused authentication checks were unchanged and remained green
 in the preceding commit. The published client build passed, and no full
 workspace suite was repeated for this isolated client retry-recovery slice;
 no new external or deferred work was opened.
+
+The regional event-cursor integrity correction was validated on 2026-08-31.
+Readiness now requires retained regional event cursors to increase strictly
+after the history floor; the focused `regional_record_integrity` server filter
+passed all 5 matching tests, including
+`retained_regional_events_cannot_share_a_cursor`. Server-package formatting,
+clippy, Rust file-size, and diff checks passed. No full workspace suite was
+repeated for this isolated regional-history predicate slice, and no new
+external or deferred work was opened.
