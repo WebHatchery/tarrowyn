@@ -78,7 +78,32 @@ fn anonymize_orphaned_audits(
         } else if is_orphaned_account(&audit.target, account_ids) {
             audit.target = RESET_ACCOUNT.to_owned();
         }
+        for account_id in orphaned_audit_accounts(audit, account_ids) {
+            audit.note = audit.note.replace(&account_id, RESET_ACCOUNT);
+        }
     }
+}
+
+fn orphaned_audit_accounts(
+    audit: &tarrowyn_protocol::AuditRecord,
+    account_ids: &HashSet<String>,
+) -> Vec<String> {
+    let mut account_ids_to_scrub = Vec::new();
+    if is_orphaned_account(&audit.actor_account_id, account_ids) {
+        account_ids_to_scrub.push(audit.actor_account_id.clone());
+    }
+    if let Some((account_id, _)) = audit.target.split_once(" (") {
+        if is_orphaned_account(account_id, account_ids)
+            && !account_ids_to_scrub.iter().any(|id| id == account_id)
+        {
+            account_ids_to_scrub.push(account_id.to_owned());
+        }
+    } else if is_orphaned_account(&audit.target, account_ids)
+        && !account_ids_to_scrub.iter().any(|id| id == &audit.target)
+    {
+        account_ids_to_scrub.push(audit.target.clone());
+    }
+    account_ids_to_scrub
 }
 
 pub(super) fn reset_guest(state: &mut RepositoryState, identity_key: &str) {
@@ -133,7 +158,7 @@ pub(super) fn reset_guest(state: &mut RepositoryState, identity_key: &str) {
     state.phase6.audits.retain(|record| {
         record.actor_account_id != old_account_id && record.target != old_account_id
     });
-    anonymize_audit_targets(&mut state.phase6.audits, &old_account_id);
+    anonymize_audit_targets(&mut state.phase6.audits, &old_account_id, &old_display_name);
     state.phase6.moderation_results.retain(|key, response| {
         key != &format!("moderation:{identity_key}:{}", response.request_id)
     });
@@ -387,11 +412,16 @@ fn anonymize_phase5_replay_orders(state: &mut RepositoryState, account_id: &str)
 fn anonymize_audit_targets(
     audits: &mut std::collections::VecDeque<tarrowyn_protocol::AuditRecord>,
     account_id: &str,
+    display_name: &str,
 ) {
     let prefix = format!("{account_id} (");
     for audit in audits {
         if let Some(suffix) = audit.target.strip_prefix(&prefix) {
             audit.target = format!("{RESET_ACCOUNT} ({suffix}");
+        }
+        audit.note = audit.note.replace(account_id, RESET_ACCOUNT);
+        if !display_name.is_empty() {
+            audit.note = audit.note.replace(display_name, RESET_NAME);
         }
     }
 }

@@ -486,7 +486,10 @@ fn account_deletion_anonymises_composite_moderation_targets() {
                 target_account_id: Some(target.account_id.clone()),
                 message_id: Some(message_id),
                 category: "harassment".to_owned(),
-                note: "The evidence should retain its report audit.".to_owned(),
+                note: format!(
+                    "The evidence for {} named {} should retain its report audit.",
+                    target.account_id, target.display_name
+                ),
             },
         )
         .expect("moderation report");
@@ -513,6 +516,16 @@ fn account_deletion_anonymises_composite_moderation_targets() {
         .audits
         .iter()
         .any(|audit| { audit.target == format!("former-resident (message {message_id})") }));
+    let audit = state
+        .phase6
+        .audits
+        .iter()
+        .find(|audit| audit.action == "moderation.report:harassment")
+        .expect("moderation audit");
+    assert!(!audit.note.contains(&target.account_id));
+    assert!(!audit.note.contains(&target.display_name));
+    assert!(audit.note.contains("former-resident"));
+    assert!(audit.note.contains("Former resident"));
 }
 
 #[test]

@@ -154,7 +154,11 @@ fn erase_account(state: &mut RepositoryState, request: &PendingAccountDeletion) 
     state.phase6.audits.retain(|record| {
         record.actor_account_id != request.account_id && record.target != request.account_id
     });
-    anonymize_audit_targets(&mut state.phase6.audits, &request.account_id);
+    anonymize_audit_targets(
+        &mut state.phase6.audits,
+        &request.account_id,
+        &deleted_display_name,
+    );
     super::audit(
         state,
         DELETED_ACCOUNT,
@@ -398,11 +402,16 @@ fn anonymize_phase3_replay_claim(claim: &mut LandClaim, account_id: &str) {
 fn anonymize_audit_targets(
     audits: &mut std::collections::VecDeque<tarrowyn_protocol::AuditRecord>,
     account_id: &str,
+    display_name: &str,
 ) {
     let prefix = format!("{account_id} (");
     for audit in audits {
         if let Some(suffix) = audit.target.strip_prefix(&prefix) {
             audit.target = format!("{DELETED_ACCOUNT} ({suffix}");
+        }
+        audit.note = audit.note.replace(account_id, DELETED_ACCOUNT);
+        if !display_name.is_empty() {
+            audit.note = audit.note.replace(display_name, DELETED_NAME);
         }
     }
 }

@@ -256,7 +256,10 @@ fn account_link_migrates_composite_moderation_audit_targets() {
                 target_account_id: Some(target.account_id.clone()),
                 message_id: Some(message_id),
                 category: "harassment".to_owned(),
-                note: "The audit target should follow the account link.".to_owned(),
+                note: format!(
+                    "The audit target {} named {} should follow the account link.",
+                    target.account_id, target.display_name
+                ),
             },
         )
         .expect("moderation report");
@@ -285,6 +288,10 @@ fn account_link_migrates_composite_moderation_audit_targets() {
         audit.target,
         format!("{} (message {message_id})", linked.account_id)
     );
+    assert!(!audit.note.contains(&target.account_id));
+    assert!(!audit.note.contains(&target.display_name));
+    assert!(audit.note.contains(&linked.account_id));
+    assert!(audit.note.contains("Linked audit resident"));
     drop(state);
     assert!(repository.ops_health().data.ready);
 }

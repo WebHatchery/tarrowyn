@@ -166,7 +166,10 @@ fn guest_reset_anonymises_shared_replays_and_composite_audits() {
                 target_account_id: Some(reset_guest.account_id.clone()),
                 message_id: Some(message_id),
                 category: "harassment".to_owned(),
-                note: "The target should remain safe after a development reset.".to_owned(),
+                note: format!(
+                    "The target {} named {} should remain safe after a development reset.",
+                    reset_guest.account_id, reset_guest.display_name
+                ),
             },
         )
         .expect("the observer should create a moderation audit");
@@ -218,6 +221,10 @@ fn guest_reset_anonymises_shared_replays_and_composite_audits() {
         audit.target,
         format!("former-resident (message {message_id})")
     );
+    assert!(!audit.note.contains("dev-account-1"));
+    assert!(!audit.note.contains("Guest 1"));
+    assert!(audit.note.contains("former-resident"));
+    assert!(audit.note.contains("Former resident"));
 }
 
 #[test]

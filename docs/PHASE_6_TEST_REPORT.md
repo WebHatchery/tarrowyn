@@ -4304,3 +4304,16 @@ from reappearing after restore. The focused reset regression passed 1 test:
 Server-package formatting, clippy, Rust file-size, and diff checks passed. No
 full workspace suite was repeated for this isolated restore-normalization
 slice, and no new external or deferred work was opened.
+
+The audit-note privacy correction was validated on 2026-08-31. Guest linking
+now migrates old account IDs and names embedded in retained audit notes, while
+guest reset, production deletion, and orphaned-snapshot restore anonymise those
+values without removing bounded moderation message evidence. Four focused
+regressions passed 1 test each:
+`account_link_migrates_composite_moderation_audit_targets`,
+`guest_reset_anonymises_shared_replays_and_composite_audits`,
+`account_deletion_anonymises_composite_moderation_targets`, and
+`restored_state_anonymises_orphaned_audit_targets`. Server-package formatting,
+clippy, Rust file-size, and diff checks passed. No full workspace suite was
+repeated for this isolated audit-note privacy slice, and no new external or
+deferred work was opened.
