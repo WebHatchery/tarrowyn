@@ -3334,6 +3334,15 @@ file-size scan pass. No publisher or full workspace gate is repeated because
 this is source organization maintenance, and no new external or deferred work
 is opened.
 
+Frontier expedition cycle tests now live in `network/frontier/tests/expedition.rs`,
+reducing the frontier test root from 712 to 502 lines while preserving the
+finished-cycle, missing-role, and retreat-notice contracts. The focused
+frontier expedition filter passes (5 matching tests, including the remaining
+expedition control regression), along with client-package clippy with warnings
+denied, package formatting, `git diff --check`, and the Rust file-size scan. No
+publisher or full workspace gate is repeated because this is test-source
+organization maintenance, and no new external or deferred work is opened.
+
 The online client now keeps the full shared-road sidebar renderer in
 `ui_online/sidebar.rs`, reducing `ui_online.rs` from 676 to 217 lines while
 preserving every farming, combat, trade, travel, recovery, account, and
