@@ -38,17 +38,32 @@ function Get-Json($check) {
     }
 }
 
-$gateway = Get-Json $checks[0]
-if ($gateway.ok -ne $true -or $gateway.service -ne 'local_gateway') {
-    throw 'gateway health returned an unexpected response'
+$gateway = $null
+$server = $null
+$failures = [System.Collections.Generic.List[string]]::new()
+
+try {
+    $gateway = Get-Json $checks[0]
+    if ($gateway.ok -ne $true -or $gateway.service -ne 'local_gateway') {
+        $failures.Add('gateway health returned an unexpected response')
+    }
+} catch {
+    $failures.Add($_.Exception.Message)
 }
 
-$server = Get-Json $checks[1]
-if ($server.data.status -ne 'ok' -or $server.data.service -ne 'tarrowyn-server') {
-    throw 'Tarrowyn proxy health returned an unexpected response'
+try {
+    $server = Get-Json $checks[1]
+    if ($server.data.status -ne 'ok' -or $server.data.service -ne 'tarrowyn-server') {
+        $failures.Add('Tarrowyn proxy health returned an unexpected response')
+    } elseif ($server.meta.protocol_version -ne '6' -or $server.data.protocol_version -ne '6') {
+        $failures.Add('Tarrowyn proxy health returned the wrong protocol version')
+    }
+} catch {
+    $failures.Add($_.Exception.Message)
 }
-if ($server.meta.protocol_version -ne '6' -or $server.data.protocol_version -ne '6') {
-    throw 'Tarrowyn proxy health returned the wrong protocol version'
+
+if ($failures.Count -gt 0) {
+    throw "Gateway verification failed: $($failures -join ' | ')"
 }
 
 Write-Host "Gateway health: $($gateway.service)" -ForegroundColor Green
