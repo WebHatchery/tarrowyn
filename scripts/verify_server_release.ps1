@@ -198,6 +198,9 @@ try {
     $baseUrl = "http://127.0.0.1:$port"
     $deadline = [DateTime]::UtcNow.AddSeconds($TimeoutSeconds)
     $ready = $null
+    $lastHealth = $null
+    $lastReady = $null
+    $contractReady = $false
     while ([DateTime]::UtcNow -lt $deadline) {
         if ($process.HasExited) {
             $stderr = if (Test-Path -LiteralPath $stderrPath) { Get-Content -LiteralPath $stderrPath -Raw } else { '' }
@@ -206,13 +209,18 @@ try {
         try {
             $health = Get-JsonEndpoint "$baseUrl/health"
             $ready = Get-JsonEndpoint "$baseUrl/v1/ops/health"
+            $lastHealth = $health
+            $lastReady = $ready
             if ($health.data.service -eq 'tarrowyn-server' -and
                 $health.data.status -eq 'ok' -and
+                $health.data.protocol_version -eq '6' -and
                 $health.meta.protocol_version -eq '6' -and
-                $ready.data.service -eq 'tarrowyn-server' -and
+                $ready.data.status -eq 'ok' -and
+                $ready.data.protocol_version -eq '6' -and
                 $ready.meta.protocol_version -eq '6' -and
                 $ready.data.ready -eq $true -and
                 $ready.data.integrity_ok -eq $true) {
+                $contractReady = $true
                 break
             }
         } catch {
@@ -220,9 +228,19 @@ try {
         }
         Start-Sleep -Milliseconds 250
     }
-    if ($null -eq $ready -or $ready.data.ready -ne $true -or $ready.data.integrity_ok -ne $true) {
+    if (-not $contractReady) {
         $stderr = if (Test-Path -LiteralPath $stderrPath) { Get-Content -LiteralPath $stderrPath -Raw } else { '' }
-        throw "Packaged server did not report ready within $TimeoutSeconds seconds. $stderr"
+        $healthSummary = if ($null -eq $lastHealth) {
+            'unavailable'
+        } else {
+            "service=$($lastHealth.data.service), status=$($lastHealth.data.status), data_protocol=$($lastHealth.data.protocol_version), meta_protocol=$($lastHealth.meta.protocol_version)"
+        }
+        $readySummary = if ($null -eq $lastReady) {
+            'unavailable'
+        } else {
+            "status=$($lastReady.data.status), data_protocol=$($lastReady.data.protocol_version), meta_protocol=$($lastReady.meta.protocol_version), ready=$($lastReady.data.ready), integrity_ok=$($lastReady.data.integrity_ok)"
+        }
+        throw "Packaged server did not report the expected protocol-6 readiness contract within $TimeoutSeconds seconds. Health: $healthSummary. Ops: $readySummary. $stderr"
     }
 
     Write-Host "Packaged server launch check passed for $($buildInfo.build_id):" -ForegroundColor Green
