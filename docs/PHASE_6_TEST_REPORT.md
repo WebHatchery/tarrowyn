@@ -3291,6 +3291,14 @@ existing archive, search, and paging behavior. The focused online UI suite
 organization maintenance, so no publisher or full workspace gate is repeated,
 and no new external or deferred work is opened.
 
+The Phase 6 operational module now keeps its readiness integrity evaluator and
+alert thresholds in `operations/integrity.rs`, reducing the endpoint module
+from 717 lines while preserving the public health and metrics surfaces. The
+focused operations suite (3 tests), server-package clippy with warnings
+denied, server formatting, `git diff --check`, and the Rust file-size scan pass.
+This is source organization maintenance, so no publisher or full workspace
+gate is repeated, and no new external or deferred work is opened.
+
 Chronicle search now treats only a cursor ahead of the authoritative world as
 invalid: all-history and paginated searches continue scanning the durable
 archive after the bounded shared-event projection advances past an older
