@@ -558,11 +558,8 @@ fn anonymize_event(event: &mut WorldEvent, account_id: &str, deleted_display_nam
 }
 
 fn anonymize_chronicle(entry: &mut tarrowyn_protocol::ChronicleEntry, deleted_display_name: &str) {
-    if deleted_display_name.is_empty() {
-        return;
-    }
-    entry.title = entry.title.replace(deleted_display_name, DELETED_NAME);
-    entry.text = entry.text.replace(deleted_display_name, DELETED_NAME);
+    super::replace_bounded_chronicle_text(&mut entry.title, deleted_display_name, DELETED_NAME);
+    super::replace_bounded_chronicle_text(&mut entry.text, deleted_display_name, DELETED_NAME);
 }
 
 fn anonymize_chat(message: &mut tarrowyn_protocol::ChatMessage, account_id: &str) {

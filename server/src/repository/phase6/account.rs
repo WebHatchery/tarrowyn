@@ -527,10 +527,8 @@ fn migrate_chronicle(
     old_display_name: &str,
     new_display_name: &str,
 ) {
-    if !old_display_name.is_empty() && old_display_name != new_display_name {
-        entry.title = entry.title.replace(old_display_name, new_display_name);
-        entry.text = entry.text.replace(old_display_name, new_display_name);
-    }
+    super::replace_bounded_chronicle_text(&mut entry.title, old_display_name, new_display_name);
+    super::replace_bounded_chronicle_text(&mut entry.text, old_display_name, new_display_name);
 }
 
 fn migrate_audit_target(target: &mut String, old_account_id: &str, new_account_id: &str) {

@@ -518,10 +518,8 @@ fn anonymize_chat(message: &mut tarrowyn_protocol::ChatMessage, old_account_id: 
 }
 
 fn anonymize_chronicle(entry: &mut tarrowyn_protocol::ChronicleEntry, old_name: &str) {
-    if !old_name.is_empty() {
-        entry.title = entry.title.replace(old_name, RESET_NAME);
-        entry.text = entry.text.replace(old_name, RESET_NAME);
-    }
+    super::phase6::replace_bounded_chronicle_text(&mut entry.title, old_name, RESET_NAME);
+    super::phase6::replace_bounded_chronicle_text(&mut entry.text, old_name, RESET_NAME);
 }
 
 fn reset_expedition(expedition: &mut tarrowyn_protocol::Expedition, old_account_id: &str) {

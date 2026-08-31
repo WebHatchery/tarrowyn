@@ -4345,3 +4345,12 @@ focused reset regression passed 1 test:
 clippy, Rust file-size, and diff checks passed. No full workspace suite was
 repeated for this isolated restore-normalization slice, and no new external or
 deferred work was opened.
+
+The bounded history replacement correction was validated on 2026-08-31. Guest
+account linking and the two anonymisation paths now cap expanded chronicle titles
+and text at the existing 512-character history-field limit after replacing a
+display name. The focused account-lifecycle regression passed 1 test:
+`account_link_keeps_expanded_history_fields_bounded`. Server-package formatting,
+clippy, Rust file-size, and diff checks passed. No full workspace suite was
+repeated for this isolated chronicle-boundary slice, and no new external or
+deferred work was opened.

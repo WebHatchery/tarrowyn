@@ -40,10 +40,22 @@ pub(super) use audit_helpers::{
 const IDENTITY_PROVIDER: &str = "webhatchery-identity-oidc";
 const PRIVACY_POLICY_VERSION: &str = "2026-08-19";
 const MAX_DISPLAY_NAME_CHARS: usize = 80;
+const MAX_CHRONICLE_TEXT_CHARS: usize = 512;
 const MAX_REFRESH_TOKEN_CHARS: usize = 512;
 pub(super) const MAX_MODERATION_REPORTS: usize = 512;
 pub(super) const MODERATION_REPORT_RETENTION_SECONDS: u64 = 90 * 24 * 60 * 60;
 pub(super) const MAX_PENDING_DELETIONS: usize = 128;
+
+pub(super) fn replace_bounded_chronicle_text(text: &mut String, old_value: &str, new_value: &str) {
+    if old_value.is_empty() || old_value == new_value {
+        return;
+    }
+    *text = text
+        .replace(old_value, new_value)
+        .chars()
+        .take(MAX_CHRONICLE_TEXT_CHARS)
+        .collect();
+}
 
 fn session_unavailable() -> RepositoryError {
     RepositoryError::new(

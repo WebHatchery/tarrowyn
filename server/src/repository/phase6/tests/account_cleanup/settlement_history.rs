@@ -65,3 +65,45 @@ fn account_lifecycle_updates_copied_settlement_history_names() {
     assert!(!entry.title.contains("Chronicle resident"));
     assert!(entry.text.contains("Former resident"));
 }
+
+#[test]
+fn account_link_keeps_expanded_history_fields_bounded() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let guest = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("settlement-history-bound".to_owned()),
+            reset: false,
+        })
+        .unwrap()
+        .data;
+    {
+        let mut state = repository.state.lock().unwrap();
+        state.phase3.chronicle.push_back(ChronicleEntry {
+            event_id: "bounded-history-entry".to_owned(),
+            kind: "social".to_owned(),
+            title: format!("{}{}", guest.display_name, "x".repeat(505)),
+            text: format!("{}{}", guest.display_name, "y".repeat(505)),
+            created_tick: 1,
+            cursor: 1,
+        });
+    }
+
+    repository
+        .auth_link(
+            &guest.account_token,
+            AuthLinkRequest {
+                request_id: "settlement-history-bound-link".to_owned(),
+                provider: "webhatchery-identity-oidc".to_owned(),
+                subject: "settlement-history-bound-subject".to_owned(),
+                display_name: Some("A much longer linked resident name".to_owned()),
+            },
+        )
+        .unwrap();
+
+    let state = repository.state.lock().unwrap();
+    let entry = &state.phase3.chronicle[0];
+    assert!(entry.title.contains("A much longer linked resident name"));
+    assert!(entry.text.contains("A much longer linked resident name"));
+    assert!(entry.title.chars().count() <= 512);
+    assert!(entry.text.chars().count() <= 512);
+}
