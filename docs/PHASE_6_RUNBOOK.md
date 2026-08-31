@@ -15,6 +15,10 @@ complete gate forwards an explicit target with
 It launches the packaged server on an ephemeral loopback port and verifies
 `/health` plus `/v1/ops/health` against isolated JSON state before writing the
 manifest; run that launch check on a host that can execute the selected target.
+The packaged-server verifier also requires the exact executable, build-info,
+deployment-notes, and migration-file set, then checks the protocol-6 health
+identity plus the operations-health `status`, `ready`, `protocol_version`, and
+`integrity_ok` fields before it reports success.
 
 ## Scoped change checks
 
