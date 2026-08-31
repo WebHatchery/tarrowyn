@@ -4060,3 +4060,11 @@ removal to appear in the migration ledger; the current baseline comparison,
 15-manifest content validation, all project PowerShell parsing, and diff checks
 passed. No full workspace suite was repeated for this focused release-gate
 change.
+
+The regional integrity coverage follow-up was validated on 2026-08-31 at commit
+`09147f0`. Focused operations-health regressions now cover duplicate location,
+route, and settlement identifiers, complementing the existing route, settlement,
+collection, topology, and settlement-location checks. The focused
+`regional_topology` filter passed all 8 matching server tests, followed by the
+affected server package formatter, clippy, Rust file-size, and diff checks. No
+full workspace suite was repeated for this test-coverage-only maintenance slice.
