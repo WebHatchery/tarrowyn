@@ -3932,3 +3932,13 @@ rollback rehearsal against the preserved `f68f494` candidate. All archive
 hashes matched at patch, rollback, and patch-restored switches, and the
 server package's embedded `BUILD_INFO.json` matched each manifest identity.
 The target server platform and live deployment rollback remain open gates.
+
+The release-gate scope correction was validated on 2026-08-31 at commit
+`70116e7`. Tarrowyn's client, protocol, and server formatting checks now name
+their manifests explicitly, so unrelated workspace formatting drift cannot
+block this game's gate. The complete gate then passed: content validation,
+714 workspace tests, workspace clippy, Windows/WebGL Preview publishing,
+host-targeted `tarrowyn-server` packaging, and the three-archive manifest.
+This was a major Phase 6 milestone, so the full workspace suite was run here;
+future isolated changes continue to use focused checks until the next
+cross-subsystem milestone.
