@@ -3913,6 +3913,8 @@ workspace clippy, Windows/WebGL packaging, Preview deployment, and catalog
 synchronization. The gate generated the clean archive manifest
 `0.1.0+gdfac04fc408a` with per-entry hashes and `.sha256` sidecars, and the
 exact candidate was preserved under its full commit in ignored
-`dist/history/`. The local rollback harness is implemented and documented but
-was not claimed as a rehearsal because this repository has no second distinct
-clean candidate yet; its first run belongs after the next release candidate.
+`dist/history/`. A republished clean candidate at `2ed9aa2` then passed the
+local rollback rehearsal against the preserved `dfac04f` candidate: patch,
+rollback, and patch-restored archive hashes all matched their sidecars. This
+proves the local artifact-switching procedure; target deployment rollback and
+world-state restore remain deployment-owned gates.
