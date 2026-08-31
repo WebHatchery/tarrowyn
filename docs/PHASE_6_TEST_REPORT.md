@@ -3342,3 +3342,12 @@ package clippy with warnings denied, package formatting, `git diff --check`,
 and the Rust file-size scan pass. No publisher or full workspace gate is
 repeated because this is source organization maintenance, and no new external
 or deferred work is opened.
+
+Phase 4 governance now keeps office inactivity, infrastructure upkeep, and
+settlement-tax ticking in `governance/tick.rs`, reducing the governance module
+from 693 to 516 lines while preserving its public office and proposal boundary.
+The focused governance, tax, infrastructure-history, and upkeep-boundary tests
+(4 tests), server-package clippy with warnings denied, package formatting,
+`git diff --check`, and the Rust file-size scan pass. No publisher or full
+workspace gate is repeated because this is source organization maintenance,
+and no new external or deferred work is opened.
