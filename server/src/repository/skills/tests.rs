@@ -64,6 +64,24 @@ fn skill_manifest_rejects_control_characters_in_player_guidance() {
 }
 
 #[test]
+fn skill_manifest_rejects_missing_launch_root() {
+    let mut manifest: SkillManifest = serde_json::from_str(SKILLS_JSON).unwrap();
+    manifest.skills.retain(|skill| skill.id != "leadership");
+
+    let error = validate_manifest(&manifest).unwrap_err();
+    assert!(error.contains("launch root skill leadership"));
+}
+
+#[test]
+fn skill_manifest_rejects_missing_launch_advanced_discovery() {
+    let mut manifest: SkillManifest = serde_json::from_str(SKILLS_JSON).unwrap();
+    manifest.skills.retain(|skill| skill.id != "storm-magic");
+
+    let error = validate_manifest(&manifest).unwrap_err();
+    assert!(error.contains("launch advanced skill storm-magic"));
+}
+
+#[test]
 fn skill_manifest_rejects_duplicate_prerequisites() {
     let mut manifest: SkillManifest = serde_json::from_str(SKILLS_JSON).unwrap();
     let duplicate = manifest

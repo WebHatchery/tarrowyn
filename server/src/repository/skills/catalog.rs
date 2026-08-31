@@ -10,6 +10,40 @@ const MAX_SKILL_ID_CHARS: usize = 160;
 const MAX_SKILL_NAME_CHARS: usize = 120;
 const MAX_SKILL_TEXT_CHARS: usize = 512;
 const MAX_PREREQUISITES: usize = 16;
+const REQUIRED_LAUNCH_ROOTS: &[&str] = &[
+    "unarmed-fighting",
+    "sword-fighting",
+    "axe-fighting",
+    "spear-fighting",
+    "bow-fighting",
+    "shield-use",
+    "wind-magic",
+    "water-magic",
+    "electricity-magic",
+    "fire-magic",
+    "earth-magic",
+    "restoration-magic",
+    "foraging",
+    "forestry",
+    "mining",
+    "fishing",
+    "hunting",
+    "survival",
+    "navigation",
+    "crop-tending",
+    "animal-husbandry",
+    "carpentry",
+    "smithing",
+    "tailoring",
+    "cooking",
+    "alchemy",
+    "masonry",
+    "general-crafting",
+    "trade",
+    "teaching",
+    "leadership",
+];
+const REQUIRED_LAUNCH_ADVANCED: &[&str] = &["weapon-fighting", "storm-magic"];
 
 pub(super) const SKILLS_JSON: &str =
     macroquad_toolkit::include_json_str!("../../../../assets/data/skills.json");
@@ -70,6 +104,15 @@ pub(super) fn validate_manifest(manifest: &SkillManifest) -> Result<(), String> 
         .collect();
     if ids.len() != manifest.skills.len() || ids.iter().any(|id| !bounded(id, MAX_SKILL_ID_CHARS)) {
         return Err("skill IDs must be unique and non-empty".to_owned());
+    }
+    if let Some(missing) = REQUIRED_LAUNCH_ROOTS.iter().find(|id| !ids.contains(**id)) {
+        return Err(format!("launch root skill {missing} is required"));
+    }
+    if let Some(missing) = REQUIRED_LAUNCH_ADVANCED
+        .iter()
+        .find(|id| !ids.contains(**id))
+    {
+        return Err(format!("launch advanced skill {missing} is required"));
     }
     for skill in &manifest.skills {
         if !(1..=5).contains(&skill.depth)
