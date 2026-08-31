@@ -3423,3 +3423,11 @@ boundaries. The focused market-history suite (3 tests) and price-boundary test
 formatting, `git diff --check`, and the Rust file-size scan. No publisher or
 full workspace gate is repeated because this is source organization
 maintenance, and no new external or deferred work is opened.
+
+The Phase 5 regional event read and action endpoints now live in
+`phase5/events.rs`, leaving event transition authority in the existing logic
+module and reducing the endpoint root from 626 to 520 lines. The focused event
+choice suite (2 tests) passes, along with server-package clippy with warnings
+denied, package formatting, `git diff --check`, and the Rust file-size scan. No
+publisher or full workspace gate is repeated because this is source
+organization maintenance, and no new external or deferred work is opened.
