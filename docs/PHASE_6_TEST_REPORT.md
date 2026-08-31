@@ -3458,3 +3458,12 @@ passes, along with client-package clippy with warnings denied, package
 formatting, `git diff --check`, and the Rust file-size scan. No publisher or
 full workspace gate is repeated because this is source organization
 maintenance, and no new external or deferred work is opened.
+
+The repository now keeps world ticking, persistence writes, session-expiry
+persistence, and tick telemetry in `repository/tick.rs`, reducing the
+repository root from 641 to 532 lines while preserving the shared authority
+hooks used by every phase. The focused telemetry (1), numeric-boundary (4),
+and persistence (11) regressions pass, along with server-package clippy with
+warnings denied, package formatting, `git diff --check`, and the Rust file-size
+scan. No publisher or full workspace gate is repeated because this is source
+organization maintenance, and no new external or deferred work is opened.
