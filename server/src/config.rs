@@ -11,6 +11,8 @@ pub(crate) const MAX_HTTP_REQUEST_QUEUE_CAPACITY: usize = 4096;
 pub(crate) const MIN_MYSQL_POOL_CONNECTIONS: usize = 2;
 pub(crate) const DEFAULT_MYSQL_POOL_CONNECTIONS: usize = 4;
 pub(crate) const MAX_MYSQL_POOL_CONNECTIONS: usize = 32;
+/// Keep startup and authoritative world snapshots within a bounded tile budget.
+pub(crate) const MAX_WORLD_TILES: u64 = 1_000_000;
 
 #[derive(Debug, Clone)]
 pub struct ServerConfig {
@@ -262,6 +264,12 @@ impl ServerConfig {
             return Err(format!(
                 "runtime world dimensions must be at least {}x{} for the validated region content",
                 content.world_width, content.world_height
+            ));
+        }
+        let tile_count = u64::from(self.world_width).saturating_mul(u64::from(self.world_height));
+        if tile_count > MAX_WORLD_TILES {
+            return Err(format!(
+                "runtime world dimensions must contain no more than {MAX_WORLD_TILES} tiles"
             ));
         }
         if !self.day_length_seconds.is_finite()

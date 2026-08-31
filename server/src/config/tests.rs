@@ -47,6 +47,21 @@ fn runtime_content_bounds_reject_an_undersized_map_or_unlocked_day_length() {
 }
 
 #[test]
+fn runtime_content_bounds_reject_an_unbounded_world_snapshot() {
+    let defaults = ServerConfig::default();
+    let oversized_width = (MAX_WORLD_TILES / u64::from(defaults.world_height) + 1) as u32;
+    let config = ServerConfig {
+        world_width: oversized_width,
+        ..defaults
+    };
+
+    let error = config
+        .validate_runtime_content_bounds()
+        .expect_err("an oversized world should be rejected before serving");
+    assert!(error.contains("1,000,000") || error.contains("1000000"));
+}
+
+#[test]
 fn oversized_unsigned_environment_values_fall_back_instead_of_wrapping() {
     assert_eq!(bounded_u32(u64::MAX, 17), 17);
     assert_eq!(bounded_u16(u64::MAX, 3306), 3306);

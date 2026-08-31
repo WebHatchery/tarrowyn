@@ -4508,6 +4508,17 @@ deployment, and catalog synchronization. No full workspace suite was repeated
 for this isolated response-validation boundary, and no new external or
 deferred work was opened.
 
+The server world-budget boundary was validated on 2026-08-31. Runtime
+configuration now rejects maps larger than 1,000,000 tiles before the HTTP
+server starts, preventing an extreme environment value from reaching
+unbounded authoritative snapshot construction. The focused server
+configuration regression passed 1 test with 488 filtered; server-package
+formatting, clippy, Rust file-size, and diff checks passed. The project
+publisher also passed Windows/WebGL release builds, packaging, Preview
+deployment, and catalog synchronization. No full workspace suite was repeated
+for this isolated server-startup safety slice, and no new external or
+deferred work was opened.
+
 The online tile-coordinate boundary was validated on 2026-08-31. State
 projection now rejects out-of-bounds and duplicate tile coordinates instead of
 silently accepting a partial world while rebuilding the map. The focused
