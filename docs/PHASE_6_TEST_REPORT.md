@@ -4130,3 +4130,12 @@ again passed all 22 tests, followed by server clippy, formatting, Rust
 file-size, and diff checks plus the publisher. No full workspace suite was
 repeated for this isolated HTTP input-bound correction, and no new external or
 deferred work was opened.
+
+Credential-bearing replay retention was validated on 2026-08-31 at commit
+`bab393b`. Phase 6 maintenance now removes cached link and refresh responses
+when their issuing production session is revoked or its refresh window closes;
+the focused `replay_retention` server filter passed its lifecycle regression.
+Server clippy, formatting, Rust file-size, and diff checks plus the publisher
+passed. No full workspace suite was repeated for this bounded Phase 6
+credential-retention maintenance slice, and no new external or deferred work
+was opened.

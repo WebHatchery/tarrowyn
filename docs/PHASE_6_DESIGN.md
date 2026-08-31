@@ -118,6 +118,9 @@ session has expired. On reload, older snapshots rebuild that ownership from the
 persisted session that issued each cached response; replay entries whose issued
 session has already been revoked or whose refresh window has ended are discarded
 as non-authoritative cache data.
+Phase 6 tick maintenance applies the same live-session rule to credential-bearing
+link and refresh replay responses, removing expired payloads before the bounded
+cache trim.
 Refresh replay lookup expires sessions before consulting that cache and only
 returns a cached response while its replacement refresh session remains live;
 once that refresh window closes, the stale replay is removed and the request
