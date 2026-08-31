@@ -1,135 +1,27 @@
 use super::*;
 use crate::config::ServerConfig;
 use crate::repository::models::RepositoryState;
-use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, VecDeque};
 use tarrowyn_protocol::{
-    AdventurerContract, ChronicleEntry, ChronicleResponse, ChronicleSummary, ClaimResponse,
-    ClaimStatus, CombatAction, CombatOutcome, CombatRequest, CombatResponse, ContractAction,
-    ContractRequest, ContractResponse, ContractStatus, ContractsResponse, Expedition,
-    ExpeditionMember, ExpeditionResponse, ExpeditionRole, ExpeditionStatus, FrontierEvent,
-    HouseholdStatus, LandClaim, OpportunitiesResponse, OpportunitySignal, PlayerProjection,
-    Position, RecoveryResponse, WeaponKind, WildernessZone, WorldEvent,
+    AdventurerContract, ChronicleEntry, ChronicleResponse, ChronicleSummary, ClaimStatus,
+    CombatAction, CombatOutcome, CombatRequest, CombatResponse, ContractAction, ContractRequest,
+    ContractResponse, ContractStatus, ContractsResponse, ExpeditionMember, ExpeditionRole,
+    ExpeditionStatus, FrontierEvent, HouseholdStatus, OpportunitiesResponse, PlayerProjection,
+    Position, WeaponKind, WorldEvent,
 };
 
-pub(crate) const MAX_CHRONICLE: usize = 64;
-pub(super) const MAX_EXPEDITION_MEMBERS: usize = 20;
 const CONTRACT_ID: &str = "brambleback-watch";
 const MAX_CHRONICLE_SUMMARY_KINDS: usize = 12;
+mod state;
+#[cfg(test)]
+pub(crate) use state::MAX_CHRONICLE;
+pub(super) use state::MAX_EXPEDITION_MEMBERS;
+pub(super) use state::{
+    archive_excess, fresh, normalize_opportunity_score, trim_expedition_members, ContractProgress,
+    Phase3Response, Phase3State,
+};
 
 #[cfg(test)]
 mod tests;
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub(super) struct ContractProgress {
-    pub(super) progress: u8,
-    pub(super) status: ContractStatus,
-    pub(super) completion_count: u32,
-    pub(super) available_at_tick: u64,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub(super) enum Phase3Response {
-    Contract(ContractResponse),
-    Combat(CombatResponse),
-    Recovery(RecoveryResponse),
-    Claim(ClaimResponse),
-    Expedition(ExpeditionResponse),
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub(super) struct Phase3State {
-    pub(super) next_event_id: u64,
-    pub(super) zone: WildernessZone,
-    pub(super) contracts: HashMap<String, ContractProgress>,
-    pub(super) households: Vec<OpportunitySignal>,
-    pub(super) unmet_demand_ticks: u64,
-    pub(super) poor_condition_ticks: u64,
-    pub(super) chronicle: VecDeque<ChronicleEntry>,
-    #[serde(default)]
-    pub(super) chronicle_archive: Vec<ChronicleEntry>,
-    pub(super) claim: Option<LandClaim>,
-    pub(super) expedition: Option<Expedition>,
-    #[serde(default)]
-    pub(super) expedition_credentials: Vec<String>,
-    pub(super) outpost: Option<Position>,
-    pub(super) request_results: HashMap<String, Phase3Response>,
-}
-
-impl Default for Phase3State {
-    fn default() -> Self {
-        let threat = crate::content::threat_template("whisperwood-edge");
-        let household = crate::content::opportunity_template("household-maren");
-        Self {
-            next_event_id: 1,
-            zone: WildernessZone {
-                zone_id: threat.id,
-                name: threat.name,
-                monster: threat.monster,
-                monster_health: threat.monster_health,
-                threat_active: true,
-                road_open: false,
-                position: threat.position,
-                price_modifier_percent: threat.price_modifier_percent,
-                resource_demand: threat.resource_demand,
-                rumour: threat.rumour,
-            },
-            contracts: HashMap::new(),
-            households: vec![OpportunitySignal {
-                household_id: household.household_id,
-                household_name: household.household_name,
-                members: household.members,
-                occupation: household.occupation,
-                home_settlement: household.home_settlement,
-                opportunity_score: household.opportunity_score,
-                status: household.status,
-                service: household.service,
-                clue: household.clue,
-            }],
-            unmet_demand_ticks: 0,
-            poor_condition_ticks: 0,
-            chronicle: VecDeque::new(),
-            chronicle_archive: Vec::new(),
-            claim: None,
-            expedition: None,
-            expedition_credentials: Vec::new(),
-            outpost: None,
-            request_results: HashMap::new(),
-        }
-    }
-}
-
-pub(super) fn fresh() -> Phase3State {
-    Phase3State::default()
-}
-
-pub(super) fn trim_expedition_members(phase: &mut Phase3State) {
-    let Some(expedition) = phase.expedition.as_mut() else {
-        return;
-    };
-    expedition.members.truncate(MAX_EXPEDITION_MEMBERS);
-    if !expedition
-        .members
-        .iter()
-        .any(|member| member.account_id == expedition.leader_account_id)
-    {
-        if let Some(member) = expedition.members.first() {
-            expedition.leader_account_id = member.account_id.clone();
-        }
-    }
-}
-
-pub(super) fn archive_excess(phase: &mut Phase3State) {
-    while phase.chronicle.len() > MAX_CHRONICLE {
-        if let Some(entry) = phase.chronicle.pop_front() {
-            phase.chronicle_archive.push(entry);
-        }
-    }
-}
-
-pub(super) fn normalize_opportunity_score(score: &mut i16) {
-    *score = (*score).clamp(0, 100);
-}
 
 pub(super) fn tick(state: &mut RepositoryState, config: &ServerConfig) {
     for progress in state.phase3.contracts.values_mut() {

@@ -3324,3 +3324,12 @@ suite (13 tests), server-package clippy with warnings denied, server formatting,
 `git diff --check`, and the Rust file-size scan pass. This is source
 organization maintenance, so no publisher or full workspace gate is repeated,
 and no new external or deferred work is opened.
+
+The Phase 3 repository now keeps its durable state, response cache, chronicle
+retention, and compatibility normalization in `phase3/state.rs`, reducing the
+main endpoint module from 715 to 607 lines without changing the frontier or
+chronicle contract. The focused Phase 3 suite (13 tests), server-package clippy
+with warnings denied, package formatting, `git diff --check`, and the Rust
+file-size scan pass. No publisher or full workspace gate is repeated because
+this is source organization maintenance, and no new external or deferred work
+is opened.
