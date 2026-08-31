@@ -38,7 +38,7 @@ if ($Production -and -not $WindowsOnly) {
     $gatewayUrl = if ($null -eq $config.gateway_url) { "" } else { [string]$config.gateway_url }
     $gatewayUrl = $gatewayUrl.Trim()
     $isHttpsOrigin = $gatewayUrl -match '^https://[^/\s]+(?:/.*)?$'
-    $isSameOriginPath = $gatewayUrl.StartsWith('/')
+    $isSameOriginPath = $gatewayUrl.StartsWith('/') -and -not $gatewayUrl.StartsWith('//')
     if (-not $isHttpsOrigin -and -not $isSameOriginPath) {
         Write-Error "Production WebGL requires game_config.json gateway_url to be an HTTPS origin or a same-origin path; the current value is blank or unsafe."
         exit 1
