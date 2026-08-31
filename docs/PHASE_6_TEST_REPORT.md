@@ -3512,6 +3512,16 @@ with server-package clippy with warnings denied, package formatting,
 gate is repeated because this is test-source organization maintenance, and no
 new external or deferred work is opened.
 
+The Phase 5 client market-control regressions now live in
+`network/phase5/tests/market_controls.rs`, reducing the client phase test root
+from 584 to 430 lines while preserving destination selection, owner-order
+protection, and queued/in-flight command gating contracts. The focused market-
+controls filter passes (3 tests, with 240 unrelated tests filtered), along with
+client-package clippy with warnings denied, package formatting,
+`git diff --check`, and the Rust file-size scan. No publisher or full workspace
+gate is repeated because this is test-source organization maintenance, and no
+new external or deferred work is opened.
+
 The Phase 3 expedition member-window regressions now live in
 `repository/phase3/tests/expedition_limits.rs`, reducing the phase test root
 from 604 to 480 lines while preserving the durable 20-member cap and legacy
