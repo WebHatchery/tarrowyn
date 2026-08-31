@@ -38,3 +38,31 @@ fn knocked_out_input_waits_for_a_visible_recovery_prompt() {
         "Choose a recovery prompt before walking."
     );
 }
+
+#[test]
+fn extreme_move_target_cannot_overflow_before_queueing_a_step() {
+    let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
+    client.state = ConnectionState::Online;
+    client
+        .projection
+        .set_authoritative_player_position(TilePos::new(i32::MAX, i32::MAX));
+
+    client.queue_move_toward(TilePos::new(i32::MIN, i32::MIN));
+
+    assert!(client.movement_queue.is_empty());
+
+    client
+        .projection
+        .set_authoritative_player_position(TilePos::new(0, 0));
+    client.queue_move_toward(TilePos::new(i32::MIN, 0));
+
+    assert_eq!(client.movement_queue.len(), 1);
+    assert_eq!(
+        client.movement_queue.front().map(|intent| intent.dx),
+        Some(-1)
+    );
+    assert_eq!(
+        client.movement_queue.front().map(|intent| intent.dy),
+        Some(0)
+    );
+}

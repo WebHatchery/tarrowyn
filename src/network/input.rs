@@ -37,9 +37,13 @@ impl OnlineClient {
     }
 
     pub fn queue_move_toward(&mut self, target: TilePos) {
-        let dx = target.x - self.projection.player_position.x;
-        let dy = target.y - self.projection.player_position.y;
-        if dx.abs() >= dy.abs() && dx != 0 {
+        let Some(dx) = target.x.checked_sub(self.projection.player_position.x) else {
+            return;
+        };
+        let Some(dy) = target.y.checked_sub(self.projection.player_position.y) else {
+            return;
+        };
+        if dx.unsigned_abs() >= dy.unsigned_abs() && dx != 0 {
             self.queue_movement(dx.signum(), 0);
         } else if dy != 0 {
             self.queue_movement(0, dy.signum());

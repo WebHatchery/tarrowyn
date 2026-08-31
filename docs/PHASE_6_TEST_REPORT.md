@@ -4486,3 +4486,13 @@ fail safely as well. The focused malformed-position regression passed 1 test
 with 250 filtered; client-package formatting, clippy, Rust file-size, and diff
 checks passed. No publisher run or full workspace suite was repeated for this
 test-only integration slice, and no new external or deferred work was opened.
+
+The online target-selection boundary was validated on 2026-08-31. Touch-target
+movement now rejects coordinate subtraction overflow and compares direction
+magnitudes without overflowing on `i32::MIN`, so malformed projection data cannot
+panic before a step enters the bounded movement queue. The focused online-input
+regression passed 1 test with 251 filtered; client-package formatting, clippy,
+Rust file-size, and diff checks passed. The project publisher also passed
+Windows/WebGL release builds, packaging, Preview deployment, and catalog
+synchronization. No full workspace suite was repeated for this isolated input
+boundary, and no new external or deferred work was opened.
