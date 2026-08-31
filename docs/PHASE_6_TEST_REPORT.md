@@ -4038,3 +4038,10 @@ and both initial advanced discoveries, with focused regressions for missing
 entries. The focused server skills filter passed all 17 matching tests, and the
 affected server package formatting, clippy, and diff checks passed. No full
 workspace suite was repeated for this bounded content-contract change.
+
+The event intervention scope guard was validated on 2026-08-31 at commit
+`f8cd54f`. Multi-location interventions now require every location named by
+their server-side effect, matching the runtime's regional application scope;
+the focused event filter passed all 9 matching tests, and the affected server
+package formatting, clippy, and diff checks passed. No full workspace suite was
+repeated for this bounded content-validation change.
