@@ -83,6 +83,11 @@ The post-pool 100-client one-round probe then completed 1,000 requests in
 recovery; it passed the same recovery checks with only the explicitly allowed
 `market_backlog` alert. These post-pool probes remain monitored local evidence,
 not a production capacity claim.
+The post-pool 250-client one-round probe completed 2,500 requests in
+97,107.35 ms with 76.58 MB measured working set and 2,780.21 ms restart
+recovery, with no operational alerts. This is the largest post-pool local
+observation, not a production capacity claim; the one-worker ownership
+boundary and target several-hundred-player gate remain open.
 The latest 24-client baseline additionally recorded 67.06 MB of server working
 set after load and 2,837.56 ms from worker stop through restart readiness. These
 local measurements inform the target-environment gate but are not production

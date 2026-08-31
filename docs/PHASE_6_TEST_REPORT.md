@@ -3703,3 +3703,10 @@ and restart checks passed; the only alert was the explicitly allowed
 `market_backlog` boundary. This extends monitored evidence for the bounded
 regional serving path, but does not establish the GDD's several-hundred-client
 capacity target.
+
+The post-pool 250-client one-round probe completed 2,500 requests in
+97,107.35 ms with 76.58 MB measured server working set and 2,780.21 ms
+restart recovery. Event, market, travel, tick, backup, metrics, support-view,
+and restart checks passed with no operational alerts. This is the largest
+post-pool local observation, but it remains monitored capacity evidence rather
+than proof of the GDD's several-hundred-client direction.
