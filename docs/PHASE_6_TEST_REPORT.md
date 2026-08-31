@@ -3822,9 +3822,10 @@ The client now prewarms every UI font size used by Tarrowyn through the shared
 toolkit and presents one atlas warm-up frame before the game UI is batched. The
 focused client compile and binary clippy checks passed, followed by the
 project `publish.ps1` Windows/WebGL build, packaging, deployment, and preview
-check. A fresh post-publish Tarrowyn tab rendered the full-screen surface and
-the offline fixture with zero deleted-texture warnings; the only remaining
-console errors were the expected failed online requests while the local server
-was unavailable. No full workspace suite was repeated for this isolated client
-runtime mitigation; repeat the clean-console check in a supported target
-browser with the target server available before public launch.
+check. Fresh post-publish Tarrowyn tabs in the diagnostic browser and a
+supported Chrome session rendered the full-screen surface and the offline
+fixture with zero deleted-texture warnings. Chrome reported only the two
+expected failed online requests while the local server was unavailable. No full
+workspace suite was repeated for this isolated client runtime mitigation;
+repeat the clean-console check with the target server available before public
+launch.
