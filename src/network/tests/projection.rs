@@ -105,6 +105,67 @@ fn projection_versions_accept_equal_state_but_reject_older_responses() {
 }
 
 #[test]
+fn stale_events_in_a_mixed_response_cannot_overwrite_newer_projection() {
+    let mut projection = WorldProjection::new(&config());
+    projection.apply_presence(
+        tarrowyn_protocol::PlayerPresence {
+            account_id: "account".to_owned(),
+            character_id: "character".to_owned(),
+            display_name: "Traveller".to_owned(),
+            position: Position { x: 8, y: 6 },
+            last_seen_tick: 5,
+            online: true,
+        },
+        "account",
+    );
+    projection.record_response_version(5, Some(5));
+
+    projection.apply_events(
+        EventsResponse {
+            cursor: 6,
+            clock: WorldClock {
+                day: 1,
+                seconds: 1.0,
+                day_length_seconds: 180.0,
+            },
+            events: vec![
+                EventRecord {
+                    cursor: 4,
+                    event: WorldEvent::Presence(tarrowyn_protocol::PlayerPresence {
+                        account_id: "account".to_owned(),
+                        character_id: "character".to_owned(),
+                        display_name: "Traveller".to_owned(),
+                        position: Position { x: 1, y: 1 },
+                        last_seen_tick: 4,
+                        online: true,
+                    }),
+                },
+                EventRecord {
+                    cursor: 6,
+                    event: WorldEvent::Chat(ChatMessage {
+                        message_id: 1,
+                        account_id: "account".to_owned(),
+                        display_name: "Traveller".to_owned(),
+                        channel: "settlement".to_owned(),
+                        text: "The newer record remains.".to_owned(),
+                        cursor: 6,
+                    }),
+                },
+            ],
+        },
+        "account",
+        6,
+    );
+
+    assert_eq!(
+        projection.authoritative_player_position(),
+        Some(TilePos::new(8, 6))
+    );
+    assert_eq!(projection.cursor, 6);
+    assert_eq!(projection.chat.len(), 1);
+}
+
+#[test]
 fn older_state_snapshot_is_reloaded_instead_of_opening_the_world() {
     let mut projection = WorldProjection::new(&config());
     projection.record_response_version(12, Some(9));

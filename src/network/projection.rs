@@ -109,6 +109,9 @@ impl WorldProjection {
         self.server_tick = self.server_tick.max(server_tick);
         self.apply_clock(response.clock);
         for record in response.events {
+            if record.cursor <= self.cursor {
+                continue;
+            }
             self.cursor = self.cursor.max(record.cursor);
             match record.event {
                 WorldEvent::Presence(presence) => self.apply_presence(presence, own_account),

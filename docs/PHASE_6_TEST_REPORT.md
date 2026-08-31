@@ -4448,3 +4448,13 @@ checks passed. The project publisher also passed Windows/WebGL release builds,
 packaging, Preview deployment, catalog synchronization, and the deployed WASM
 hash check. No full workspace suite was repeated for this bounded error-path
 slice, and no new external or deferred work was opened.
+
+The client event projection cursor guard was validated on 2026-08-31. Incremental
+event application now ignores records at or before the already-applied cursor, so
+a mixed or reordered response cannot overwrite newer position or history state
+with stale data. The focused client network regression passed 1 test with 248
+filtered; client-package formatting, clippy, Rust file-size, and diff checks
+passed. The project publisher also passed Windows/WebGL release builds, packaging,
+Preview deployment, and catalog synchronization. No full workspace suite was
+repeated for this isolated projection-boundary slice, and no new external or
+deferred work was opened.
