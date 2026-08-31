@@ -3772,3 +3772,10 @@ case-insensitive backend check and saturates malformed oversized configuration
 when crossing into the protocol's `u32` field. Its focused pure-helper
 regression passes alongside the existing operator-metrics check; no broader
 client or workspace test is repeated for this edge-case correction.
+
+The MySQL persistence boundary now uses a five-second pooled-connection
+checkout timeout instead of waiting indefinitely when the bounded pool is
+exhausted. The existing safe persistence error remains the only outward error
+surface. Focused MySQL repository tests, server clippy, formatting, diff, and
+Rust file-size checks cover this isolated failure-mode change; no full
+workspace or publisher gate is repeated.

@@ -140,7 +140,10 @@ protocol and repository rules intact while the schema is being proven against a
 live environment. The bridge uses a bounded driver pool, reserving one
 connection for the process-lifetime world-authority lock and defaulting the
 pool maximum to four; `TARROWYN_MYSQL_POOL_MAX_CONNECTIONS` allows a measured
-2–32 deployment override. Startup also rejects a migration table written by a
+2–32 deployment override. Pool checkout also has a five-second bound so a
+depleted or disconnected backend returns a persistence error rather than
+stalling an authoritative operation indefinitely. Startup also rejects a
+migration table written by a
 newer server binary rather than attempting to run an older schema against it.
 The server writes a scheduled backup to the configured backup path and reports
 the last successful tick through `/v1/ops/health`. A failed authoritative write

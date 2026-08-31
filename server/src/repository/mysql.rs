@@ -6,11 +6,13 @@ use crate::config::ServerConfig;
 use mysql::prelude::Queryable;
 use mysql::{OptsBuilder, Pool, PoolConstraints, PoolOpts, TxOpts};
 use std::sync::Mutex;
+use std::time::Duration;
 
 const MIGRATION_VERSION: u32 = 1;
 const MIGRATION_LOCK_NAME: &str = "tarrowyn-schema-migration";
 const WORLD_AUTHORITY_LOCK_NAME: &str = "tarrowyn-world-authority";
 const WORLD_AUTHORITY_LOCK_TIMEOUT_SECONDS: u32 = 5;
+const MYSQL_POOL_WAIT_TIMEOUT_SECONDS: u64 = 5;
 const MIGRATION_TABLE_SQL: &str = "CREATE TABLE IF NOT EXISTS tarrowyn_schema_migrations (
     version INT UNSIGNED PRIMARY KEY,
     applied_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
@@ -178,9 +180,11 @@ impl MysqlStore {
     }
 
     fn connection(&self) -> Result<mysql::PooledConn, PersistenceBackendError> {
-        self.pool.get_conn().map_err(|_| {
-            PersistenceBackendError::new("a MySQL connection could not be checked out")
-        })
+        self.pool
+            .try_get_conn(Duration::from_secs(MYSQL_POOL_WAIT_TIMEOUT_SECONDS))
+            .map_err(|_| {
+                PersistenceBackendError::new("a MySQL connection could not be checked out")
+            })
     }
 
     fn acquire_authority_lock(&self) -> Result<(), PersistenceBackendError> {

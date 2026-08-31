@@ -32,6 +32,9 @@ bounded pool of up to 4 connections by default. Set
 `TARROWYN_MYSQL_POOL_MAX_CONNECTIONS` only after measuring the target database;
 the accepted range is 2–32 so persistence can still check out a connection
 while the authority lock is held.
+Pooled checkout is bounded to five seconds; treat that persistence error as a
+degraded readiness signal and inspect the database connection budget before
+raising the pool limit.
 Keep the identity-gateway deployment secret in the secret manager. Set
 `TARROWYN_SUPPORT_OPERATOR_ACCOUNTS` to a comma-separated
 allowlist of operator account IDs; an empty value fails closed. Keep development
