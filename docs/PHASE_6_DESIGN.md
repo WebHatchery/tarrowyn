@@ -244,7 +244,11 @@ the event stream before private identity state is removed. Before that removal,
 any open or failed regional market order owned by the account is cancelled.
 Real unsettled escrow is returned to origin stock; a travelling fallback order
 has no player escrow and is closed without a refund. The anonymised order
-remains as public settlement history without an ownerless shipment.
+remains as public settlement history without an ownerless shipment. The worker
+also anonymises matching owners in retained regional market replay responses,
+including a fulfilled order response cached under another identity, so an
+idempotent replay cannot restore the deleted account's private identifier or
+display name.
 When a provider leaves while holding an accepted service order, the surviving
 requester's typed material and tool escrow is returned before that order is
 cancelled; an order owned by the departing requester is instead removed with

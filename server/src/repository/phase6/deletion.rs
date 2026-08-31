@@ -105,6 +105,7 @@ fn erase_account(state: &mut RepositoryState, request: &PendingAccountDeletion) 
             && trade.recipient_account_id != request.account_id
     });
     super::super::phase5::close_deleted_account_orders(state, &request.account_id);
+    anonymize_phase5_replay_orders(state, &request.account_id);
 
     anonymize_public_history(state, request, &deleted_display_name);
     state.phase6.auth_link_results.retain(|key, response| {
@@ -157,6 +158,21 @@ fn erase_account(state: &mut RepositoryState, request: &PendingAccountDeletion) 
     );
     state.identities.remove(&request.identity_key);
     true
+}
+
+fn anonymize_phase5_replay_orders(state: &mut RepositoryState, account_id: &str) {
+    for response in state.phase5.request_results.values_mut() {
+        let super::super::phase5::Phase5Response::Market(response) = response else {
+            continue;
+        };
+        let Some(order) = response.order.as_mut() else {
+            continue;
+        };
+        if order.owner_account_id == account_id {
+            order.owner_account_id = DELETED_ACCOUNT.to_owned();
+            order.owner_name = DELETED_NAME.to_owned();
+        }
+    }
 }
 
 fn anonymize_audit_targets(

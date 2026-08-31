@@ -4194,3 +4194,12 @@ passed all 5 matching tests, including
 clippy, Rust file-size, and diff checks passed. No full workspace suite was
 repeated for this isolated regional-history predicate slice, and no new
 external or deferred work was opened.
+
+The deleted-account market replay privacy correction was validated on
+2026-08-31. Account deletion now anonymises matching owners in retained Phase 5
+market replay responses, including responses cached under another identity; the
+focused exact regression filter passed 1 test:
+`account_deletion_anonymises_market_replays_kept_by_another_identity`.
+Server-package formatting, clippy, Rust file-size, and diff checks passed. No
+full workspace suite was repeated for this isolated deletion-boundary slice,
+and no new external or deferred work was opened.

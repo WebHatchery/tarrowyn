@@ -232,6 +232,107 @@ fn account_deletion_removes_phase4_and_phase5_replay_payloads() {
 }
 
 #[test]
+fn account_deletion_anonymises_market_replays_kept_by_another_identity() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let owner_guest = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("market-replay-owner".to_owned()),
+            reset: false,
+        })
+        .expect("owner guest session")
+        .data;
+    let owner = repository
+        .auth_link(
+            &owner_guest.account_token,
+            AuthLinkRequest {
+                request_id: "market-replay-owner-link".to_owned(),
+                provider: "webhatchery-identity-oidc".to_owned(),
+                subject: "market-replay-owner-subject".to_owned(),
+                display_name: Some("Market owner".to_owned()),
+            },
+        )
+        .expect("owner link")
+        .data;
+    let observer = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("market-replay-observer".to_owned()),
+            reset: false,
+        })
+        .expect("observer guest session")
+        .data;
+    let created = repository
+        .market_order(
+            &owner.session.account_token,
+            MarketOrderRequest {
+                request_id: "market-replay-create".to_owned(),
+                action: MarketOrderAction::Create,
+                order_id: None,
+                destination_location_id: Some("whisperwood-outpost".to_owned()),
+                commodity: Some(tarrowyn_protocol::CommodityKind::Seeds),
+                quantity: Some(1),
+            },
+        )
+        .expect("market order creation")
+        .data;
+    let order_id = created.order.expect("created order").order_id;
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        let destination = state
+            .phase5
+            .locations
+            .iter()
+            .find(|location| location.location_id == "whisperwood-outpost")
+            .expect("market destination")
+            .position;
+        state
+            .identities
+            .get_mut(&observer.client_key)
+            .expect("observer identity")
+            .position = destination;
+    }
+    let fulfil_request = MarketOrderRequest {
+        request_id: "market-replay-fulfil".to_owned(),
+        action: MarketOrderAction::Fulfil,
+        order_id: Some(order_id),
+        destination_location_id: None,
+        commodity: None,
+        quantity: None,
+    };
+    let fulfilled = repository
+        .market_order(&observer.account_token, fulfil_request.clone())
+        .expect("market order fulfilment")
+        .data;
+    assert_eq!(
+        fulfilled
+            .order
+            .as_ref()
+            .expect("fulfilled order")
+            .owner_account_id,
+        owner.account_id
+    );
+
+    repository
+        .account_delete(
+            &owner.session.account_token,
+            AccountDeletionRequest {
+                request_id: "market-replay-owner-delete".to_owned(),
+                account_id: owner.account_id,
+            },
+        )
+        .expect("schedule owner deletion");
+    repository.tick();
+
+    let replay = repository
+        .market_order(&observer.account_token, fulfil_request)
+        .expect("market replay")
+        .data;
+    let replayed_order = replay.order.expect("replayed order");
+    assert_eq!(replayed_order.owner_account_id, "former-resident");
+    assert_eq!(replayed_order.owner_name, "Former resident");
+    assert!(repository.ops_health().data.ready);
+}
+
+#[test]
 fn account_deletion_anonymises_composite_moderation_targets() {
     let repository = WorldRepository::new(ServerConfig::default());
     let target_guest = repository
