@@ -3449,3 +3449,12 @@ tests pass, along with client-package clippy with warnings denied, package
 formatting, `git diff --check`, and the Rust file-size scan. No publisher or
 full workspace gate is repeated because this is source organization
 maintenance, and no new external or deferred work is opened.
+
+The Phase 4 client now keeps crafting challenge start, projection, and submit
+behavior beside combat timing in `network/phase4/combat.rs`, reducing the
+orchestration root from 623 to 580 lines while preserving the bounded quality
+score and queue-full recovery path. The focused crafting suite (4 tests)
+passes, along with client-package clippy with warnings denied, package
+formatting, `git diff --check`, and the Rust file-size scan. No publisher or
+full workspace gate is repeated because this is source organization
+maintenance, and no new external or deferred work is opened.
