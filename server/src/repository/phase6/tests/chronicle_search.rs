@@ -34,6 +34,50 @@ fn chronicle_search_returns_a_bounded_page_with_a_continuation_cursor() {
 }
 
 #[test]
+fn chronicle_search_retrieves_archived_records_after_shared_event_retention_advances() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let session = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("chronicle-search-archive-retention".to_owned()),
+            reset: false,
+        })
+        .expect("guest session")
+        .data;
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        super::super::super::phase3::record(
+            &mut state,
+            "archived achievement",
+            "The old achievement remains searchable",
+            "The archive keeps the settlement's history available.",
+        );
+        for index in 0..2100 {
+            super::super::super::phase3::record(
+                &mut state,
+                "retention pressure",
+                &format!("Retention marker {index:04}"),
+                "Shared event retention advances while the archive remains durable.",
+            );
+        }
+    }
+
+    let search = repository
+        .chronicle_search(
+            &session.account_token,
+            "The old achievement remains searchable",
+            0,
+        )
+        .expect("archived chronicle search")
+        .data;
+
+    assert_eq!(search.entries.len(), 1);
+    assert_eq!(
+        search.entries[0].title,
+        "The old achievement remains searchable"
+    );
+}
+
+#[test]
 fn chronicle_search_summarises_recent_matches_too() {
     let repository = WorldRepository::new(ServerConfig::default());
     let session = repository

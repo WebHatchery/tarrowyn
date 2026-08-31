@@ -13,6 +13,21 @@ use tarrowyn_protocol::{
 const MAX_CHRONICLE_SEARCH_RESULTS: usize = 128;
 const MAX_SUPPORT_CHRONICLE_ENTRIES: usize = 128;
 
+fn validate_chronicle_search_cursor(
+    state: &RepositoryState,
+    since: u64,
+) -> Result<(), RepositoryError> {
+    if since > state.cursor {
+        Err(RepositoryError::new(
+            409,
+            "cursor_ahead",
+            "The chronicle search cursor is ahead of the settlement.",
+        ))
+    } else {
+        Ok(())
+    }
+}
+
 impl WorldRepository {
     pub fn support_account(
         &self,
@@ -327,7 +342,7 @@ impl WorldRepository {
         let mut state = self.state.lock().expect("world repository lock poisoned");
         self.expire_and_persist_sessions(&mut state);
         authenticate(&mut state, token, &self.config)?;
-        super::super::validate_event_cursor(&state, since, "chronicle search")?;
+        validate_chronicle_search_cursor(&state, since)?;
         let trimmed_query = query.trim();
         if trimmed_query.chars().count() > 80 || query.chars().any(char::is_control) {
             return Err(RepositoryError::new(

@@ -3290,3 +3290,13 @@ existing archive, search, and paging behavior. The focused online UI suite
 `git diff --check`, and the Rust file-size scan pass. This is source
 organization maintenance, so no publisher or full workspace gate is repeated,
 and no new external or deferred work is opened.
+
+Chronicle search now treats only a cursor ahead of the authoritative world as
+invalid: all-history and paginated searches continue scanning the durable
+archive after the bounded shared-event projection advances past an older
+cursor. The focused chronicle-search suite (5 tests), server-package clippy
+with warnings denied, server formatting, `git diff --check`, and the Rust
+file-size scan pass. The project `publish.ps1` Windows/WebGL build, packaging,
+Preview deployment, tracker recording, and catalog synchronization also pass.
+No full workspace gate is repeated because this is a bounded chronicle-search
+fix, and no new external or deferred work is opened.
