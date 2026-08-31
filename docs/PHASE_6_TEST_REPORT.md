@@ -3273,6 +3273,15 @@ Rust file-size scan pass. This is test-only organization maintenance, so no
 publisher or full workspace gate is repeated, and no new external or deferred
 work is opened.
 
+The Phase 4 combat and animal-state integrity regressions now live in
+`repository/tests/phase4_state_integrity/combat.rs`, reducing the shared
+integrity test root from 600 to 533 lines while preserving health/status,
+position, and care-day readiness contracts. The focused combat-integrity filter
+passes (4 tests), along with server-package clippy with warnings denied,
+package formatting, `git diff --check`, and the Rust file-size scan. No
+publisher or full workspace gate is repeated because this is test-source
+organization maintenance, and no new external or deferred work is opened.
+
 The linked-account deletion confirmation now remains armed when the bounded
 client command queue is full; the failed enqueue is reported so the player can
 retry without silently losing the safety confirmation. The focused normal and
