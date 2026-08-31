@@ -331,3 +331,144 @@ impl Game {
         }
     }
 }
+
+impl Game {
+    pub(super) fn apply_action(&mut self, action: UiAction) {
+        match action {
+            UiAction::UseOffline => {
+                self.mode = ClientMode::Offline(GameSession::new(&self.data.config));
+                self.regional_inspection_open = false;
+                self.skill_selection_open = false;
+                self.school_selection_open = false;
+                self.chronicle_open = false;
+                self.chronicle_query.clear();
+                self.account_open = false;
+                self.chat_draft.clear();
+                self.sync_camera(TilePos::new(8, 6));
+                self.notifications
+                    .info("Offline fixture enabled; no online state is used.");
+            }
+            UiAction::UseOnline => {
+                self.mode = ClientMode::Online(Box::new(OnlineClient::new(
+                    &self.server_url,
+                    &self.data.config,
+                )));
+                self.regional_inspection_open = false;
+                self.skill_selection_open = false;
+                self.school_selection_open = false;
+                self.chronicle_open = false;
+                self.chronicle_query.clear();
+                self.account_open = false;
+                self.chat_draft.clear();
+                self.sync_camera(TilePos::new(8, 6));
+                self.notifications.info("Connecting to the shared road…");
+            }
+            UiAction::Reconnect => match &mut self.mode {
+                ClientMode::Online(client) => {
+                    self.regional_inspection_open = false;
+                    self.skill_selection_open = false;
+                    self.school_selection_open = false;
+                    self.chronicle_open = false;
+                    self.chronicle_query.clear();
+                    self.account_open = false;
+                    if !client.reconnect() {
+                        self.notifications
+                            .warning("Wait for the reconnect cooldown to finish.");
+                    }
+                }
+                ClientMode::Offline(_) => {
+                    self.mode = ClientMode::Online(Box::new(OnlineClient::new(
+                        &self.server_url,
+                        &self.data.config,
+                    )));
+                    self.regional_inspection_open = false;
+                    self.skill_selection_open = false;
+                    self.school_selection_open = false;
+                    self.chronicle_open = false;
+                    self.chronicle_query.clear();
+                    self.account_open = false;
+                    self.sync_camera(TilePos::new(8, 6));
+                    self.notifications.info("Connecting to the shared road…");
+                }
+            },
+            UiAction::NewEvening => match &mut self.mode {
+                ClientMode::Offline(session) => {
+                    *session = GameSession::new(&self.data.config);
+                    self.sync_camera(TilePos::new(8, 6));
+                    self.notifications
+                        .info("A fresh offline first evening begins at the Hearth.");
+                }
+                ClientMode::Online(_) => self
+                    .notifications
+                    .warning("The server owns the online world; use Reconnect to recover it."),
+            },
+            UiAction::Save => self.save_game(),
+            UiAction::Load => self.load_game(),
+            UiAction::DeleteSave => self.delete_save(),
+            UiAction::Move(dx, dy) => self.queue_movement(dx, dy),
+            UiAction::MoveTo(tile) => self.move_toward(tile),
+            UiAction::Interact(id) => self.interact(&id),
+            UiAction::Practice(skill_id) => {
+                self.skill_selection_open = false;
+                self.school_selection_open = false;
+                self.chronicle_open = false;
+                if let ClientMode::Online(client) = &mut self.mode {
+                    client.queue_skill_practice(skill_id);
+                }
+            }
+            UiAction::Teach(skill_id) => {
+                self.school_selection_open = false;
+                self.chronicle_open = false;
+                if let ClientMode::Online(client) = &mut self.mode {
+                    let own = client
+                        .account
+                        .as_ref()
+                        .map(|account| account.account_id.as_str());
+                    let target = own.and_then(|own| {
+                        client
+                            .projection
+                            .players
+                            .iter()
+                            .find(|player| {
+                                player.account_id != own
+                                    && !player.stale(client.projection.server_tick)
+                                    && player.position == client.projection.player_position
+                            })
+                            .map(|player| player.account_id.clone())
+                    });
+                    if let Some(target) = target {
+                        if !client.queue_skill_teach_for(&target, &skill_id) {
+                            self.notifications.warning(
+                                "That discipline is no longer ready to teach; refresh the school ledger.",
+                            );
+                        }
+                    } else {
+                        self.notifications
+                            .warning("Another nearby player must be present for a school lesson.");
+                    }
+                }
+            }
+            UiAction::RegionalEvent(intervention) => {
+                if let ClientMode::Online(client) = &mut self.mode {
+                    client.queue_region_intervention(intervention);
+                }
+            }
+            UiAction::SendChat => {
+                let text = self.chat_draft.trim().to_owned();
+                if let ClientMode::Online(client) = &mut self.mode {
+                    if client.queue_chat(&text) {
+                        self.chat_draft.clear();
+                    }
+                }
+            }
+            UiAction::QuickChat(text) => {
+                if let ClientMode::Online(client) = &mut self.mode {
+                    client.queue_chat(&text);
+                }
+            }
+            UiAction::Zoom(delta) => {
+                self.camera.zoom = (self.camera.zoom + delta).clamp(0.9, 1.15);
+            }
+        }
+    }
+}

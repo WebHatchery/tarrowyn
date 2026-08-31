@@ -3431,3 +3431,12 @@ choice suite (2 tests) passes, along with server-package clippy with warnings
 denied, package formatting, `git diff --check`, and the Rust file-size scan. No
 publisher or full workspace gate is repeated because this is source
 organization maintenance, and no new external or deferred work is opened.
+
+The client action dispatcher now lives beside the existing interaction routing
+in `game/actions.rs`, reducing the runtime root from 665 to 526 lines while
+preserving online, offline, recovery, chat, and touch-facing action IDs. The
+focused UI controls suite (27 tests) passes, along with client-package clippy
+with warnings denied, package formatting, `git diff --check`, and the Rust
+file-size scan. No publisher or full workspace gate is repeated because this
+is source organization maintenance, and no new external or deferred work is
+opened.
