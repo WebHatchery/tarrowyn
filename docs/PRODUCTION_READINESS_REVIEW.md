@@ -108,6 +108,13 @@ The live Phase 6 journey now also proves the allowlisted support-account HTTP
 view, its character and cursor boundary, secret-free response shape, and the
 ordinary-player 403 boundary.
 
+The client also prewarms every Tarrowyn UI font size through the shared toolkit
+and presents the atlas before the first game frame. A fresh post-publish
+preview tab rendered the full-screen and offline-fixture surfaces with zero
+deleted-texture warnings; only the expected failed online requests appeared
+while the local server was unavailable. A supported target-browser check with
+the target server available remains required before public launch.
+
 The complete list of target-environment gates, desired human evidence, and
 deliberate product deferrals is maintained in
 [`PHASE_6_FOLLOW_UP_REGISTER.md`](PHASE_6_FOLLOW_UP_REGISTER.md); this review

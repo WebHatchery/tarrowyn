@@ -3807,12 +3807,24 @@ layout with a visible `Done` exit, and the offline fixture remained usable.
 The page metadata now tells phone players to use that control, and the focused
 JSON parse plus the project `publish.ps1` Windows/WebGL build, packaging,
 deployment, and preview-text check passed. No full workspace suite was repeated
-for this isolated metadata and evidence update. A clean preview reload still
-emits repeated `glBindTexture called with an already deleted texture ID 20!`
-messages from the shared `mq_js_bundle.js` while the game renders; that shared
-runtime warning is recorded as a pre-launch follow-up rather than claimed as a
+for this isolated metadata and evidence update. Before the font-atlas
+mitigation, a clean preview reload emitted repeated
+`glBindTexture called with an already deleted texture ID 20!` messages from
+the shared `mq_js_bundle.js` while the game rendered; that shared-runtime
+warning was recorded as a pre-launch follow-up rather than claimed as a
 Tarrowyn-owned rendering failure.
 
 A fresh published Frontier comparison tab using the same shell and bundle
 produced no texture warning, so ownership remains unresolved between the
 Tarrowyn render workload, the shared runtime, and the in-app browser.
+
+The client now prewarms every UI font size used by Tarrowyn through the shared
+toolkit and presents one atlas warm-up frame before the game UI is batched. The
+focused client compile and binary clippy checks passed, followed by the
+project `publish.ps1` Windows/WebGL build, packaging, deployment, and preview
+check. A fresh post-publish Tarrowyn tab rendered the full-screen surface and
+the offline fixture with zero deleted-texture warnings; the only remaining
+console errors were the expected failed online requests while the local server
+was unavailable. No full workspace suite was repeated for this isolated client
+runtime mitigation; repeat the clean-console check in a supported target
+browser with the target server available before public launch.

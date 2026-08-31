@@ -2,6 +2,7 @@
 
 use macroquad::prelude::*;
 use macroquad_toolkit::capture;
+use macroquad_toolkit::prelude::dark;
 
 mod data;
 mod game;
@@ -10,6 +11,8 @@ mod state;
 mod ui;
 
 use game::Game;
+
+const UI_FONT_SIZES: &[u16] = &[8, 9, 10, 11, 12, 13, 14, 16, 17, 18, 20, 28];
 
 fn window_conf() -> Conf {
     capture::capture_window_conf(
@@ -22,6 +25,12 @@ fn window_conf() -> Conf {
 
 #[macroquad::main(window_conf)]
 async fn main() {
+    macroquad_toolkit::ui::prewarm_default_ui_font(UI_FONT_SIZES)
+        .expect("toolkit UI font should prewarm");
+    clear_background(dark::BACKGROUND);
+    macroquad_toolkit::ui::draw_default_ui_font_atlas_warmup(UI_FONT_SIZES);
+    next_frame().await;
+
     let mut game = Game::new().await;
 
     if let Some(configs) = capture::CaptureConfig::all_from_env("TARROWYN") {
