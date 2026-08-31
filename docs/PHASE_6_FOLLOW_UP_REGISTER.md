@@ -46,3 +46,8 @@ release JSON server then reached `ONLINE` with zero deleted-texture warnings and
 zero request errors. Deployment-target confirmation remains open; the
 mitigation does not claim ownership of the underlying shared-runtime failure
 mode.
+
+The read-only gateway verifier was rerun on 2026-08-31 and reported both the
+gateway health route and the proposed Tarrowyn proxy route as HTTP 404. The
+verifier now checks those endpoints independently, so a future deployment
+recheck will expose both failures or both successful hops in one result.

@@ -4016,3 +4016,11 @@ and the protocol-6 health/readiness fields checked before admission. Markdown
 diff checks passed; this was documentation-only maintenance, so no runtime or
 workspace test suite was repeated and no new external or deferred work was
 opened.
+
+The gateway verifier diagnostics were validated on 2026-08-31 at commit
+`13769bf`. The read-only checker now probes gateway health and the proxied
+Tarrowyn health route independently and aggregates their failures; the current
+deployment recheck reported HTTP 404 for both routes. PowerShell parsing and
+`git diff --check` passed. This was focused release-tooling maintenance, so no
+runtime or full workspace suite was repeated; the gateway deployment gap
+remains documented in the follow-up register.
