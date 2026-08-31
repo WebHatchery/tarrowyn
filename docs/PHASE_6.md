@@ -62,7 +62,10 @@ temporary database. Later reruns first found the preview file using a stale
 username key; after correcting it to the documented `DB_USERNAME` contract, a
 password-safe connection succeeded but the existing database failed closed at
 readiness because legacy production refresh replay results lacked the current
-ownership mirror. No new MySQL persistence claim is made from those reruns.
+ownership mirror. The reload migration now reconstructs that mirror from
+persisted sessions and discards only orphaned replay cache entries, so that
+legacy failure is repaired locally. No new MySQL persistence claim is made
+from those reruns.
 The checklist remains open for a clean current preview snapshot,
 target-environment migration, multi-worker concurrency, failover, and rollback
 drills; the JSON backend remains the deterministic default for local fixtures.
