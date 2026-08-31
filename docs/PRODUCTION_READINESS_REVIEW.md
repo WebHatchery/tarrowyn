@@ -26,8 +26,9 @@ metadata. Malformed cross-references degrade operator readiness instead of
 being served as authoritative state. Focused Phase 6 regressions and the
 cross-subsystem release gate are recorded in PHASE_6_TEST_REPORT.md.
 
-The measured scope is deliberately regional: one worker, 24 concurrent-client
-target, bounded queues, and selectable JSON/MySQL persistence. The local Phase 6
+The measured scope is deliberately regional: one region-authoritative worker,
+a bounded 4-to-32-worker HTTP request pool, a 24 concurrent-client target,
+bounded queues, and selectable JSON/MySQL persistence. The local Phase 6
 mixed-load drill passed with 24 clients, three rounds, 624 requests, and 5,390.96
 ms wall time, including backup and restart recovery. The same drill crossed the
 2,048-record event window and verified `cursor_stale` on both event endpoints.
@@ -66,6 +67,12 @@ allowlist, but took 82,299.85 ms for 2,500 requests. That result is retained as
 capacity evidence against promoting the one-worker snapshot bridge to the
 GDD's several-hundred-player direction; the supported release target remains
 24 clients.
+The subsequent one-round check after introducing the bounded HTTP worker pool
+also passed at 24 clients with 240 requests, no operational alerts, 72.4 MB
+measured working set, and 2,739.61 ms restart recovery. The pool improves
+request-service concurrency inside the regional worker, but does not change
+the one-worker ownership boundary or establish several-hundred-player
+capacity.
 The latest 24-client baseline additionally recorded 67.06 MB of server working
 set after load and 2,837.56 ms from worker stop through restart readiness. These
 local measurements inform the target-environment gate but are not production

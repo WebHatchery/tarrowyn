@@ -123,6 +123,11 @@ fn rate_limited_guest_sessions_advertise_the_retry_window() {
 }
 
 #[test]
+fn request_worker_count_stays_within_the_bounded_pool() {
+    assert!((MIN_REQUEST_WORKERS..=MAX_REQUEST_WORKERS).contains(&request_worker_count()));
+}
+
+#[test]
 fn guest_session_rate_limiter_bounds_a_source_window() {
     let mut limiter = GuestSessionRateLimiter::default();
     let source = "192.0.2.10".parse().expect("test source address");

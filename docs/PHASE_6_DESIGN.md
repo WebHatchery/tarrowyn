@@ -243,9 +243,10 @@ same boundary.
 
 ## Hosting and observability
 
-The release candidate runs one region-authoritative worker behind a TLS reverse
-proxy, with the browser bundle delivered by the existing publishing path. The
-native worker binds only to its configured private service address; TLS,
+The release candidate runs one region-authoritative worker with a bounded HTTP
+request pool behind a TLS reverse proxy, with the browser bundle delivered by
+the existing publishing path. The native worker binds only to its configured
+private service address; TLS,
 provider secrets, and support credentials are environment or deployment-secret
 inputs, never checked into the repository. Development guest identities use a
 separate fixture state path and must not share production data.

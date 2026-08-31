@@ -3,7 +3,7 @@ use serde::Serialize;
 use std::collections::HashMap;
 use std::io::Read;
 use std::net::IpAddr;
-use std::sync::Arc;
+use std::sync::{mpsc, Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant};
 use tarrowyn_protocol::{
@@ -22,6 +22,9 @@ const GUEST_SESSION_RATE_WINDOW: Duration = Duration::from_secs(60);
 const GUEST_SESSION_BURST_LIMIT: u16 = 32;
 const MAX_TRACKED_GUEST_SOURCES: usize = 4096;
 const GUEST_SESSION_RETRY_AFTER_SECONDS: &str = "60";
+const MIN_REQUEST_WORKERS: usize = 4;
+const MAX_REQUEST_WORKERS: usize = 32;
+const REQUEST_QUEUE_CAPACITY: usize = 128;
 
 mod request;
 #[cfg(test)]
@@ -119,11 +122,43 @@ pub fn serve(config: crate::config::ServerConfig) -> Result<(), String> {
         PROTOCOL_VERSION,
         config.tick_interval.as_millis()
     );
-    let mut guest_session_limiter = GuestSessionRateLimiter::default();
+    let request_worker_count = request_worker_count();
+    let (request_sender, request_receiver) = mpsc::sync_channel(REQUEST_QUEUE_CAPACITY);
+    let request_receiver = Arc::new(Mutex::new(request_receiver));
+    let guest_session_limiter = Arc::new(Mutex::new(GuestSessionRateLimiter::default()));
+    let mut workers = Vec::with_capacity(request_worker_count);
+    for _ in 0..request_worker_count {
+        let request_receiver = Arc::clone(&request_receiver);
+        let repository = Arc::clone(&repository);
+        let guest_session_limiter = Arc::clone(&guest_session_limiter);
+        workers.push(thread::spawn(move || loop {
+            let request = request_receiver
+                .lock()
+                .expect("request queue lock poisoned")
+                .recv();
+            let Ok(request) = request else {
+                break;
+            };
+            handle_request(request, Arc::clone(&repository), &guest_session_limiter);
+        }));
+    }
     for request in server.incoming_requests() {
-        handle_request(request, Arc::clone(&repository), &mut guest_session_limiter);
+        if request_sender.send(request).is_err() {
+            break;
+        }
+    }
+    drop(request_sender);
+    for worker in workers {
+        let _ = worker.join();
     }
     Ok(())
+}
+
+fn request_worker_count() -> usize {
+    thread::available_parallelism()
+        .map(|parallelism| parallelism.get())
+        .unwrap_or(8)
+        .clamp(MIN_REQUEST_WORKERS, MAX_REQUEST_WORKERS)
 }
 
 fn monotonic_tick_wait(deadline: &mut Instant, interval: Duration) {
@@ -145,7 +180,7 @@ fn next_tick_deadline(deadline: Instant, now: Instant, interval: Duration) -> In
 fn handle_request(
     mut request: Request,
     repository: Arc<WorldRepository>,
-    guest_session_limiter: &mut GuestSessionRateLimiter,
+    guest_session_limiter: &Mutex<GuestSessionRateLimiter>,
 ) {
     if request.method() == &Method::Options {
         let _ = request.respond(with_cors(Response::empty(StatusCode(204))));
@@ -158,7 +193,11 @@ fn handle_request(
         (Method::Get, "/health") => json_response(StatusCode(200), repository.health()),
         (Method::Get, "/v1/ops/health") => json_response(StatusCode(200), repository.ops_health()),
         (Method::Post, "/v1/session/guest") => {
-            if !guest_session_limiter.allow(&request) {
+            if !guest_session_limiter
+                .lock()
+                .expect("guest session limiter lock poisoned")
+                .allow(&request)
+            {
                 rate_limited_response(429, repository.health().meta)
             } else {
                 match read_json_or_default(&mut request) {

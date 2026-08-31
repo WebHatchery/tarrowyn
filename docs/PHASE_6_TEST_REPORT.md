@@ -3674,3 +3674,16 @@ client-package clippy with warnings denied, package formatting,
 `git diff --check`, and the Rust file-size scan. No publisher or full workspace
 gate is repeated because this is test-source organization maintenance, and no
 new external or deferred work is opened.
+
+On 2026-08-31, the server HTTP path gained a bounded request-worker pool that
+keeps the guest-session limiter synchronized while allowing independent
+requests to progress concurrently. The focused worker-boundary regression
+passed (1 test), and the 24-client one-round mixed-load check passed with 240
+requests, no operational alerts, 72.4 MB measured server working set, and
+2,739.61 ms restart recovery. The full milestone gate also passed: content
+validation, 16 protocol tests, 443 server tests, 243 client tests, asset and
+code-standard checks, workspace clippy, Windows/WebGL release builds,
+packaging, and Preview deployment. This improves the locked scale direction's
+serving path but does not promote the 24-client evidence to the GDD's
+several-hundred-player target; target topology and multi-worker ownership
+remain in the follow-up register.
