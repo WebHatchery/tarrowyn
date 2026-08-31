@@ -3265,6 +3265,14 @@ tracker recording, and catalog synchronization also pass. No full workspace
 gate is repeated because this is a bounded guidance correction, and no new
 external or deferred work is opened.
 
+The online UI control regressions are now split into a dedicated child test
+file, keeping the parent suite readable and below the 800-line Rust standard
+as further player-facing controls are added. The focused online UI suite
+(45 tests), client-package clippy, formatting, `git diff --check`, and the
+Rust file-size scan pass. This is test-only organization maintenance, so no
+publisher or full workspace gate is repeated, and no new external or deferred
+work is opened.
+
 The linked-account deletion confirmation now remains armed when the bounded
 client command queue is full; the failed enqueue is reported so the player can
 retry without silently losing the safety confirmation. The focused normal and
