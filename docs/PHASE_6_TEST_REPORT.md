@@ -789,6 +789,15 @@ catalog-sync checks pass. No full workspace gate was repeated because this was
 a bounded session-expiry endpoint correction, and no new external or deferred
 work was opened.
 
+The online chat draft now remains visible when the shared state is reloading or
+the bounded chat queue is full; the client clears it only after the chat request
+is actually accepted into the queue. The focused chat enqueue regressions pass,
+along with client-package clippy, formatting, `git diff --check`, and the Rust
+file-size scan. No full workspace gate is repeated because this is a bounded
+input-preservation correction. The project `publish.ps1` Windows/WebGL build,
+packaging, Preview deployment, tracker recording, and catalog synchronization
+also pass.
+
 The online crafting overlay now appears only while the shared connection is
 Online, so a disconnect during timing play no longer hides the visible
 Reconnect control behind an action that the request layer cannot submit. The

@@ -573,8 +573,9 @@ impl Game {
             UiAction::SendChat => {
                 let text = self.chat_draft.trim().to_owned();
                 if let ClientMode::Online(client) = &mut self.mode {
-                    client.queue_chat(&text);
-                    self.chat_draft.clear();
+                    if client.queue_chat(&text) {
+                        self.chat_draft.clear();
+                    }
                 }
             }
             UiAction::QuickChat(text) => {

@@ -47,16 +47,16 @@ impl OnlineClient {
         }
     }
 
-    pub fn queue_chat(&mut self, text: &str) {
+    pub fn queue_chat(&mut self, text: &str) -> bool {
         if !self.mutations_ready() {
-            return;
+            return false;
         }
         let text: String = text.chars().take(MAX_CHAT_MESSAGE_LENGTH).collect();
         if text.trim().is_empty() {
-            return;
+            return false;
         }
         let request_id = self.next_request_id("chat");
-        if !queue::try_push(
+        if queue::try_push(
             &mut self.chat_queue,
             ChatRequest {
                 request_id,
@@ -64,9 +64,12 @@ impl OnlineClient {
                 text,
             },
         ) {
+            true
+        } else {
             self.status_message =
                 "The chat channel is busy; wait for current messages before trying again."
                     .to_owned();
+            false
         }
     }
 

@@ -315,7 +315,7 @@ fn explicit_logout_forgets_a_linked_key_before_guest_reconnect() {
 fn online_commands_are_not_queued_while_disconnected() {
     let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
     client.queue_movement(1, 0);
-    client.queue_chat("This must wait for the road");
+    assert!(!client.queue_chat("This must wait for the road"));
     assert!(client.movement_queue.is_empty());
     assert!(client.chat_queue.is_empty());
 
@@ -324,9 +324,19 @@ fn online_commands_are_not_queued_while_disconnected() {
         .projection
         .set_authoritative_player_position(TilePos::new(8, 6));
     client.queue_movement(1, 0);
-    client.queue_chat("The road is open");
+    assert!(client.queue_chat("The road is open"));
     assert_eq!(client.movement_queue.len(), 1);
     assert_eq!(client.chat_queue.len(), 1);
+}
+
+#[test]
+fn chat_enqueue_reports_when_a_state_reload_would_drop_the_draft() {
+    let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
+    client.state = ConnectionState::Online;
+    client.state_reload_pending = true;
+
+    assert!(!client.queue_chat("Keep this until the road is current"));
+    assert!(client.chat_queue.is_empty());
 }
 
 #[test]
