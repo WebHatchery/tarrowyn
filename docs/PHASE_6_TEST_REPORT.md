@@ -4007,3 +4007,10 @@ under one second; the wrong web package was rejected, all project PowerShell
 scripts parsed, and no server process or temporary extraction directory
 remained. This was a focused release-verifier correction, so no full workspace
 suite was repeated.
+
+The operator-runbook alignment was validated on 2026-08-31 at commit
+`31238c8`. The release procedure now names the exact packaged-server file set
+and the protocol-6 health/readiness fields checked before admission. Markdown
+diff checks passed; this was documentation-only maintenance, so no runtime or
+workspace test suite was repeated and no new external or deferred work was
+opened.
