@@ -78,6 +78,9 @@ it uses `mysqldump.exe` and `mysql.exe` to restore into a generated temporary
 database. It validates the restored world and identity index before dropping
 that generated database and removing its temporary files. It does not reset or
 delete the configured database.
+The acceptance process pins `TARROWYN_MYSQL_POOL_MAX_CONNECTIONS` to the
+documented default of 4; change the verifier only when repeating the check for
+an explicitly measured target capacity budget.
 
 For the local regional load and restart drill, run:
 

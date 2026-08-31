@@ -3760,3 +3760,9 @@ the metric cannot imply a live database pool. Older metrics payloads default
 the field safely. The focused protocol compatibility, server metrics, package
 clippy, formatting, diff, and Rust file-size checks cover this observability
 slice; no full workspace or publisher gate is repeated.
+
+The MySQL acceptance harness now pins its server process to the documented
+four-connection pool default after clearing inherited overrides. Its existing
+target-database privilege and clean-schema gates remain unchanged. PowerShell
+parsing and diff checks pass; the live acceptance remains target-required and
+is not rerun for this harness-only determinism correction.

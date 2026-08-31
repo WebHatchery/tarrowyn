@@ -272,6 +272,7 @@ try {
     $env:TARROWYN_TICK_MS = "50"
     $env:TARROWYN_SESSION_TTL_SECONDS = "120"
     $env:TARROWYN_MOVEMENT_COOLDOWN_TICKS = "0"
+    $env:TARROWYN_MYSQL_POOL_MAX_CONNECTIONS = "4"
 
     $server = Start-PreviewServer
     $health = Wait-Ready
