@@ -3282,3 +3282,11 @@ formatting, `git diff --check`, and the Rust file-size scan. The project
 recording, and catalog synchronization also pass. No full workspace gate is
 repeated because this is a bounded account-safety correction, and no new
 external or deferred work is opened.
+
+The online chronicle panel now lives in a named child module, keeping the
+parent panel source below the 800-line Rust standard while preserving the
+existing archive, search, and paging behavior. The focused online UI suite
+(45 tests), client-package clippy with warnings denied, package formatting,
+`git diff --check`, and the Rust file-size scan pass. This is source
+organization maintenance, so no publisher or full workspace gate is repeated,
+and no new external or deferred work is opened.
