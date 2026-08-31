@@ -172,6 +172,7 @@ fn replay_caches_ok(state: &RepositoryState, identity_accounts: &HashSet<&str>) 
                             })
                 })
             && auth_session_ok(&response.session)
+            && cached_session_matches_account(state, &response.session, &response.account_id)
             && response.linked_guest
     });
     let link_tokens_ok = phase6.auth_link_tokens.iter().all(|(token, identity_key)| {
