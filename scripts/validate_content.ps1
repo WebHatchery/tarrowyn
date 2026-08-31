@@ -1,3 +1,7 @@
+param(
+    [string]$PreviousCommit
+)
+
 $ErrorActionPreference = "Stop"
 $projectRoot = Split-Path -Parent $PSScriptRoot
 $dataRoot = Join-Path $projectRoot "assets\data"
@@ -140,6 +144,136 @@ function Get-Records([object]$document, [string]$property, [string]$label) {
     return @($field.Value)
 }
 
+function Get-StableIdEntries([string]$manifestName, [object]$document) {
+    $entries = @()
+    $recordProperties = @{
+        "actions.json" = $null
+        "crops.json" = $null
+        "contracts.json" = "contracts"
+        "events.json" = "events"
+        "items.json" = "items"
+        "threats.json" = "threats"
+        "infrastructure.json" = "infrastructure"
+        "recipes.json" = "recipes"
+        "settlements.json" = "settlements"
+        "skills.json" = "skills"
+    }
+    if ($manifestName -eq "region.json") {
+        foreach ($record in @($document.locations)) {
+            $entries += [pscustomobject]@{ Key = "$manifestName|locations|$([string]$record.id)" }
+        }
+        foreach ($record in @($document.routes)) {
+            $entries += [pscustomobject]@{ Key = "$manifestName|routes|$([string]$record.id)" }
+        }
+        return $entries
+    }
+    if ($manifestName -eq "households.json") {
+        foreach ($record in @($document.households)) {
+            foreach ($field in @("id", "opportunity_id", "regional_id")) {
+                $entries += [pscustomobject]@{ Key = "$manifestName|$field|$([string]$record.$field)" }
+            }
+        }
+        return $entries
+    }
+    if ($manifestName -eq "npc_households.json") {
+        foreach ($record in @($document.npc_households)) {
+            foreach ($field in @("id", "household_id")) {
+                $entries += [pscustomobject]@{ Key = "$manifestName|$field|$([string]$record.$field)" }
+            }
+        }
+        return $entries
+    }
+    if (-not $recordProperties.ContainsKey($manifestName)) {
+        return $entries
+    }
+    foreach ($record in (Get-Records $document $recordProperties[$manifestName] $manifestName)) {
+        $entries += [pscustomobject]@{ Key = "$manifestName|id|$([string]$record.id)" }
+    }
+    return $entries
+}
+
+function Get-PreviousManifest([string]$commit, [string]$manifestName) {
+    $spec = "{0}:assets/data/{1}" -f $commit, $manifestName
+    $raw = (& git show $spec 2>$null) -join [Environment]::NewLine
+    if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($raw)) {
+        throw "Previous commit $commit is missing content manifest $manifestName."
+    }
+    try {
+        return $raw | ConvertFrom-Json
+    } catch {
+        throw "Previous commit $commit has invalid JSON in $manifestName."
+    }
+}
+
+function Get-ApprovedContentRemovals {
+    $path = Join-Path $projectRoot "docs\CONTENT_MIGRATIONS.json"
+    if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
+        throw "Missing content migration ledger: $path"
+    }
+    try {
+        $ledger = Get-Content -Raw -LiteralPath $path | ConvertFrom-Json
+    } catch {
+        throw "Content migration ledger is invalid JSON."
+    }
+    if ($ledger.schema_version -ne 1 -or $null -eq $ledger.approved_removals) {
+        throw "Content migration ledger needs schema_version 1 and approved_removals."
+    }
+    $approved = @{}
+    foreach ($removal in @($ledger.approved_removals)) {
+        $manifest = [string]$removal.manifest
+        $field = [string]$removal.field
+        $id = [string]$removal.id
+        $migration = [string]$removal.migration
+        if ([string]::IsNullOrWhiteSpace($manifest) -or
+            [string]::IsNullOrWhiteSpace($field) -or
+            [string]::IsNullOrWhiteSpace($id) -or
+            [string]::IsNullOrWhiteSpace($migration)) {
+            throw "Content migration removals need manifest, field, id, and migration text."
+        }
+        $key = "$manifest|$field|$id"
+        if ($approved.ContainsKey($key)) {
+            throw "Content migration ledger repeats approved removal $key."
+        }
+        $approved[$key] = $true
+    }
+    return $approved
+}
+
+function Assert-ContentIdsAppendOnly([string]$previousCommit, [hashtable]$currentManifests) {
+    if ([string]::IsNullOrWhiteSpace($previousCommit)) {
+        return
+    }
+    $approved = Get-ApprovedContentRemovals
+    $current = @{}
+    $previous = @{}
+    foreach ($manifestName in $required) {
+        foreach ($entry in (Get-StableIdEntries $manifestName $currentManifests[$manifestName])) {
+            if ($current.ContainsKey($entry.Key)) {
+                throw "Current content repeats stable ID $($entry.Key)."
+            }
+            $current[$entry.Key] = $true
+        }
+        $previousManifest = Get-PreviousManifest $previousCommit $manifestName
+        foreach ($entry in (Get-StableIdEntries $manifestName $previousManifest)) {
+            if ($previous.ContainsKey($entry.Key)) {
+                throw "Previous content repeats stable ID $($entry.Key)."
+            }
+            $previous[$entry.Key] = $true
+        }
+    }
+    foreach ($key in $previous.Keys) {
+        if (-not $current.ContainsKey($key) -and -not $approved.ContainsKey($key)) {
+            throw "Content ID $key was removed without a migration record."
+        }
+    }
+    foreach ($key in $approved.Keys) {
+        if ($current.ContainsKey($key) -or -not $previous.ContainsKey($key)) {
+            throw "Content migration record $key is stale or does not match the previous release."
+        }
+    }
+    Write-Host "Content compatibility valid: no unapproved stable ID removals from $previousCommit."
+}
+
 function Assert-ManifestSchema([object]$schema) {
     if ($schema.schema_version -lt 1 -or [string]::IsNullOrWhiteSpace([string]$schema.compatibility)) {
         throw "Content schema needs a positive version and compatibility rule."
@@ -164,6 +298,7 @@ foreach ($name in $required) {
 }
 $schema = Get-Content -Raw -LiteralPath (Join-Path $dataRoot "content_schema.json") | ConvertFrom-Json
 Assert-ManifestSchema $schema
+Assert-ContentIdsAppendOnly $PreviousCommit $manifests
 
 $gameConfig = $manifests["game_config.json"]
 $requiredGameText = @("game_name", "display_name", "save_slot", "version")

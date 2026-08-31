@@ -20,7 +20,12 @@ function Invoke-NativeChecked {
 }
 
 try {
-    & "$PSScriptRoot\validate_content.ps1"
+    $previousCommit = (& git rev-parse --verify HEAD^ 2>$null)
+    if ($LASTEXITCODE -eq 0 -and -not [string]::IsNullOrWhiteSpace([string]$previousCommit)) {
+        & "$PSScriptRoot\validate_content.ps1" -PreviousCommit ([string]$previousCommit).Trim()
+    } else {
+        & "$PSScriptRoot\validate_content.ps1"
+    }
     if (-not $?) { throw "Content validation failed." }
     Invoke-NativeChecked "client cargo fmt" { cargo fmt --package years_of_tarrowyn -- --check }
     Invoke-NativeChecked "protocol cargo fmt" { cargo fmt --manifest-path protocol\Cargo.toml -- --check }

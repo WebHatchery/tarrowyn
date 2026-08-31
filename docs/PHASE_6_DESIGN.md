@@ -215,7 +215,9 @@ the requester's private state and is not credited to another player.
 The checked-in content contract is validated twice at release boundaries: the
 PowerShell gate requires the canonical manifest set, exact schema declaration,
 record IDs, required text fields, and required arrays to be present and valid
-JSON, while server startup parses typed action, crop, item, event, settlement,
+JSON and compares the current stable-ID set with the previous Git release when
+the gate runs, allowing only removals recorded in `docs/CONTENT_MIGRATIONS.json`;
+server startup parses typed action, crop, item, event, settlement,
 region, household, infrastructure, NPC-household, recipe, calendar, and game-
 config records. Startup rejects duplicate IDs, incomplete records, unknown
 route or settlement locations, missing launch IDs, incompatible launch route

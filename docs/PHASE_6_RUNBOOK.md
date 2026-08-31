@@ -4,7 +4,10 @@
 
 Run `scripts/validate_content.ps1`, then
 `scripts/run_release_gate.ps1`. The gate checks formatting, workspace tests,
-clippy, content IDs, `publish.ps1`, and the archive identity manifest. The
+clippy, content IDs, append-only compatibility against the parent Git release,
+`publish.ps1`, and the archive identity manifest. Deliberate stable-ID removal
+requires a one-release entry in `docs/CONTENT_MIGRATIONS.json` describing the
+migration; stale or unapproved entries fail the content gate. The
 output directory is a release artifact; do not copy a live state file into the
 browser bundle. The gate also builds a target-specific `tarrowyn-server` ZIP;
 the current Rust host is the default, and an installed target can be supplied

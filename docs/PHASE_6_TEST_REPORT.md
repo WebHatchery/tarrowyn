@@ -4052,3 +4052,11 @@ their server-side effect, matching the runtime's regional application scope;
 the focused event filter passed all 9 matching tests, and the affected server
 package formatting, clippy, and diff checks passed. No full workspace suite was
 repeated for this bounded content-validation change.
+
+The append-only content compatibility guard was validated on 2026-08-31 at the
+current follow-up commit. The release validator now compares stable IDs in the
+current manifests with the parent Git release and requires any intentional
+removal to appear in the migration ledger; the current baseline comparison,
+15-manifest content validation, all project PowerShell parsing, and diff checks
+passed. No full workspace suite was repeated for this focused release-gate
+change.
