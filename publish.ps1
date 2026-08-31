@@ -27,6 +27,24 @@ if ($Archive -or $Unarchive) {
     exit 0
 }
 
+if ($Production) {
+    $configPath = Join-Path $PSScriptRoot "assets\data\game_config.json"
+    if (-not (Test-Path -LiteralPath $configPath)) {
+        Write-Error "Production browser endpoint check could not find $configPath"
+        exit 1
+    }
+
+    $config = Get-Content -LiteralPath $configPath -Raw | ConvertFrom-Json
+    $gatewayUrl = if ($null -eq $config.gateway_url) { "" } else { [string]$config.gateway_url }
+    $gatewayUrl = $gatewayUrl.Trim()
+    $isHttpsOrigin = $gatewayUrl -match '^https://[^/\s]+(?:/.*)?$'
+    $isSameOriginPath = $gatewayUrl.StartsWith('/')
+    if (-not $isHttpsOrigin -and -not $isSameOriginPath) {
+        Write-Error "Production WebGL requires game_config.json gateway_url to be an HTTPS origin or a same-origin path; the current value is blank or unsafe."
+        exit 1
+    }
+}
+
 & $rootPublisher -RustGamePublish -ProjectDir $PSScriptRoot `
     -SkipBuild:$SkipBuild `
     -WindowsOnly:$WindowsOnly `

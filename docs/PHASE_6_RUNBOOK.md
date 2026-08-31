@@ -49,6 +49,10 @@ project-local `register-server.ps1` heartbeat alive with
 with `-Target` instead of forwarding port 8787. The token is never written to
 the repository or the browser artifact.
 
+The project wrapper also rejects `-Production` when `gateway_url` is blank or
+is neither an HTTPS origin nor a same-origin path. Preview publishing remains
+available with the intentionally blank development fallback.
+
 New production access and refresh credentials are generated from the operating
 system's secure random source and are never derived from the session counter.
 Existing persisted counter-shaped credentials are legacy sessions; let their

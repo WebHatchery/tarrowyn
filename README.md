@@ -46,6 +46,10 @@ $env:GATEWAY_ADMIN_TOKEN = "<gateway token from the secret manager>"
 For an HTTPS tunnel, pass its base URL with `-Target` instead of forwarding the
 port. The helper never stores or commits the gateway token.
 
+`.\publish.ps1 -Production` fails closed when `gateway_url` is blank or is not
+an HTTPS origin or same-origin path, so a production browser artifact cannot be
+published while it would still call the native loopback fallback.
+
 The client never performs a blocking HTTP call on the render thread. Guest,
 state, event, movement, chat, farming, trade, frontier, travel, market, event,
 and account requests are retained as toolkit `Pending<T>` values and polled

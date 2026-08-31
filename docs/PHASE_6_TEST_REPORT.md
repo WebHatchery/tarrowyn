@@ -3848,3 +3848,9 @@ clippy passed, and `publish.ps1` completed the Windows/WebGL build and preview
 deployment. The checked-in gateway value remains blank until the target service
 route is provisioned, so this implementation does not close the deployment
 online-bootstrap gate by itself.
+
+The Tarrowyn publisher now rejects `-Production` when `gateway_url` is blank or
+is not an HTTPS origin or same-origin path. The guard was exercised against the
+current intentionally blank preview configuration and failed closed before any
+production publish action; preview `publish.ps1` remains available. No full
+workspace suite was repeated for this focused deployment preflight.
