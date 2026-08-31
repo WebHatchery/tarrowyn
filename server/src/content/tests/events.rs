@@ -55,3 +55,22 @@ fn event_interventions_must_include_their_effect_location() {
         .expect_err("an intervention must include its target location");
     assert!(error.contains("affected location"));
 }
+
+#[test]
+fn multi_location_interventions_must_cover_every_required_location() {
+    let mut events: EventsManifest = macroquad_toolkit::data_loader::parse_json_labeled(
+        "events.json",
+        macroquad_toolkit::include_json_str!("../../../../assets/data/events.json"),
+    )
+    .expect("checked-in events content should parse");
+    let event = events
+        .events
+        .first_mut()
+        .expect("the events manifest should have a launch record");
+    event.affected_locations = vec!["hearth".to_owned()];
+    event.intervention_options = vec!["repair ferry markers".to_owned()];
+
+    let error = validate_events(&events, region_catalog())
+        .expect_err("a multi-location intervention must name every required location");
+    assert!(error.contains("affected location"));
+}

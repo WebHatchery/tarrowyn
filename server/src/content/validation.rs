@@ -263,7 +263,7 @@ fn intervention_scope_is_valid(intervention: &str, affected_locations: &[String]
         "open the frontier storehouse" => ["whisperwood-outpost"].as_slice(),
         _ => return true,
     };
-    required_locations.iter().any(|required| {
+    required_locations.iter().all(|required| {
         affected_locations
             .iter()
             .any(|affected| affected == required)
