@@ -3840,3 +3840,11 @@ environment. This opens a target-owned browser API-origin gate: serve an
 explicit HTTPS endpoint or same-origin reverse-proxy route, then repeat
 guest-session bootstrap and one online action. No full workspace suite was
 repeated for this deployment-boundary finding.
+
+The client now carries an embedded optional `gateway_url` and selects it for
+published/WebGL builds while preserving `TARROWYN_SERVER_URL` for native
+development. The focused data/configuration tests passed (2 tests), package
+clippy passed, and `publish.ps1` completed the Windows/WebGL build and preview
+deployment. The checked-in gateway value remains blank until the target service
+route is provisioned, so this implementation does not close the deployment
+online-bootstrap gate by itself.

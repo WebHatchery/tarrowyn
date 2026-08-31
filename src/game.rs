@@ -67,8 +67,7 @@ impl Game {
         let offline = std::env::var("TARROWYN_OFFLINE")
             .map(|value| value == "1" || value.eq_ignore_ascii_case("true"))
             .unwrap_or(false);
-        let server_url = std::env::var("TARROWYN_SERVER_URL")
-            .unwrap_or_else(|_| "http://127.0.0.1:8787".to_owned());
+        let server_url = data.config.connection_url();
         let mode = if offline {
             ClientMode::Offline(GameSession::new(&data.config))
         } else {

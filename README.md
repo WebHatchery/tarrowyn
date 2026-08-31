@@ -24,10 +24,12 @@ cargo run -p years_of_tarrowyn
 ```
 
 The native client honors `TARROWYN_SERVER_URL`, but a static browser WASM
-artifact cannot read the server process environment at runtime. The deployment
-must therefore provide the browser build an explicit HTTPS API origin or
-same-origin reverse-proxy route; `http://127.0.0.1:8787` is only the local
-development fallback and is not a production endpoint.
+artifact cannot read the server process environment at runtime. Before a WebGL
+release, set the embedded `gateway_url` in
+`assets/data/game_config.json` to the deployment's explicit HTTPS API origin or
+same-origin reverse-proxy route. An empty value keeps
+`http://127.0.0.1:8787` as the local development fallback and is not a
+production endpoint.
 
 The client never performs a blocking HTTP call on the render thread. Guest,
 state, event, movement, chat, farming, trade, frontier, travel, market, event,

@@ -22,6 +22,8 @@ fn config() -> GameConfig {
         display_name: "The Years of Tarrowyn".to_owned(),
         save_slot: "phase_0".to_owned(),
         version: "0.1.0".to_owned(),
+        server_url: "http://127.0.0.1:8787".to_owned(),
+        gateway_url: String::new(),
         world_width: 3,
         world_height: 2,
         day_length_seconds: 180.0,

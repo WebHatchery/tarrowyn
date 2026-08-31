@@ -19,12 +19,62 @@ pub struct GameConfig {
     pub display_name: String,
     pub save_slot: String,
     pub version: String,
+    /// Local authority-server base URL used by native development builds.
+    pub server_url: String,
+    /// Optional public or same-origin gateway base URL for published builds.
+    /// Empty keeps the local development URL as a safe preview fallback.
+    #[serde(default)]
+    pub gateway_url: String,
     pub world_width: usize,
     pub world_height: usize,
     pub day_length_seconds: f32,
     pub starting_gold: u32,
     pub starting_seeds: u32,
     pub starting_skill: u32,
+}
+
+impl GameConfig {
+    /// Select the authority endpoint for this build.
+    ///
+    /// Native development keeps the local server as its default and accepts a
+    /// `TARROWYN_SERVER_URL` override. Published native and WebGL builds use
+    /// the embedded gateway when one is configured; WebGL cannot read process
+    /// environment at runtime.
+    pub fn connection_url(&self) -> String {
+        let override_url: Option<String> = {
+            #[cfg(not(target_arch = "wasm32"))]
+            {
+                std::env::var("TARROWYN_SERVER_URL").ok()
+            }
+            #[cfg(target_arch = "wasm32")]
+            {
+                None
+            }
+        };
+
+        select_connection_url(
+            &self.server_url,
+            &self.gateway_url,
+            override_url.as_deref(),
+            cfg!(target_arch = "wasm32") || !cfg!(debug_assertions),
+        )
+    }
+}
+
+fn select_connection_url(
+    server_url: &str,
+    gateway_url: &str,
+    override_url: Option<&str>,
+    published: bool,
+) -> String {
+    if let Some(override_url) = override_url.map(str::trim).filter(|url| !url.is_empty()) {
+        return override_url.to_owned();
+    }
+    let gateway = gateway_url.trim();
+    if published && !gateway.is_empty() {
+        return gateway.to_owned();
+    }
+    server_url.to_owned()
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
