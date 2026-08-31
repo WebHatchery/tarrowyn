@@ -31,6 +31,21 @@ same-origin reverse-proxy route. An empty value keeps
 `http://127.0.0.1:8787` as the local development fallback and is not a
 production endpoint.
 
+When using the shared `local_gateway` reverse proxy, first add `tarrowyn` to its
+service policy, then run the authority server with a reachable bind address and
+keep the registration heartbeat alive:
+
+```powershell
+$env:TARROWYN_SERVER_ADDR = "0.0.0.0:8787"
+cargo run -p tarrowyn-server
+
+$env:GATEWAY_ADMIN_TOKEN = "<gateway token from the secret manager>"
+.\register-server.ps1
+```
+
+For an HTTPS tunnel, pass its base URL with `-Target` instead of forwarding the
+port. The helper never stores or commits the gateway token.
+
 The client never performs a blocking HTTP call on the render thread. Guest,
 state, event, movement, chat, farming, trade, frontier, travel, market, event,
 and account requests are retained as toolkit `Pending<T>` values and polled

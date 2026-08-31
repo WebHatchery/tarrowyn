@@ -40,6 +40,15 @@ Keep the identity-gateway deployment secret in the secret manager. Set
 allowlist of operator account IDs; an empty value fails closed. Keep development
 guests on a separate state path.
 
+For a browser deployment through the shared `local_gateway`, add the `tarrowyn`
+service to the gateway policy and set `gateway_url` in
+`assets/data/game_config.json` to the provisioned HTTPS route before building
+WebGL. Run the authority server on a reachable bind address, then keep the
+project-local `register-server.ps1` heartbeat alive with
+`GATEWAY_ADMIN_TOKEN` supplied from the secret manager. A tunnel may be passed
+with `-Target` instead of forwarding port 8787. The token is never written to
+the repository or the browser artifact.
+
 New production access and refresh credentials are generated from the operating
 system's secure random source and are never derived from the session counter.
 Existing persisted counter-shaped credentials are legacy sessions; let their
