@@ -3334,6 +3334,15 @@ file-size scan pass. No publisher or full workspace gate is repeated because
 this is source organization maintenance, and no new external or deferred work
 is opened.
 
+The online client now keeps the full shared-road sidebar renderer in
+`ui_online/sidebar.rs`, reducing `ui_online.rs` from 676 to 217 lines while
+preserving every farming, combat, trade, travel, recovery, account, and
+touch-facing control. The focused UI controls suite (27 tests), client-package
+clippy with warnings denied, package formatting, `git diff --check`, and the
+Rust file-size scan pass. No publisher or full workspace gate is repeated
+because this is source organization maintenance, and no new external or
+deferred work is opened.
+
 The Phase 5 client now keeps shared cursor polling in `phase5/polling.rs`,
 regional event merging in `phase5/events.rs`, and market/action feedback in
 `phase5/feedback.rs`, reducing the orchestration module from 716 to 581 lines.
