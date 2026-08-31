@@ -3827,5 +3827,7 @@ supported Chrome session rendered the full-screen surface and the offline
 fixture with zero deleted-texture warnings. Chrome reported only the two
 expected failed online requests while the local server was unavailable. No full
 workspace suite was repeated for this isolated client runtime mitigation;
-repeat the clean-console check with the target server available before public
-launch.
+repeat the check against the deployment target before public launch. With a
+disposable local release JSON server healthy, a fresh Chrome session reached
+`ONLINE` with zero deleted-texture warnings and zero request errors. The local
+server was stopped and its disposable state removed after the check.

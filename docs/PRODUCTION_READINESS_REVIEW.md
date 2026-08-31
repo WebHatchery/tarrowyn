@@ -114,7 +114,9 @@ preview tab rendered the full-screen and offline-fixture surfaces with zero
 deleted-texture warnings; only the expected failed online requests appeared
 while the local server was unavailable. A supported target-browser check with
 the same clean result is now recorded in Chrome, but the target server must
-still be available for one online session before public launch.
+still be available for one deployment-target online session before public
+launch. A disposable local release JSON server also produced an `ONLINE`
+Chrome session with zero deleted-texture warnings and zero request errors.
 
 The complete list of target-environment gates, desired human evidence, and
 deliberate product deferrals is maintained in
