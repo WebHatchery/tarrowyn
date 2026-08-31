@@ -4,8 +4,9 @@
 
 Run `scripts/validate_content.ps1`, then
 `scripts/run_release_gate.ps1`. The gate checks formatting, workspace tests,
-clippy, content IDs, and `publish.ps1`. The output directory is a reproducible
-release artifact; do not copy a live state file into the browser bundle.
+clippy, content IDs, `publish.ps1`, and the archive identity manifest. The
+output directory is a release artifact; do not copy a live state file into the
+browser bundle.
 
 ## Scoped change checks
 
@@ -204,6 +205,26 @@ effective values and queue pressure counters are exposed through
    previous artifact plus the last known-good state backup to a new named path.
 7. Reconcile the event cursor, travel records, orders, claims, and chronicle
    before reopening player access.
+
+Before the first deployment of a clean candidate, preserve its exact archives:
+
+```powershell
+.\scripts\preserve_release_candidate.ps1
+```
+
+The command stores the manifest, checksum sidecars, Windows archive, and WebGL
+archive under `dist/history/<full-commit>`. It refuses dirty candidates,
+checksum mismatches, and replacement of different evidence. After a distinct
+patch candidate has been built, run:
+
+```powershell
+.\scripts\rehearse_release_rollback.ps1 -PreservedDir <full-preserved-directory>
+```
+
+This copies the exact Windows archive through an isolated temporary directory
+as patch → rollback → patch restored, verifies the external manifest and
+sidecar at every switch, and leaves machine-readable evidence under `target/`.
+It does not start a server, modify world state, or contact a deployment target.
 
 Chronicle support is split between the normal settlement view and the
 authenticated search path. The view is intentionally bounded to recent

@@ -200,6 +200,7 @@ cargo clippy --workspace --all-targets --all-features -- -D warnings
 .\scripts\phase6_failure_drill.ps1 -StatePath <state> -BackupPath <backup>
 .\scripts\verify_mysql.ps1
 .\publish.ps1
+.\scripts\write_release_manifest.ps1
 ```
 
 The command list above is the full release gate for a major milestone or a
@@ -224,3 +225,11 @@ must precede public access.
 `verify_mysql.ps1` is an explicit local-preview check rather than part of the
 default release gate because it requires the ignored `.env.preview` credentials
 and writes one uniquely named guest identity to that configured database.
+
+The major-milestone gate also writes `dist/tarrowyn_release_manifest.json` and
+one `.sha256` sidecar per Windows/WebGL archive. Preserve a clean candidate for
+rollback with `scripts/preserve_release_candidate.ps1`; after a later candidate
+exists, rehearse the isolated patch, rollback, and patch-restoration sequence
+with `scripts/rehearse_release_rollback.ps1 -PreservedDir <directory>`. These
+records contain archive hashes and source identity only; the ignored server
+state and backup files are never release inputs.
