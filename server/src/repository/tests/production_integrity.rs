@@ -340,6 +340,37 @@ fn live_session_cannot_remain_an_auth_link_replay_tombstone() {
 }
 
 #[test]
+fn live_session_cannot_remain_an_auth_revoke_tombstone() {
+    let repository = WorldRepository::new(ServerConfig::default());
+    let guest = super::guest(&repository, "integrity-live-revoke-tombstone");
+    let session = {
+        let state = repository.state.lock().expect("repository lock");
+        state
+            .sessions
+            .get(&guest.account_token)
+            .cloned()
+            .expect("guest session")
+    };
+    repository
+        .auth_revoke(
+            &guest.account_token,
+            AuthRevokeRequest {
+                request_id: "integrity-live-revoke-request".to_owned(),
+                revoke_all: false,
+            },
+        )
+        .expect("revoke session");
+    {
+        let mut state = repository.state.lock().expect("repository lock");
+        state.sessions.insert(guest.account_token, session);
+    }
+
+    let health = repository.ops_health().data;
+    assert!(!health.ready);
+    assert!(!health.integrity_ok);
+}
+
+#[test]
 fn invalid_audit_outcome_degrades_readiness() {
     let repository = WorldRepository::new(ServerConfig::default());
     let guest = super::guest(&repository, "integrity-production-audit");

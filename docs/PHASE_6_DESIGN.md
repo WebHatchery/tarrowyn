@@ -132,6 +132,8 @@ next trim.
 Link replay tombstones must also refer to access tokens that are no longer in
 either live session table; a token cannot be both an active session and a
 credential-replay key.
+Revoked-guest replay fingerprints follow the same rule: a fingerprinted token
+must no longer be present in the live guest-session table.
 Moderation cooldowns are identity-lifecycle state rather than replay history:
 they remain for every extant identity and are removed only when that identity
 leaves the world, so report rate limits are not defeated by cache eviction.

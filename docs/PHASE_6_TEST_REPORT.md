@@ -4157,3 +4157,11 @@ filter passed all 11 tests, including
 formatting, clippy, Rust file-size, and diff checks passed. No full workspace
 suite was repeated for this isolated replay-integrity predicate maintenance
 slice, and no new external or deferred work was opened.
+
+The revoked-guest tombstone integrity correction was validated on 2026-08-31.
+Readiness now rejects a revoked-guest fingerprint that still corresponds to a
+live guest session; the focused `production_integrity` filter passed all 12
+tests, including `live_session_cannot_remain_an_auth_revoke_tombstone`.
+Server-package formatting, clippy, Rust file-size, and diff checks passed. No
+full workspace suite was repeated for this isolated replay-integrity predicate
+maintenance slice, and no new external or deferred work was opened.

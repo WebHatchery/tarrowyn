@@ -219,6 +219,10 @@ fn replay_caches_ok(state: &RepositoryState, identity_accounts: &HashSet<&str>) 
             .iter()
             .all(|(fingerprint, identity_key)| {
                 fingerprint_ok(fingerprint, true)
+                    && !state
+                        .sessions
+                        .keys()
+                        .any(|token| super::stable_fingerprint(token) == *fingerprint)
                     && bounded(identity_key, MAX_ACCOUNT_ID_CHARS)
                     && state.identities.contains_key(identity_key)
             });
