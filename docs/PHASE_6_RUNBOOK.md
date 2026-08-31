@@ -49,6 +49,19 @@ project-local `register-server.ps1` heartbeat alive with
 with `-Target` instead of forwarding port 8787. The token is never written to
 the repository or the browser artifact.
 
+The policy entry follows the gateway's existing public-service shape:
+
+```json
+"tarrowyn": {
+  "public": true,
+  "methods": ["GET", "POST", "OPTIONS"]
+}
+```
+
+After that policy is deployed, the normal route is
+`https://webhatchery.au/local_gateway/api/p/tarrowyn`; the read-only gateway
+check below verifies the route before any browser release.
+
 The project wrapper also rejects `-Production` when `gateway_url` is blank or
 is neither an HTTPS origin nor a same-origin path. Preview publishing remains
 available with the intentionally blank development fallback.

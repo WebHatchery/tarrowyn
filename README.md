@@ -31,6 +31,11 @@ same-origin reverse-proxy route. An empty value keeps
 `http://127.0.0.1:8787` as the local development fallback and is not a
 production endpoint.
 
+For the shared gateway deployment, the provisioned client value is expected to
+be `https://webhatchery.au/local_gateway/api/p/tarrowyn` (or the equivalent
+HTTPS tunnel URL); do not put that value in the checked-in config until the
+service policy and target registration are live.
+
 When using the shared `local_gateway` reverse proxy, first add `tarrowyn` to its
 service policy, then run the authority server with a reachable bind address and
 keep the registration heartbeat alive:
