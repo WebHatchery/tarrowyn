@@ -160,6 +160,20 @@ pub(super) fn validate_manifest(manifest: &SkillManifest) -> Result<(), String> 
             ));
         }
     }
+    for skill in &manifest.skills {
+        if skill.prerequisites.iter().any(|prerequisite_id| {
+            manifest
+                .skills
+                .iter()
+                .find(|prerequisite| prerequisite.id == *prerequisite_id)
+                .is_some_and(|prerequisite| prerequisite.depth >= skill.depth)
+        }) {
+            return Err(format!(
+                "skill {} must build on lower-depth prerequisites",
+                skill.id
+            ));
+        }
+    }
     Ok(())
 }
 

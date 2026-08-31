@@ -110,6 +110,20 @@ fn skill_manifest_rejects_prerequisite_cycles() {
 }
 
 #[test]
+fn skill_manifest_rejects_prerequisites_that_do_not_reduce_depth() {
+    let mut manifest: SkillManifest = serde_json::from_str(SKILLS_JSON).unwrap();
+    let advanced = manifest
+        .skills
+        .iter_mut()
+        .find(|skill| skill.id == "storm-magic")
+        .expect("storm magic should be present");
+    advanced.prerequisites[0] = "weapon-fighting".to_owned();
+
+    let error = validate_manifest(&manifest).unwrap_err();
+    assert!(error.contains("lower-depth prerequisites"));
+}
+
+#[test]
 fn weapon_discovery_counts_saturate_when_each_family_reaches_the_ceiling() {
     let definition = catalog()
         .skills
