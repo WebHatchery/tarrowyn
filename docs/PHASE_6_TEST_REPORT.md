@@ -4405,5 +4405,7 @@ well as public chronicle text, while preserving semantic audit targets and the
 `restored_state_anonymises_orphaned_chronicle_names`, and
 `restored_state_anonymises_orphaned_governance_chronicle_names`.
 Server-package formatting, clippy, Rust file-size, and diff checks passed. No
-full workspace suite was repeated for this isolated restore-privacy slice, and
-no new external or deferred work was opened.
+full workspace suite was repeated for this isolated restore-privacy slice. The
+project publisher also passed Windows/WebGL release builds, packaging, Preview
+deployment, catalog synchronization, and the deployed WASM hash check. No new
+external or deferred work was opened.
