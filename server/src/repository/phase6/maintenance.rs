@@ -1,12 +1,14 @@
 use super::super::models::{trim_replay_cache, RepositoryState};
 use super::{
     deletion, prune_moderation_cooldowns, trim_audits, trim_auth_link_tokens,
-    trim_moderation_reports,
+    trim_moderation_reports, ProductionSession,
 };
 use crate::config::ServerConfig;
+use tarrowyn_protocol::AuthSession;
 
 pub(super) fn run(state: &mut RepositoryState) {
     deletion::process(state);
+    trim_expired_auth_replays(state);
     trim_replay_cache(&mut state.phase6.auth_link_results);
     trim_auth_link_tokens(&mut state.phase6);
     trim_replay_cache(&mut state.phase6.auth_refresh_results);
@@ -31,6 +33,34 @@ pub(super) fn run(state: &mut RepositoryState) {
         trim_replay_cache(&mut identity.chat_results);
     }
     trim_audits(&mut state.phase6.audits);
+}
+
+fn trim_expired_auth_replays(state: &mut RepositoryState) {
+    let current_tick = state.tick;
+    let sessions = &state.phase6.sessions;
+    state
+        .phase6
+        .auth_link_results
+        .retain(|_, response| replay_session_is_live(sessions, &response.session, current_tick));
+    state
+        .phase6
+        .auth_refresh_results
+        .retain(|_, response| replay_session_is_live(sessions, &response.session, current_tick));
+}
+
+fn replay_session_is_live(
+    sessions: &std::collections::HashMap<String, ProductionSession>,
+    response: &AuthSession,
+    current_tick: u64,
+) -> bool {
+    sessions
+        .get(&response.account_token)
+        .is_some_and(|session| {
+            !session.revoked
+                && session.refresh_token == response.refresh_token
+                && session.expires_at_tick == response.expires_at_tick
+                && session.refresh_expires_at_tick > current_tick
+        })
 }
 
 pub(super) fn backup_due(state: &RepositoryState, config: &ServerConfig) -> bool {

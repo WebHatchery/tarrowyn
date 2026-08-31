@@ -28,6 +28,7 @@ mod moderation_retention;
 mod moderation_validation;
 mod operations_metrics;
 mod replay_integrity;
+mod replay_retention;
 mod service_orders;
 mod session_integrity;
 mod support_chronicle;
