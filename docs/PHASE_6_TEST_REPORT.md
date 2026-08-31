@@ -3540,3 +3540,13 @@ clippy with warnings denied, package formatting, `git diff --check`, and the
 Rust file-size scan. No publisher or full workspace gate is repeated because
 this is test-source organization maintenance, and no new external or deferred
 work is opened.
+
+The Phase 4 client crafting timing and reload tests now live in
+`network/phase4/tests/crafting.rs`, reducing the phase test root from 618 to
+582 lines while preserving the wide-target movement and authoritative-reload
+pause contracts. The focused crafting filter passes (4 matching tests,
+including the existing completion and queue-capacity regressions), along with
+client-package clippy with warnings denied, package formatting,
+`git diff --check`, and the Rust file-size scan. No publisher or full workspace
+gate is repeated because this is test-source organization maintenance, and no
+new external or deferred work is opened.
