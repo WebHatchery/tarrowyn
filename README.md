@@ -117,7 +117,7 @@ workers; deployments may set `TARROWYN_HTTP_REQUEST_WORKERS` to `0` for that
 automatic mode or a measured value in the same range. Queue capacity defaults
 to 128 and is clamped to 16–4096 through `TARROWYN_HTTP_QUEUE_CAPACITY`.
 The MySQL pool reserves one connection for the world-authority lock and limits
-the remaining shared backend to a maximum of 4 connections by default; set
+the total backend pool to a maximum of 4 connections by default; set
 `TARROWYN_MYSQL_POOL_MAX_CONNECTIONS` only to a measured value from 2–32.
 
 The shared `protocol/` crate is versioned at protocol `6`. Every successful or
