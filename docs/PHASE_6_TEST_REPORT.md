@@ -3990,3 +3990,10 @@ be created because the shell safety policy blocked the traversal-shaped test
 input before file creation; the verifier's archive-path guard remains covered
 by source-level review and the safe wrong-package probe. No full workspace
 suite was repeated for this isolated verifier hardening.
+
+The packaged-server contract tightening was validated on 2026-08-31 at commit
+`8b01b59`. The verifier now requires the exact four-file server package and
+confirms the Tarrowyn service plus protocol-6 identity from both health
+responses. The current packaged ZIP passed launch/readiness and cleanup, while
+PowerShell parsing and `git diff --check` passed. This was an isolated verifier
+change, so the previously recorded full milestone suite was not repeated.
