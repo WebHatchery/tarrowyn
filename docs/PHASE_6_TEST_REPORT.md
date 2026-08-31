@@ -3951,3 +3951,12 @@ script parsing, ZIP identity inspection, and `git diff --check` passed; the
 clean package, three-archive manifest, preservation, and rollback rehearsal
 against `8fffcbe` also passed. This was isolated release tooling, so no full
 workspace suite was repeated after the previously recorded major milestone.
+
+The release-gate target forwarding correction was validated on 2026-08-31 at
+commit `4996098`. `run_release_gate.ps1` now exposes `-ServerTarget` and passes
+it to the target-aware server packager while retaining the current-host
+default. The parameter surface, all PowerShell script parsing, and
+`git diff --check` passed; the clean server package, three-archive manifest,
+preservation, and rollback rehearsal also passed. This was argument plumbing
+in the release workflow, so no full workspace suite was repeated after the
+previous major milestone.
