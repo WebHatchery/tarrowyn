@@ -670,7 +670,7 @@ pub fn draw_button_row(
             *active,
             ctx.connection,
             ctx.player_position_authoritative,
-        );
+        ) && sidebar_modal_control_enabled(id, sidebar_modal_open(ctx));
         if virtual_button(
             Rect::new(content.x + index as f32 * (width + gap), y, width, height),
             label,
@@ -705,6 +705,29 @@ pub(super) fn sidebar_button_enabled(
         }
         _ => button_enabled(active, connection, player_position_authoritative),
     }
+}
+
+pub(crate) fn sidebar_modal_control_enabled(id: &str, modal_open: bool) -> bool {
+    !modal_open
+        || matches!(
+            id,
+            "reconnect"
+                | "offline"
+                | "recover-self"
+                | "recover"
+                | "recover-healer"
+                | "route-repair"
+                | "route-escort"
+                | "route-improve"
+        )
+}
+
+pub(super) fn sidebar_modal_open(ctx: &UiContext<'_>) -> bool {
+    ctx.regional_inspection.is_some()
+        || ctx.skill_selection_open
+        || ctx.school_selection_open
+        || ctx.chronicle_open
+        || ctx.account_open
 }
 
 pub fn button_enabled(

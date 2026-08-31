@@ -3232,3 +3232,14 @@ Windows/WebGL build, packaging, Preview deployment, tracker recording, and
 catalog synchronization pass. No full workspace gate is repeated because
 this is a bounded tavern-feed selection correction, and no new external or
 deferred work was opened.
+
+Open online panels now visibly disable unrelated sidebar controls instead of
+showing tappable actions that the modal filter would discard. Reconnect,
+Offline, knockout recovery, and the regional route actions remain available
+where their visible recovery or inspection paths require them. The focused
+modal-filter regressions pass, along with client-package clippy, formatting,
+`git diff --check`, and the Rust file-size scan. The project `publish.ps1`
+Windows/WebGL build, packaging, Preview deployment, tracker recording, and
+catalog synchronization also pass. No full workspace gate is repeated because
+this is a bounded touch-focus correction, and no new external or deferred work
+is opened.

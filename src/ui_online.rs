@@ -18,6 +18,8 @@ pub(super) use controls::{
 pub(crate) use controls::{
     movement_tooltip_for, walking_connection_enabled, walking_projection_enabled,
 };
+#[cfg(test)]
+pub(crate) use panels::sidebar_modal_control_enabled;
 pub(super) use panels::{
     combat_side_control, draw_account, draw_button_row, draw_chronicle, draw_combat_status,
     draw_regional_inspection, draw_school_selection, draw_skill_selection,
@@ -35,6 +37,7 @@ pub(super) fn draw_sidebar(
     actions: &mut Vec<UiAction>,
 ) {
     let top = content.y + 34.0;
+    let modal_open = panels::sidebar_modal_open(ctx);
     draw_surface(
         Rect::new(content.x, top, content.w, 40.0),
         &SurfaceStyle::new(Color::new(0.10, 0.14, 0.15, 1.0))
@@ -57,7 +60,9 @@ pub(super) fn draw_sidebar(
     );
 
     draw_ui_text_ex(
-        if movement_enabled(ctx) {
+        if modal_open {
+            "Close the open panel to use road controls"
+        } else if movement_enabled(ctx) {
             "Tap a tile or use arrows to walk"
         } else {
             movement_tooltip(ctx)
@@ -71,7 +76,7 @@ pub(super) fn draw_sidebar(
         top + 47.0,
         mouse,
         actions,
-        movement_enabled(ctx),
+        movement_enabled(ctx) && !modal_open,
     );
 
     draw_combat_status(ctx, content, top);
@@ -224,7 +229,9 @@ pub(super) fn draw_sidebar(
     if virtual_button(
         Rect::new(content.right() - 70.0, top + 207.0, 70.0, 27.0),
         "Send",
-        !ctx.chat_draft.trim().is_empty() && ctx.connection == ConnectionState::Online,
+        !ctx.chat_draft.trim().is_empty()
+            && ctx.connection == ConnectionState::Online
+            && !modal_open,
         ButtonTone::Positive,
         mouse,
     ) {

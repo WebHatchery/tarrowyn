@@ -49,12 +49,25 @@ fn map_player_marker_waits_for_authority_unless_using_the_offline_fixture() {
 fn modal_filters_keep_recovery_controls_touchable() {
     assert!(is_recovery_action(&UiAction::Reconnect));
     assert!(is_recovery_action(&UiAction::UseOffline));
+    assert!(is_recovery_action(&UiAction::Interact(
+        "recover-healer".to_owned()
+    )));
     assert!(!is_recovery_action(&UiAction::Interact(
         "account-close".to_owned()
     )));
     assert!(!is_recovery_action(&UiAction::Practice(
         "farming".to_owned()
     )));
+}
+
+#[test]
+fn open_modal_disables_background_sidebar_controls_but_keeps_recovery_paths() {
+    assert!(!super::sidebar_modal_control_enabled("trade", true));
+    assert!(super::sidebar_modal_control_enabled("recover-self", true));
+    assert!(super::sidebar_modal_control_enabled("reconnect", true));
+    assert!(super::sidebar_modal_control_enabled("route-repair", true));
+    assert!(super::sidebar_modal_control_enabled("route-escort", true));
+    assert!(super::sidebar_modal_control_enabled("trade", false));
 }
 
 #[test]

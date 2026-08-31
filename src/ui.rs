@@ -19,6 +19,9 @@ mod ui_online;
 mod ui_regional;
 pub(super) use ui_map::{draw_landmark, draw_map, MapView};
 
+#[cfg(test)]
+pub(crate) use ui_online::sidebar_modal_control_enabled;
+
 pub const LOGICAL_WIDTH: f32 = 1280.0;
 pub const LOGICAL_HEIGHT: f32 = 720.0;
 
@@ -97,6 +100,11 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
 
 fn is_recovery_action(action: &UiAction) -> bool {
     matches!(action, UiAction::Reconnect | UiAction::UseOffline)
+        || matches!(
+            action,
+            UiAction::Interact(id)
+                if matches!(id.as_str(), "recover-self" | "recover" | "recover-healer")
+        )
 }
 
 fn school_selection_action_allowed(action: &UiAction) -> bool {
