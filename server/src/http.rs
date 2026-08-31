@@ -602,8 +602,9 @@ fn readiness_error_response(health: ApiResponse<OpsHealthResponse>) -> Option<Js
 }
 
 fn json_response<T: Serialize>(status: StatusCode, value: T) -> JsonResponse {
-    let body = serde_json::to_string(&value).unwrap_or_else(|error| {
-        format!("{{\"error\":{{\"code\":\"serialization\",\"message\":\"{error}\"}}}}")
+    let body = serde_json::to_string(&value).unwrap_or_else(|_| {
+        "{\"error\":{\"code\":\"serialization\",\"message\":\"The server could not encode this response.\"}}"
+            .to_owned()
     });
     with_cors(
         Response::from_string(body)

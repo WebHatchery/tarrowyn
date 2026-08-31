@@ -5,6 +5,17 @@ use std::io::Cursor;
 use std::time::{Duration, Instant};
 use tarrowyn_protocol::{ApiMeta, ApiResponse, OpsHealthResponse};
 
+struct FailingResponse;
+
+impl serde::Serialize for FailingResponse {
+    fn serialize<S>(&self, _serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        Err(serde::ser::Error::custom("value has a \"quoted\" failure"))
+    }
+}
+
 #[test]
 fn bounded_body_accepts_the_configured_limit() {
     let input = vec![b'a'; MAX_REQUEST_BODY_BYTES];
@@ -172,6 +183,18 @@ fn api_responses_emit_one_cors_origin_header() {
             .count(),
         1
     );
+}
+
+#[test]
+fn response_serialization_failures_still_return_valid_json() {
+    let response = json_response(StatusCode(500), FailingResponse);
+    let body = String::from_utf8(response.into_reader().into_inner()).expect("UTF-8 response");
+
+    assert_eq!(
+        body,
+        "{\"error\":{\"code\":\"serialization\",\"message\":\"The server could not encode this response.\"}}"
+    );
+    assert!(serde_json::from_str::<serde_json::Value>(&body).is_ok());
 }
 
 #[test]

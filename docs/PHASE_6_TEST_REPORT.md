@@ -4439,3 +4439,12 @@ passed. The project publisher also passed Windows/WebGL release builds,
 packaging, Preview deployment, catalog synchronization, and the deployed WASM
 hash check. No full workspace suite was repeated for this behavior-preserving
 organization slice, and no new external or deferred work was opened.
+
+The HTTP serialization fallback was validated on 2026-08-31. A response encode
+failure now returns a fixed, valid JSON error body instead of interpolating the
+serializer's raw error text into JSON. The focused HTTP regression passed 1 test
+with 487 filtered; server-package formatting, clippy, Rust file-size, and diff
+checks passed. The project publisher also passed Windows/WebGL release builds,
+packaging, Preview deployment, catalog synchronization, and the deployed WASM
+hash check. No full workspace suite was repeated for this bounded error-path
+slice, and no new external or deferred work was opened.
