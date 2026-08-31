@@ -29,6 +29,12 @@ rows remain deployment gates; the deliberately deferred rows remain product
 choices rather than missing implementation. Any new row should name its owner,
 evidence, and exit condition before code or content is added.
 
+The shared gateway source available on this host was inspected during this
+review: its deployed-policy source currently lists only `mytherra`, and it is
+outside this Tarrowyn checkout. No gateway policy or deployment application
+was changed here; adding `tarrowyn` remains the explicitly recorded gateway
+deployment step above.
+
 The WebGL warning was reproduced in a fresh Tarrowyn preview tab, while a fresh
 Frontier comparison using the same shell and bundle was clean. The client now
 uses the shared font-atlas prewarm path: a fresh post-publish Tarrowyn tab
