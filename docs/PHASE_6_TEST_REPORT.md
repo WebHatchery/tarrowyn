@@ -4392,10 +4392,11 @@ repeated for this isolated restore-privacy slice. The project publisher remains
 green for this runtime change as well, passing Windows/WebGL release builds,
 packaging, Preview deployment, catalog synchronization, and the deployed WASM
 hash check. No new external or deferred work was opened.
-The account-cleanup test source is now 759 physical lines; before adding more
-account-lifecycle coverage, extract cohesive child modules so it remains below
-the repository's 800-line Rust limit. This is a local maintenance trigger, not
-an additional release gate.
+The account-cleanup test source reached 759 physical lines, so its standalone
+Phase 4/5 replay-payload deletion case was extracted into a named child module.
+The parent is now 591 lines and the child is 170 lines; the repository's 800-line
+Rust limit remains clear. This was a local maintenance task, not an additional
+release gate.
 
 The legacy audit-note privacy correction was validated on 2026-08-31. Restore
 normalization now replaces orphaned display names inside retained audit notes as
@@ -4409,3 +4410,11 @@ full workspace suite was repeated for this isolated restore-privacy slice. The
 project publisher also passed Windows/WebGL release builds, packaging, Preview
 deployment, catalog synchronization, and the deployed WASM hash check. No new
 external or deferred work was opened.
+
+The account-cleanup test seam was validated on 2026-08-31. The Phase 4/5 replay
+payload deletion regression now lives in
+`phase6/tests/account_cleanup/deletion_state.rs`, leaving the parent account-cleanup
+suite at 591 lines. The moved regression passed 1 focused test with 485 filtered;
+server-package formatting, clippy, Rust file-size, and diff checks passed. No
+publisher or full workspace suite was repeated because this was test organization
+only, and no new external or deferred work was opened.
