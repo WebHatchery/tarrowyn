@@ -4249,3 +4249,12 @@ regression filter passed 1 test:
 Server-package formatting, clippy, Rust file-size, and diff checks passed. No
 full workspace suite was repeated for this isolated skill-deletion boundary
 slice, and no new external or deferred work was opened.
+
+The deleted-account trade replay privacy correction was validated on
+2026-08-31. Cached direct-trade responses involving the deleted creator or
+recipient are now invalidated under surviving identities; the focused exact
+regression filter passed 1 test:
+`account_deletion_invalidates_trade_replays_kept_by_another_identity`.
+Server-package formatting, clippy, Rust file-size, and diff checks passed. No
+full workspace suite was repeated for this isolated trade-deletion boundary
+slice, and no new external or deferred work was opened.

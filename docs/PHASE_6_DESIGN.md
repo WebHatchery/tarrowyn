@@ -264,6 +264,9 @@ public attribution list before another identity can retry the cached command.
 Retained school-skill responses remove lessons involving a deleted teacher or
 learner, clear their target account, and replace a now-unavailable lesson
 message before replay.
+Direct-trade responses retained under another identity are invalidated when
+either party is deleted, because the live trade is removed rather than kept as
+public history.
 When a provider leaves while holding an accepted service order, the surviving
 requester's typed material and tool escrow is returned before that order is
 cancelled; an order owned by the departing requester is instead removed with

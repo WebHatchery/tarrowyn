@@ -105,6 +105,7 @@ fn erase_account(state: &mut RepositoryState, request: &PendingAccountDeletion) 
     anonymize_phase4_replay_governance(state, &request.account_id);
     anonymize_phase4_replay_knowledge(state, &request.account_id);
     anonymize_phase4_replay_skill_lessons(state, &request.account_id);
+    invalidate_deleted_trade_replays(state, &request.account_id);
     state.trades.retain(|_, trade| {
         trade.creator_account_id != request.account_id
             && trade.recipient_account_id != request.account_id
@@ -344,6 +345,23 @@ fn anonymize_phase4_replay_skill_lessons(state: &mut RepositoryState, account_id
                 "This school lesson is no longer available after an account departure.".to_owned();
         } else if response.target_account_id.as_deref() == Some(account_id) {
             response.target_account_id = None;
+        }
+    }
+}
+
+fn invalidate_deleted_trade_replays(state: &mut RepositoryState, account_id: &str) {
+    for identity in state.identities.values_mut() {
+        for response in identity.trade_results.values_mut() {
+            let Some(trade) = response.trade.as_ref() else {
+                continue;
+            };
+            if trade.creator_account_id == account_id || trade.recipient_account_id == account_id {
+                response.accepted = false;
+                response.trade = None;
+                response.reason = Some(
+                    "That trade is no longer available after an account departure.".to_owned(),
+                );
+            }
         }
     }
 }

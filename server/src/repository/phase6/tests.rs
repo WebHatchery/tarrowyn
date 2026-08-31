@@ -36,3 +36,4 @@ mod support_chronicle;
 mod support_integrity;
 mod support_inventory;
 mod support_travel;
+mod trade_replays;
