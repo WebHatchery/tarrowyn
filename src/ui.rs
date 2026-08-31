@@ -46,7 +46,9 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
 
     draw_header(&ctx);
     let map_rect = draw_world_panel(&ctx, mouse);
+    let modal_open = ui_online::gameplay_modal_open(&ctx);
     if ctx.crafting.is_none()
+        && !modal_open
         && ui_online::movement_enabled(&ctx)
         && is_mouse_button_released(MouseButton::Left)
     {

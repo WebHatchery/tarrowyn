@@ -22,6 +22,7 @@ impl Game {
             self.regional_inspection_open,
             self.skill_selection_open,
             self.school_selection_open,
+            self.crafting_open(),
         ) {
             return;
         }
@@ -65,11 +66,30 @@ impl Game {
     }
 }
 
+impl Game {
+    fn crafting_open(&self) -> bool {
+        match &self.mode {
+            super::ClientMode::Online(client) => super::online_crafting_view(
+                client.state,
+                client.projection.authoritative_player_position().is_some(),
+                client.crafting_view(),
+            )
+            .is_some(),
+            super::ClientMode::Offline(_) => false,
+        }
+    }
+}
+
 pub(super) fn keyboard_gameplay_blocked(
     account_open: bool,
     regional_inspection_open: bool,
     skill_selection_open: bool,
     school_selection_open: bool,
+    crafting_open: bool,
 ) -> bool {
-    account_open || regional_inspection_open || skill_selection_open || school_selection_open
+    account_open
+        || regional_inspection_open
+        || skill_selection_open
+        || school_selection_open
+        || crafting_open
 }

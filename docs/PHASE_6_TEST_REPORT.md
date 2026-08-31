@@ -3243,3 +3243,14 @@ Windows/WebGL build, packaging, Preview deployment, tracker recording, and
 catalog synchronization also pass. No full workspace gate is repeated because
 this is a bounded touch-focus correction, and no new external or deferred work
 is opened.
+
+The same modal boundary now covers the woodworking timing overlay: background
+sidebar controls and map taps are visibly inactive, route controls remain
+enabled only for the regional inspection that owns them, and keyboard movement
+or chat cannot pass through the crafting challenge. The focused modal and
+keyboard-input regressions pass, along with client-package clippy, formatting,
+`git diff --check`, and the Rust file-size scan. The project `publish.ps1`
+Windows/WebGL build, packaging, Preview deployment, tracker recording, and
+catalog synchronization also pass. No full workspace gate is repeated because
+this is a bounded modal-input correction, and no new external or deferred work
+is opened.

@@ -62,12 +62,28 @@ fn modal_filters_keep_recovery_controls_touchable() {
 
 #[test]
 fn open_modal_disables_background_sidebar_controls_but_keeps_recovery_paths() {
-    assert!(!super::sidebar_modal_control_enabled("trade", true));
-    assert!(super::sidebar_modal_control_enabled("recover-self", true));
-    assert!(super::sidebar_modal_control_enabled("reconnect", true));
-    assert!(super::sidebar_modal_control_enabled("route-repair", true));
-    assert!(super::sidebar_modal_control_enabled("route-escort", true));
-    assert!(super::sidebar_modal_control_enabled("trade", false));
+    assert!(!super::sidebar_modal_control_enabled("trade", true, false));
+    assert!(super::sidebar_modal_control_enabled(
+        "recover-self",
+        true,
+        false
+    ));
+    assert!(super::sidebar_modal_control_enabled(
+        "reconnect",
+        true,
+        false
+    ));
+    assert!(!super::sidebar_modal_control_enabled(
+        "route-repair",
+        true,
+        false
+    ));
+    assert!(super::sidebar_modal_control_enabled(
+        "route-repair",
+        true,
+        true
+    ));
+    assert!(super::sidebar_modal_control_enabled("trade", false, false));
 }
 
 #[test]

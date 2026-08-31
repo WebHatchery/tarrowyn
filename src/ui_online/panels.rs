@@ -670,7 +670,11 @@ pub fn draw_button_row(
             *active,
             ctx.connection,
             ctx.player_position_authoritative,
-        ) && sidebar_modal_control_enabled(id, sidebar_modal_open(ctx));
+        ) && sidebar_modal_control_enabled(
+            id,
+            sidebar_modal_open(ctx),
+            ctx.regional_inspection.is_some(),
+        );
         if virtual_button(
             Rect::new(content.x + index as f32 * (width + gap), y, width, height),
             label,
@@ -707,23 +711,23 @@ pub(super) fn sidebar_button_enabled(
     }
 }
 
-pub(crate) fn sidebar_modal_control_enabled(id: &str, modal_open: bool) -> bool {
+pub(crate) fn sidebar_modal_control_enabled(
+    id: &str,
+    modal_open: bool,
+    regional_inspection_open: bool,
+) -> bool {
     !modal_open
         || matches!(
             id,
-            "reconnect"
-                | "offline"
-                | "recover-self"
-                | "recover"
-                | "recover-healer"
-                | "route-repair"
-                | "route-escort"
-                | "route-improve"
+            "reconnect" | "offline" | "recover-self" | "recover" | "recover-healer"
         )
+        || (regional_inspection_open
+            && matches!(id, "route-repair" | "route-escort" | "route-improve"))
 }
 
 pub(super) fn sidebar_modal_open(ctx: &UiContext<'_>) -> bool {
-    ctx.regional_inspection.is_some()
+    ctx.crafting.is_some()
+        || ctx.regional_inspection.is_some()
         || ctx.skill_selection_open
         || ctx.school_selection_open
         || ctx.chronicle_open

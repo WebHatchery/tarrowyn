@@ -26,6 +26,10 @@ pub(super) use panels::{
     frontier_threat_is_reachable,
 };
 
+pub(super) fn gameplay_modal_open(ctx: &UiContext<'_>) -> bool {
+    panels::sidebar_modal_open(ctx)
+}
+
 #[cfg(test)]
 #[path = "ui_online/tests.rs"]
 mod tests;

@@ -21,11 +21,14 @@ fn chronicle_touch_keys_build_and_edit_a_query() {
 
 #[test]
 fn gameplay_keyboard_input_stops_behind_non_textual_modals() {
-    assert!(!keyboard_gameplay_blocked(false, false, false, false));
-    assert!(keyboard_gameplay_blocked(true, false, false, false));
-    assert!(keyboard_gameplay_blocked(false, true, false, false));
-    assert!(keyboard_gameplay_blocked(false, false, true, false));
-    assert!(keyboard_gameplay_blocked(false, false, false, true));
+    assert!(!keyboard_gameplay_blocked(
+        false, false, false, false, false
+    ));
+    assert!(keyboard_gameplay_blocked(true, false, false, false, false));
+    assert!(keyboard_gameplay_blocked(false, true, false, false, false));
+    assert!(keyboard_gameplay_blocked(false, false, true, false, false));
+    assert!(keyboard_gameplay_blocked(false, false, false, true, false));
+    assert!(keyboard_gameplay_blocked(false, false, false, false, true));
 }
 
 #[test]
