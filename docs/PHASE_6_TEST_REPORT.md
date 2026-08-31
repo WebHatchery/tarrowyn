@@ -4396,3 +4396,14 @@ The account-cleanup test source is now 759 physical lines; before adding more
 account-lifecycle coverage, extract cohesive child modules so it remains below
 the repository's 800-line Rust limit. This is a local maintenance trigger, not
 an additional release gate.
+
+The legacy audit-note privacy correction was validated on 2026-08-31. Restore
+normalization now replaces orphaned display names inside retained audit notes as
+well as public chronicle text, while preserving semantic audit targets and the
+240-character note boundary. The focused reset regressions passed 3 tests:
+`restored_state_anonymises_orphaned_audit_targets`,
+`restored_state_anonymises_orphaned_chronicle_names`, and
+`restored_state_anonymises_orphaned_governance_chronicle_names`.
+Server-package formatting, clippy, Rust file-size, and diff checks passed. No
+full workspace suite was repeated for this isolated restore-privacy slice, and
+no new external or deferred work was opened.

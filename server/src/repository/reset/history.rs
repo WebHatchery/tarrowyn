@@ -22,6 +22,7 @@ pub fn anonymize_orphaned_public_history(state: &mut RepositoryState) {
         }
     }
     super::anonymize_orphaned_audits(&mut state.phase6.audits, &account_ids);
+    anonymize_orphaned_audit_names(&mut state.phase6.audits, &orphaned_names);
     for event in &mut state.events {
         let orphaned_ids = super::orphaned_event_accounts(&event.event, &account_ids);
         for account_id in orphaned_ids {
@@ -296,6 +297,18 @@ fn anonymize_orphaned_chronicles(state: &mut RepositoryState, orphaned_names: &[
                 anonymize_chronicle(entry, old_name);
             }
         }
+    }
+}
+
+fn anonymize_orphaned_audit_names(
+    audits: &mut std::collections::VecDeque<tarrowyn_protocol::AuditRecord>,
+    orphaned_names: &[String],
+) {
+    for audit in audits {
+        for old_name in orphaned_names {
+            audit.note = audit.note.replace(old_name, RESET_NAME);
+        }
+        audit.note = audit.note.chars().take(240).collect();
     }
 }
 

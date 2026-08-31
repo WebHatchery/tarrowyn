@@ -111,6 +111,15 @@ fn restored_state_anonymises_orphaned_governance_chronicle_names() {
         service_affected: "north road".to_owned(),
         created_tick: 1,
     });
+    stored.phase6.audits.push_back(AuditRecord {
+        audit_id: "audit-orphan-governance".to_owned(),
+        actor_account_id: "orphan-account".to_owned(),
+        action: "governance.tax".to_owned(),
+        target: "tax-policy".to_owned(),
+        outcome: "accepted".to_owned(),
+        tick: 1,
+        note: "Orphan registrar recorded the public repair.".to_owned(),
+    });
     stored.phase3.chronicle.push_back(ChronicleEntry {
         event_id: "orphan-governance-chronicle".to_owned(),
         kind: "governance".to_owned(),
@@ -127,6 +136,7 @@ fn restored_state_anonymises_orphaned_governance_chronicle_names() {
     assert!(!restored.phase3.chronicle[0]
         .text
         .contains("Orphan registrar"));
+    assert!(!restored.phase6.audits[0].note.contains("Orphan registrar"));
 }
 
 #[test]
