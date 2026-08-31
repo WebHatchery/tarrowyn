@@ -3541,6 +3541,15 @@ Rust file-size scan. No publisher or full workspace gate is repeated because
 this is test-source organization maintenance, and no new external or deferred
 work is opened.
 
+Shared network projection, clock, chronicle-cache, presence, version, and
+snapshot tests now live in `network/tests/projection.rs`, reducing the network
+test root from 611 to 493 lines while preserving the six projection contracts.
+The focused projection filter passes (6 tests), along with client-package
+clippy with warnings denied, package formatting, `git diff --check`, and the
+Rust file-size scan. No publisher or full workspace gate is repeated because
+this is test-source organization maintenance, and no new external or deferred
+work is opened.
+
 The Phase 4 client crafting timing and reload tests now live in
 `network/phase4/tests/crafting.rs`, reducing the phase test root from 618 to
 582 lines while preserving the wide-target movement and authoritative-reload
