@@ -3854,3 +3854,9 @@ is not an HTTPS origin or same-origin path. The guard was exercised against the
 current intentionally blank preview configuration and failed closed before any
 production publish action; preview `publish.ps1` remains available. No full
 workspace suite was repeated for this focused deployment preflight.
+
+On 2026-08-31, direct GET checks of
+`https://webhatchery.au/local_gateway/api/health` and
+`https://webhatchery.au/local_gateway/api/p/tarrowyn/health` both returned
+LiteSpeed HTTP 404. The shared gateway and Tarrowyn proxy route therefore still
+need deployment before the browser online-bootstrap check can pass.

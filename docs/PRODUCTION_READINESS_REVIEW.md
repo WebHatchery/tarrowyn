@@ -127,6 +127,9 @@ published/WebGL builds when configured; the native `TARROWYN_SERVER_URL`
 override and a disposable local release JSON server prove the client can use a
 configured endpoint. The deployment still needs an explicit HTTPS API origin
 or same-origin reverse-proxy route and a successful online bootstrap.
+As of 2026-08-31, direct GET checks of both the shared gateway health route and
+the proposed Tarrowyn proxy route returned LiteSpeed HTTP 404, so the route is
+not merely unverified; it is not currently deployed.
 
 The complete list of target-environment gates, desired human evidence, and
 deliberate product deferrals is maintained in
