@@ -3360,3 +3360,11 @@ scan pass; no focused runtime suite was added because this move changes no
 behavior. No publisher or full workspace gate is repeated because this is
 source organization maintenance, and no new external or deferred work is
 opened.
+
+The HTTP server now keeps bounded request bodies, bearer parsing, URL splitting,
+and form-query decoding in `http/request.rs`, reducing `http.rs` from 691 to
+598 lines while preserving the route and CORS boundary. The focused HTTP suite
+(14 tests), server-package clippy with warnings denied, package formatting,
+`git diff --check`, and the Rust file-size scan pass. No publisher or full
+workspace gate is repeated because this is source organization maintenance,
+and no new external or deferred work is opened.
