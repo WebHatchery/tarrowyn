@@ -3927,6 +3927,8 @@ package formatting checks passed, followed by the full workspace suite (714
 tests), workspace clippy, content validation, Windows/WebGL Preview publishing,
 host-targeted `tarrowyn-server` packaging for `x86_64-pc-windows-msvc`, the
 three-archive manifest, and commit-addressed preservation. The next clean
-candidate will run the expanded client/server/browser archive rollback
-rehearsal before deployment; the target server platform and live deployment
-rollback remain open gates.
+candidate `325a46e` then passed the expanded client/server/browser archive
+rollback rehearsal against the preserved `f68f494` candidate. All archive
+hashes matched at patch, rollback, and patch-restored switches, and the
+server package's embedded `BUILD_INFO.json` matched each manifest identity.
+The target server platform and live deployment rollback remain open gates.
