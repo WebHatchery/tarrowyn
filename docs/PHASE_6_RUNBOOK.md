@@ -53,6 +53,16 @@ The project wrapper also rejects `-Production` when `gateway_url` is blank or
 is neither an HTTPS origin nor a same-origin path. Preview publishing remains
 available with the intentionally blank development fallback.
 
+After the gateway policy and registration heartbeat are live, run the
+read-only two-hop check:
+
+```powershell
+.\scripts\verify_gateway.ps1
+```
+
+It requires gateway health, proxied Tarrowyn health, and protocol version 6;
+it does not create a session or mutate world state.
+
 New production access and refresh credentials are generated from the operating
 system's secure random source and are never derived from the session counter.
 Existing persisted counter-shaped credentials are legacy sessions; let their

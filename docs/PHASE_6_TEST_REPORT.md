@@ -3860,3 +3860,8 @@ On 2026-08-31, direct GET checks of
 `https://webhatchery.au/local_gateway/api/p/tarrowyn/health` both returned
 LiteSpeed HTTP 404. The shared gateway and Tarrowyn proxy route therefore still
 need deployment before the browser online-bootstrap check can pass.
+
+The read-only `scripts/verify_gateway.ps1` was added as the repeatable target
+check for these two hops. Its PowerShell syntax parses successfully; it is
+expected to fail until the gateway health and Tarrowyn proxy routes are
+deployed, and it performs no session creation or world mutation.

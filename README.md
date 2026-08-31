@@ -50,6 +50,13 @@ port. The helper never stores or commits the gateway token.
 an HTTPS origin or same-origin path, so a production browser artifact cannot be
 published while it would still call the native loopback fallback.
 
+After the gateway service and registration are live, verify both hops with the
+read-only check below:
+
+```powershell
+.\scripts\verify_gateway.ps1
+```
+
 The client never performs a blocking HTTP call on the render thread. Guest,
 state, event, movement, chat, farming, trade, frontier, travel, market, event,
 and account requests are retained as toolkit `Pending<T>` values and polled
