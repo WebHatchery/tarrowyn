@@ -261,6 +261,9 @@ public proposal and decision records use the former-resident marker, and
 deleted approver or tax identities are cleared before replay.
 Archived knowledge replay snapshots also remove deleted discoverers from their
 public attribution list before another identity can retry the cached command.
+Retained school-skill responses remove lessons involving a deleted teacher or
+learner, clear their target account, and replace a now-unavailable lesson
+message before replay.
 When a provider leaves while holding an accepted service order, the surviving
 requester's typed material and tool escrow is returned before that order is
 cancelled; an order owned by the departing requester is instead removed with

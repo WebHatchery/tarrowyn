@@ -4240,3 +4240,12 @@ passed 1 test:
 Server-package formatting, clippy, Rust file-size, and diff checks passed. No
 full workspace suite was repeated for this isolated knowledge-deletion
 boundary slice, and no new external or deferred work was opened.
+
+The deleted-account skill replay privacy correction was validated on
+2026-08-31. Retained Phase 4 skill responses now remove lessons involving the
+deleted teacher or learner and clear associated target data; the focused exact
+regression filter passed 1 test:
+`account_deletion_removes_skill_replays_kept_by_another_identity`.
+Server-package formatting, clippy, Rust file-size, and diff checks passed. No
+full workspace suite was repeated for this isolated skill-deletion boundary
+slice, and no new external or deferred work was opened.

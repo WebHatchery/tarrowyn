@@ -31,6 +31,7 @@ mod replay_integrity;
 mod replay_retention;
 mod service_orders;
 mod session_integrity;
+mod skill_replays;
 mod support_chronicle;
 mod support_integrity;
 mod support_inventory;

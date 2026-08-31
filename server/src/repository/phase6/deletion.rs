@@ -104,6 +104,7 @@ fn erase_account(state: &mut RepositoryState, request: &PendingAccountDeletion) 
     anonymize_phase4_replay_service_orders(state, &request.account_id);
     anonymize_phase4_replay_governance(state, &request.account_id);
     anonymize_phase4_replay_knowledge(state, &request.account_id);
+    anonymize_phase4_replay_skill_lessons(state, &request.account_id);
     state.trades.retain(|_, trade| {
         trade.creator_account_id != request.account_id
             && trade.recipient_account_id != request.account_id
@@ -321,6 +322,28 @@ fn anonymize_phase4_replay_knowledge(state: &mut RepositoryState, account_id: &s
         for item in &mut response.knowledge.items {
             item.discovered_by
                 .retain(|discovered_by| discovered_by != account_id);
+        }
+    }
+}
+
+fn anonymize_phase4_replay_skill_lessons(state: &mut RepositoryState, account_id: &str) {
+    for response in state.phase4.request_results.values_mut() {
+        let super::super::phase4::Phase4Response::Skill(response) = response else {
+            continue;
+        };
+        let lesson_was_removed = response.lesson.as_ref().is_some_and(|lesson| {
+            lesson.teacher_account_id == account_id || lesson.learner_account_id == account_id
+        });
+        response.skills.lessons.retain(|lesson| {
+            lesson.teacher_account_id != account_id && lesson.learner_account_id != account_id
+        });
+        if lesson_was_removed {
+            response.lesson = None;
+            response.target_account_id = None;
+            response.message =
+                "This school lesson is no longer available after an account departure.".to_owned();
+        } else if response.target_account_id.as_deref() == Some(account_id) {
+            response.target_account_id = None;
         }
     }
 }
