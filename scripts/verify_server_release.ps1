@@ -149,6 +149,25 @@ try {
         throw "Packaged server executable is missing: $executable"
     }
 
+    $allowedFiles = @(
+        $executable,
+        'BUILD_INFO.json',
+        'docs/SERVER_DEPLOYMENT.md',
+        'server/migrations/0001_initial_world.sql'
+    )
+    $runPrefix = $runDir.TrimEnd('\') + '\'
+    $packageFiles = @(Get-ChildItem -LiteralPath $runDir -Recurse -File | ForEach-Object {
+        $_.FullName.Substring($runPrefix.Length).Replace('\', '/')
+    })
+    $unexpectedFiles = @($packageFiles | Where-Object { $allowedFiles -notcontains $_ })
+    if ($unexpectedFiles.Count -gt 0) {
+        throw "Server package contains an unexpected file: $($unexpectedFiles[0])"
+    }
+    $missingFiles = @($allowedFiles | Where-Object { $packageFiles -notcontains $_ })
+    if ($missingFiles.Count -gt 0) {
+        throw "Server package is missing a required file: $($missingFiles[0])"
+    }
+
     $forbidden = @('tarrowyn-server-state.json', 'tarrowyn-server-state.json.backup', '.env')
     $forbiddenFiles = @(Get-ChildItem -LiteralPath $runDir -Recurse -File | Where-Object { $forbidden -contains $_.Name })
     if ($forbiddenFiles.Count -gt 0) {
@@ -187,7 +206,11 @@ try {
         try {
             $health = Get-JsonEndpoint "$baseUrl/health"
             $ready = Get-JsonEndpoint "$baseUrl/v1/ops/health"
-            if ($health.data.status -eq 'ok' -and
+            if ($health.data.service -eq 'tarrowyn-server' -and
+                $health.data.status -eq 'ok' -and
+                $health.meta.protocol_version -eq '6' -and
+                $ready.data.service -eq 'tarrowyn-server' -and
+                $ready.meta.protocol_version -eq '6' -and
                 $ready.data.ready -eq $true -and
                 $ready.data.integrity_ok -eq $true) {
                 break
