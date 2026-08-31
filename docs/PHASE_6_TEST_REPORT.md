@@ -3368,3 +3368,12 @@ and form-query decoding in `http/request.rs`, reducing `http.rs` from 691 to
 `git diff --check`, and the Rust file-size scan pass. No publisher or full
 workspace gate is repeated because this is source organization maintenance,
 and no new external or deferred work is opened.
+
+Phase 4 now keeps its durable state, default records, response cache, and
+startup construction in `phase4/state.rs`, reducing the main repository module
+from 516 to 402 lines after the earlier governance lifecycle split. The two
+directly affected regressions for legacy animal restoration and governance
+construction pass, along with server-package clippy with warnings denied,
+package formatting, `git diff --check`, and the Rust file-size scan. No
+publisher or full workspace gate is repeated because this is source
+organization maintenance, and no new external or deferred work is opened.

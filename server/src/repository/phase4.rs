@@ -1,14 +1,9 @@
 use super::models::RepositoryState;
 use crate::config::ServerConfig;
-use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use std::time::{SystemTime, UNIX_EPOCH};
 use tarrowyn_protocol::{
-    Capability, ClaimLifecycleResponse, ClaimRecord, FarmAnimal, FarmAnimalKind,
-    GovernanceResponse, GovernanceState, HouseholdRecord, InfrastructureRecord, KnowledgeItem,
-    KnowledgeResponse, LocalCombatResponse, LocalCombatState, MaterialStock, OfficeKind,
-    OfficeRecord, ProfessionProfile, ProfessionResponse, ServiceOrder, ServiceOrderStatus,
-    SkillLesson, SkillResponse, TaxPolicy,
+    Capability, FarmAnimal, FarmAnimalKind, GovernanceState, InfrastructureRecord, OfficeKind,
+    OfficeRecord, ServiceOrder, ServiceOrderStatus, TaxPolicy,
 };
 
 mod claims;
@@ -16,10 +11,12 @@ mod combat;
 mod governance;
 mod households;
 mod knowledge;
+mod state;
 
 pub(super) use super::{validate_optional_identifier, validate_request_id};
 mod professions;
 pub(super) use claims::trim_claim_history;
+pub(super) use state::{fresh, Phase4Response, Phase4State};
 
 const DEFAULT_TREASURY: u32 = 48;
 pub(super) const MAX_PROPOSALS: usize = 64;
@@ -29,122 +26,6 @@ pub(super) const MAX_TAX_COLLECTIONS: usize = 64;
 pub(super) const MAX_INFRASTRUCTURE_RECORDS: usize = 32;
 pub(super) const MAX_SCHOOL_LESSONS: usize = 128;
 pub(super) const MAX_CLAIMS: usize = 128;
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub(super) enum Phase4Response {
-    Governance(GovernanceResponse),
-    Claim(ClaimLifecycleResponse),
-    Profession(ProfessionResponse),
-    Knowledge(KnowledgeResponse),
-    Combat(LocalCombatResponse),
-    Skill(SkillResponse),
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub(super) struct Phase4State {
-    #[serde(default = "default_next_lesson_id")]
-    pub(super) next_lesson_id: u64,
-    #[serde(default = "default_next_tax_id")]
-    pub(super) next_tax_id: u64,
-    pub(super) next_proposal_id: u64,
-    pub(super) next_decision_id: u64,
-    pub(super) next_order_id: u64,
-    pub(super) next_claim_id: u64,
-    pub(super) next_knowledge_id: u64,
-    pub(super) governance: GovernanceState,
-    pub(super) infrastructure: Vec<InfrastructureRecord>,
-    pub(super) claims: Vec<ClaimRecord>,
-    pub(super) available_plots: Vec<tarrowyn_protocol::Position>,
-    pub(super) households: Vec<HouseholdRecord>,
-    pub(super) profiles: HashMap<String, Vec<ProfessionProfile>>,
-    pub(super) materials: HashMap<String, MaterialStock>,
-    pub(super) credentials: HashMap<String, Vec<String>>,
-    pub(super) orders: Vec<ServiceOrder>,
-    pub(super) knowledge: Vec<KnowledgeItem>,
-    pub(super) known_by: HashMap<String, Vec<String>>,
-    pub(super) combat: HashMap<String, LocalCombatState>,
-    #[serde(default)]
-    pub(super) animals: Vec<FarmAnimal>,
-    #[serde(default)]
-    pub(super) lessons: Vec<SkillLesson>,
-    pub(super) request_results: HashMap<String, Phase4Response>,
-}
-
-impl Default for Phase4State {
-    fn default() -> Self {
-        fresh(&ServerConfig::default())
-    }
-}
-
-pub(super) fn fresh(_config: &ServerConfig) -> Phase4State {
-    Phase4State {
-        next_lesson_id: 1,
-        next_tax_id: 1,
-        next_proposal_id: 1,
-        next_decision_id: 1,
-        next_order_id: 1,
-        next_claim_id: 1,
-        next_knowledge_id: 1,
-        governance: GovernanceState {
-            settlement_id: "hearth-settlement".to_owned(),
-            offices: vec![
-                office(
-                    "steward",
-                    OfficeKind::Steward,
-                    "Settlement Steward",
-                    "May approve and complete all bounded public actions.",
-                ),
-                office(
-                    "works-warden",
-                    OfficeKind::WorksWarden,
-                    "Works Warden",
-                    "May propose and complete road, bridge, and public-work repairs.",
-                ),
-                office(
-                    "registrar",
-                    OfficeKind::Registrar,
-                    "Settlement Registrar",
-                    "May maintain the contract board and public records.",
-                ),
-            ],
-            proposals: Vec::new(),
-            decisions: Vec::new(),
-            public_treasury: DEFAULT_TREASURY,
-            administration_quality: 80,
-            service_funding_until_tick: 0,
-            taxation: Some(default_tax_policy()),
-            tax_ledger: Vec::new(),
-            cursor: 0,
-        },
-        infrastructure: crate::content::infrastructure_profiles()
-            .into_iter()
-            .map(infrastructure_from_profile)
-            .collect(),
-        claims: Vec::new(),
-        available_plots: crate::content::farm_plot_positions(),
-        households: vec![crate::content::npc_household("bellweather")],
-        profiles: HashMap::new(),
-        materials: HashMap::new(),
-        credentials: HashMap::new(),
-        orders: Vec::new(),
-        knowledge: vec![KnowledgeItem {
-            knowledge_id: "moonberry-tending".to_owned(),
-            title: "Moonberry trellis method".to_owned(),
-            kind: tarrowyn_protocol::KnowledgeKind::CropTechnique,
-            description: "A low trellis keeps moonberries dry when the road is wet.".to_owned(),
-            effect: "Improves moonberry quality by one when applied to a harvest.".to_owned(),
-            teachable: true,
-            writable: true,
-            discovered_by: Vec::new(),
-            stored_in: "A discoverer's private field notes".to_owned(),
-        }],
-        known_by: HashMap::new(),
-        combat: HashMap::new(),
-        animals: fresh_animals(),
-        lessons: Vec::new(),
-        request_results: HashMap::new(),
-    }
-}
 
 pub(super) fn trim_proposals(governance: &mut GovernanceState) {
     while governance.proposals.len() > MAX_PROPOSALS {
@@ -243,14 +124,6 @@ pub(super) fn restore_animals(mut animals: Vec<FarmAnimal>) -> Vec<FarmAnimal> {
         }
     }
     animals
-}
-
-fn default_next_lesson_id() -> u64 {
-    1
-}
-
-fn default_next_tax_id() -> u64 {
-    1
 }
 
 pub(super) fn default_tax_policy() -> TaxPolicy {
