@@ -65,12 +65,15 @@ pub(super) fn trim_auth_link_tokens(phase6: &mut Phase6State) {
     retention::trim_auth_link_tokens(phase6);
 }
 
-pub(super) fn backfill_auth_refresh_accounts(phase6: &mut Phase6State) {
+pub(super) fn backfill_auth_refresh_accounts(phase6: &mut Phase6State, current_tick: u64) {
     let mut accounts = HashMap::new();
     phase6.auth_refresh_results.retain(|key, response| {
         let Some(session) = phase6.sessions.get(&response.session.account_token) else {
             return false;
         };
+        if session.revoked || session.refresh_expires_at_tick <= current_tick {
+            return false;
+        }
         accounts.insert(key.clone(), session.account_id.clone());
         true
     });
