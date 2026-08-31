@@ -87,9 +87,9 @@ requirements.
   event backlog, economy anomalies, and client connection failures.
 - The local release pipeline now runs formatting, tests, clippy, content and
   asset validation, `publish.ps1`, and archive identity generation; its clean
-  Windows/WebGL candidates can be preserved and rollback-rehearsed. A target
-  server package and deployment artifact remain open until the target OS or
-  container contract is selected.
+  Windows/WebGL/server candidates can be preserved and rollback-rehearsed. The
+  server package defaults to the current host and accepts an explicit installed
+  target, while the production OS or container contract remains open.
 - Maintain operator runbooks for launch, rollback, incident response,
   maintenance windows, restore, moderation, and communication of a service
   interruption.

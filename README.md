@@ -227,9 +227,10 @@ must precede public access.
 default release gate because it requires the ignored `.env.preview` credentials
 and writes one uniquely named guest identity to that configured database.
 
-The major-milestone gate also builds the host-targeted authoritative server
-package, writes `dist/tarrowyn_release_manifest.json`, and emits one `.sha256`
-sidecar per Windows/WebGL/server archive. Preserve a clean candidate for
+The major-milestone gate also builds a target-specific authoritative server
+package (current host by default), writes
+`dist/tarrowyn_release_manifest.json`, and emits one `.sha256` sidecar per
+Windows/WebGL/server archive. Preserve a clean candidate for
 rollback with `scripts/preserve_release_candidate.ps1`; after a later candidate
 exists, rehearse the isolated patch, rollback, and patch-restoration sequence
 with `scripts/rehearse_release_rollback.ps1 -PreservedDir <directory>`. These
