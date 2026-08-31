@@ -3997,3 +3997,13 @@ confirms the Tarrowyn service plus protocol-6 identity from both health
 responses. The current packaged ZIP passed launch/readiness and cleanup, while
 PowerShell parsing and `git diff --check` passed. This was an isolated verifier
 change, so the previously recorded full milestone suite was not repeated.
+
+The packaged-server contract enforcement correction was validated on 2026-08-31
+at commit `45f109d`. The verifier now checks the actual operations-health schema
+(`status`, `ready`, `protocol_version`, and `integrity_ok`) and records a
+separate success flag, so a deadline cannot turn a failed contract assertion
+into a passing result. The current server ZIP reached the complete contract in
+under one second; the wrong web package was rejected, all project PowerShell
+scripts parsed, and no server process or temporary extraction directory
+remained. This was a focused release-verifier correction, so no full workspace
+suite was repeated.
