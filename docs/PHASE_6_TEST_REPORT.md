@@ -3512,6 +3512,16 @@ with server-package clippy with warnings denied, package formatting,
 gate is repeated because this is test-source organization maintenance, and no
 new external or deferred work is opened.
 
+The Phase 5 server restart and replay regressions now live in
+`repository/phase5/tests/replay_restart.rs`, reducing the phase test root from
+544 to 356 lines while preserving accepted and rejected regional mutation
+replay plus authentication replay across repository restarts. The focused
+replay-restart filter passes (3 tests, with 439 unrelated tests filtered),
+along with server-package clippy with warnings denied, package formatting,
+`git diff --check`, and the Rust file-size scan. No publisher or full workspace
+gate is repeated because this is test-source organization maintenance, and no
+new external or deferred work is opened.
+
 The Phase 6 account-link replay regressions now live in
 `repository/phase6/tests/account_cleanup/identity_link.rs`, reducing the
 account-cleanup test root from 588 to 447 lines while preserving Phase 4/skill
