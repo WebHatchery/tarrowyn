@@ -161,6 +161,13 @@ change that crosses subsystem boundaries. For focused maintenance, run only
 the smallest changed-subsystem test and matching package clippy, plus
 formatting, diff, size, and publisher checks when runtime files changed.
 
+Run `.\scripts\verify_concept_prototype.ps1` for the focused GDD role-loop
+fixture. It starts a fresh JSON worker and places a farmer, adventurer, and
+wayfarer in the same world to verify shared farming, exchange, tavern
+coordination, repeatable contract play, and regional travel. This automated
+fixture strengthens the concept evidence but does not replace a human
+multi-session playthrough.
+
 The Phase 5 and Phase 6 design decisions, playthrough, test report, operator
 runbook, and production-readiness review are recorded in `docs/`. The current
 release candidate retains JSON as the deterministic default and keeps the

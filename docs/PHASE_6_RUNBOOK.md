@@ -106,6 +106,15 @@ that intentionally exceeds the 32-open-order warning threshold, pass
 `-AllowedAlertFlags market_backlog`; any alert not explicitly allowed still
 fails the drill.
 
+For the GDD concept-prototype role loop, run
+`.\scripts\verify_concept_prototype.ps1`. The fixture uses a fresh JSON worker
+and verifies three shared role sessions: a farmer plants and harvests, the
+farmer exchanges supplies with an adventurer, a wayfarer coordinates at the
+tavern, the adventurer completes the repeatable contract, and the wayfarer
+completes a regional journey. This remains automated evidence; record a human
+multi-session playthrough separately before treating the social promise as
+proven.
+
 ## Deploy, rollback, and maintenance
 
 1. Check `/v1/ops/health`, the last backup tick, `persistence_error`, and

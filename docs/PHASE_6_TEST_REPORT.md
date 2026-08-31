@@ -3728,3 +3728,10 @@ It reported 16 workers, a queue peak of 92/128, and 0 queue-full events, while
 event, market, travel, tick, backup, metrics, support-view, and restart checks
 passed with no operational alerts. The longer restart measurement is retained
 as local variance, not promoted to a production recovery SLO.
+
+The focused GDD concept-prototype fixture then passed on a fresh JSON worker.
+Its three shared sessions assigned farmer, adventurer, and wayfarer roles and
+verified shared farming, a direct supply exchange, tavern coordination, a
+repeatable contract, and regional travel in one run. This strengthens the
+automated prototype evidence without claiming the human multi-session
+playthrough that remains open in the follow-up register.
