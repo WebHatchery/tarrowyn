@@ -1,8 +1,18 @@
 use super::{
-    actions::apply_chronicle_key, input::keyboard_gameplay_blocked, online_crafting_view,
-    online_gameplay_modal_visible,
+    actions::apply_chronicle_key,
+    input::{keyboard_direction, keyboard_gameplay_blocked},
+    online_crafting_view, online_gameplay_modal_visible,
 };
 use crate::network::{ConnectionState, CraftingView};
+use macroquad::prelude::KeyCode;
+
+#[test]
+fn arrow_keys_map_to_one_step_directions() {
+    assert_eq!(keyboard_direction(KeyCode::Up), Some((0, -1)));
+    assert_eq!(keyboard_direction(KeyCode::Down), Some((0, 1)));
+    assert_eq!(keyboard_direction(KeyCode::Left), Some((-1, 0)));
+    assert_eq!(keyboard_direction(KeyCode::Right), Some((1, 0)));
+}
 
 #[test]
 fn chronicle_touch_keys_build_and_edit_a_query() {

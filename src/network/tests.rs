@@ -12,7 +12,6 @@ mod connection_recovery;
 mod farming;
 mod input_guards;
 mod location_projection;
-mod movement_feedback;
 mod projection;
 mod trades;
 

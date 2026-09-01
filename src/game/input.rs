@@ -26,6 +26,17 @@ impl Game {
         ) {
             return;
         }
+        if self.menu_open || self.art_catalog_open {
+            return;
+        }
+        if let Some(key) = [KeyCode::Up, KeyCode::Down, KeyCode::Left, KeyCode::Right]
+            .into_iter()
+            .find(|key| is_key_pressed(*key))
+        {
+            if let Some((dx, dy)) = keyboard_direction(key) {
+                self.mode.queue_movement(dx, dy);
+            }
+        }
         while let Some(character) = get_char_pressed() {
             if !character.is_control() && self.chat_draft.chars().count() < 160 {
                 self.chat_draft.push(character);
@@ -43,6 +54,16 @@ impl Game {
         if is_key_pressed(KeyCode::Minus) {
             self.events.push(UiAction::Zoom(-0.05));
         }
+    }
+}
+
+pub(super) fn keyboard_direction(key: KeyCode) -> Option<(i32, i32)> {
+    match key {
+        KeyCode::Up => Some((0, -1)),
+        KeyCode::Down => Some((0, 1)),
+        KeyCode::Left => Some((-1, 0)),
+        KeyCode::Right => Some((1, 0)),
+        _ => None,
     }
 }
 
