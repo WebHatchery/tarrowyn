@@ -25,6 +25,7 @@ mod polling;
 mod recovery;
 mod regional;
 mod registry;
+#[cfg(test)]
 mod summary;
 mod sync;
 
@@ -558,10 +559,6 @@ impl Phase4Client {
                 target_account_id: None,
             }),
         )
-    }
-
-    pub(super) fn summary(&self) -> String {
-        summary::render(self)
     }
 
     pub(super) fn mutation_in_flight(&self) -> bool {

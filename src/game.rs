@@ -25,9 +25,7 @@ mod input;
 mod tests;
 
 pub struct Game {
-    data: GameData,
     mode: OnlineClient,
-    assets: AssetManager,
     sprites: SpriteAssets,
     notifications: NotificationManager,
     camera: Camera2D,
@@ -79,10 +77,8 @@ impl Game {
             },
         );
 
-        let game = Self {
-            data,
+        Self {
             mode,
-            assets,
             sprites,
             notifications: NotificationManager::new(),
             camera,
@@ -97,8 +93,7 @@ impl Game {
             menu_open: false,
             art_catalog_open: false,
             art_catalog_page: 0,
-        };
-        game
+        }
     }
 
     pub fn update(&mut self, dt: f32) {
@@ -193,13 +188,11 @@ impl Game {
                 stats
             };
             ui::draw_game_ui(UiContext {
-                data: &self.data,
                 world: &client.projection.world,
                 player_position: client.projection.player_position,
                 day: client.projection.day,
                 calendar_season: client.phase5_season(),
                 clock_minutes: client.projection.clock_minutes(),
-                time_of_day: client.projection.time_of_day(),
                 night: client.projection.is_night(),
                 stats: &stats,
                 own_account_id,
@@ -212,17 +205,11 @@ impl Game {
                 trades: &client.projection.trades,
                 trade_pending: client.trade_pending(),
                 farming_pending: client.farming_pending(),
-                chat: &client.projection.chat,
-                tavern_notices: &client.projection.feed.notices,
-                tavern_rumours: &client.projection.feed.rumours,
-                chat_draft: &self.chat_draft,
                 server_tick: client.projection.server_tick,
                 connection: client.state,
                 status_message: &client.status_message,
                 expedition: client.projection.expedition.as_ref(),
-                expedition_requirements: client.projection.expedition_requirements,
                 identity_name: identity,
-                loaded_assets: self.assets.len(),
                 sprites: &self.sprites,
                 camera_zoom: self.camera.zoom,
                 menu_open: self.menu_open,
@@ -256,9 +243,6 @@ impl Game {
                 chronicle_search_query: client.projection.chronicle_search_query.as_deref(),
                 chronicle_search_next_cursor: client.projection.chronicle_search_next_cursor,
                 chronicle_search_pending: client.chronicle_search_pending(),
-                opportunities: &client.projection.opportunities,
-                phase4_summary: &client.phase4_summary(),
-                phase5_summary: &client.phase5_summary(),
                 account_deletion_armed: client.account_deletion_armed(),
                 account_deletion_available: client.account_deletion_available(),
                 account_link_available: client.account_link_available(),

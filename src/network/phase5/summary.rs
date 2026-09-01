@@ -1,6 +1,9 @@
 use super::Phase5Client;
-use tarrowyn_protocol::{MarketOrderStatus, RegionalEventStage, RouteStatus};
+use tarrowyn_protocol::MarketOrderStatus;
+#[cfg(test)]
+use tarrowyn_protocol::{RegionalEventStage, RouteStatus};
 
+#[cfg(test)]
 pub(super) fn render(client: &Phase5Client) -> String {
     let region = client
         .region

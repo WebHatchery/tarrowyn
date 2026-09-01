@@ -1,12 +1,10 @@
-use crate::data::GameData;
 use crate::network::{ConnectionState, CraftingView, RemotePlayer};
 use crate::sprites::SpriteAssets;
 use crate::state::WorldState;
 use macroquad_toolkit::grid::TilePos;
 use macroquad_toolkit::ui::VirtualUi;
 use tarrowyn_protocol::{
-    ChatMessage, ChronicleEntry, ChronicleSummary, ExpeditionRequirements, LocalCombatState,
-    OpportunitySignal, RegionSnapshot, TavernNotice, TimeOfDay, TradeOffer, WildernessZone,
+    ChronicleEntry, ChronicleSummary, LocalCombatState, RegionSnapshot, TradeOffer, WildernessZone,
 };
 
 #[derive(Debug, Clone, PartialEq)]
@@ -23,13 +21,11 @@ pub enum UiAction {
 }
 
 pub struct UiContext<'a> {
-    pub data: &'a GameData,
     pub world: &'a WorldState,
     pub player_position: TilePos,
     pub day: u32,
     pub calendar_season: Option<&'a str>,
     pub clock_minutes: u32,
-    pub time_of_day: TimeOfDay,
     pub night: bool,
     pub stats: &'a str,
     pub own_account_id: Option<&'a str>,
@@ -39,17 +35,11 @@ pub struct UiContext<'a> {
     pub trades: &'a [TradeOffer],
     pub trade_pending: bool,
     pub farming_pending: bool,
-    pub chat: &'a [ChatMessage],
-    pub tavern_notices: &'a [TavernNotice],
-    pub tavern_rumours: &'a [String],
-    pub chat_draft: &'a str,
     pub server_tick: u64,
     pub connection: ConnectionState,
     pub status_message: &'a str,
     pub expedition: Option<&'a tarrowyn_protocol::Expedition>,
-    pub expedition_requirements: ExpeditionRequirements,
     pub identity_name: Option<&'a str>,
-    pub loaded_assets: usize,
     pub sprites: &'a SpriteAssets,
     pub camera_zoom: f32,
     pub menu_open: bool,
@@ -71,9 +61,6 @@ pub struct UiContext<'a> {
     pub chronicle_search_query: Option<&'a str>,
     pub chronicle_search_next_cursor: Option<u64>,
     pub chronicle_search_pending: bool,
-    pub opportunities: &'a [OpportunitySignal],
-    pub phase4_summary: &'a str,
-    pub phase5_summary: &'a str,
     pub account_deletion_armed: bool,
     pub account_deletion_available: bool,
     pub account_link_available: bool,

@@ -116,12 +116,41 @@ impl GameData {
         let crops = DataRegistry::from_embedded_json(CROPS_JSON, "id")?;
         let texture_manifest = load_embedded_json(TEXTURE_MANIFEST_JSON)?;
 
-        Ok(Self {
+        let data = Self {
             config,
             actions,
             crops,
             texture_manifest,
-        })
+        };
+        data.validate_required_content()?;
+        Ok(data)
+    }
+
+    fn validate_required_content(&self) -> Result<(), String> {
+        for (id, kind) in [
+            ("plant", ActionKind::Plant),
+            ("tend", ActionKind::Tend),
+            ("harvest", ActionKind::Harvest),
+            ("listen", ActionKind::Listen),
+        ] {
+            let Some(action) = self.actions.get(id) else {
+                return Err(format!("actions is missing required entry `{id}`"));
+            };
+            if action.kind != kind {
+                return Err(format!(
+                    "actions entry `{id}` has kind {:?}; expected {:?}",
+                    action.kind, kind
+                ));
+            }
+        }
+
+        for id in ["wheat", "turnip", "moonberry"] {
+            if !self.crops.contains(id) {
+                return Err(format!("crops is missing required entry `{id}`"));
+            }
+        }
+
+        Ok(())
     }
 }
 

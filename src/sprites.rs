@@ -140,7 +140,7 @@ impl SpriteAssets {
         }
     }
 
-    pub fn draw_atlas(self: &Self, atlas: ArtAtlas, rect: Rect) -> bool {
+    pub fn draw_atlas(&self, atlas: ArtAtlas, rect: Rect) -> bool {
         let Some(texture) = self.texture(atlas) else {
             return false;
         };
@@ -155,7 +155,7 @@ impl SpriteAssets {
     }
 
     pub fn draw_atlas_cell(
-        self: &Self,
+        &self,
         atlas: ArtAtlas,
         index: usize,
         center: Vec2,

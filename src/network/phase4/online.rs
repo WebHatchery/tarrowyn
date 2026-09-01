@@ -52,10 +52,6 @@ impl OnlineClient {
         }
     }
 
-    pub(crate) fn phase4_summary(&self) -> String {
-        self.phase4.summary()
-    }
-
     pub(crate) fn knowledge_cycle_label(&self, has_target: bool) -> &'static str {
         self.phase4.knowledge_cycle_label(has_target)
     }

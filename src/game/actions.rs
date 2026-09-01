@@ -330,7 +330,6 @@ impl Game {
             | "delete-account" => client.queue_phase5(id),
             _ => self.notifications.warning(format!("Unknown action: {id}")),
         }
-        return;
     }
 }
 

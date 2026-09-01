@@ -513,6 +513,7 @@ impl Phase5Client {
         self.refreshed_session.take()
     }
 
+    #[cfg(test)]
     pub(super) fn summary(&self) -> String {
         summary::render(self)
     }

@@ -14,10 +14,6 @@ impl OnlineClient {
         }
     }
 
-    pub(crate) fn phase5_summary(&self) -> String {
-        self.phase4.region_summary()
-    }
-
     pub(crate) fn account_summary(&self) -> String {
         self.phase4.account_summary()
     }

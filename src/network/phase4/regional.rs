@@ -51,10 +51,6 @@ impl Phase4Client {
             .queue_report(request_id, target_account_id, message_id)
     }
 
-    pub(crate) fn region_summary(&self) -> String {
-        self.regional.summary()
-    }
-
     pub(crate) fn account_summary(&self) -> String {
         self.regional.account_details()
     }
