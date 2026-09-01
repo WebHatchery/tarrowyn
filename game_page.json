@@ -9,7 +9,7 @@
     "Share a persistent regional world with other players. Farm, trade, travel, take contracts, recover from danger, and leave your mark on a living settlement network."
   ],
   "controls": [
-    { "key": "Tap arrows or map tiles", "desc": "Walk through the shared world" },
+    { "key": "Hold arrows or the map", "desc": "Move freely through the shared world" },
     { "key": "Visible action buttons", "desc": "Farm, fight, trade, travel, govern, learn, and report" },
     { "key": "Quick phrases / Send", "desc": "Share short settlement messages" },
     { "key": "Reconnect / Recover", "desc": "Return safely from a degraded session or interrupted journey" },

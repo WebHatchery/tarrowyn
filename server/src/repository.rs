@@ -311,13 +311,6 @@ impl WorldRepository {
             .get(&key)
             .expect("identity exists")
             .position;
-        let limited = state
-            .sessions
-            .get(token)
-            .and_then(|session| session.last_movement_tick)
-            .is_some_and(|last| {
-                state.tick.saturating_sub(last) < self.config.movement_cooldown_ticks
-            });
         let travel_locked = state.phase5.travel.get(&key).is_some_and(|travel| {
             matches!(
                 travel.status,
@@ -339,8 +332,6 @@ impl WorldRepository {
             != 1
         {
             response.reason = Some("Movement must be one cardinal step.".to_owned());
-        } else if limited {
-            response.reason = Some("Movement is arriving too quickly.".to_owned());
         } else if travel_locked {
             response.reason = Some(
                 "Your journey is on the regional ledger; tap Recover or wait for arrival before walking."

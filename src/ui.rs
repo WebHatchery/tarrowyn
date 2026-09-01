@@ -49,7 +49,7 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
         && !ctx.crafting.is_some()
         && !ui_online::gameplay_modal_open(&ctx)
         && ui_online::movement_enabled(&ctx)
-        && is_mouse_button_released(MouseButton::Left)
+        && is_mouse_button_down(MouseButton::Left)
     {
         if let Some(tile) = MapView::new(&ctx, map_rect).tile_at(mouse) {
             actions.push(UiAction::MoveTo(tile));

@@ -181,7 +181,7 @@ fn world_contains_the_phase_zero_collision_map() {
 }
 
 #[test]
-fn movement_rate_limit_chat_bound_and_session_expiry_are_server_rules() {
+fn held_movement_chat_bound_and_session_expiry_are_server_rules() {
     let repo = repo();
     let session = guest(&repo, "rules");
     let first = repo
@@ -196,7 +196,7 @@ fn movement_rate_limit_chat_bound_and_session_expiry_are_server_rules() {
         .unwrap()
         .data;
     assert!(first.accepted);
-    let too_fast = repo
+    let held_step = repo
         .movement(
             &session.account_token,
             MovementIntent {
@@ -207,7 +207,7 @@ fn movement_rate_limit_chat_bound_and_session_expiry_are_server_rules() {
         )
         .unwrap()
         .data;
-    assert!(!too_fast.accepted);
+    assert!(held_step.accepted);
 
     repo.tick();
     let too_long = repo

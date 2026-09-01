@@ -40,6 +40,8 @@ pub struct Game {
     menu_open: bool,
     art_catalog_open: bool,
     art_catalog_page: usize,
+    movement_repeat_timer: f32,
+    rendered_player_position: Vec2,
 }
 
 impl Game {
@@ -93,14 +95,18 @@ impl Game {
             menu_open: false,
             art_catalog_open: false,
             art_catalog_page: 0,
+            movement_repeat_timer: 0.0,
+            rendered_player_position: vec2(player_position.x as f32, player_position.y as f32),
         }
     }
 
     pub fn update(&mut self, dt: f32) {
         self.notifications.update(dt);
+        self.movement_repeat_timer = (self.movement_repeat_timer - dt.max(0.0)).max(0.0);
         for notice in self.mode.update(dt) {
             self.show_network_notice(notice);
         }
+        self.update_rendered_player_position(dt);
 
         self.read_keyboard_input();
         let actions: Vec<UiAction> = self.events.drain().collect();
@@ -190,6 +196,7 @@ impl Game {
             ui::draw_game_ui(UiContext {
                 world: &client.projection.world,
                 player_position: client.projection.player_position,
+                rendered_player_position: self.rendered_player_position,
                 day: client.projection.day,
                 calendar_season: client.phase5_season(),
                 clock_minutes: client.projection.clock_minutes(),
@@ -315,7 +322,24 @@ impl Game {
     }
 
     fn move_toward(&mut self, target: TilePos) {
+        if self.movement_repeat_timer > 0.0 {
+            return;
+        }
         self.mode.queue_move_toward(target);
+        self.movement_repeat_timer = input::MOVEMENT_REPEAT_SECONDS;
+    }
+
+    fn update_rendered_player_position(&mut self, dt: f32) {
+        let position = self.mode.projection.player_position;
+        let target = vec2(position.x as f32, position.y as f32);
+        let offset = target - self.rendered_player_position;
+        let distance = offset.length();
+        let travel = input::RENDERED_MOVEMENT_SPEED * dt.max(0.0);
+        if distance > input::TELEPORT_SNAP_DISTANCE || distance <= travel {
+            self.rendered_player_position = target;
+        } else if distance > f32::EPSILON {
+            self.rendered_player_position += offset / distance * travel;
+        }
     }
 
     fn show_network_notice(&mut self, notice: NetworkNotice) {

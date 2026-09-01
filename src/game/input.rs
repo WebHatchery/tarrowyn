@@ -1,5 +1,9 @@
 use super::*;
 
+pub(super) const MOVEMENT_REPEAT_SECONDS: f32 = 0.08;
+pub(super) const RENDERED_MOVEMENT_SPEED: f32 = 9.0;
+pub(super) const TELEPORT_SNAP_DISTANCE: f32 = 4.0;
+
 impl Game {
     pub(super) fn read_keyboard_input(&mut self) {
         if self.chronicle_open {
@@ -29,12 +33,18 @@ impl Game {
         if self.menu_open || self.art_catalog_open {
             return;
         }
-        if let Some(key) = [KeyCode::Up, KeyCode::Down, KeyCode::Left, KeyCode::Right]
-            .into_iter()
-            .find(|key| is_key_pressed(*key))
-        {
-            if let Some((dx, dy)) = keyboard_direction(key) {
-                self.mode.queue_movement(dx, dy);
+        if self.movement_repeat_timer <= 0.0 {
+            let mut moved = false;
+            for key in [KeyCode::Up, KeyCode::Down, KeyCode::Left, KeyCode::Right] {
+                if is_key_down(key) {
+                    if let Some((dx, dy)) = keyboard_direction(key) {
+                        self.mode.queue_movement(dx, dy);
+                        moved = true;
+                    }
+                }
+            }
+            if moved {
+                self.movement_repeat_timer = MOVEMENT_REPEAT_SECONDS;
             }
         }
         while let Some(character) = get_char_pressed() {

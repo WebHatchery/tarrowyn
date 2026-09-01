@@ -71,7 +71,13 @@ pub(crate) fn draw_map(ctx: &UiContext<'_>, rect: Rect) {
     draw_fixed_npcs(ctx, &view, rect);
     draw_wilderness_monster(ctx, &view, rect);
     if should_draw_player_marker(ctx.player_position_authoritative) {
-        draw_character(ctx.sprites, &view, ctx.player_position, CREAM, true);
+        draw_character_at_position(
+            ctx.sprites,
+            &view,
+            ctx.rendered_player_position,
+            CREAM,
+            true,
+        );
     }
     for (index, player) in ctx.remote_players.iter().enumerate() {
         if ctx.own_account_id == Some(player.account_id.as_str()) {
@@ -410,8 +416,23 @@ fn draw_character(
     color: Color,
     player: bool,
 ) {
-    let tile_rect = view.tile_rect(tile);
-    let center = tile_rect.center();
+    draw_character_at_position(
+        sprites,
+        view,
+        vec2(tile.x as f32, tile.y as f32),
+        color,
+        player,
+    );
+}
+
+fn draw_character_at_position(
+    sprites: &SpriteAssets,
+    view: &MapView,
+    position: Vec2,
+    color: Color,
+    player: bool,
+) {
+    let center = view.world_position_center(position);
     let scale = (view.tile_size / 34.0).clamp(0.8, 1.8);
     draw_ellipse(
         center.x,
@@ -522,12 +543,8 @@ impl MapView {
         let world = &ctx.world.tiles;
         let base = (rect.w / world.width as f32).min(rect.h / world.height as f32);
         let tile_size = (base * ctx.camera_zoom).max(12.0);
-        let focus = ctx.player_position;
-        let origin = rect.center()
-            - vec2(
-                (focus.x as f32 + 0.5) * tile_size,
-                (focus.y as f32 + 0.5) * tile_size,
-            );
+        let focus = ctx.rendered_player_position;
+        let origin = rect.center() - vec2((focus.x + 0.5) * tile_size, (focus.y + 0.5) * tile_size);
         Self {
             origin,
             tile_size,
@@ -543,6 +560,14 @@ impl MapView {
             (self.tile_size - 0.8).max(6.0),
             (self.tile_size - 0.8).max(6.0),
         )
+    }
+
+    fn world_position_center(self, position: Vec2) -> Vec2 {
+        self.origin
+            + vec2(
+                (position.x + 0.5) * self.tile_size - 0.4,
+                (position.y + 0.5) * self.tile_size - 0.4,
+            )
     }
 
     pub(crate) fn tile_at(self, point: Vec2) -> Option<TilePos> {

@@ -344,7 +344,7 @@ fn client_pending_queues_stop_at_the_backpressure_limit() {
 }
 
 #[test]
-fn movement_and_chat_backpressure_explain_the_retry_path() {
+fn continuous_movement_drops_excess_input_while_chat_explains_backpressure() {
     let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
     client.state = ConnectionState::Online;
     client
@@ -364,7 +364,7 @@ fn movement_and_chat_backpressure_explain_the_retry_path() {
         client.movement_queue.len(),
         super::queue::MAX_PENDING_COMMANDS
     );
-    assert!(client.status_message.contains("movement queue is full"));
+    assert!(!client.status_message.contains("movement queue is full"));
 
     for index in 0..super::queue::MAX_PENDING_COMMANDS {
         client.chat_queue.push_back(ChatRequest {

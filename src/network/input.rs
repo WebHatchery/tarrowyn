@@ -26,14 +26,12 @@ impl OnlineClient {
             return;
         }
         let request_id = self.next_request_id("move");
-        if !queue::try_push(
+        // Held movement produces a stream of samples. Dropping a sample while the
+        // network catches up is expected and avoids adding more stale movement.
+        let _queued = queue::try_push(
             &mut self.movement_queue,
             MovementIntent { request_id, dx, dy },
-        ) {
-            self.status_message =
-                "The movement queue is full; wait for the road to clear before walking again."
-                    .to_owned();
-        }
+        );
     }
 
     pub fn queue_move_toward(&mut self, target: TilePos) {

@@ -122,7 +122,7 @@ pub(crate) fn movement_tooltip_for(
     } else if regional_travel_blocked {
         "Your regional journey is underway; use the visible Travel or Recover control."
     } else {
-        "Tap a walkable tile to take one step toward it."
+        "Press and hold the map to move freely; arrow keys also work."
     }
 }
 
