@@ -83,7 +83,7 @@ fn draw_status_hud(ctx: &UiContext<'_>) {
         Rect::new(1186.0, 12.0, 78.0, 28.0),
         ctx.connection.label(),
         connection_fill(ctx),
-        if ctx.offline { GOLD } else { MINT },
+        MINT,
     );
 }
 
@@ -98,60 +98,31 @@ fn draw_command_deck(ctx: &UiContext<'_>, mouse: Vec2, actions: &mut Vec<UiActio
         Color::new(0.50, 0.82, 0.68, 0.70),
     );
     draw_ui_text_ex(
-        if ctx.offline { "FIELD" } else { "ROAD" },
+        "ROAD",
         18.0,
         dock.y + 14.0,
         TextStyle::new(8.0, MINT).params(),
     );
 
-    let content = Rect::new(18.0, dock.y + 24.0, 1122.0, 28.0);
-    if ctx.offline {
-        draw_offline_quick_row(content, mouse, actions);
-    } else {
-        super::ui_online::draw_button_row(
-            content,
-            content.y,
-            content.h,
-            mouse,
-            &[
-                ("plant", "Plant", true, ButtonTone::Positive),
-                ("tend", "Tend", true, ButtonTone::Positive),
-                ("harvest", "Harvest", true, ButtonTone::Positive),
-                ("animal", "Care", true, ButtonTone::Positive),
-                ("trade", "Trade", true, ButtonTone::Primary),
-                ("say-hello", "Meet", true, ButtonTone::Secondary),
-                ("practice", "Practice", true, ButtonTone::Primary),
-                ("menu-toggle", "All tools", true, ButtonTone::Secondary),
-            ],
-            ctx,
-            actions,
-        );
-    }
-    draw_compact_move_strip(
-        1152.0,
-        dock.y + 24.0,
+    let content = Rect::new(18.0, dock.y + 24.0, 1244.0, 28.0);
+    super::ui_online::draw_button_row(
+        content,
+        content.y,
+        content.h,
         mouse,
+        &[
+            ("plant", "Plant", true, ButtonTone::Positive),
+            ("tend", "Tend", true, ButtonTone::Positive),
+            ("harvest", "Harvest", true, ButtonTone::Positive),
+            ("animal", "Care", true, ButtonTone::Positive),
+            ("trade", "Trade", true, ButtonTone::Primary),
+            ("say-hello", "Meet", true, ButtonTone::Secondary),
+            ("practice", "Practice", true, ButtonTone::Primary),
+            ("menu-toggle", "All tools", true, ButtonTone::Secondary),
+        ],
+        ctx,
         actions,
-        super::ui_online::movement_enabled(ctx),
     );
-}
-
-fn draw_compact_move_strip(
-    x: f32,
-    y: f32,
-    mouse: Vec2,
-    actions: &mut Vec<UiAction>,
-    enabled: bool,
-) {
-    for (index, (label, dx, dy)) in [("<", -1, 0), ("^", 0, -1), ("v", 0, 1), (">", 1, 0)]
-        .iter()
-        .enumerate()
-    {
-        let rect = Rect::new(x + index as f32 * 27.0, y, 24.0, 28.0);
-        if super::virtual_button(rect, label, enabled, ButtonTone::Secondary, mouse) {
-            actions.push(UiAction::Move(*dx, *dy));
-        }
-    }
 }
 
 fn draw_tools_overlay(ctx: &UiContext<'_>, mouse: Vec2, actions: &mut Vec<UiAction>) {
@@ -189,11 +160,7 @@ fn draw_tools_overlay(ctx: &UiContext<'_>, mouse: Vec2, actions: &mut Vec<UiActi
         TextStyle::new(10.0, MINT).params(),
     );
 
-    if ctx.offline {
-        draw_offline_tools(panel, mouse, actions, ctx);
-    } else {
-        tools::draw_online_tools(panel, mouse, actions, ctx);
-    }
+    tools::draw_online_tools(panel, mouse, actions, ctx);
     if super::virtual_button(
         Rect::new(panel.right() - 138.0, panel.bottom() - 44.0, 110.0, 28.0),
         "Back",
@@ -202,107 +169,6 @@ fn draw_tools_overlay(ctx: &UiContext<'_>, mouse: Vec2, actions: &mut Vec<UiActi
         mouse,
     ) {
         actions.push(UiAction::Interact("menu-close".to_owned()));
-    }
-}
-
-fn draw_offline_quick_row(content: Rect, mouse: Vec2, actions: &mut Vec<UiAction>) {
-    let entries = [
-        ("plant", "Plant", ButtonTone::Positive),
-        ("tend", "Tend", ButtonTone::Positive),
-        ("harvest", "Harvest", ButtonTone::Positive),
-        ("listen", "Listen", ButtonTone::Primary),
-        ("save", "Save", ButtonTone::Secondary),
-        ("load", "Load", ButtonTone::Secondary),
-        ("new", "New evening", ButtonTone::Secondary),
-        ("menu-toggle", "All tools", ButtonTone::Secondary),
-    ];
-    let gap = 5.0;
-    let width = (content.w - gap * (entries.len() - 1) as f32) / entries.len() as f32;
-    for (index, (id, label, tone)) in entries.iter().enumerate() {
-        if super::virtual_button(
-            Rect::new(
-                content.x + index as f32 * (width + gap),
-                content.y,
-                width,
-                content.h,
-            ),
-            label,
-            true,
-            *tone,
-            mouse,
-        ) {
-            actions.push(match *id {
-                "save" => UiAction::Save,
-                "load" => UiAction::Load,
-                "new" => UiAction::NewEvening,
-                "menu-toggle" => UiAction::Interact("menu-toggle".to_owned()),
-                _ => UiAction::Interact((*id).to_owned()),
-            });
-        }
-    }
-}
-
-fn draw_offline_tools(panel: Rect, mouse: Vec2, actions: &mut Vec<UiAction>, ctx: &UiContext<'_>) {
-    let content = Rect::new(panel.x + 28.0, panel.y + 102.0, panel.w - 56.0, 34.0);
-    let entries = [
-        ("plant", "Plant", ButtonTone::Positive),
-        ("tend", "Tend", ButtonTone::Positive),
-        ("harvest", "Harvest", ButtonTone::Positive),
-        ("listen", "Listen", ButtonTone::Primary),
-        ("save", "Save", ButtonTone::Secondary),
-        ("load", "Load", ButtonTone::Secondary),
-    ];
-    let gap = 6.0;
-    let width = (content.w - gap * (entries.len() - 1) as f32) / entries.len() as f32;
-    for (index, (id, label, tone)) in entries.iter().enumerate() {
-        if super::virtual_button(
-            Rect::new(
-                content.x + index as f32 * (width + gap),
-                content.y,
-                width,
-                content.h,
-            ),
-            label,
-            *id != "load" || ctx.save_exists,
-            *tone,
-            mouse,
-        ) {
-            actions.push(match *id {
-                "save" => UiAction::Save,
-                "load" => UiAction::Load,
-                _ => UiAction::Interact((*id).to_owned()),
-            });
-        }
-    }
-    draw_ui_text_ex(
-        "LOCAL LEDGER",
-        content.x,
-        content.y + 76.0,
-        TextStyle::new(9.0, GOLD).params(),
-    );
-    draw_ui_text_ex(
-        &ellipsize(ctx.status_message, 110),
-        content.x,
-        content.y + 98.0,
-        TextStyle::new(13.0, CREAM).params(),
-    );
-    if super::virtual_button(
-        Rect::new(content.x, content.y + 128.0, 220.0, 30.0),
-        "New evening",
-        true,
-        ButtonTone::Secondary,
-        mouse,
-    ) {
-        actions.push(UiAction::NewEvening);
-    }
-    if super::virtual_button(
-        Rect::new(content.x + 232.0, content.y + 128.0, 280.0, 30.0),
-        "Reconnect online",
-        true,
-        ButtonTone::Primary,
-        mouse,
-    ) {
-        actions.push(UiAction::UseOnline);
     }
 }
 

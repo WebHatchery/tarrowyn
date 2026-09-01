@@ -363,75 +363,12 @@ pub fn advanced_skill_line(skills: &[tarrowyn_protocol::SkillView]) -> String {
     }
 }
 
-pub fn draw_combat_status(ctx: &UiContext<'_>, content: Rect, top: f32) {
-    let Some(combat) = ctx.combat else {
-        return;
-    };
-    let available_in = combat
-        .action_available_at_tick
-        .saturating_sub(ctx.server_tick);
-    let timing = if available_in == 0 {
-        "Action ready".to_owned()
-    } else {
-        format!(
-            "Action opens in {available_in} beat{}",
-            if available_in == 1 { "" } else { "s" }
-        )
-    };
-    let status = match combat.status {
-        tarrowyn_protocol::LocalCombatStatus::Ready => "ready",
-        tarrowyn_protocol::LocalCombatStatus::Engaged => "engaged",
-        tarrowyn_protocol::LocalCombatStatus::Victorious => "victorious",
-        tarrowyn_protocol::LocalCombatStatus::KnockedOut => "knocked out",
-        tarrowyn_protocol::LocalCombatStatus::Retreated => "retreated",
-    };
-    draw_surface(
-        Rect::new(
-            content.x,
-            top + 101.0,
-            content.w - 128.0,
-            if combat.status == tarrowyn_protocol::LocalCombatStatus::KnockedOut {
-                55.0
-            } else {
-                43.0
-            },
-        ),
-        &SurfaceStyle::new(Color::new(0.075, 0.105, 0.115, 1.0))
-            .with_border(1.0, Color::new(0.62, 0.42, 0.22, 0.7)),
-    );
-    draw_ui_text_ex(
-        &format!(
-            "Encounter {status}  •  enemy {}  •  you {}",
-            combat.enemy_health, combat.player_health
-        ),
-        content.x + 8.0,
-        top + 115.0,
-        TextStyle::new(10.0, GOLD).params(),
-    );
-    draw_ui_text_ex(
-        &combat_weapon_line(combat.weapon, &timing),
-        content.x + 8.0,
-        top + 129.0,
-        TextStyle::new(8.5, CREAM).params(),
-    );
-    if combat.status == tarrowyn_protocol::LocalCombatStatus::KnockedOut {
-        draw_ui_text_ex(
-            &format!(
-                "Risk: {}  •  Healer: {} gold  •  stored property safe",
-                recovery_risk_label(&combat.carried_risk),
-                combat.recovery_cost,
-            ),
-            content.x + 8.0,
-            top + 143.0,
-            TextStyle::new(8.0, CREAM).params(),
-        );
-    }
-}
-
+#[cfg(test)]
 pub fn combat_weapon_line(weapon: tarrowyn_protocol::WeaponKind, timing: &str) -> String {
     format!("Weapon: {}  •  {timing}", weapon.label())
 }
 
+#[cfg(test)]
 pub fn recovery_risk_label(carried_risk: &str) -> &'static str {
     if carried_risk.to_ascii_lowercase().contains("seed") {
         "1 carried seed"
@@ -479,8 +416,6 @@ pub fn draw_button_row(
         ) {
             if *id == "reconnect" {
                 actions.push(UiAction::Reconnect);
-            } else if *id == "offline" {
-                actions.push(UiAction::UseOffline);
             } else if *id == "say-hello" {
                 actions.push(UiAction::QuickChat("Meet at the Hearth".to_owned()));
             } else {
@@ -499,7 +434,6 @@ pub(super) fn sidebar_button_enabled(
     match id {
         "menu-toggle" | "menu-close" => true,
         "reconnect" => reconnect_control_enabled(connection),
-        "offline" => true,
         "account" | "account-details" | "logout" | "report" | "delete-account" => {
             account_control_enabled(active, connection)
         }
@@ -515,7 +449,7 @@ pub(crate) fn sidebar_modal_control_enabled(
     !modal_open
         || matches!(
             id,
-            "reconnect" | "offline" | "recover-self" | "recover" | "recover-healer"
+            "reconnect" | "recover-self" | "recover" | "recover-healer"
         )
         || (regional_inspection_open
             && matches!(id, "route-repair" | "route-escort" | "route-improve"))

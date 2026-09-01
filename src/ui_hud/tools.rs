@@ -403,15 +403,7 @@ pub(super) fn draw_online_tools(
         ),
         (
             "SESSION",
-            vec![
-                ("reconnect", "Reconnect", true, ButtonTone::Primary),
-                (
-                    "offline",
-                    "Offline first evening",
-                    true,
-                    ButtonTone::Secondary,
-                ),
-            ],
+            vec![("reconnect", "Reconnect", true, ButtonTone::Primary)],
         ),
     ];
     for (index, (label, entries)) in rows.iter().enumerate() {

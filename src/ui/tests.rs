@@ -39,16 +39,14 @@ fn online_footer_exposes_pending_trade_terms_and_direction() {
 }
 
 #[test]
-fn map_player_marker_waits_for_authority_unless_using_the_offline_fixture() {
-    assert!(super::ui_map::should_draw_player_marker(true, false));
-    assert!(super::ui_map::should_draw_player_marker(false, true));
-    assert!(!super::ui_map::should_draw_player_marker(false, false));
+fn map_player_marker_waits_for_authoritative_position() {
+    assert!(super::ui_map::should_draw_player_marker(true));
+    assert!(!super::ui_map::should_draw_player_marker(false));
 }
 
 #[test]
 fn modal_filters_keep_recovery_controls_touchable() {
     assert!(is_recovery_action(&UiAction::Reconnect));
-    assert!(is_recovery_action(&UiAction::UseOffline));
     assert!(is_recovery_action(&UiAction::Interact(
         "recover-healer".to_owned()
     )));
@@ -89,20 +87,20 @@ fn open_modal_disables_background_sidebar_controls_but_keeps_recovery_paths() {
 #[test]
 fn regional_inspection_preserves_recovery_controls() {
     assert!(regional_inspection_action_allowed(&UiAction::Reconnect));
-    assert!(regional_inspection_action_allowed(&UiAction::UseOffline));
     assert!(regional_inspection_action_allowed(&UiAction::Interact(
         "route-repair".to_owned()
     )));
     assert!(regional_inspection_action_allowed(
         &UiAction::RegionalEvent("Repair the road".to_owned())
     ));
-    assert!(!regional_inspection_action_allowed(&UiAction::Move(1, 0)));
+    assert!(!regional_inspection_action_allowed(&UiAction::Interact(
+        "trade".to_owned(),
+    )));
 }
 
 #[test]
 fn crafting_overlay_preserves_recovery_controls() {
     assert!(crafting_action_allowed(&UiAction::Reconnect));
-    assert!(crafting_action_allowed(&UiAction::UseOffline));
     assert!(crafting_action_allowed(&UiAction::Interact(
         "crafting-timing".to_owned()
     )));
@@ -120,8 +118,9 @@ fn school_overlay_keeps_subject_selection_and_recovery_touchable() {
         "school-close".to_owned()
     )));
     assert!(school_selection_action_allowed(&UiAction::Reconnect));
-    assert!(school_selection_action_allowed(&UiAction::UseOffline));
-    assert!(!school_selection_action_allowed(&UiAction::Move(1, 0)));
+    assert!(!school_selection_action_allowed(&UiAction::Interact(
+        "trade".to_owned(),
+    )));
     assert!(!school_selection_action_allowed(&UiAction::Interact(
         "trade".to_owned()
     )));

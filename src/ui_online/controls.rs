@@ -85,47 +85,39 @@ pub(crate) fn frontier_combat_control_enabled(reachable: bool, combat_pending: b
 
 pub(crate) fn movement_enabled(ctx: &UiContext<'_>) -> bool {
     !ctx.knocked_out
-        && walking_connection_enabled(ctx.connection, ctx.offline)
-        && walking_projection_enabled(ctx.player_position_authoritative, ctx.offline)
+        && walking_connection_enabled(ctx.connection)
+        && walking_projection_enabled(ctx.player_position_authoritative)
         && !super::panels::regional_travel_blocks_movement(ctx.regional_region)
 }
 
 pub(crate) fn movement_tooltip(ctx: &UiContext<'_>) -> &'static str {
     movement_tooltip_for(
         ctx.connection,
-        ctx.offline,
         ctx.knocked_out,
         ctx.player_position_authoritative,
         super::panels::regional_travel_blocks_movement(ctx.regional_region),
     )
 }
 
-pub(crate) fn walking_connection_enabled(
-    connection: ConnectionState,
-    offline_fixture: bool,
-) -> bool {
-    offline_fixture || connection == ConnectionState::Online
+pub(crate) fn walking_connection_enabled(connection: ConnectionState) -> bool {
+    connection == ConnectionState::Online
 }
 
-pub(crate) fn walking_projection_enabled(
-    player_position_authoritative: bool,
-    offline_fixture: bool,
-) -> bool {
-    offline_fixture || player_position_authoritative
+pub(crate) fn walking_projection_enabled(player_position_authoritative: bool) -> bool {
+    player_position_authoritative
 }
 
 pub(crate) fn movement_tooltip_for(
     connection: ConnectionState,
-    offline_fixture: bool,
     knocked_out: bool,
     player_position_authoritative: bool,
     regional_travel_blocked: bool,
 ) -> &'static str {
-    if !offline_fixture && connection != ConnectionState::Online {
+    if connection != ConnectionState::Online {
         "The shared road is reconnecting; tap Reconnect when it is available."
     } else if knocked_out {
         "Choose a recovery prompt before walking."
-    } else if !offline_fixture && !player_position_authoritative {
+    } else if !player_position_authoritative {
         "Your position is still loading; wait for the shared road snapshot."
     } else if regional_travel_blocked {
         "Your regional journey is underway; use the visible Travel or Recover control."
@@ -134,6 +126,7 @@ pub(crate) fn movement_tooltip_for(
     }
 }
 
+#[cfg(test)]
 pub(crate) fn visible_companion_count(
     players: &[RemotePlayer],
     own_account_id: Option<&str>,
@@ -147,6 +140,7 @@ pub(crate) fn visible_companion_count(
         .count()
 }
 
+#[cfg(test)]
 pub(crate) fn visible_player_count(players: &[RemotePlayer], server_tick: u64) -> usize {
     players
         .iter()

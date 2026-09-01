@@ -11,16 +11,9 @@ use tarrowyn_protocol::{
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum UiAction {
-    NewEvening,
-    UseOnline,
-    UseOffline,
     Reconnect,
     Practice(String),
     Teach(String),
-    Save,
-    Load,
-    DeleteSave,
-    Move(i32, i32),
     MoveTo(TilePos),
     Interact(String),
     RegionalEvent(String),
@@ -56,9 +49,6 @@ pub struct UiContext<'a> {
     pub expedition: Option<&'a tarrowyn_protocol::Expedition>,
     pub expedition_requirements: ExpeditionRequirements,
     pub identity_name: Option<&'a str>,
-    pub offline: bool,
-    pub save_exists: bool,
-    pub save_slots: &'a [String],
     pub loaded_assets: usize,
     pub sprites: &'a SpriteAssets,
     pub camera_zoom: f32,

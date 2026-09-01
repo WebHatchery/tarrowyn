@@ -10,12 +10,11 @@ pub(super) use controls::{
     identity_control_enabled, knowledge_control_enabled, market_control_enabled, movement_enabled,
     movement_tooltip, order_control_enabled, recovery_control_enabled, report_control_enabled,
     route_control_enabled, skill_control_enabled, trade_control_enabled, travel_control_enabled,
-    visible_companion_count, visible_player_count,
 };
 #[cfg(test)]
 pub(crate) use controls::{
-    movement_tooltip_for, pioneer_status_line, walking_connection_enabled,
-    walking_projection_enabled,
+    movement_tooltip_for, pioneer_status_line, visible_companion_count, visible_player_count,
+    walking_connection_enabled, walking_projection_enabled,
 };
 #[cfg(test)]
 pub(crate) use panels::sidebar_modal_control_enabled;

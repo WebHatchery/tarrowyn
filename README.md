@@ -5,8 +5,8 @@ server owns guest and linked production identity, characters, the accelerated
 clock, farming plots, inventory, trades, presence, tavern history, frontier
 threats, contracts, households, claims, settlements, travel, routes, markets,
 regional events, backups, audits, and support repair. The Macroquad client
-renders accepted projections and keeps the Phase 0 first-evening fixture as an
-explicitly labelled offline mode.
+renders accepted projections from the shared road; there is no local game mode
+or client-side save system.
 
 ## Run the shared road locally
 
@@ -70,16 +70,9 @@ state; visible `Reconnect`, `Recover`, `Account`, `Logout`, and `Report`
 controls remain available. Inventory, gold, crop growth, travel arrival, and
 completed trades only change after an accepted server projection.
 
-For the local first-evening fixture, use a separate terminal or the visible
-`Use offline fixture` action:
-
-```powershell
-$env:TARROWYN_OFFLINE = "1"
-cargo run -p years_of_tarrowyn
-```
-
-Offline save slots are development fixtures only. They are not used as an
-online source of truth.
+The client always starts on the shared road. Progress, inventory, movement,
+and account state are authoritative server projections; there are no local
+save or load slots.
 
 ## Verify three clients
 

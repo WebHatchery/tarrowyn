@@ -129,7 +129,7 @@ fn draw_map_tooltip(ctx: &UiContext<'_>, map_rect: Rect, mouse: Vec2) {
 }
 
 fn is_recovery_action(action: &UiAction) -> bool {
-    matches!(action, UiAction::Reconnect | UiAction::UseOffline)
+    matches!(action, UiAction::Reconnect)
         || matches!(
             action,
             UiAction::Interact(id)
@@ -207,6 +207,7 @@ fn format_clock(minutes: u32) -> String {
     format!("{:02}:{:02}", (minutes / 60) % 24, minutes % 60)
 }
 
+#[cfg(test)]
 fn online_footer_detail(stats: &str, visible_players: usize, trade: Option<&str>) -> String {
     let mut lines = stats.lines();
     let overview = lines.next().unwrap_or("Player ledger loading");
@@ -219,6 +220,7 @@ fn online_footer_detail(stats: &str, visible_players: usize, trade: Option<&str>
     detail
 }
 
+#[cfg(test)]
 fn pending_trade_detail(
     trades: &[tarrowyn_protocol::TradeOffer],
     own_account_id: Option<&str>,
@@ -252,6 +254,7 @@ fn pending_trade_detail(
     ))
 }
 
+#[cfg(test)]
 fn trade_bundle_detail(bundle: tarrowyn_protocol::TradeBundle) -> String {
     let mut goods = Vec::new();
     for (amount, name) in [

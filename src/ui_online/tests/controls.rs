@@ -19,62 +19,45 @@ fn reconnect_control_waits_for_a_failed_connection() {
 #[test]
 fn walking_controls_wait_for_an_authoritative_connection() {
     assert!(super::super::walking_connection_enabled(
-        ConnectionState::Online,
-        false
-    ));
-    assert!(super::super::walking_connection_enabled(
-        ConnectionState::Offline,
-        true
+        ConnectionState::Online
     ));
     assert!(!super::super::walking_connection_enabled(
-        ConnectionState::Connecting,
-        false
+        ConnectionState::Offline
     ));
     assert!(!super::super::walking_connection_enabled(
-        ConnectionState::Degraded,
-        false
+        ConnectionState::Connecting
+    ));
+    assert!(!super::super::walking_connection_enabled(
+        ConnectionState::Degraded
     ));
 }
 
 #[test]
 fn walking_controls_wait_for_an_authoritative_player_projection() {
-    assert!(super::super::walking_projection_enabled(true, false));
-    assert!(super::super::walking_projection_enabled(false, true));
-    assert!(!super::super::walking_projection_enabled(false, false));
+    assert!(super::super::walking_projection_enabled(true));
+    assert!(!super::super::walking_projection_enabled(false));
 }
 
 #[test]
 fn movement_tooltip_names_the_next_visible_recovery_path() {
-    assert!(super::super::movement_tooltip_for(
-        ConnectionState::Degraded,
-        false,
-        false,
-        false,
-        false
-    )
-    .contains("Reconnect"));
-    assert!(super::super::movement_tooltip_for(
-        ConnectionState::Online,
-        false,
-        false,
-        false,
-        false
-    )
-    .contains("position is still loading"));
-    assert!(super::super::movement_tooltip_for(
-        ConnectionState::Online,
-        false,
-        false,
-        false,
-        false
-    )
-    .contains("shared road snapshot"));
     assert!(
-        super::super::movement_tooltip_for(ConnectionState::Online, false, true, true, false)
+        super::super::movement_tooltip_for(ConnectionState::Degraded, false, false, false)
+            .contains("Reconnect")
+    );
+    assert!(
+        super::super::movement_tooltip_for(ConnectionState::Online, false, false, false)
+            .contains("position is still loading")
+    );
+    assert!(
+        super::super::movement_tooltip_for(ConnectionState::Online, false, false, false)
+            .contains("shared road snapshot")
+    );
+    assert!(
+        super::super::movement_tooltip_for(ConnectionState::Online, true, true, false)
             .contains("recovery prompt")
     );
     assert!(
-        super::super::movement_tooltip_for(ConnectionState::Online, false, false, true, true)
+        super::super::movement_tooltip_for(ConnectionState::Online, false, true, true)
             .contains("Travel or Recover")
     );
 }

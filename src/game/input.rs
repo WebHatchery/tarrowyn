@@ -26,20 +26,6 @@ impl Game {
         ) {
             return;
         }
-        let movement = if is_key_pressed(KeyCode::W) || is_key_pressed(KeyCode::Up) {
-            Some((0, -1))
-        } else if is_key_pressed(KeyCode::D) || is_key_pressed(KeyCode::Right) {
-            Some((1, 0))
-        } else if is_key_pressed(KeyCode::S) || is_key_pressed(KeyCode::Down) {
-            Some((0, 1))
-        } else if is_key_pressed(KeyCode::A) || is_key_pressed(KeyCode::Left) {
-            Some((-1, 0))
-        } else {
-            None
-        };
-        if let Some((dx, dy)) = movement {
-            self.events.push(UiAction::Move(dx, dy));
-        }
         while let Some(character) = get_char_pressed() {
             if !character.is_control() && self.chat_draft.chars().count() < 160 {
                 self.chat_draft.push(character);
@@ -50,12 +36,6 @@ impl Game {
         }
         if is_key_pressed(KeyCode::Enter) && !self.chat_draft.trim().is_empty() {
             self.events.push(UiAction::SendChat);
-        }
-        if is_key_pressed(KeyCode::F5) {
-            self.events.push(UiAction::Save);
-        }
-        if is_key_pressed(KeyCode::F9) {
-            self.events.push(UiAction::Load);
         }
         if is_key_pressed(KeyCode::Equal) {
             self.events.push(UiAction::Zoom(0.05));
@@ -68,15 +48,13 @@ impl Game {
 
 impl Game {
     fn crafting_open(&self) -> bool {
-        match &self.mode {
-            super::ClientMode::Online(client) => super::online_crafting_view(
-                client.state,
-                client.projection.authoritative_player_position().is_some(),
-                client.crafting_view(),
-            )
-            .is_some(),
-            super::ClientMode::Offline(_) => false,
-        }
+        let client = &self.mode;
+        super::online_crafting_view(
+            client.state,
+            client.projection.authoritative_player_position().is_some(),
+            client.crafting_view(),
+        )
+        .is_some()
     }
 }
 
