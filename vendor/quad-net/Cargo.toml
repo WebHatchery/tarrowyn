@@ -1,0 +1,16 @@
+[package]
+name = "quad-net"
+version = "0.1.2"
+edition = "2018"
+license = "MIT/Apache-2.0"
+description = "Miniquad friendly network abstractions"
+
+[features]
+default = []
+ssl = []
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+ureq = "2.0"
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+sapp-jsutils = "0.1"

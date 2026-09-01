@@ -7,6 +7,9 @@ edition = "2021"
 members = ["protocol", "server"]
 resolver = "2"
 
+[patch.crates-io]
+quad-net = { path = "vendor/quad-net" }
+
 [dependencies]
 macroquad = "0.4"
 macroquad-toolkit = { path = "../macroquad-toolkit", features = ["net"] }

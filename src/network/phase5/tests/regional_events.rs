@@ -227,6 +227,55 @@ fn regional_event_initial_cache_stays_bounded() {
 }
 
 #[test]
+fn stale_regional_history_resumes_from_the_authoritative_world_cursor() {
+    let mut client = Phase5Client::new();
+    client.region = Some(tarrowyn_protocol::RegionSnapshot {
+        region_id: "hearthlands".to_owned(),
+        season: "thaw".to_owned(),
+        calendar_day: 1,
+        locations: Vec::new(),
+        routes: Vec::new(),
+        visible_settlements: Vec::new(),
+        player_location_id: "hearth".to_owned(),
+        travel: None,
+        interest_radius: 12,
+        cursor: 18,
+    });
+    client.events = Some(RegionalEventsResponse {
+        events: vec![regional_event(
+            "stale-event",
+            tarrowyn_protocol::RegionalEventStage::Aftermath,
+            18,
+        )],
+        cursor: 18,
+    });
+    client.projection_cursor = 18;
+    client.pending_region = Some(Pending::failed(
+        "the current regional map is still in flight",
+    ));
+    client.pending_events = Some(Pending::failed(
+        "HTTP API error in 'GET /v1/events/region?since=18' [cursor_stale]: history changed",
+    ));
+    let data = crate::data::GameData::load().expect("embedded game data should load");
+    let mut projection = WorldProjection::new(&data.config);
+    projection.cursor = 42;
+    let mut notices = Vec::new();
+
+    client.poll_events(0.0, &mut projection, &mut notices);
+
+    assert_eq!(client.events.as_ref().map(|events| events.cursor), Some(42));
+    assert!(client
+        .events
+        .as_ref()
+        .is_some_and(|events| events.events.is_empty()));
+    assert!(client.pending_region.is_some());
+    assert!(client.region.is_some());
+    assert_eq!(client.projection_cursor, 42);
+    assert_eq!(client.refresh_timer, 0.0);
+    assert_eq!(notices.len(), 1);
+}
+
+#[test]
 fn regional_cursor_reset_discards_stale_events_and_restarts_refresh() {
     let mut client = Phase5Client::new();
     client.account = Some(account_response(false));

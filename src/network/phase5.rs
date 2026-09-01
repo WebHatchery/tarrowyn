@@ -195,6 +195,7 @@ impl Phase5Client {
         if !context.online {
             return;
         }
+        self.projection_cursor = self.projection_cursor.max(projection.cursor);
         self.refresh_timer = (self.refresh_timer - dt.max(0.0)).max(0.0);
         self.auth_refresh_timer = (self.auth_refresh_timer - dt.max(0.0)).max(0.0);
         self.refresh_retry_timer = (self.refresh_retry_timer - dt.max(0.0)).max(0.0);
@@ -581,7 +582,7 @@ impl Phase5Client {
                 }
             }
             Err(error) if super::cursor::is_cursor_recovery_error(&error) => {
-                self.reset_event_cursor();
+                self.reset_regional_event_cursor(projection.cursor);
                 notices.push(NetworkNotice::Warning(
                     "The regional history window changed; reloading its latest events.".to_owned(),
                 ));

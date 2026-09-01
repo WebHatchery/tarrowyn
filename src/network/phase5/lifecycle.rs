@@ -85,4 +85,13 @@ impl Phase5Client {
         self.command_retry_count = 0;
         self.projection_cursor = 0;
     }
+
+    pub(super) fn reset_regional_event_cursor(&mut self, current_cursor: u64) {
+        self.events = Some(tarrowyn_protocol::RegionalEventsResponse {
+            events: Vec::new(),
+            cursor: current_cursor,
+        });
+        self.projection_cursor = self.projection_cursor.max(current_cursor);
+        self.refresh_timer = 0.0;
+    }
 }

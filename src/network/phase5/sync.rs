@@ -39,7 +39,7 @@ impl Phase5Client {
                     .events
                     .as_ref()
                     .map(|events| events.cursor)
-                    .unwrap_or(0);
+                    .unwrap_or(self.projection_cursor);
                 self.pending_events = Some(api.get(&format!("/v1/events/region?since={cursor}")));
             }
             if self.pending_law.is_none() {
