@@ -16,6 +16,29 @@ pub(super) fn apply_chronicle_key(query: &mut String, key: &str) {
 
 impl Game {
     pub(super) fn interact(&mut self, id: &str) {
+        if id == "art-catalog" {
+            self.menu_open = false;
+            self.art_catalog_open = true;
+            self.art_catalog_page = 0;
+            self.regional_inspection_open = false;
+            self.skill_selection_open = false;
+            self.school_selection_open = false;
+            self.chronicle_open = false;
+            self.account_open = false;
+            return;
+        }
+        if id == "art-catalog-close" {
+            self.art_catalog_open = false;
+            return;
+        }
+        if id == "art-page-prev" {
+            self.art_catalog_page = self.art_catalog_page.saturating_sub(1);
+            return;
+        }
+        if id == "art-page-next" {
+            self.art_catalog_page = (self.art_catalog_page + 1) % 3;
+            return;
+        }
         if id == "menu-toggle" {
             self.menu_open = !self.menu_open;
             return;

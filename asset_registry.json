@@ -3,6 +3,15 @@
   "assets": [
     "assets/images/sprites/hearth_npcs.png",
     "assets/images/sprites/brambleback.png",
-    "assets/images/sprites/hearth_items.png"
+    "assets/images/sprites/hearth_items.png",
+    "assets/images/sprites/terrain_atlas.png",
+    "assets/images/sprites/farming_atlas.png",
+    "assets/images/sprites/player_atlas.png",
+    "assets/images/sprites/settlements_atlas.png",
+    "assets/images/sprites/combat_atlas.png",
+    "assets/images/sprites/items_economy_atlas.png",
+    "assets/images/sprites/ui_icons_atlas.png",
+    "assets/images/sprites/weather_events_atlas.png",
+    "assets/images/sprites/npc_portraits.png"
   ]
 }

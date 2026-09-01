@@ -5,6 +5,8 @@ use macroquad::prelude::*;
 use macroquad_toolkit::grid::TilePos;
 use macroquad_toolkit::prelude::*;
 
+#[path = "ui_art.rs"]
+mod ui_art;
 #[path = "ui_crafting.rs"]
 mod ui_crafting;
 #[path = "ui_hud.rs"]
@@ -42,7 +44,8 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
     let mut actions = Vec::new();
     let map_rect = draw_world_stage(&ctx);
 
-    if !ui_hud::blocks_map_click(mouse, ctx.menu_open)
+    if !ctx.art_catalog_open
+        && !ui_hud::blocks_map_click(mouse, ctx.menu_open)
         && !ctx.crafting.is_some()
         && !ui_online::gameplay_modal_open(&ctx)
         && ui_online::movement_enabled(&ctx)
@@ -53,10 +56,13 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
         }
     }
 
-    if !ctx.menu_open {
+    if !ctx.menu_open && !ctx.art_catalog_open {
         draw_map_tooltip(&ctx, map_rect, mouse);
     }
     ui_hud::draw(&ctx, mouse, &mut actions);
+    if ctx.art_catalog_open {
+        ui_art::draw(&ctx, mouse, &mut actions);
+    }
     ui_online::draw_account(&ctx, mouse, &mut actions);
     ui_online::draw_regional_inspection(&ctx, mouse, &mut actions);
     ui_online::draw_skill_selection(&ctx, mouse, &mut actions);
@@ -93,6 +99,18 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
         actions.retain(|action| {
             matches!(action, UiAction::Interact(id) if id == "account-close")
                 || is_recovery_action(action)
+        });
+    }
+    if ctx.art_catalog_open {
+        actions.retain(|action| {
+            matches!(
+                action,
+                UiAction::Interact(id)
+                    if matches!(
+                        id.as_str(),
+                        "art-catalog-close" | "art-page-prev" | "art-page-next"
+                    )
+            )
         });
     }
 

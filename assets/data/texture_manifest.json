@@ -13,5 +13,50 @@
     "key": "hearth_items",
     "path": "assets/images/sprites/hearth_items.png",
     "filter": "nearest"
+  },
+  {
+    "key": "terrain_atlas",
+    "path": "assets/images/sprites/terrain_atlas.png",
+    "filter": "nearest"
+  },
+  {
+    "key": "farming_atlas",
+    "path": "assets/images/sprites/farming_atlas.png",
+    "filter": "nearest"
+  },
+  {
+    "key": "player_atlas",
+    "path": "assets/images/sprites/player_atlas.png",
+    "filter": "nearest"
+  },
+  {
+    "key": "settlements_atlas",
+    "path": "assets/images/sprites/settlements_atlas.png",
+    "filter": "nearest"
+  },
+  {
+    "key": "combat_atlas",
+    "path": "assets/images/sprites/combat_atlas.png",
+    "filter": "nearest"
+  },
+  {
+    "key": "items_economy_atlas",
+    "path": "assets/images/sprites/items_economy_atlas.png",
+    "filter": "nearest"
+  },
+  {
+    "key": "ui_icons_atlas",
+    "path": "assets/images/sprites/ui_icons_atlas.png",
+    "filter": "nearest"
+  },
+  {
+    "key": "weather_events_atlas",
+    "path": "assets/images/sprites/weather_events_atlas.png",
+    "filter": "nearest"
+  },
+  {
+    "key": "npc_portraits",
+    "path": "assets/images/sprites/npc_portraits.png",
+    "filter": "nearest"
   }
 ]

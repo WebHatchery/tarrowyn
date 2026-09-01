@@ -432,7 +432,7 @@ pub(super) fn sidebar_button_enabled(
     player_position_authoritative: bool,
 ) -> bool {
     match id {
-        "menu-toggle" | "menu-close" => true,
+        "menu-toggle" | "menu-close" | "art-catalog" => true,
         "reconnect" => reconnect_control_enabled(connection),
         "account" | "account-details" | "logout" | "report" | "delete-account" => {
             account_control_enabled(active, connection)

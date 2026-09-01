@@ -40,6 +40,8 @@ pub struct Game {
     chronicle_query: String,
     account_open: bool,
     menu_open: bool,
+    art_catalog_open: bool,
+    art_catalog_page: usize,
 }
 
 impl Game {
@@ -93,6 +95,8 @@ impl Game {
             chronicle_query: String::new(),
             account_open: false,
             menu_open: false,
+            art_catalog_open: false,
+            art_catalog_page: 0,
         };
         game
     }
@@ -108,6 +112,17 @@ impl Game {
         for action in actions {
             self.apply_action(action);
         }
+    }
+
+    pub fn begin_capture_scene(&mut self, scene: &str) {
+        self.art_catalog_open = scene.starts_with("art-");
+        self.art_catalog_page = if scene.contains("combat") {
+            1
+        } else if scene.contains("portraits") {
+            2
+        } else {
+            0
+        };
     }
 
     pub fn draw(&mut self) {
@@ -211,6 +226,8 @@ impl Game {
                 sprites: &self.sprites,
                 camera_zoom: self.camera.zoom,
                 menu_open: self.menu_open,
+                art_catalog_open: self.art_catalog_open,
+                art_catalog_page: self.art_catalog_page,
                 wilderness: client.projection.wilderness.as_ref(),
                 regional_region: client.phase5_region(),
                 regional_inspection: regional_inspection.as_deref(),
@@ -302,13 +319,15 @@ impl Game {
         for action in actions {
             self.events.push(action);
         }
-        self.notifications
-            .draw_with_config(&NotificationRenderConfig {
-                anchor: NotificationAnchor::BottomRight,
-                margin: 22.0,
-                width: 360.0,
-                ..Default::default()
-            });
+        if !self.art_catalog_open {
+            self.notifications
+                .draw_with_config(&NotificationRenderConfig {
+                    anchor: NotificationAnchor::BottomRight,
+                    margin: 22.0,
+                    width: 360.0,
+                    ..Default::default()
+                });
+        }
     }
 
     fn move_toward(&mut self, target: TilePos) {

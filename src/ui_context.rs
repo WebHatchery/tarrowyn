@@ -53,6 +53,8 @@ pub struct UiContext<'a> {
     pub sprites: &'a SpriteAssets,
     pub camera_zoom: f32,
     pub menu_open: bool,
+    pub art_catalog_open: bool,
+    pub art_catalog_page: usize,
     pub wilderness: Option<&'a WildernessZone>,
     pub regional_region: Option<&'a RegionSnapshot>,
     pub regional_inspection: Option<&'a str>,

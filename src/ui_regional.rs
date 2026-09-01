@@ -1,9 +1,10 @@
 use super::*;
+use crate::sprites::SpriteAssets;
 use tarrowyn_protocol::{LocationKind, RouteStatus};
 
 pub(super) fn draw_map_overlay(ctx: &UiContext<'_>, view: &MapView, rect: Rect) {
     let Some(region) = ctx.regional_region else {
-        draw_local_landmarks(view);
+        draw_local_landmarks(ctx.sprites, view);
         draw_expedition_outpost(ctx, view, rect);
         return;
     };
@@ -48,7 +49,13 @@ pub(super) fn draw_map_overlay(ctx: &UiContext<'_>, view: &MapView, rect: Rect) 
         }
         let tile = TilePos::new(location.position.x, location.position.y);
         if rect.overlaps(&view.tile_rect(tile)) {
-            draw_landmark(view, tile, &location.name, location_color(location.kind));
+            draw_landmark(
+                ctx.sprites,
+                view,
+                tile,
+                &location.name,
+                location_color(location.kind),
+            );
         }
     }
     draw_expedition_outpost(ctx, view, rect);
@@ -66,6 +73,7 @@ fn draw_expedition_outpost(ctx: &UiContext<'_>, view: &MapView, rect: Rect) {
     let tile = TilePos::new(expedition.outpost_position.x, expedition.outpost_position.y);
     if rect.overlaps(&view.tile_rect(tile)) {
         draw_landmark(
+            ctx.sprites,
             view,
             tile,
             &expedition.outpost_name,
@@ -74,20 +82,23 @@ fn draw_expedition_outpost(ctx: &UiContext<'_>, view: &MapView, rect: Rect) {
     }
 }
 
-fn draw_local_landmarks(view: &MapView) {
+fn draw_local_landmarks(sprites: &SpriteAssets, view: &MapView) {
     draw_landmark(
+        sprites,
         view,
         TilePos::new(8, 5),
         "THE HEARTH",
         Color::new(0.76, 0.46, 0.25, 1.0),
     );
     draw_landmark(
+        sprites,
         view,
         TilePos::new(4, 4),
         "SHARED FIELDS",
         Color::new(0.78, 0.69, 0.30, 1.0),
     );
     draw_landmark(
+        sprites,
         view,
         TilePos::new(14, 3),
         "WHISPERWOOD",

@@ -1,5 +1,5 @@
 use super::*;
-use crate::sprites::{ItemSprite, NpcSprite};
+use crate::sprites::{ArtAtlas, ItemSprite, NpcSprite, SpriteAssets};
 use crate::state::{tile_color, CropState, TileKind};
 
 pub(crate) fn draw_map(ctx: &UiContext<'_>, rect: Rect) {
@@ -17,8 +17,22 @@ pub(crate) fn draw_map(ctx: &UiContext<'_>, rect: Rect) {
         if !rect.overlaps(&tile_rect) {
             continue;
         }
-        let fill = tile_color(*tile);
-        draw_rectangle(tile_rect.x, tile_rect.y, tile_rect.w, tile_rect.h, fill);
+        if !ctx.sprites.draw_terrain_tile(
+            *tile,
+            pos,
+            tile_rect.center(),
+            vec2(tile_rect.w + 1.0, tile_rect.h + 1.0),
+            ctx.night,
+        ) {
+            draw_rectangle(
+                tile_rect.x,
+                tile_rect.y,
+                tile_rect.w,
+                tile_rect.h,
+                tile_color(*tile),
+            );
+            draw_tile_detail(*tile, tile_rect);
+        }
         draw_rectangle_lines(
             tile_rect.x,
             tile_rect.y,
@@ -27,7 +41,6 @@ pub(crate) fn draw_map(ctx: &UiContext<'_>, rect: Rect) {
             0.45,
             Color::new(0.04, 0.09, 0.09, 0.20),
         );
-        draw_tile_detail(*tile, tile_rect);
         if let Some(Some(crop)) = ctx.world.crops.get(pos) {
             draw_crop(ctx, crop, tile_rect);
         }
@@ -36,7 +49,7 @@ pub(crate) fn draw_map(ctx: &UiContext<'_>, rect: Rect) {
         let tile = TilePos::new(animal.position.x, animal.position.y);
         let tile_rect = view.tile_rect(tile);
         if rect.overlaps(&tile_rect) {
-            draw_farm_animal(animal, tile_rect);
+            draw_farm_animal(ctx.sprites, animal, tile_rect);
         }
     }
 
@@ -55,13 +68,13 @@ pub(crate) fn draw_map(ctx: &UiContext<'_>, rect: Rect) {
     draw_fixed_npcs(ctx, &view, rect);
     draw_wilderness_monster(ctx, &view, rect);
     if should_draw_player_marker(ctx.player_position_authoritative) {
-        draw_character(&view, ctx.player_position, CREAM, true);
+        draw_character(ctx.sprites, &view, ctx.player_position, CREAM, true);
     }
     for (index, player) in ctx.remote_players.iter().enumerate() {
         if ctx.own_account_id == Some(player.account_id.as_str()) {
             continue;
         }
-        draw_remote_character(&view, player, index, ctx.server_tick);
+        draw_remote_character(ctx.sprites, &view, player, index, ctx.server_tick);
     }
 }
 
@@ -128,6 +141,14 @@ fn draw_tile_detail(tile: TileKind, rect: Rect) {
 }
 
 fn draw_crop(ctx: &UiContext<'_>, crop: &CropState, rect: Rect) {
+    if ctx.sprites.draw_crop(
+        crop.kind,
+        crop.stage,
+        rect.center() + vec2(0.0, 1.0),
+        vec2(rect.w * 0.88, rect.h * 0.88),
+    ) {
+        return;
+    }
     let sprite = match crop.kind {
         crate::state::CropKind::Wheat => ItemSprite::Wheat,
         crate::state::CropKind::Turnip => ItemSprite::Turnips,
@@ -206,7 +227,7 @@ fn draw_fixed_npcs(ctx: &UiContext<'_>, view: &MapView, rect: Rect) {
             .sprites
             .draw_npc(sprite, center, vec2(tile_rect.w * 0.92, tile_rect.h * 1.35))
         {
-            draw_character(view, tile, MINT, false);
+            draw_character(ctx.sprites, view, tile, MINT, false);
         }
         draw_text_centered_in_box(
             label,
@@ -259,9 +280,37 @@ fn draw_wilderness_monster(ctx: &UiContext<'_>, view: &MapView, rect: Rect) {
     );
 }
 
-fn draw_farm_animal(animal: &tarrowyn_protocol::FarmAnimal, rect: Rect) {
+fn draw_farm_animal(sprites: &SpriteAssets, animal: &tarrowyn_protocol::FarmAnimal, rect: Rect) {
     let center = rect.center();
     let condition_ratio = animal.condition as f32 / animal.max_condition.max(1) as f32;
+    let goat_pose = if condition_ratio >= 0.8 {
+        34
+    } else if condition_ratio >= 0.4 {
+        33
+    } else {
+        32
+    };
+    if sprites.draw_atlas_cell(
+        ArtAtlas::Farming,
+        goat_pose,
+        center,
+        vec2(rect.w * 0.86, rect.h * 0.86),
+        WHITE,
+    ) {
+        draw_text_centered_in_box(
+            &format!(
+                "{} {}/{}",
+                animal.name, animal.condition, animal.max_condition
+            ),
+            center.x - 58.0,
+            center.y - 31.0,
+            116.0,
+            13.0,
+            9.0,
+            Color::new(0.92, 0.86, 0.68, 1.0),
+        );
+        return;
+    }
     let body = Color::new(0.74, 0.62 + condition_ratio * 0.12, 0.42, 1.0);
     draw_ellipse(center.x, center.y + 5.0, 10.0, 6.0, 0.0, body);
     draw_circle_at(center + vec2(5.0, -2.0), 5.0, body);
@@ -300,20 +349,46 @@ fn draw_farm_animal(animal: &tarrowyn_protocol::FarmAnimal, rect: Rect) {
     );
 }
 
-pub(crate) fn draw_landmark(view: &MapView, tile: TilePos, label: &str, color: Color) {
+pub(crate) fn draw_landmark(
+    sprites: &SpriteAssets,
+    view: &MapView,
+    tile: TilePos,
+    label: &str,
+    color: Color,
+) {
     let center = view.tile_rect(tile).center();
     draw_circle_at(
         center + vec2(0.0, -3.0),
         8.0,
         Color::new(0.08, 0.10, 0.11, 0.8),
     );
-    draw_rectangle(center.x - 7.0, center.y - 10.0, 14.0, 13.0, color);
-    draw_triangle(
-        center + vec2(-10.0, -9.0),
-        center + vec2(10.0, -9.0),
-        center + vec2(0.0, -19.0),
-        Color::new(0.30, 0.18, 0.16, 1.0),
-    );
+    let label_lower = label.to_ascii_lowercase();
+    let settlement_cell = if label_lower.contains("hearth") {
+        0
+    } else if label_lower.contains("whisperwood") || label_lower.contains("watch") {
+        8
+    } else if label_lower.contains("saltmere") || label_lower.contains("ferry") {
+        16
+    } else if label_lower.contains("field") {
+        6
+    } else {
+        24
+    };
+    if !sprites.draw_atlas_cell(
+        ArtAtlas::Settlements,
+        settlement_cell,
+        center + vec2(0.0, -4.0),
+        vec2(view.tile_size * 1.45, view.tile_size * 1.45),
+        WHITE,
+    ) {
+        draw_rectangle(center.x - 7.0, center.y - 10.0, 14.0, 13.0, color);
+        draw_triangle(
+            center + vec2(-10.0, -9.0),
+            center + vec2(10.0, -9.0),
+            center + vec2(0.0, -19.0),
+            Color::new(0.30, 0.18, 0.16, 1.0),
+        );
+    }
     draw_text_centered_in_box(
         label,
         center.x - 58.0,
@@ -325,7 +400,13 @@ pub(crate) fn draw_landmark(view: &MapView, tile: TilePos, label: &str, color: C
     );
 }
 
-fn draw_character(view: &MapView, tile: TilePos, color: Color, player: bool) {
+fn draw_character(
+    sprites: &SpriteAssets,
+    view: &MapView,
+    tile: TilePos,
+    color: Color,
+    player: bool,
+) {
     let tile_rect = view.tile_rect(tile);
     let center = tile_rect.center();
     let scale = (view.tile_size / 34.0).clamp(0.8, 1.8);
@@ -337,6 +418,26 @@ fn draw_character(view: &MapView, tile: TilePos, color: Color, player: bool) {
         0.0,
         Color::new(0.02, 0.04, 0.04, 0.45),
     );
+    let player_cell = if player { 48 } else { 0 };
+    if sprites.draw_atlas_cell(
+        ArtAtlas::Player,
+        player_cell,
+        center + vec2(0.0, -2.0 * scale),
+        vec2(26.0 * scale, 34.0 * scale),
+        if player { WHITE } else { color },
+    ) {
+        if player {
+            draw_rectangle_lines(
+                center.x - 12.0 * scale,
+                center.y - 19.0 * scale,
+                24.0 * scale,
+                38.0 * scale,
+                2.0,
+                GOLD,
+            );
+        }
+        return;
+    }
     draw_circle_at(center + vec2(0.0, -4.0 * scale), 7.0 * scale, color);
     draw_rectangle(
         center.x - 7.0 * scale,
@@ -366,7 +467,13 @@ fn draw_character(view: &MapView, tile: TilePos, color: Color, player: bool) {
     }
 }
 
-fn draw_remote_character(view: &MapView, player: &RemotePlayer, index: usize, server_tick: u64) {
+fn draw_remote_character(
+    sprites: &SpriteAssets,
+    view: &MapView,
+    player: &RemotePlayer,
+    index: usize,
+    server_tick: u64,
+) {
     let stale = player.stale(server_tick);
     let palette = [
         Color::new(0.56, 0.72, 0.91, 1.0),
@@ -378,7 +485,7 @@ fn draw_remote_character(view: &MapView, player: &RemotePlayer, index: usize, se
     } else {
         palette[index % palette.len()]
     };
-    draw_character(view, player.position, color, false);
+    draw_character(sprites, view, player.position, color, false);
     let center = view.tile_rect(player.position).center();
     draw_text_centered_in_box(
         &format!(

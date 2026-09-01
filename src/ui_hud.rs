@@ -118,6 +118,7 @@ fn draw_command_deck(ctx: &UiContext<'_>, mouse: Vec2, actions: &mut Vec<UiActio
             ("trade", "Trade", true, ButtonTone::Primary),
             ("say-hello", "Meet", true, ButtonTone::Secondary),
             ("practice", "Practice", true, ButtonTone::Primary),
+            ("art-catalog", "Art atlas", true, ButtonTone::Secondary),
             ("menu-toggle", "All tools", true, ButtonTone::Secondary),
         ],
         ctx,

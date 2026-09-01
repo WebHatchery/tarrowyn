@@ -36,6 +36,7 @@ async fn main() {
 
     if let Some(configs) = capture::CaptureConfig::all_from_env("TARROWYN") {
         for config in configs {
+            game.begin_capture_scene(&config.scene);
             capture::run_capture_once(&config, |dt| {
                 game.update(dt);
                 game.draw();
