@@ -6,19 +6,18 @@ use macroquad_toolkit::ui::draw_ui_text_ex;
 #[path = "ui_hud/tools.rs"]
 mod tools;
 
-pub(crate) const HUD_HEIGHT: f32 = 132.0;
+pub(crate) const HUD_HEIGHT: f32 = 64.0;
 
-const HUD_FILL: Color = Color::new(0.025, 0.040, 0.043, 0.90);
-const HUD_CARD: Color = Color::new(0.035, 0.058, 0.060, 0.88);
+const HUD_FILL: Color = Color::new(0.025, 0.040, 0.043, 0.78);
+const HUD_CARD: Color = Color::new(0.035, 0.058, 0.060, 0.76);
 
 pub(super) fn blocks_map_click(point: Vec2, menu_open: bool) -> bool {
     menu_open
         || point.y >= LOGICAL_HEIGHT - HUD_HEIGHT
-        || Rect::new(18.0, 16.0, 282.0, 56.0).contains_point(point)
-        || Rect::new(316.0, 16.0, 408.0, 56.0).contains_point(point)
-        || Rect::new(764.0, 16.0, 330.0, 56.0).contains_point(point)
-        || Rect::new(1106.0, 16.0, 148.0, 56.0).contains_point(point)
-        || Rect::new(1158.0, 82.0, 104.0, 104.0).contains_point(point)
+        || point.y <= 52.0
+        || Rect::new(16.0, 12.0, 238.0, 28.0).contains_point(point)
+        || Rect::new(270.0, 12.0, 420.0, 28.0).contains_point(point)
+        || Rect::new(980.0, 12.0, 284.0, 28.0).contains_point(point)
 }
 
 pub(super) fn draw(ctx: &UiContext<'_>, mouse: Vec2, actions: &mut Vec<UiAction>) {
@@ -32,27 +31,17 @@ pub(super) fn draw(ctx: &UiContext<'_>, mouse: Vec2, actions: &mut Vec<UiAction>
 
 fn draw_status_hud(ctx: &UiContext<'_>) {
     draw_hud_card(
-        Rect::new(18.0, 16.0, 282.0, 56.0),
-        Color::new(0.88, 0.64, 0.25, 0.90),
+        Rect::new(16.0, 12.0, 238.0, 28.0),
+        Color::new(0.88, 0.64, 0.25, 0.78),
     );
     draw_ui_text_ex(
-        ctx.identity_name.unwrap_or("Guest traveller"),
-        34.0,
-        39.0,
-        TextStyle::new(17.0, CREAM).params(),
-    );
-    draw_ui_text_ex(
-        if ctx.offline {
-            "LOCAL EVENING  /  THE HEARTH"
-        } else {
-            "SHARED ROAD  /  THE HEARTH"
-        },
-        34.0,
-        58.0,
-        TextStyle::new(10.0, dark::TEXT_DIM).params(),
+        &ellipsize(ctx.identity_name.unwrap_or("Guest traveller"), 26),
+        28.0,
+        30.0,
+        TextStyle::new(11.0, CREAM).params(),
     );
 
-    draw_hud_card(Rect::new(316.0, 16.0, 408.0, 56.0), MINT);
+    draw_hud_card(Rect::new(270.0, 12.0, 420.0, 28.0), MINT);
     let overview = ctx
         .stats
         .lines()
@@ -61,37 +50,13 @@ fn draw_status_hud(ctx: &UiContext<'_>) {
     let inventory = ctx
         .stats
         .lines()
-        .find(|line| line.starts_with("Wheat") || line.starts_with("Gold"))
+        .find(|line| line.starts_with("Wheat") || line.starts_with("Turnips"))
         .unwrap_or("Inventory is arriving…");
-    draw_ui_text_ex(overview, 334.0, 40.0, TextStyle::new(12.0, CREAM).params());
     draw_ui_text_ex(
-        inventory,
-        334.0,
-        59.0,
-        TextStyle::new(10.0, dark::TEXT_DIM).params(),
-    );
-
-    draw_hud_card(Rect::new(740.0, 16.0, 354.0, 56.0), GOLD);
-    let feed = ctx
-        .tavern_notices
-        .iter()
-        .rev()
-        .find(|notice| !notice.text.trim().is_empty())
-        .map(|notice| notice.text.as_str())
-        .or_else(|| ctx.tavern_rumours.first().map(String::as_str))
-        .or_else(|| ctx.chat.last().map(|message| message.text.as_str()))
-        .unwrap_or(ctx.status_message);
-    draw_ui_text_ex(
-        "LATEST FROM THE HEARTH",
-        758.0,
-        35.0,
-        TextStyle::new(9.0, GOLD).params(),
-    );
-    draw_ui_text_ex(
-        &ellipsize(feed, 48),
-        758.0,
-        56.0,
-        TextStyle::new(10.0, CREAM).params(),
+        &ellipsize(&format!("{overview}  •  {inventory}"), 65),
+        284.0,
+        30.0,
+        TextStyle::new(9.0, CREAM).params(),
     );
 
     let day_label = ctx
@@ -99,13 +64,13 @@ fn draw_status_hud(ctx: &UiContext<'_>) {
         .map(|season| format!("DAY {}  /  {}", ctx.day, season.to_ascii_uppercase()))
         .unwrap_or_else(|| format!("DAY {}", ctx.day));
     draw_hud_badge(
-        Rect::new(1106.0, 16.0, 148.0, 26.0),
+        Rect::new(980.0, 12.0, 120.0, 28.0),
         &day_label,
         Color::new(0.12, 0.20, 0.20, 0.94),
         CREAM,
     );
     draw_hud_badge(
-        Rect::new(1106.0, 46.0, 72.0, 26.0),
+        Rect::new(1108.0, 12.0, 70.0, 28.0),
         &format_clock(ctx.clock_minutes),
         if ctx.night {
             Color::new(0.13, 0.15, 0.28, 0.96)
@@ -115,7 +80,7 @@ fn draw_status_hud(ctx: &UiContext<'_>) {
         CREAM,
     );
     draw_hud_badge(
-        Rect::new(1184.0, 46.0, 70.0, 26.0),
+        Rect::new(1186.0, 12.0, 78.0, 28.0),
         ctx.connection.label(),
         connection_fill(ctx),
         if ctx.offline { GOLD } else { MINT },
@@ -133,29 +98,13 @@ fn draw_command_deck(ctx: &UiContext<'_>, mouse: Vec2, actions: &mut Vec<UiActio
         Color::new(0.50, 0.82, 0.68, 0.70),
     );
     draw_ui_text_ex(
-        if ctx.offline {
-            "FIELD COMMAND"
-        } else {
-            "ROAD COMMAND"
-        },
-        24.0,
-        dock.y + 23.0,
-        TextStyle::new(11.0, MINT).params(),
-    );
-    draw_ui_text_ex(
-        &ellipsize(command_hint(ctx), 112),
-        155.0,
-        dock.y + 23.0,
-        TextStyle::new(10.0, dark::TEXT_DIM).params(),
-    );
-    draw_ui_text_ex(
-        "MORE TOOLS",
-        1144.0,
-        dock.y + 23.0,
-        TextStyle::new(9.0, GOLD).params(),
+        if ctx.offline { "FIELD" } else { "ROAD" },
+        18.0,
+        dock.y + 14.0,
+        TextStyle::new(8.0, MINT).params(),
     );
 
-    let content = Rect::new(24.0, dock.y + 40.0, LOGICAL_WIDTH - 48.0, 34.0);
+    let content = Rect::new(18.0, dock.y + 24.0, 1122.0, 28.0);
     if ctx.offline {
         draw_offline_quick_row(content, mouse, actions);
     } else {
@@ -178,65 +127,31 @@ fn draw_command_deck(ctx: &UiContext<'_>, mouse: Vec2, actions: &mut Vec<UiActio
             actions,
         );
     }
-
-    let detail = deck_detail(ctx);
-    draw_ui_text_ex(
-        &ellipsize(&detail, 156),
-        24.0,
-        dock.y + 102.0,
-        TextStyle::new(10.0, CREAM).params(),
-    );
-    draw_ui_text_ex(
-        if ctx.offline {
-            "Tap a walkable tile to travel  •  progress is stored locally"
-        } else {
-            "Tap a walkable tile to travel  •  the shared road resolves each step"
-        },
-        24.0,
-        dock.y + 123.0,
-        TextStyle::new(10.0, dark::TEXT_DIM).params(),
-    );
-    draw_ui_text_ex(
-        if ctx.offline {
-            "LOCAL"
-        } else {
-            "LIVE PRESENCE"
-        },
-        1154.0,
-        dock.y + 102.0,
-        TextStyle::new(9.0, if ctx.offline { GOLD } else { MINT }).params(),
-    );
-    draw_ui_text_ex(
-        &format!(
-            "{} companion{} nearby",
-            super::ui_online::visible_companion_count(
-                ctx.remote_players,
-                ctx.own_account_id,
-                ctx.server_tick
-            ),
-            if super::ui_online::visible_companion_count(
-                ctx.remote_players,
-                ctx.own_account_id,
-                ctx.server_tick,
-            ) == 1
-            {
-                ""
-            } else {
-                "s"
-            }
-        ),
-        1154.0,
-        dock.y + 123.0,
-        TextStyle::new(10.0, dark::TEXT_DIM).params(),
-    );
-
-    draw_move_pad(
-        1158.0,
-        82.0,
+    draw_compact_move_strip(
+        1152.0,
+        dock.y + 24.0,
         mouse,
         actions,
-        !ctx.menu_open && super::ui_online::movement_enabled(ctx),
+        super::ui_online::movement_enabled(ctx),
     );
+}
+
+fn draw_compact_move_strip(
+    x: f32,
+    y: f32,
+    mouse: Vec2,
+    actions: &mut Vec<UiAction>,
+    enabled: bool,
+) {
+    for (index, (label, dx, dy)) in [("<", -1, 0), ("^", 0, -1), ("v", 0, 1), (">", 1, 0)]
+        .iter()
+        .enumerate()
+    {
+        let rect = Rect::new(x + index as f32 * 27.0, y, 24.0, 28.0);
+        if super::virtual_button(rect, label, enabled, ButtonTone::Secondary, mouse) {
+            actions.push(UiAction::Move(*dx, *dy));
+        }
+    }
 }
 
 fn draw_tools_overlay(ctx: &UiContext<'_>, mouse: Vec2, actions: &mut Vec<UiAction>) {
@@ -422,52 +337,6 @@ fn connection_fill(ctx: &UiContext<'_>) -> Color {
         ConnectionState::Degraded => Color::new(0.28, 0.20, 0.10, 0.96),
         ConnectionState::Offline => Color::new(0.25, 0.15, 0.13, 0.96),
     }
-}
-
-fn command_hint(ctx: &UiContext<'_>) -> &'static str {
-    if ctx.offline {
-        "Choose a field action, or tap a tile to walk the first evening."
-    } else if ctx.knocked_out {
-        "Recovery is ready in the tools deck."
-    } else {
-        "Shape the road with the people and places around you."
-    }
-}
-
-fn deck_detail(ctx: &UiContext<'_>) -> String {
-    if ctx.offline {
-        return format!(
-            "{} ready plot{}  •  {} saved slot{}",
-            ctx.world
-                .crops
-                .data()
-                .iter()
-                .filter_map(|crop| *crop)
-                .filter(crate::state::CropState::mature)
-                .count(),
-            if ctx
-                .world
-                .crops
-                .data()
-                .iter()
-                .filter_map(|crop| *crop)
-                .filter(crate::state::CropState::mature)
-                .count()
-                == 1
-            {
-                ""
-            } else {
-                "s"
-            },
-            ctx.save_slots.len(),
-            if ctx.save_slots.len() == 1 { "" } else { "s" },
-        );
-    }
-    super::online_footer_detail(
-        ctx.stats,
-        super::ui_online::visible_player_count(ctx.remote_players, ctx.server_tick),
-        super::pending_trade_detail(ctx.trades, ctx.own_account_id).as_deref(),
-    )
 }
 
 fn ellipsize(value: &str, max_chars: usize) -> String {

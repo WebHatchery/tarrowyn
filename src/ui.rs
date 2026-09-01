@@ -109,8 +109,8 @@ fn draw_world_stage(ctx: &UiContext<'_>) -> Rect {
         0.0,
         0.0,
         LOGICAL_WIDTH,
-        96.0,
-        Color::new(0.015, 0.025, 0.028, 0.24),
+        58.0,
+        Color::new(0.015, 0.025, 0.028, 0.16),
     );
     rect
 }
@@ -159,39 +159,6 @@ fn regional_inspection_action_allowed(action: &UiAction) -> bool {
 fn crafting_action_allowed(action: &UiAction) -> bool {
     matches!(action, UiAction::Interact(id) if id == "crafting-timing")
         || is_recovery_action(action)
-}
-
-fn draw_move_pad(x: f32, y: f32, mouse: Vec2, actions: &mut Vec<UiAction>, enabled: bool) {
-    let size = 28.0;
-    let gap = 4.0;
-    let button = |x: f32, y: f32, label: &str, action: &mut Vec<UiAction>| {
-        if virtual_button(
-            Rect::new(x, y, size, size),
-            label,
-            enabled,
-            ButtonTone::Secondary,
-            mouse,
-        ) {
-            match label {
-                "^" => action.push(UiAction::Move(0, -1)),
-                "<" => action.push(UiAction::Move(-1, 0)),
-                ">" => action.push(UiAction::Move(1, 0)),
-                "v" => action.push(UiAction::Move(0, 1)),
-                _ => {}
-            }
-        }
-    };
-    button(x + size + gap, y, "^", actions);
-    button(x, y + size + gap, "<", actions);
-    virtual_button(
-        Rect::new(x + size + gap, y + size + gap, size, size),
-        "•",
-        false,
-        ButtonTone::Secondary,
-        mouse,
-    );
-    button(x + (size + gap) * 2.0, y + size + gap, ">", actions);
-    button(x + size + gap, y + (size + gap) * 2.0, "v", actions);
 }
 
 fn virtual_button(rect: Rect, label: &str, enabled: bool, tone: ButtonTone, mouse: Vec2) -> bool {
