@@ -15,8 +15,8 @@
     "filter": "nearest"
   },
   {
-    "key": "terrain_atlas",
-    "path": "assets/images/sprites/terrain_atlas.png",
+    "key": "terrain_atlas_v2",
+    "path": "assets/images/sprites/terrain_atlas_v2.png",
     "filter": "nearest"
   },
   {

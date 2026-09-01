@@ -10,7 +10,7 @@ const NPC_ATLAS_KEY: &str = "hearth_npcs";
 const MONSTER_KEY: &str = "brambleback";
 const ITEM_ATLAS_KEY: &str = "hearth_items";
 
-const TERRAIN_KEY: &str = "terrain_atlas";
+const TERRAIN_KEY: &str = "terrain_atlas_v2";
 const FARMING_KEY: &str = "farming_atlas";
 const PLAYER_KEY: &str = "player_atlas";
 const SETTLEMENTS_KEY: &str = "settlements_atlas";
@@ -173,13 +173,14 @@ impl SpriteAssets {
         if row >= rows {
             return false;
         }
+        let edge_bleed = if atlas == ArtAtlas::Terrain { 2.5 } else { 0.0 };
         draw_region(
             texture,
             Rect::new(
-                column * cell_width,
-                row * cell_height,
-                cell_width,
-                cell_height,
+                column * cell_width + edge_bleed,
+                row * cell_height + edge_bleed,
+                cell_width - edge_bleed * 2.0,
+                cell_height - edge_bleed * 2.0,
             ),
             center,
             size,

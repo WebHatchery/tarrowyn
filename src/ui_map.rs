@@ -17,30 +17,33 @@ pub(crate) fn draw_map(ctx: &UiContext<'_>, rect: Rect) {
         if !rect.overlaps(&tile_rect) {
             continue;
         }
-        if !ctx.sprites.draw_terrain_tile(
+        draw_rectangle(
+            tile_rect.x,
+            tile_rect.y,
+            tile_rect.w,
+            tile_rect.h,
+            tile_color(*tile),
+        );
+        let textured = ctx.sprites.draw_terrain_tile(
             *tile,
             pos,
             tile_rect.center(),
             vec2(tile_rect.w + 1.0, tile_rect.h + 1.0),
             ctx.night,
-        ) {
-            draw_rectangle(
+        );
+        if !textured {
+            draw_tile_detail(*tile, tile_rect);
+        }
+        if !textured {
+            draw_rectangle_lines(
                 tile_rect.x,
                 tile_rect.y,
                 tile_rect.w,
                 tile_rect.h,
-                tile_color(*tile),
+                0.45,
+                Color::new(0.04, 0.09, 0.09, 0.20),
             );
-            draw_tile_detail(*tile, tile_rect);
         }
-        draw_rectangle_lines(
-            tile_rect.x,
-            tile_rect.y,
-            tile_rect.w,
-            tile_rect.h,
-            0.45,
-            Color::new(0.04, 0.09, 0.09, 0.20),
-        );
         if let Some(Some(crop)) = ctx.world.crops.get(pos) {
             draw_crop(ctx, crop, tile_rect);
         }
