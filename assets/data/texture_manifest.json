@@ -1,1 +1,17 @@
-[]
+[
+  {
+    "key": "hearth_npcs",
+    "path": "assets/images/sprites/hearth_npcs.png",
+    "filter": "nearest"
+  },
+  {
+    "key": "brambleback",
+    "path": "assets/images/sprites/brambleback.png",
+    "filter": "nearest"
+  },
+  {
+    "key": "hearth_items",
+    "path": "assets/images/sprites/hearth_items.png",
+    "filter": "nearest"
+  }
+]

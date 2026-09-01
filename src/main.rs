@@ -7,6 +7,7 @@ use macroquad_toolkit::prelude::dark;
 mod data;
 mod game;
 mod network;
+mod sprites;
 mod state;
 mod ui;
 

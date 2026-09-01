@@ -1,5 +1,6 @@
 use crate::data::GameData;
 use crate::network::{ConnectionState, CraftingView, RemotePlayer};
+use crate::sprites::SpriteAssets;
 use crate::state::WorldState;
 use macroquad_toolkit::grid::TilePos;
 use macroquad_toolkit::ui::VirtualUi;
@@ -59,7 +60,9 @@ pub struct UiContext<'a> {
     pub save_exists: bool,
     pub save_slots: &'a [String],
     pub loaded_assets: usize,
+    pub sprites: &'a SpriteAssets,
     pub camera_zoom: f32,
+    pub menu_open: bool,
     pub wilderness: Option<&'a WildernessZone>,
     pub regional_region: Option<&'a RegionSnapshot>,
     pub regional_inspection: Option<&'a str>,

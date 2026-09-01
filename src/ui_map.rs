@@ -1,4 +1,6 @@
 use super::*;
+use crate::sprites::{ItemSprite, NpcSprite};
+use crate::state::{tile_color, CropState, TileKind};
 
 pub(crate) fn draw_map(ctx: &UiContext<'_>, rect: Rect) {
     let view = MapView::new(ctx, rect);
@@ -22,12 +24,12 @@ pub(crate) fn draw_map(ctx: &UiContext<'_>, rect: Rect) {
             tile_rect.y,
             tile_rect.w,
             tile_rect.h,
-            1.0,
-            Color::new(0.05, 0.11, 0.11, 0.25),
+            0.45,
+            Color::new(0.04, 0.09, 0.09, 0.20),
         );
         draw_tile_detail(*tile, tile_rect);
         if let Some(Some(crop)) = ctx.world.crops.get(pos) {
-            draw_crop(crop, tile_rect);
+            draw_crop(ctx, crop, tile_rect);
         }
     }
     for animal in ctx.farm_animals {
@@ -49,6 +51,9 @@ pub(crate) fn draw_map(ctx: &UiContext<'_>, rect: Rect) {
     }
 
     ui_regional::draw_map_overlay(ctx, &view, rect);
+    draw_map_item_markers(ctx, &view, rect);
+    draw_fixed_npcs(ctx, &view, rect);
+    draw_wilderness_monster(ctx, &view, rect);
     if should_draw_player_marker(ctx.offline, ctx.player_position_authoritative) {
         draw_character(&view, ctx.player_position, CREAM, true);
     }
@@ -122,7 +127,19 @@ fn draw_tile_detail(tile: TileKind, rect: Rect) {
     }
 }
 
-fn draw_crop(crop: &CropState, rect: Rect) {
+fn draw_crop(ctx: &UiContext<'_>, crop: &CropState, rect: Rect) {
+    let sprite = match crop.kind {
+        crate::state::CropKind::Wheat => ItemSprite::Wheat,
+        crate::state::CropKind::Turnip => ItemSprite::Turnips,
+        crate::state::CropKind::Moonberry => ItemSprite::Moonberries,
+    };
+    if ctx.sprites.draw_item(
+        sprite,
+        rect.center() + vec2(0.0, 1.0),
+        vec2(rect.w * 0.82, rect.h * 0.82),
+    ) {
+        return;
+    }
     let color = match crop.kind {
         crate::state::CropKind::Wheat => Color::new(0.95, 0.76, 0.26, 1.0),
         crate::state::CropKind::Turnip => Color::new(0.82, 0.62, 0.90, 1.0),
@@ -137,6 +154,108 @@ fn draw_crop(crop: &CropState, rect: Rect) {
         rect.center().y - 7.0,
         2.0,
         MINT,
+    );
+}
+
+fn draw_map_item_markers(ctx: &UiContext<'_>, view: &MapView, rect: Rect) {
+    let markers = [
+        (TilePos::new(6, 5), ItemSprite::Seeds),
+        (TilePos::new(8, 4), ItemSprite::Bandages),
+        (TilePos::new(10, 3), ItemSprite::Stone),
+        (TilePos::new(14, 3), ItemSprite::Timber),
+    ];
+    for (tile, sprite) in markers {
+        let tile_rect = view.tile_rect(tile);
+        if !rect.overlaps(&tile_rect) {
+            continue;
+        }
+        let center = tile_rect.center() + vec2(0.0, -tile_rect.h * 0.12);
+        draw_ellipse(
+            center.x,
+            tile_rect.bottom() - 3.0,
+            tile_rect.w * 0.28,
+            tile_rect.h * 0.10,
+            0.0,
+            Color::new(0.02, 0.04, 0.04, 0.38),
+        );
+        ctx.sprites
+            .draw_item(sprite, center, vec2(tile_rect.w * 0.62, tile_rect.h * 0.62));
+    }
+}
+
+fn draw_fixed_npcs(ctx: &UiContext<'_>, view: &MapView, rect: Rect) {
+    let npcs = [
+        (TilePos::new(7, 5), NpcSprite::Iven, "IVEN"),
+        (TilePos::new(9, 5), NpcSprite::Sella, "SELLA"),
+    ];
+    for (tile, sprite, label) in npcs {
+        let tile_rect = view.tile_rect(tile);
+        if !rect.overlaps(&tile_rect) {
+            continue;
+        }
+        let center = tile_rect.center() + vec2(0.0, -tile_rect.h * 0.28);
+        draw_ellipse(
+            center.x,
+            tile_rect.bottom() - 2.0,
+            tile_rect.w * 0.28,
+            tile_rect.h * 0.10,
+            0.0,
+            Color::new(0.02, 0.04, 0.04, 0.42),
+        );
+        if !ctx
+            .sprites
+            .draw_npc(sprite, center, vec2(tile_rect.w * 0.92, tile_rect.h * 1.35))
+        {
+            draw_character(view, tile, MINT, false);
+        }
+        draw_text_centered_in_box(
+            label,
+            center.x - tile_rect.w,
+            center.y - tile_rect.h * 0.95,
+            tile_rect.w * 2.0,
+            12.0,
+            8.0,
+            CREAM,
+        );
+    }
+}
+
+fn draw_wilderness_monster(ctx: &UiContext<'_>, view: &MapView, rect: Rect) {
+    let Some(zone) = ctx.wilderness.filter(|zone| zone.threat_active) else {
+        return;
+    };
+    let tile = TilePos::new(zone.position.x, zone.position.y);
+    let tile_rect = view.tile_rect(tile);
+    if !rect.overlaps(&tile_rect) {
+        return;
+    }
+    let center = tile_rect.center() + vec2(0.0, -tile_rect.h * 0.18);
+    draw_ellipse(
+        center.x,
+        tile_rect.bottom() - 2.0,
+        tile_rect.w * 0.42,
+        tile_rect.h * 0.14,
+        0.0,
+        Color::new(0.01, 0.02, 0.02, 0.55),
+    );
+    if !ctx
+        .sprites
+        .draw_monster(center, vec2(tile_rect.w * 1.65, tile_rect.h * 1.65))
+    {
+        draw_circle_at(
+            center,
+            tile_rect.w * 0.44,
+            Color::new(0.32, 0.16, 0.13, 1.0),
+        );
+    }
+    draw_text_centered_in_box(
+        &format!("BRAMBLEBACK • {}/3", zone.monster_health),
+        center.x - tile_rect.w * 2.0,
+        center.y - tile_rect.h * 1.2,
+        tile_rect.w * 4.0,
+        13.0,
+        9.0,
+        Color::new(0.94, 0.66, 0.42, 1.0),
     );
 }
 
@@ -207,20 +326,28 @@ pub(crate) fn draw_landmark(view: &MapView, tile: TilePos, label: &str, color: C
 }
 
 fn draw_character(view: &MapView, tile: TilePos, color: Color, player: bool) {
-    let center = view.tile_rect(tile).center();
+    let tile_rect = view.tile_rect(tile);
+    let center = tile_rect.center();
+    let scale = (view.tile_size / 34.0).clamp(0.8, 1.8);
     draw_ellipse(
         center.x,
-        center.y + 9.0,
-        10.0,
-        4.0,
+        center.y + 9.0 * scale,
+        10.0 * scale,
+        4.0 * scale,
         0.0,
         Color::new(0.02, 0.04, 0.04, 0.45),
     );
-    draw_circle_at(center + vec2(0.0, -4.0), 7.0, color);
-    draw_rectangle(center.x - 7.0, center.y + 1.0, 14.0, 12.0, color);
+    draw_circle_at(center + vec2(0.0, -4.0 * scale), 7.0 * scale, color);
+    draw_rectangle(
+        center.x - 7.0 * scale,
+        center.y + 1.0 * scale,
+        14.0 * scale,
+        12.0 * scale,
+        color,
+    );
     draw_circle_at(
-        center + vec2(0.0, -9.0),
-        5.0,
+        center + vec2(0.0, -9.0 * scale),
+        5.0 * scale,
         if player {
             Color::new(0.22, 0.15, 0.12, 1.0)
         } else {
@@ -228,7 +355,14 @@ fn draw_character(view: &MapView, tile: TilePos, color: Color, player: bool) {
         },
     );
     if player {
-        draw_rectangle_lines(center.x - 10.0, center.y - 18.0, 20.0, 34.0, 2.0, GOLD);
+        draw_rectangle_lines(
+            center.x - 10.0 * scale,
+            center.y - 18.0 * scale,
+            20.0 * scale,
+            34.0 * scale,
+            2.0,
+            GOLD,
+        );
     }
 }
 
@@ -296,8 +430,8 @@ impl MapView {
         Rect::new(
             self.origin.x + pos.x as f32 * self.tile_size,
             self.origin.y + pos.y as f32 * self.tile_size,
-            (self.tile_size - 2.0).max(6.0),
-            (self.tile_size - 2.0).max(6.0),
+            (self.tile_size - 0.8).max(6.0),
+            (self.tile_size - 0.8).max(6.0),
         )
     }
 

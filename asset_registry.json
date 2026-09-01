@@ -1,4 +1,8 @@
 {
   "version": 1,
-  "assets": []
+  "assets": [
+    "assets/images/sprites/hearth_npcs.png",
+    "assets/images/sprites/brambleback.png",
+    "assets/images/sprites/hearth_items.png"
+  ]
 }

@@ -154,6 +154,7 @@ pub(crate) fn visible_player_count(players: &[RemotePlayer], server_tick: u64) -
         .count()
 }
 
+#[cfg(test)]
 pub(crate) fn pioneer_status_line(
     expedition: &tarrowyn_protocol::Expedition,
     requirements: tarrowyn_protocol::ExpeditionRequirements,

@@ -497,6 +497,7 @@ pub(super) fn sidebar_button_enabled(
     player_position_authoritative: bool,
 ) -> bool {
     match id {
+        "menu-toggle" | "menu-close" => true,
         "reconnect" => reconnect_control_enabled(connection),
         "offline" => true,
         "account" | "account-details" | "logout" | "report" | "delete-account" => {

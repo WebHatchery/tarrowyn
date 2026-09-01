@@ -2,6 +2,7 @@
 
 use crate::data::GameData;
 use crate::network::{ConnectionState, CraftingView, NetworkNotice, OnlineClient};
+use crate::sprites::SpriteAssets;
 use crate::state::{migrate_save_value, GameSession, SaveData};
 use crate::ui::{self, UiAction, UiContext};
 use macroquad::prelude::*;
@@ -40,6 +41,7 @@ pub struct Game {
     mode: ClientMode,
     server_url: String,
     assets: AssetManager,
+    sprites: SpriteAssets,
     notifications: NotificationManager,
     camera: Camera2D,
     events: EventBus<UiAction>,
@@ -52,6 +54,7 @@ pub struct Game {
     chronicle_open: bool,
     chronicle_query: String,
     account_open: bool,
+    menu_open: bool,
 }
 
 impl Game {
@@ -63,6 +66,7 @@ impl Game {
         let placeholder = Image::gen_image_color(16, 16, Color::new(0.24, 0.42, 0.35, 1.0));
         assets.set_placeholder_texture_direct(Texture2D::from_image(&placeholder));
         assets.load_texture_configs(&data.texture_manifest).await;
+        let sprites = SpriteAssets::from_manager(&assets);
 
         let offline = std::env::var("TARROWYN_OFFLINE")
             .map(|value| value == "1" || value.eq_ignore_ascii_case("true"))
@@ -103,6 +107,7 @@ impl Game {
             mode,
             server_url,
             assets,
+            sprites,
             notifications: NotificationManager::new(),
             camera,
             events: EventBus::new(),
@@ -115,6 +120,7 @@ impl Game {
             chronicle_open: false,
             chronicle_query: String::new(),
             account_open: false,
+            menu_open: false,
         };
         game.refresh_save_state();
         game
@@ -251,7 +257,9 @@ impl Game {
                     save_exists: false,
                     save_slots: &self.save_slots,
                     loaded_assets: self.assets.len(),
+                    sprites: &self.sprites,
                     camera_zoom: self.camera.zoom,
+                    menu_open: self.menu_open,
                     wilderness: client.projection.wilderness.as_ref(),
                     regional_region: client.phase5_region(),
                     regional_inspection: regional_inspection.as_deref(),
@@ -379,7 +387,9 @@ impl Game {
                     save_exists: self.save_exists,
                     save_slots: &self.save_slots,
                     loaded_assets: self.assets.len(),
+                    sprites: &self.sprites,
                     camera_zoom: self.camera.zoom,
+                    menu_open: self.menu_open,
                     wilderness: None,
                     regional_region: None,
                     regional_inspection: None,

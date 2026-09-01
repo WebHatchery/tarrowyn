@@ -1,16 +1,14 @@
-//! Virtual-resolution UI for the Phase 0 first-evening client.
+//! Full-bleed presentation layer for the Tarrowyn client.
 
-use crate::data::ActionDef;
 use crate::network::{ConnectionState, RemotePlayer};
-use crate::state::{tile_color, CropState, TileKind};
 use macroquad::prelude::*;
 use macroquad_toolkit::grid::TilePos;
 use macroquad_toolkit::prelude::*;
-use macroquad_toolkit::ui::draw_ui_text_ex;
-use macroquad_toolkit::ui::RectExt;
 
 #[path = "ui_crafting.rs"]
 mod ui_crafting;
+#[path = "ui_hud.rs"]
+mod ui_hud;
 #[path = "ui_map.rs"]
 mod ui_map;
 #[path = "ui_online.rs"]
@@ -33,22 +31,20 @@ pub use ui_context::{UiAction, UiContext};
 #[path = "ui/tests.rs"]
 mod tests;
 
-const PANEL: Color = Color::new(0.055, 0.075, 0.09, 0.97);
-const PANEL_LIGHT: Color = Color::new(0.08, 0.11, 0.13, 0.98);
-const LINE: Color = Color::new(0.32, 0.48, 0.50, 0.75);
 const CREAM: Color = Color::new(0.91, 0.87, 0.73, 1.0);
 const MINT: Color = Color::new(0.50, 0.82, 0.68, 1.0);
 const GOLD: Color = Color::new(0.90, 0.69, 0.30, 1.0);
+const PANEL: Color = Color::new(0.055, 0.075, 0.09, 0.97);
+const LINE: Color = Color::new(0.32, 0.48, 0.50, 0.75);
 
 pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
     let mouse = ctx.ui.mouse_position();
     let mut actions = Vec::new();
+    let map_rect = draw_world_stage(&ctx);
 
-    draw_header(&ctx);
-    let map_rect = draw_world_panel(&ctx, mouse);
-    let modal_open = ui_online::gameplay_modal_open(&ctx);
-    if ctx.crafting.is_none()
-        && !modal_open
+    if !ui_hud::blocks_map_click(mouse, ctx.menu_open)
+        && !ctx.crafting.is_some()
+        && !ui_online::gameplay_modal_open(&ctx)
         && ui_online::movement_enabled(&ctx)
         && is_mouse_button_released(MouseButton::Left)
     {
@@ -56,7 +52,11 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
             actions.push(UiAction::MoveTo(tile));
         }
     }
-    draw_sidebar(&ctx, mouse, &mut actions);
+
+    if !ctx.menu_open {
+        draw_map_tooltip(&ctx, map_rect, mouse);
+    }
+    ui_hud::draw(&ctx, mouse, &mut actions);
     ui_online::draw_account(&ctx, mouse, &mut actions);
     ui_online::draw_regional_inspection(&ctx, mouse, &mut actions);
     ui_online::draw_skill_selection(&ctx, mouse, &mut actions);
@@ -66,7 +66,6 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
         ui_crafting::draw(crafting, mouse, &mut actions);
         actions.retain(crafting_action_allowed);
     }
-    draw_footer(&ctx);
 
     if ctx.regional_inspection.is_some() {
         actions.retain(regional_inspection_action_allowed);
@@ -100,6 +99,35 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
     actions
 }
 
+fn draw_world_stage(ctx: &UiContext<'_>) -> Rect {
+    let rect = Rect::new(0.0, 0.0, LOGICAL_WIDTH, LOGICAL_HEIGHT);
+    draw_map(ctx, rect);
+
+    // A quiet veil gives the floating HUD enough contrast without fencing the
+    // world into another card or adding a decorative frame around the screen.
+    draw_rectangle(
+        0.0,
+        0.0,
+        LOGICAL_WIDTH,
+        96.0,
+        Color::new(0.015, 0.025, 0.028, 0.24),
+    );
+    rect
+}
+
+fn draw_map_tooltip(ctx: &UiContext<'_>, map_rect: Rect, mouse: Vec2) {
+    if !map_rect.contains_point(mouse) || ui_hud::blocks_map_click(mouse, false) {
+        return;
+    }
+    draw_tooltip(
+        ui_online::movement_tooltip_for_overlay(
+            ui_online::gameplay_modal_open(ctx),
+            ui_online::movement_tooltip(ctx),
+        ),
+        mouse,
+    );
+}
+
 fn is_recovery_action(action: &UiAction) -> bool {
     matches!(action, UiAction::Reconnect | UiAction::UseOffline)
         || matches!(
@@ -131,270 +159,6 @@ fn regional_inspection_action_allowed(action: &UiAction) -> bool {
 fn crafting_action_allowed(action: &UiAction) -> bool {
     matches!(action, UiAction::Interact(id) if id == "crafting-timing")
         || is_recovery_action(action)
-}
-
-fn draw_header(ctx: &UiContext<'_>) {
-    let rect = Rect::new(20.0, 16.0, LOGICAL_WIDTH - 40.0, 64.0);
-    draw_surface(
-        rect,
-        &SurfaceStyle::new(PANEL)
-            .with_border(1.0, LINE)
-            .with_top_highlight(2.0, Color::new(0.62, 0.82, 0.72, 0.7)),
-    );
-    draw_ui_text_ex(
-        &ctx.data.config.display_name,
-        rect.x + 18.0,
-        rect.y + 31.0,
-        TextStyle::new(28.0, CREAM).params(),
-    );
-    draw_ui_text_ex(
-        if ctx.offline {
-            "A local first evening • never shared online"
-        } else {
-            "The shared road • world state shared with others"
-        },
-        rect.x + 20.0,
-        rect.y + 51.0,
-        TextStyle::new(13.0, dark::TEXT_DIM).params(),
-    );
-
-    let time = format_clock(ctx.clock_minutes);
-    let day_label = ctx
-        .calendar_season
-        .map(|season| format!("Day {} • {}", ctx.day, season))
-        .unwrap_or_else(|| format!("Day {}", ctx.day));
-    draw_badge(
-        Rect::new(rect.right() - 364.0, rect.y + 18.0, 125.0, 28.0),
-        &day_label,
-        Color::new(0.16, 0.24, 0.25, 1.0),
-        CREAM,
-    );
-    draw_badge(
-        Rect::new(rect.right() - 229.0, rect.y + 18.0, 116.0, 28.0),
-        &format!("{} {}", time, ctx.time_of_day.label()),
-        if ctx.night {
-            Color::new(0.13, 0.16, 0.28, 1.0)
-        } else {
-            Color::new(0.28, 0.24, 0.14, 1.0)
-        },
-        CREAM,
-    );
-    draw_badge(
-        Rect::new(rect.right() - 105.0, rect.y + 18.0, 87.0, 28.0),
-        ctx.connection.label(),
-        match ctx.connection {
-            ConnectionState::Online => Color::new(0.16, 0.28, 0.22, 1.0),
-            ConnectionState::Connecting => Color::new(0.20, 0.22, 0.18, 1.0),
-            ConnectionState::Degraded => Color::new(0.30, 0.22, 0.14, 1.0),
-            ConnectionState::Offline => Color::new(0.24, 0.18, 0.16, 1.0),
-        },
-        if ctx.offline { GOLD } else { MINT },
-    );
-}
-
-fn draw_world_panel(ctx: &UiContext<'_>, mouse: Vec2) -> Rect {
-    let panel = Rect::new(20.0, 96.0, 824.0, 510.0);
-    draw_surface_with_title(
-        panel,
-        Some("The road between the Hearth and Whisperwood"),
-        &SurfaceStyle::new(PANEL_LIGHT)
-            .with_border(1.0, LINE)
-            .with_header(42.0, Color::new(0.09, 0.14, 0.15, 1.0))
-            .with_header_divider(1.0, LINE),
-        TextStyle::new(17.0, CREAM),
-    );
-
-    let map = Rect::new(panel.x + 18.0, panel.y + 61.0, panel.w - 36.0, 398.0);
-    draw_map(ctx, map);
-    if map.contains_point(mouse) {
-        draw_tooltip(
-            ui_online::movement_tooltip_for_overlay(
-                ui_online::gameplay_modal_open(ctx),
-                ui_online::movement_tooltip(ctx),
-            ),
-            mouse,
-        );
-    }
-
-    let ready_plots = ctx
-        .world
-        .crops
-        .data()
-        .iter()
-        .filter_map(|crop| *crop)
-        .filter(CropState::mature)
-        .count();
-    let map_status = if ctx.offline {
-        format!(
-            "{ready_plots} ready plots  •  {} reachable tiles  •  zoom {:.1}x",
-            ctx.world.reachable.len(),
-            ctx.camera_zoom
-        )
-    } else {
-        format!(
-            "{ready_plots} ready plots  •  server-stepped travel  •  zoom {:.1}x",
-            ctx.camera_zoom
-        )
-    };
-    draw_text_right(
-        &map_status,
-        panel.right() - 18.0,
-        panel.bottom() - 17.0,
-        TextStyle::new(13.0, dark::TEXT_DIM),
-    );
-    map
-}
-
-fn draw_sidebar(ctx: &UiContext<'_>, mouse: Vec2, actions: &mut Vec<UiAction>) {
-    let panel = Rect::new(864.0, 96.0, 396.0, 510.0);
-    draw_surface_with_title(
-        panel,
-        Some(if ctx.offline {
-            "Your evening"
-        } else {
-            "The shared road"
-        }),
-        &SurfaceStyle::new(PANEL)
-            .with_border(1.0, LINE)
-            .with_header(42.0, Color::new(0.09, 0.14, 0.15, 1.0))
-            .with_header_divider(1.0, LINE),
-        TextStyle::new(17.0, CREAM),
-    );
-
-    let content = panel.inset(16.0);
-    if ctx.offline {
-        draw_offline_sidebar(ctx, content, mouse, actions);
-    } else {
-        ui_online::draw_sidebar(ctx, content, mouse, actions);
-    }
-}
-
-fn draw_offline_sidebar(
-    ctx: &UiContext<'_>,
-    content: Rect,
-    mouse: Vec2,
-    actions: &mut Vec<UiAction>,
-) {
-    draw_stats(ctx, Rect::new(content.x, content.y + 34.0, content.w, 56.0));
-
-    draw_ui_text_ex(
-        "What will you do?",
-        content.x,
-        content.y + 113.0,
-        TextStyle::new(17.0, CREAM).params(),
-    );
-    let mut y = content.y + 124.0;
-    for id in ["plant", "tend", "harvest", "listen"] {
-        if let Some(action) = ctx.data.actions.get(id) {
-            let rect = Rect::new(content.x, y, content.w, 38.0);
-            if draw_action_card(rect, action, mouse) {
-                actions.push(UiAction::Interact(action.id.clone()));
-            }
-            y += 44.0;
-        }
-    }
-
-    draw_ui_text_ex(
-        "Walk",
-        content.x,
-        416.0,
-        TextStyle::new(16.0, CREAM).params(),
-    );
-    draw_move_pad(content.x + 77.0, 424.0, mouse, actions, true);
-
-    let save_y = 520.0;
-    let half = (content.w - 8.0) * 0.5;
-    if virtual_button(
-        Rect::new(content.x, save_y, half, 29.0),
-        "Save",
-        true,
-        ButtonTone::Positive,
-        mouse,
-    ) {
-        actions.push(UiAction::Save);
-    }
-    if virtual_button(
-        Rect::new(content.x + half + 8.0, save_y, half, 29.0),
-        "Load",
-        ctx.save_exists,
-        ButtonTone::Primary,
-        mouse,
-    ) {
-        actions.push(UiAction::Load);
-    }
-    if virtual_button(
-        Rect::new(content.x, 550.0, half, 22.0),
-        "New evening",
-        true,
-        ButtonTone::Secondary,
-        mouse,
-    ) {
-        actions.push(UiAction::NewEvening);
-    }
-    if virtual_button(
-        Rect::new(content.x + half + 8.0, 550.0, half, 22.0),
-        "Delete local save",
-        ctx.save_exists,
-        ButtonTone::Danger,
-        mouse,
-    ) {
-        actions.push(UiAction::DeleteSave);
-    }
-    if virtual_button(
-        Rect::new(content.x, 576.0, content.w, 26.0),
-        "Reconnect online",
-        true,
-        ButtonTone::Primary,
-        mouse,
-    ) {
-        actions.push(UiAction::UseOnline);
-    }
-}
-
-fn draw_stats(ctx: &UiContext<'_>, rect: Rect) {
-    draw_surface(
-        rect,
-        &SurfaceStyle::new(Color::new(0.10, 0.14, 0.15, 1.0))
-            .with_border(1.0, Color::new(0.32, 0.48, 0.50, 0.45)),
-    );
-    draw_text_block(
-        ctx.stats,
-        rect.x + 12.0,
-        rect.y + 17.0,
-        rect.w - 24.0,
-        rect.h - 8.0,
-        13.0,
-        2.0,
-        dark::TEXT,
-    );
-}
-
-fn draw_action_card(rect: Rect, action: &ActionDef, mouse: Vec2) -> bool {
-    let hovered = rect.contains_point(mouse);
-    let fill = if hovered {
-        Color::new(0.17, 0.24, 0.23, 1.0)
-    } else {
-        Color::new(0.10, 0.15, 0.16, 1.0)
-    };
-    draw_surface(
-        rect,
-        &SurfaceStyle::new(fill)
-            .with_left_accent(4.0, if hovered { GOLD } else { MINT })
-            .with_border(1.0, Color::new(0.35, 0.51, 0.50, 0.45)),
-    );
-    draw_ui_text_ex(
-        &action.name,
-        rect.x + 13.0,
-        rect.y + 18.0,
-        TextStyle::new(14.0, CREAM).params(),
-    );
-    draw_ui_text_ex(
-        &action.description,
-        rect.x + 13.0,
-        rect.y + 34.0,
-        TextStyle::new(10.0, dark::TEXT_DIM).params(),
-    );
-    hovered && is_mouse_button_released(MouseButton::Left)
 }
 
 fn draw_move_pad(x: f32, y: f32, mouse: Vec2, actions: &mut Vec<UiAction>, enabled: bool) {
@@ -445,7 +209,14 @@ fn virtual_button(rect: Rect, label: &str, enabled: bool, tone: ButtonTone, mous
     };
     draw_surface(
         rect,
-        &SurfaceStyle::new(fill).with_border(1.0, style.border),
+        &SurfaceStyle::new(fill).with_top_highlight(
+            1.0,
+            if enabled {
+                style.border
+            } else {
+                Color::new(0.0, 0.0, 0.0, 0.0)
+            },
+        ),
     );
     draw_text_centered_in_box_ex(
         label,
@@ -465,68 +236,8 @@ fn virtual_button(rect: Rect, label: &str, enabled: bool, tone: ButtonTone, mous
     hovered && is_mouse_button_released(MouseButton::Left)
 }
 
-fn draw_footer(ctx: &UiContext<'_>) {
-    let rect = Rect::new(20.0, 620.0, LOGICAL_WIDTH - 40.0, 84.0);
-    draw_surface(
-        rect,
-        &SurfaceStyle::new(Color::new(0.045, 0.065, 0.075, 0.98))
-            .with_border(1.0, Color::new(0.32, 0.48, 0.50, 0.6)),
-    );
-    draw_ui_text_ex(
-        if ctx.offline {
-            "OFFLINE FIRST EVENING"
-        } else {
-            "SHARED CHRONICLE"
-        },
-        rect.x + 16.0,
-        rect.y + 22.0,
-        TextStyle::new(12.0, MINT).params(),
-    );
-    draw_text_block(
-        ctx.status_message,
-        rect.x + 16.0,
-        rect.y + 38.0,
-        540.0,
-        28.0,
-        14.0,
-        2.0,
-        CREAM,
-    );
-    draw_ui_text_ex(
-        if ctx.offline {
-            "LOCAL ONLY"
-        } else {
-            "SHARED ROAD"
-        },
-        rect.x + 600.0,
-        rect.y + 22.0,
-        TextStyle::new(12.0, GOLD).params(),
-    );
-    let footer_detail = if ctx.offline {
-        format!(
-            "This first evening is separate from the online world\n{} crop types • {} assets • {} saved slot(s)",
-            ctx.data.crops.len(),
-            ctx.loaded_assets,
-            ctx.save_slots.len()
-        )
-    } else {
-        online_footer_detail(
-            ctx.stats,
-            ui_online::visible_player_count(ctx.remote_players, ctx.server_tick),
-            pending_trade_detail(ctx.trades, ctx.own_account_id).as_deref(),
-        )
-    };
-    let has_trade_detail = !footer_detail.lines().nth(2).unwrap_or_default().is_empty();
-    draw_text_block_ex(
-        &footer_detail,
-        rect.x + 600.0,
-        rect.y + 38.0,
-        rect.w - 616.0,
-        if has_trade_detail { 40.0 } else { 30.0 },
-        TextStyle::new(if has_trade_detail { 10.5 } else { 13.0 }, dark::TEXT_DIM)
-            .with_line_gap(1.0),
-        8.0,
-    );
+fn format_clock(minutes: u32) -> String {
+    format!("{:02}:{:02}", (minutes / 60) % 24, minutes % 60)
 }
 
 fn online_footer_detail(stats: &str, visible_players: usize, trade: Option<&str>) -> String {
@@ -592,8 +303,4 @@ fn trade_bundle_detail(bundle: tarrowyn_protocol::TradeBundle) -> String {
     } else {
         goods.join(", ")
     }
-}
-
-fn format_clock(minutes: u32) -> String {
-    format!("{:02}:{:02}", (minutes / 60) % 24, minutes % 60)
 }

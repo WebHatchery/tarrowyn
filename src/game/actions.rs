@@ -16,6 +16,15 @@ pub(super) fn apply_chronicle_key(query: &mut String, key: &str) {
 
 impl Game {
     pub(super) fn interact(&mut self, id: &str) {
+        if id == "menu-toggle" {
+            self.menu_open = !self.menu_open;
+            return;
+        }
+        if id == "menu-close" {
+            self.menu_open = false;
+            return;
+        }
+        self.menu_open = false;
         if id == "chronicle-close" {
             self.chronicle_open = false;
             return;
@@ -337,6 +346,7 @@ impl Game {
         match action {
             UiAction::UseOffline => {
                 self.mode = ClientMode::Offline(GameSession::new(&self.data.config));
+                self.menu_open = false;
                 self.regional_inspection_open = false;
                 self.skill_selection_open = false;
                 self.school_selection_open = false;
@@ -353,6 +363,7 @@ impl Game {
                     &self.server_url,
                     &self.data.config,
                 )));
+                self.menu_open = false;
                 self.regional_inspection_open = false;
                 self.skill_selection_open = false;
                 self.school_selection_open = false;
@@ -365,6 +376,7 @@ impl Game {
             }
             UiAction::Reconnect => match &mut self.mode {
                 ClientMode::Online(client) => {
+                    self.menu_open = false;
                     self.regional_inspection_open = false;
                     self.skill_selection_open = false;
                     self.school_selection_open = false;
@@ -381,6 +393,7 @@ impl Game {
                         &self.server_url,
                         &self.data.config,
                     )));
+                    self.menu_open = false;
                     self.regional_inspection_open = false;
                     self.skill_selection_open = false;
                     self.school_selection_open = false;
@@ -393,6 +406,7 @@ impl Game {
             },
             UiAction::NewEvening => match &mut self.mode {
                 ClientMode::Offline(session) => {
+                    self.menu_open = false;
                     *session = GameSession::new(&self.data.config);
                     self.sync_camera(TilePos::new(8, 6));
                     self.notifications
@@ -409,6 +423,7 @@ impl Game {
             UiAction::MoveTo(tile) => self.move_toward(tile),
             UiAction::Interact(id) => self.interact(&id),
             UiAction::Practice(skill_id) => {
+                self.menu_open = false;
                 self.skill_selection_open = false;
                 self.school_selection_open = false;
                 self.chronicle_open = false;
@@ -417,6 +432,7 @@ impl Game {
                 }
             }
             UiAction::Teach(skill_id) => {
+                self.menu_open = false;
                 self.school_selection_open = false;
                 self.chronicle_open = false;
                 if let ClientMode::Online(client) = &mut self.mode {
@@ -449,6 +465,7 @@ impl Game {
                 }
             }
             UiAction::RegionalEvent(intervention) => {
+                self.menu_open = false;
                 if let ClientMode::Online(client) = &mut self.mode {
                     client.queue_region_intervention(intervention);
                 }
