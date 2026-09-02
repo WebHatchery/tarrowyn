@@ -35,6 +35,11 @@
     "filter": "nearest"
   },
   {
+    "key": "first_beacon_fire",
+    "path": "assets/images/sprites/first_beacon_fire.png",
+    "filter": "linear"
+  },
+  {
     "key": "combat_atlas",
     "path": "assets/images/sprites/combat_atlas.png",
     "filter": "nearest"

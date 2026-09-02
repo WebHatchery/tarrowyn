@@ -1,5 +1,5 @@
 use super::*;
-use crate::sprites::{ArtAtlas, ItemSprite, NpcSprite, SpriteAssets};
+use crate::sprites::{ArtAtlas, FoundationSprite, ItemSprite, NpcSprite, SpriteAssets};
 use crate::state::{tile_color, CropState, TileKind};
 
 pub(crate) fn draw_map(ctx: &UiContext<'_>, rect: Rect) {
@@ -140,6 +140,11 @@ fn draw_foundation_landmarks(ctx: &UiContext<'_>, view: &MapView, rect: Rect) {
 
 fn draw_foundation_icon(ctx: &UiContext<'_>, kind: &str, center: Vec2, rect: Rect) {
     let scale = rect.w.max(18.0);
+    if FoundationSprite::from_kind(kind)
+        .is_some_and(|sprite| ctx.sprites.draw_foundation(sprite, center, scale))
+    {
+        return;
+    }
     match kind {
         "npc" => {
             if !ctx.sprites.draw_npc(

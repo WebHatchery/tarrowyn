@@ -102,6 +102,8 @@ This checklist is copied from the art audit brief. An item is marked complete on
 
 ## 6. Settlements, buildings and landmarks
 
+- [x] F1 First Beacon marker, tent camp and communal fire
+- [x] F1 noticeboard, shared cache, crude-tool rack, rough forge and storehouse site
 - [x] The Hearth settlement cluster
 - [x] Hearth tavern
 - [x] Town hall
@@ -209,5 +211,5 @@ This checklist is copied from the art audit brief. An item is marked complete on
 
 ## Verification log
 
-- Generated source: nine production art families in `assets/images/sprites/`; terrain uses the versioned `terrain_atlas_v2.png` replacement after seam QA
+- Generated source: nine production art families in `assets/images/sprites/`; terrain uses the versioned `terrain_atlas_v2.png` replacement after seam QA; F1 world objects reuse authored settlement, economy and UI atlas cells, with a dedicated transparent `first_beacon_fire.png` sprite for the communal fire
 - In-game verification screenshots: `docs/verification/ui_gameplay.png`, `ui_art-terrain.png`, `ui_art-combat.png`, `ui_art-portraits.png`

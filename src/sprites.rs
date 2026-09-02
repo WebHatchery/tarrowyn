@@ -14,6 +14,7 @@ const TERRAIN_KEY: &str = "terrain_atlas_v2";
 const FARMING_KEY: &str = "farming_atlas";
 const PLAYER_KEY: &str = "player_atlas";
 const SETTLEMENTS_KEY: &str = "settlements_atlas";
+const FOUNDATION_FIRE_KEY: &str = "first_beacon_fire";
 const COMBAT_KEY: &str = "combat_atlas";
 const ECONOMY_KEY: &str = "items_economy_atlas";
 const UI_ICONS_KEY: &str = "ui_icons_atlas";
@@ -44,6 +45,34 @@ pub enum ItemSprite {
     Timber,
     Stone,
     Bandages,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FoundationSprite {
+    Beacon,
+    TentSettlement,
+    GatheringFire,
+    Noticeboard,
+    SharedCache,
+    ToolRack,
+    RoughForge,
+    ConstructionSite,
+}
+
+impl FoundationSprite {
+    pub fn from_kind(kind: &str) -> Option<Self> {
+        match kind {
+            "beacon" => Some(Self::Beacon),
+            "tent_settlement" => Some(Self::TentSettlement),
+            "gathering_place" => Some(Self::GatheringFire),
+            "noticeboard" => Some(Self::Noticeboard),
+            "shared_storage" => Some(Self::SharedCache),
+            "crude_tools" => Some(Self::ToolRack),
+            "rough_forge" => Some(Self::RoughForge),
+            "construction_space" => Some(Self::ConstructionSite),
+            _ => None,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -82,7 +111,7 @@ impl ArtAtlas {
 
     fn grid(self) -> (f32, f32) {
         match self {
-            Self::Settlements => (8.0, 6.0),
+            Self::Settlements => (8.0, 8.0),
             Self::NpcPortraits => (4.0, 2.0),
             Self::ExistingNpcs => (2.0, 1.0),
             Self::ExistingItems => (7.0, 1.0),
@@ -115,6 +144,7 @@ pub struct SpriteAssets {
     farming: Option<Texture2D>,
     player: Option<Texture2D>,
     settlements: Option<Texture2D>,
+    foundation_fire: Option<Texture2D>,
     combat: Option<Texture2D>,
     economy: Option<Texture2D>,
     ui_icons: Option<Texture2D>,
@@ -132,6 +162,7 @@ impl SpriteAssets {
             farming: assets.get_texture(FARMING_KEY).cloned(),
             player: assets.get_texture(PLAYER_KEY).cloned(),
             settlements: assets.get_texture(SETTLEMENTS_KEY).cloned(),
+            foundation_fire: assets.get_texture(FOUNDATION_FIRE_KEY).cloned(),
             combat: assets.get_texture(COMBAT_KEY).cloned(),
             economy: assets.get_texture(ECONOMY_KEY).cloned(),
             ui_icons: assets.get_texture(UI_ICONS_KEY).cloned(),
@@ -289,6 +320,40 @@ impl SpriteAssets {
         draw_region(texture, source, center, size, WHITE);
         true
     }
+
+    pub fn draw_foundation(&self, sprite: FoundationSprite, center: Vec2, tile_size: f32) -> bool {
+        let (atlas, index, scale, y_offset) = match sprite {
+            FoundationSprite::Beacon => (ArtAtlas::Settlements, 20, 1.25, -0.16),
+            FoundationSprite::TentSettlement => (ArtAtlas::Settlements, 15, 1.55, -0.22),
+            FoundationSprite::GatheringFire => return self.draw_foundation_fire(center, tile_size),
+            FoundationSprite::Noticeboard => (ArtAtlas::Settlements, 35, 1.02, -0.10),
+            FoundationSprite::SharedCache => (ArtAtlas::Settlements, 41, 1.02, -0.08),
+            FoundationSprite::ToolRack => (ArtAtlas::Economy, 9, 0.90, -0.06),
+            FoundationSprite::RoughForge => (ArtAtlas::UiIcons, 31, 0.92, -0.04),
+            FoundationSprite::ConstructionSite => (ArtAtlas::Settlements, 39, 1.30, -0.16),
+        };
+        self.draw_atlas_cell(
+            atlas,
+            index,
+            center + vec2(0.0, tile_size * y_offset),
+            vec2(tile_size * scale, tile_size * scale),
+            WHITE,
+        )
+    }
+
+    fn draw_foundation_fire(&self, center: Vec2, tile_size: f32) -> bool {
+        let Some(texture) = self.foundation_fire.as_ref() else {
+            return false;
+        };
+        draw_region(
+            texture,
+            Rect::new(0.0, 0.0, texture.width(), texture.height()),
+            center + vec2(0.0, tile_size * -0.08),
+            vec2(tile_size * 0.92, tile_size * 0.92),
+            WHITE,
+        );
+        true
+    }
 }
 
 fn draw_region(texture: &Texture2D, source: Rect, center: Vec2, size: Vec2, tint: Color) {
@@ -304,3 +369,7 @@ fn draw_region(texture: &Texture2D, source: Rect, center: Vec2, size: Vec2, tint
         },
     );
 }
+
+#[cfg(test)]
+#[path = "sprites/tests.rs"]
+mod tests;
