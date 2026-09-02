@@ -1,8 +1,10 @@
 use crate::{PlayerProjection, Position};
 use serde::{Deserialize, Serialize};
 
+mod journey;
 mod storehouse;
 
+pub use journey::*;
 pub use storehouse::*;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]

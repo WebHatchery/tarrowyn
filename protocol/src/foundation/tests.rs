@@ -1,5 +1,7 @@
 use super::*;
 
+mod journey;
+
 #[test]
 fn foundation_baseline_round_trips_with_stable_records() {
     let baseline = FoundationBaseline {
