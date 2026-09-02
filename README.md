@@ -124,6 +124,16 @@ optional maintenance, replay, and restart acceptance pass with:
 Its fixed short-session path and authority boundaries are documented in
 [`docs/FOUNDATIONAL_PLAYABILITY_F3_RUNBOOK.md`](docs/FOUNDATIONAL_PLAYABILITY_F3_RUNBOOK.md).
 
+Run the foundational F4 gathered-input rough-forge chain, exact
+crude-versus-iron action comparison, replay, and restart acceptance pass with:
+
+```powershell
+.\scripts\verify_foundation_forge.ps1
+```
+
+Its player path and authority boundaries are documented in
+[`docs/FOUNDATIONAL_PLAYABILITY_F4_RUNBOOK.md`](docs/FOUNDATIONAL_PLAYABILITY_F4_RUNBOOK.md).
+
 ## Architecture decisions
 
 The server uses `tiny_http` for the native process and a mutex-protected

@@ -36,7 +36,7 @@ player-observable acceptance test that exercises the connected experience.
 | [F1](FOUNDATIONAL_PLAYABILITY_F1_RUNBOOK.md) | Arriving at the First Beacon | Three touch-controlled clients can arrive, move through the same tent settlement, meet the builder, read the local need, disconnect, and return to the correct shared state. | Phases 0–1 |
 | [F2](FOUNDATIONAL_PLAYABILITY_F2_RUNBOOK.md) | Living off the land | A player can explore, gather timber and minerals, use crude tools, store goods, and recover the resource state after restart. Personal tent placement remains separately tracked in the audit. | Phases 2–4 |
 | [F3](FOUNDATIONAL_PLAYABILITY_F3_RUNBOOK.md) | The useful short session | A returning player can plant, tend, advance through offline world time, harvest, and replant during a useful 15-minute farming session using visible controls alone. | Phases 2 and 4 |
-| F4 | Connected production | Ore, fuel, and a timber-derived component can become an improved tool at the rough forge, and a fixed comparison proves that the tool saves actions, time, or materials over the crude fallback. | Phases 2 and 4 |
+| [F4](FOUNDATIONAL_PLAYABILITY_F4_RUNBOOK.md) | Connected production | Ore, fuel, and a timber-derived component can become an improved tool at the rough forge, and a fixed comparison proves that the tool saves actions, time, or materials over the crude fallback. | Phases 2 and 4 |
 | F5 | Player interdependence | Two players can complete an atomic barter and finish a fixed production goal in fewer actions or less world time by specialising and trading than by self-supplying. | Phases 2 and 5 |
 | F6 | Building the first storehouse | Players can see an unfinished storehouse, understand its needs, contribute goods from several activities, and permanently transform it into an operational settlement structure. | Phases 3–5 |
 | F7 | The cohesive first hour | A fresh player can try farming, logging, mining, exploration, smithing, trade, and settlement contribution without choosing a class, then leave with a visible future-session goal. | Cross-phase integration |
@@ -81,6 +81,15 @@ Run its connected acceptance gate with:
 
 ```powershell
 .\scripts\verify_foundation_farming.ps1
+```
+
+F4's gathered-input forge chain, typed recipe needs, fixed crude-versus-iron
+comparison, replay, and restart proof is in
+[`FOUNDATIONAL_PLAYABILITY_F4_RUNBOOK.md`](FOUNDATIONAL_PLAYABILITY_F4_RUNBOOK.md).
+Run its connected acceptance gate with:
+
+```powershell
+.\scripts\verify_foundation_forge.ps1
 ```
 
 ### Foundational acceptance rules
