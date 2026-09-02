@@ -1,7 +1,7 @@
 use super::{
     actions::{
         apply_chronicle_key, parse_cooperation_trade_command, parse_foundation_cache_command,
-        parse_foundation_forge_command,
+        parse_foundation_forge_command, parse_foundation_storehouse_command,
     },
     input::{
         keyboard_gameplay_blocked, keyboard_movement_direction, normalized_movement_direction,
@@ -92,6 +92,44 @@ fn cooperation_touch_commands_build_exact_atomic_trade_requests() {
     assert_eq!(accept.action, tarrowyn_protocol::TradeAction::Accept);
     assert_eq!(accept.trade_id.as_deref(), Some("trade-4"));
     assert!(parse_cooperation_trade_command("cooperation-offer-ore:").is_none());
+}
+
+#[test]
+fn storehouse_touch_commands_keep_landmark_and_payment_typed() {
+    let (landmark, material) = parse_foundation_storehouse_command(
+        "foundation-storehouse:storehouse-site:material:timber:1",
+    )
+    .unwrap();
+    assert_eq!(landmark, "storehouse-site");
+    assert_eq!(
+        material,
+        Some(
+            tarrowyn_protocol::FoundationStorehouseContributionInput::Material {
+                kind: FoundationResourceKind::Timber,
+                amount: 1,
+            }
+        )
+    );
+    let (_, gold) =
+        parse_foundation_storehouse_command("foundation-storehouse:builder-mara:gold:stone:3")
+            .unwrap();
+    assert_eq!(
+        gold,
+        Some(
+            tarrowyn_protocol::FoundationStorehouseContributionInput::Gold {
+                toward: FoundationResourceKind::Stone,
+                amount: 3,
+            }
+        )
+    );
+    assert!(parse_foundation_storehouse_command(
+        "foundation-storehouse:first-beacon-noticeboard:inspect"
+    )
+    .is_some());
+    assert!(parse_foundation_storehouse_command(
+        "foundation-storehouse:storehouse-site:gold:iron-ore:1"
+    )
+    .is_none());
 }
 
 #[test]

@@ -40,6 +40,7 @@ pub struct UiContext<'a> {
     pub foundation: &'a FoundationBaseline,
     pub foundation_activity: &'a FoundationActivityState,
     pub player_inventory: Option<&'a tarrowyn_protocol::Inventory>,
+    pub player_gold: Option<u32>,
     pub field_tool_condition: Option<u8>,
     pub field_tool_kind: Option<tarrowyn_protocol::FoundationFieldToolKind>,
     pub field_weather: Option<tarrowyn_protocol::FieldWeather>,

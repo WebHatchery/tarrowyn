@@ -1,4 +1,7 @@
 use super::*;
+
+#[path = "ui_map/storehouse.rs"]
+mod storehouse;
 use crate::sprites::{ArtAtlas, FoundationSprite, ItemSprite, NpcSprite, SpriteAssets};
 use crate::state::{tile_color, CropState};
 
@@ -124,11 +127,22 @@ fn draw_foundation_landmarks(ctx: &UiContext<'_>, view: &MapView, rect: Rect) {
             0.0,
             Color::new(0.01, 0.02, 0.02, 0.48),
         );
-        draw_foundation_icon(ctx, landmark.kind.as_str(), center, tile_rect);
+        if landmark.id == ctx.foundation_activity.storehouse.site_landmark_id {
+            storehouse::draw(ctx, center, tile_rect);
+        } else {
+            draw_foundation_icon(ctx, landmark.kind.as_str(), center, tile_rect);
+        }
         let contextual = context_id == Some(landmark.id.as_str());
         let anchor_label = match landmark.kind.as_str() {
             "npc" => Some("MARA"),
             "noticeboard" => Some("NEEDS"),
+            "construction_space" => ctx
+                .foundation_activity
+                .storehouse
+                .stages
+                .iter()
+                .find(|gate| gate.stage == ctx.foundation_activity.storehouse.current_stage)
+                .map(|gate| gate.visible_label.as_str()),
             _ => None,
         };
         if contextual || anchor_label.is_some() {

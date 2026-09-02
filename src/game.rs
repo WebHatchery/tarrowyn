@@ -225,6 +225,7 @@ impl Game {
                     .player
                     .as_ref()
                     .map(|player| &player.inventory),
+                player_gold: client.projection.player.as_ref().map(|player| player.gold),
                 field_tool_condition: client
                     .projection
                     .player

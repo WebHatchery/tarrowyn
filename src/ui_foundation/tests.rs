@@ -5,8 +5,10 @@ use tarrowyn_protocol::{
     FieldWeather, FoundationActivityState, FoundationCooperationWorkCredit,
     FoundationCooperationWorkKind, FoundationFieldToolKind, FoundationForgeAction,
     FoundationForgeMaterialAmount, FoundationForgeMaterialKind, FoundationInteraction,
-    FoundationResourceDeposit, FoundationResourceKind, FoundationResourceNode, Position,
-    TradeBundle, TradeOffer, TradeStatus,
+    FoundationLandmark, FoundationResourceDeposit, FoundationResourceKind, FoundationResourceNode,
+    FoundationStorehouseCompletion, FoundationStorehouseContribution,
+    FoundationStorehouseContributionInput, FoundationStorehouseStage, Position, TradeBundle,
+    TradeOffer, TradeStatus,
 };
 
 fn work_credit(
@@ -135,6 +137,109 @@ fn uncredited_goods_do_not_claim_the_measured_cooperation_shortcut() {
         cooperation_detail(&FoundationActivityState::default(), Some("miner"))
             .contains("Solo fallback open")
     );
+}
+
+fn storehouse_context<'a>(
+    landmark: &'a FoundationLandmark,
+    interaction_action: &'a str,
+) -> FoundationContext<'a> {
+    FoundationContext {
+        landmark,
+        interaction_id: "inspect-storehouse-site",
+        interaction_action,
+        action_label: "Inspect site".to_owned(),
+        resource_node_id: None,
+        resource_action: None,
+        cache_action: None,
+        cache_resource: None,
+    }
+}
+
+fn storehouse_landmark() -> FoundationLandmark {
+    FoundationLandmark {
+        id: "storehouse-site".to_owned(),
+        kind: "construction_space".to_owned(),
+        name: "Storehouse site".to_owned(),
+        position: Position { x: 6, y: 7 },
+        visible: true,
+        permanent: false,
+        note: "The first public project".to_owned(),
+    }
+}
+
+#[test]
+fn nearby_storehouse_offers_goods_and_exact_gold_as_separate_touch_actions() {
+    let landmark = storehouse_landmark();
+    let context = storehouse_context(&landmark, "inspect_or_contribute");
+    let inventory = Inventory {
+        timber: 2,
+        ..Default::default()
+    };
+    let choice = storehouse::nearby_choice(
+        Some(&context),
+        &tarrowyn_protocol::FoundationStorehouseState::default(),
+        Some(&inventory),
+        Some(3),
+    )
+    .unwrap();
+
+    assert_eq!(choice.material.as_ref().unwrap().label, "Give 1 timber");
+    assert_eq!(
+        choice.material.as_ref().unwrap().command,
+        "foundation-storehouse:storehouse-site:material:timber:1"
+    );
+    assert_eq!(choice.gold.as_ref().unwrap().label, "Fund stone 3g");
+    assert_eq!(
+        choice.gold.as_ref().unwrap().command,
+        "foundation-storehouse:storehouse-site:gold:stone:3"
+    );
+    assert!(choice.detail.contains("Timber 0/8; stone 0/6"));
+    assert!(choice.detail.contains("0 contributors"));
+}
+
+#[test]
+fn storehouse_touch_state_explains_recovery_and_persistent_operation() {
+    let landmark = storehouse_landmark();
+    let context = storehouse_context(&landmark, "inspect_or_contribute");
+    let mut project = tarrowyn_protocol::FoundationStorehouseState::default();
+    let recovery = storehouse::nearby_choice(
+        Some(&context),
+        &project,
+        Some(&Inventory::default()),
+        Some(0),
+    )
+    .unwrap();
+    assert!(recovery.material.is_none());
+    assert!(!recovery.gold.as_ref().unwrap().enabled);
+    assert!(recovery.detail.contains("Gather timber at the woodland"));
+
+    project.current_stage = FoundationStorehouseStage::Operational;
+    project
+        .contributions
+        .push(FoundationStorehouseContribution {
+            contribution_id: "storehouse-contribution-2".to_owned(),
+            account_id: "builder-account".to_owned(),
+            input: FoundationStorehouseContributionInput::Material {
+                kind: FoundationResourceKind::Timber,
+                amount: 8,
+            },
+            credited_kind: FoundationResourceKind::Timber,
+            credited_units: 8,
+            contributed_tick: 1,
+        });
+    project.completion = Some(FoundationStorehouseCompletion {
+        completed_tick: 2,
+        contributor_account_ids: vec!["builder-account".to_owned()],
+        operational_infrastructure_id: "first-beacon-storehouse".to_owned(),
+    });
+    let complete = storehouse::nearby_choice(Some(&context), &project, None, None).unwrap();
+    assert!(complete.operational);
+    assert_eq!(
+        complete.inspect_command,
+        "foundation-storehouse:storehouse-site:inspect"
+    );
+    assert!(complete.detail.contains("Operational storehouse"));
+    assert!(complete.detail.contains("1 contributors"));
 }
 
 fn farm_world(crop: Option<CropState>) -> WorldState {

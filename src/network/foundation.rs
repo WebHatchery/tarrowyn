@@ -7,6 +7,7 @@ impl OnlineClient {
             || self.pending_foundation_resource.is_some()
             || self.pending_foundation_cache.is_some()
             || self.pending_foundation_forge.is_some()
+            || self.pending_foundation_storehouse.is_some()
         {
             self.status_message =
                 "Wait for the current First Beacon conversation to finish.".to_owned();
@@ -26,6 +27,7 @@ impl OnlineClient {
             || self.pending_foundation_resource.is_some()
             || self.pending_foundation_cache.is_some()
             || self.pending_foundation_forge.is_some()
+            || self.pending_foundation_storehouse.is_some()
     }
 
     pub(super) fn poll_foundation(&mut self, dt: f32, notices: &mut Vec<NetworkNotice>) {
@@ -65,6 +67,7 @@ impl OnlineClient {
             || self.pending_foundation_resource.is_some()
             || self.pending_foundation_cache.is_some()
             || self.pending_foundation_forge.is_some()
+            || self.pending_foundation_storehouse.is_some()
         {
             self.status_message = "Wait for the current nearby work to finish.".to_owned();
             return false;
@@ -328,6 +331,148 @@ impl OnlineClient {
             Err(error) => self.connection_failed(error, notices),
         }
     }
+
+    pub fn queue_foundation_storehouse(
+        &mut self,
+        landmark_id: &str,
+        contribution: Option<FoundationStorehouseContributionInput>,
+    ) -> bool {
+        if !self.mutations_ready() || self.foundation_interaction_pending() {
+            self.status_message = "Wait for the current nearby work to finish.".to_owned();
+            return false;
+        }
+        let action = if contribution.is_some() {
+            FoundationStorehouseAction::Contribute
+        } else {
+            FoundationStorehouseAction::Inspect
+        };
+        let request = FoundationStorehouseRequest {
+            request_id: self.next_request_id("foundation-storehouse"),
+            action,
+            landmark_id: landmark_id.to_owned(),
+            contribution,
+        };
+        self.pending_foundation_storehouse = Some(PendingFoundationStorehouse {
+            pending: Some(self.api.post_json("/v1/foundation/storehouse", &request)),
+            request,
+            retries: 0,
+            retry_timer: 0.0,
+        });
+        self.status_message = match action {
+            FoundationStorehouseAction::Inspect => "Reading Mara's storehouse ledger…",
+            FoundationStorehouseAction::Contribute => "Delivering goods to Mara's project…",
+        }
+        .to_owned();
+        true
+    }
+
+    pub(super) fn poll_foundation_storehouse(&mut self, dt: f32, notices: &mut Vec<NetworkNotice>) {
+        let Some(mut pending) = self.pending_foundation_storehouse.take() else {
+            return;
+        };
+        pending.retry_timer = (pending.retry_timer - dt.max(0.0)).max(0.0);
+        if pending.retry_timer > 0.0 {
+            self.pending_foundation_storehouse = Some(pending);
+            return;
+        }
+        if pending.pending.is_none() {
+            pending.pending = Some(
+                self.api
+                    .post_json("/v1/foundation/storehouse", &pending.request),
+            );
+        }
+        let Some(result) = pending
+            .pending
+            .as_mut()
+            .and_then(|request| request.poll_timed(dt, REQUEST_TIMEOUT_SECONDS))
+        else {
+            self.pending_foundation_storehouse = Some(pending);
+            return;
+        };
+        pending.pending = None;
+        match result {
+            Ok(response) => {
+                let cursor = response.meta.cursor.unwrap_or(self.projection.cursor);
+                let projection_current = self
+                    .projection
+                    .response_is_current(response.meta.server_tick, cursor);
+                self.projection
+                    .record_response_version(response.meta.server_tick, response.meta.cursor);
+                let data = response.data;
+                if projection_current {
+                    self.projection.foundation_activity.storehouse = data.storehouse.clone();
+                    self.projection.player = Some(data.player);
+                }
+                let detail = if data.accepted {
+                    foundation_storehouse_success_notice(&data.storehouse, data.action)
+                } else {
+                    data.reason
+                        .unwrap_or_else(|| "Mara rejected that storehouse request.".to_owned())
+                };
+                self.status_message = detail.clone();
+                notices.push(if data.accepted {
+                    NetworkNotice::Success(detail)
+                } else {
+                    NetworkNotice::Warning(detail)
+                });
+                self.state_refresh = 0.0;
+            }
+            Err(error)
+                if is_transient_transport_error(&error)
+                    && pending.retries < super::commands::MAX_COMMAND_RETRIES =>
+            {
+                pending.retries += 1;
+                pending.retry_timer = super::commands::COMMAND_RETRY_DELAY_SECONDS;
+                let retries = pending.retries;
+                self.pending_foundation_storehouse = Some(pending);
+                notices.push(NetworkNotice::Warning(format!(
+                    "The contribution could not be confirmed; retrying the same request ({retries}/{}).",
+                    super::commands::MAX_COMMAND_RETRIES
+                )));
+            }
+            Err(error) => self.connection_failed(error, notices),
+        }
+    }
+}
+
+pub(super) fn foundation_storehouse_success_notice(
+    project: &tarrowyn_protocol::FoundationStorehouseState,
+    action: FoundationStorehouseAction,
+) -> String {
+    let remaining = |kind| {
+        let required = project
+            .requirements
+            .iter()
+            .find(|requirement| requirement.kind == kind)
+            .map_or(0, |requirement| requirement.units_required);
+        let credited = project
+            .contributions
+            .iter()
+            .filter(|contribution| contribution.credited_kind == kind)
+            .fold(0_u32, |total, contribution| {
+                total.saturating_add(contribution.credited_units)
+            });
+        required.saturating_sub(credited)
+    };
+    let stage = project
+        .stages
+        .iter()
+        .find(|gate| gate.stage == project.current_stage)
+        .map(|gate| gate.visible_label.as_str())
+        .unwrap_or("Storehouse project");
+    if project.completion.is_some() {
+        return "First Beacon storehouse operational — the public structure is permanently recorded."
+            .to_owned();
+    }
+    let verb = match action {
+        FoundationStorehouseAction::Inspect => "Storehouse inspected",
+        FoundationStorehouseAction::Contribute => "Contribution accepted",
+    };
+    format!(
+        "{verb} — {stage}; {} timber and {} stone remain.",
+        remaining(FoundationResourceKind::Timber),
+        remaining(FoundationResourceKind::Stone)
+    )
 }
 
 pub(super) fn foundation_forge_success_notice(

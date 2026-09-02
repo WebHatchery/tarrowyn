@@ -2,6 +2,7 @@ use super::*;
 use tarrowyn_protocol::{
     FoundationCacheAction, FoundationFieldToolKind, FoundationForgeAction,
     FoundationResourceAction, FoundationResourceAmount, FoundationResourceKind,
+    FoundationStorehouseAction, FoundationStorehouseContributionInput,
 };
 
 #[test]
@@ -120,5 +121,57 @@ fn cache_feedback_names_the_authoritative_transfer() {
             Some(FoundationResourceKind::IronOre)
         ),
         "Collected 1 iron ore from the shared cache."
+    );
+}
+
+#[test]
+fn storehouse_queue_keeps_one_typed_landmark_contribution_for_retry() {
+    let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
+    client.state = ConnectionState::Online;
+    client.state_reload_pending = false;
+
+    assert!(client.queue_foundation_storehouse(
+        "storehouse-site",
+        Some(FoundationStorehouseContributionInput::Material {
+            kind: FoundationResourceKind::Timber,
+            amount: 1,
+        })
+    ));
+    let pending = client.pending_foundation_storehouse.as_ref().unwrap();
+    assert_eq!(
+        pending.request.action,
+        FoundationStorehouseAction::Contribute
+    );
+    assert_eq!(pending.request.landmark_id, "storehouse-site");
+    assert!(pending
+        .request
+        .request_id
+        .starts_with("foundation-storehouse-"));
+    assert!(!client.queue_foundation_storehouse("builder-mara", None));
+}
+
+#[test]
+fn storehouse_feedback_names_stage_remaining_need_and_completion() {
+    let project = tarrowyn_protocol::FoundationStorehouseState::default();
+    let progress = super::super::foundation::foundation_storehouse_success_notice(
+        &project,
+        FoundationStorehouseAction::Inspect,
+    );
+    assert!(progress.contains("Marked storehouse site"));
+    assert!(progress.contains("8 timber and 6 stone remain"));
+
+    let mut complete = project;
+    complete.current_stage = tarrowyn_protocol::FoundationStorehouseStage::Operational;
+    complete.completion = Some(tarrowyn_protocol::FoundationStorehouseCompletion {
+        completed_tick: 4,
+        contributor_account_ids: vec!["account-1".to_owned()],
+        operational_infrastructure_id: "first-beacon-storehouse".to_owned(),
+    });
+    assert!(
+        super::super::foundation::foundation_storehouse_success_notice(
+            &complete,
+            FoundationStorehouseAction::Contribute,
+        )
+        .contains("permanently recorded")
     );
 }

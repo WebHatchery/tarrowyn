@@ -263,6 +263,7 @@ impl OnlineClient {
             || self.pending_foundation_resource.is_some()
             || self.pending_foundation_cache.is_some()
             || self.pending_foundation_forge.is_some()
+            || self.pending_foundation_storehouse.is_some()
         {
             return;
         }

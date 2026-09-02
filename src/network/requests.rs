@@ -2,8 +2,9 @@ use macroquad_toolkit::net::Pending;
 use tarrowyn_protocol::{
     ApiResponse, ChatRequest, ChatResponse, FarmingRequest, FarmingResponse,
     FoundationCacheRequest, FoundationCacheResponse, FoundationForgeRequest,
-    FoundationForgeResponse, FoundationResourceRequest, FoundationResourceResponse, MovementIntent,
-    MovementResponse, TradeRequest, TradeResponse,
+    FoundationForgeResponse, FoundationResourceRequest, FoundationResourceResponse,
+    FoundationStorehouseRequest, FoundationStorehouseResponse, MovementIntent, MovementResponse,
+    TradeRequest, TradeResponse,
 };
 
 pub(super) struct PendingMovement {
@@ -44,6 +45,13 @@ pub(super) struct PendingFoundationCache {
 pub(super) struct PendingFoundationForge {
     pub(crate) pending: Option<Pending<ApiResponse<FoundationForgeResponse>>>,
     pub(crate) request: FoundationForgeRequest,
+    pub(crate) retries: u8,
+    pub(crate) retry_timer: f32,
+}
+
+pub(super) struct PendingFoundationStorehouse {
+    pub(crate) pending: Option<Pending<ApiResponse<FoundationStorehouseResponse>>>,
+    pub(crate) request: FoundationStorehouseRequest,
     pub(crate) retries: u8,
     pub(crate) retry_timer: f32,
 }

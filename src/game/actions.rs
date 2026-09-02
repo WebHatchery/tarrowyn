@@ -38,6 +38,47 @@ pub(super) fn parse_foundation_forge_command(value: &str) -> Option<FoundationFo
     }
 }
 
+pub(super) fn parse_foundation_storehouse_command(
+    value: &str,
+) -> Option<(
+    String,
+    Option<tarrowyn_protocol::FoundationStorehouseContributionInput>,
+)> {
+    let mut parts = value.strip_prefix("foundation-storehouse:")?.split(':');
+    let landmark_id = parts.next()?;
+    if !matches!(
+        landmark_id,
+        "builder-mara" | "first-beacon-noticeboard" | "storehouse-site"
+    ) {
+        return None;
+    }
+    let source = parts.next()?;
+    let contribution = match source {
+        "inspect" if parts.next().is_none() => None,
+        "material" | "gold" => {
+            let kind = match parts.next()? {
+                "timber" => FoundationResourceKind::Timber,
+                "stone" => FoundationResourceKind::Stone,
+                _ => return None,
+            };
+            let amount = parts.next()?.parse::<u32>().ok()?;
+            if amount == 0 || parts.next().is_some() {
+                return None;
+            }
+            Some(if source == "material" {
+                tarrowyn_protocol::FoundationStorehouseContributionInput::Material { kind, amount }
+            } else {
+                tarrowyn_protocol::FoundationStorehouseContributionInput::Gold {
+                    toward: kind,
+                    amount,
+                }
+            })
+        }
+        _ => return None,
+    };
+    Some((landmark_id.to_owned(), contribution))
+}
+
 pub(super) fn parse_cooperation_trade_command(value: &str) -> Option<TradeRequest> {
     let (action, selector) = if let Some(account_id) = value.strip_prefix("cooperation-offer-ore:")
     {
@@ -196,6 +237,10 @@ impl Game {
         }
         if let Some(action) = parse_foundation_forge_command(id) {
             client.queue_foundation_forge(action);
+            return;
+        }
+        if let Some((landmark_id, contribution)) = parse_foundation_storehouse_command(id) {
+            client.queue_foundation_storehouse(&landmark_id, contribution);
             return;
         }
         if let Some(request) = parse_cooperation_trade_command(id) {

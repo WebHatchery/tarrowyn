@@ -11,11 +11,12 @@ use tarrowyn_protocol::{
     FoundationActivityState, FoundationBaseline, FoundationCacheAction, FoundationCacheRequest,
     FoundationForgeAction, FoundationForgeRequest, FoundationInteractionRequest,
     FoundationInteractionResponse, FoundationResourceAction, FoundationResourceAmount,
-    FoundationResourceKind, FoundationResourceRequest, FrontierEvent, GuestSessionRequest,
-    GuestSessionResponse, LandClaim, MovementIntent, OpportunitySignal, OpsHealthResponse,
-    PlayerPresence, PlayerProjection, StateSnapshot, TavernFeedResponse, TimeOfDay, TradeAction,
-    TradeOffer, TradeRequest, TradesResponse, WildernessZone, WorldClock, WorldEvent,
-    WorldSnapshot, MAX_CHAT_MESSAGE_LENGTH,
+    FoundationResourceKind, FoundationResourceRequest, FoundationStorehouseAction,
+    FoundationStorehouseContributionInput, FoundationStorehouseRequest, FrontierEvent,
+    GuestSessionRequest, GuestSessionResponse, LandClaim, MovementIntent, OpportunitySignal,
+    OpsHealthResponse, PlayerPresence, PlayerProjection, StateSnapshot, TavernFeedResponse,
+    TimeOfDay, TradeAction, TradeOffer, TradeRequest, TradesResponse, WildernessZone, WorldClock,
+    WorldEvent, WorldSnapshot, MAX_CHAT_MESSAGE_LENGTH,
 };
 
 const REQUEST_TIMEOUT_SECONDS: f32 = 6.0;
@@ -56,7 +57,7 @@ pub(crate) use phase4::CraftingView;
 use phase4::Phase4Client;
 use requests::{
     PendingChat, PendingFarming, PendingFoundationCache, PendingFoundationForge,
-    PendingFoundationResource, PendingMovement, PendingTrade,
+    PendingFoundationResource, PendingFoundationStorehouse, PendingMovement, PendingTrade,
 };
 pub use types::{ConnectionState, NetworkNotice, RemotePlayer};
 
@@ -111,6 +112,7 @@ pub struct OnlineClient {
     pending_foundation_resource: Option<PendingFoundationResource>,
     pending_foundation_cache: Option<PendingFoundationCache>,
     pending_foundation_forge: Option<PendingFoundationForge>,
+    pending_foundation_storehouse: Option<PendingFoundationStorehouse>,
     pending_trades: Option<Pending<ApiResponse<TradesResponse>>>,
     pending_trade: Option<PendingTrade>,
     movement_queue: VecDeque<MovementIntent>,
@@ -159,6 +161,7 @@ impl OnlineClient {
             pending_foundation_resource: None,
             pending_foundation_cache: None,
             pending_foundation_forge: None,
+            pending_foundation_storehouse: None,
             pending_trades: None,
             pending_trade: None,
             movement_queue: VecDeque::new(),
@@ -200,6 +203,7 @@ impl OnlineClient {
         self.poll_foundation_resource(dt, &mut notices);
         self.poll_foundation_cache(dt, &mut notices);
         self.poll_foundation_forge(dt, &mut notices);
+        self.poll_foundation_storehouse(dt, &mut notices);
         self.poll_trade_requests(dt, &mut notices);
         let mutations_ready = self.mutations_ready();
         let frontier_cursor_boundary =
@@ -281,6 +285,7 @@ impl OnlineClient {
         self.pending_foundation_resource = None;
         self.pending_foundation_cache = None;
         self.pending_foundation_forge = None;
+        self.pending_foundation_storehouse = None;
         self.pending_trades = None;
         self.pending_trade = None;
         self.movement_correction = self.projection.authoritative_player_position();
@@ -382,6 +387,7 @@ impl OnlineClient {
         self.pending_foundation_resource = None;
         self.pending_foundation_cache = None;
         self.pending_foundation_forge = None;
+        self.pending_foundation_storehouse = None;
         self.pending_trades = None;
         self.pending_trade = None;
         self.frontier.clear();
@@ -551,6 +557,7 @@ impl OnlineClient {
         self.pending_foundation_resource = None;
         self.pending_foundation_cache = None;
         self.pending_foundation_forge = None;
+        self.pending_foundation_storehouse = None;
         self.pending_trades = None;
         self.pending_trade = None;
         self.movement_correction = self.projection.authoritative_player_position();
@@ -590,6 +597,7 @@ impl OnlineClient {
             || self.pending_foundation_resource.is_some()
             || self.pending_foundation_cache.is_some()
             || self.pending_foundation_forge.is_some()
+            || self.pending_foundation_storehouse.is_some()
             || !self.movement_queue.is_empty()
             || !self.chat_queue.is_empty()
             || !self.farming_queue.is_empty()
