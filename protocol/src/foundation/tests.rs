@@ -81,6 +81,7 @@ fn foundation_resource_contract_round_trips_depletion_and_crude_access() {
             },
             capacity: 64,
         },
+        cooperation: FoundationCooperationState::default(),
     };
     let request = FoundationResourceRequest {
         request_id: "gather-1".to_owned(),
@@ -144,4 +145,22 @@ fn forge_recipe_round_trips_typed_costs_and_tool_result() {
     assert!(encoded.contains("iron_ore"));
     assert!(encoded.contains("tool_handle"));
     assert!(encoded.contains("\"tool\":\"iron\""));
+}
+
+#[test]
+fn cooperative_goal_names_raw_inputs_and_a_smaller_work_target() {
+    let state = FoundationCooperationState::default();
+    let encoded = serde_json::to_string(&state).unwrap();
+    let decoded: FoundationCooperationState = serde_json::from_str(&encoded).unwrap();
+
+    assert_eq!(decoded, state);
+    assert_eq!(state.goal.goal_id, "first-beacon-field-tool");
+    assert_eq!(state.goal.output_tool, FoundationFieldToolKind::Iron);
+    assert_eq!(state.goal.solo_work_actions, 6);
+    assert_eq!(state.goal.cooperative_target_work_actions, 5);
+    assert_eq!(
+        state.goal.work_measure,
+        FoundationCooperationWorkMeasure::AcceptedGatherOrForgeAction
+    );
+    assert_eq!(state.goal.required_inputs.len(), 2);
 }

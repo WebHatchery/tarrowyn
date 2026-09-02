@@ -97,6 +97,52 @@ fn core_ok(state: &RepositoryState, config: &ServerConfig, account_ids: &HashSet
                         | TradeStatus::Expired
                 )
         });
+    let cooperation = &state.foundation_activity.cooperation;
+    let cooperation_ok = cooperation.goal == Default::default()
+        && cooperation.latest_result.as_ref().is_none_or(|result| {
+            account_reference_ok(&result.coordinator_account_id, account_ids)
+                && result.participant_account_ids.len() >= 2
+                && result.participant_account_ids.len() <= 8
+                && unique_non_empty(result.participant_account_ids.iter().map(String::as_str))
+                && result
+                    .participant_account_ids
+                    .iter()
+                    .all(|account_id| account_reference_ok(account_id, account_ids))
+                && result
+                    .participant_account_ids
+                    .contains(&result.coordinator_account_id)
+                && result.contributions.len() == result.participant_account_ids.len()
+                && unique_non_empty(
+                    result
+                        .contributions
+                        .iter()
+                        .map(|contribution| contribution.account_id.as_str()),
+                )
+                && result.contributions.iter().all(|contribution| {
+                    result
+                        .participant_account_ids
+                        .contains(&contribution.account_id)
+                        && !contribution.materials.is_empty()
+                        && contribution
+                            .materials
+                            .iter()
+                            .all(|material| material.amount > 0)
+                })
+                && result
+                    .contributions
+                    .iter()
+                    .map(|contribution| u16::from(contribution.work_actions))
+                    .sum::<u16>()
+                    == u16::from(result.work_actions)
+                && !result.trade_id.trim().is_empty()
+                && result.work_actions <= cooperation.goal.solo_work_actions
+                && result.saved_work_actions
+                    == cooperation
+                        .goal
+                        .solo_work_actions
+                        .saturating_sub(result.work_actions)
+                && result.completed_tick <= state.tick
+        });
 
     sequence_ok
         && clock_ok
@@ -106,6 +152,7 @@ fn core_ok(state: &RepositoryState, config: &ServerConfig, account_ids: &HashSet
         && chat_ok
         && notices_ok
         && trades_ok
+        && cooperation_ok
 }
 
 fn phase3_ok(state: &RepositoryState, config: &ServerConfig, account_ids: &HashSet<&str>) -> bool {

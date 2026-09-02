@@ -340,6 +340,11 @@ fn has_bundle(identity: &Identity, bundle: TradeBundle) -> bool {
         && identity.inventory.turnips >= bundle.turnips
         && identity.inventory.moonberries >= bundle.moonberries
         && identity.inventory.seeds >= bundle.seeds
+        && identity.inventory.timber >= bundle.timber
+        && identity.inventory.stone >= bundle.stone
+        && identity.inventory.iron_ore >= bundle.iron_ore
+        && identity.inventory.charcoal >= bundle.charcoal
+        && identity.inventory.tool_handles >= bundle.tool_handles
         && identity.gold >= bundle.gold
 }
 
@@ -349,6 +354,11 @@ fn apply_bundle(identity: &mut Identity, bundle: TradeBundle, direction: i32) {
         identity.inventory.turnips -= bundle.turnips;
         identity.inventory.moonberries -= bundle.moonberries;
         identity.inventory.seeds -= bundle.seeds;
+        identity.inventory.timber -= bundle.timber;
+        identity.inventory.stone -= bundle.stone;
+        identity.inventory.iron_ore -= bundle.iron_ore;
+        identity.inventory.charcoal -= bundle.charcoal;
+        identity.inventory.tool_handles -= bundle.tool_handles;
         identity.gold -= bundle.gold;
     } else {
         identity.inventory.wheat = identity.inventory.wheat.saturating_add(bundle.wheat);
@@ -358,6 +368,14 @@ fn apply_bundle(identity: &mut Identity, bundle: TradeBundle, direction: i32) {
             .moonberries
             .saturating_add(bundle.moonberries);
         identity.inventory.seeds = identity.inventory.seeds.saturating_add(bundle.seeds);
+        identity.inventory.timber = identity.inventory.timber.saturating_add(bundle.timber);
+        identity.inventory.stone = identity.inventory.stone.saturating_add(bundle.stone);
+        identity.inventory.iron_ore = identity.inventory.iron_ore.saturating_add(bundle.iron_ore);
+        identity.inventory.charcoal = identity.inventory.charcoal.saturating_add(bundle.charcoal);
+        identity.inventory.tool_handles = identity
+            .inventory
+            .tool_handles
+            .saturating_add(bundle.tool_handles);
         identity.gold = identity.gold.saturating_add(bundle.gold);
     }
 }

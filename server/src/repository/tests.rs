@@ -9,6 +9,7 @@ use tarrowyn_protocol::{
 };
 
 mod chat_validation;
+mod cooperation_contract;
 mod core_event_integrity;
 mod core_history_integrity;
 mod core_metadata_integrity;

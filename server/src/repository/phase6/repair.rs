@@ -137,6 +137,11 @@ fn normalize_inventory(
         identity.inventory.moonberries = identity.inventory.moonberries.min(9_999);
         identity.inventory.seeds = identity.inventory.seeds.min(9_999);
         identity.inventory.bandages = identity.inventory.bandages.min(9_999);
+        identity.inventory.timber = identity.inventory.timber.min(9_999);
+        identity.inventory.stone = identity.inventory.stone.min(9_999);
+        identity.inventory.iron_ore = identity.inventory.iron_ore.min(9_999);
+        identity.inventory.charcoal = identity.inventory.charcoal.min(9_999);
+        identity.inventory.tool_handles = identity.inventory.tool_handles.min(9_999);
     }
     (
         true,

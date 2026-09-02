@@ -494,6 +494,16 @@ pub struct TradeBundle {
     pub turnips: u32,
     pub moonberries: u32,
     pub seeds: u32,
+    #[serde(default)]
+    pub timber: u32,
+    #[serde(default)]
+    pub stone: u32,
+    #[serde(default)]
+    pub iron_ore: u32,
+    #[serde(default)]
+    pub charcoal: u32,
+    #[serde(default)]
+    pub tool_handles: u32,
     pub gold: u32,
 }
 
@@ -503,6 +513,11 @@ impl TradeBundle {
             .saturating_add(self.turnips)
             .saturating_add(self.moonberries)
             .saturating_add(self.seeds)
+            .saturating_add(self.timber)
+            .saturating_add(self.stone)
+            .saturating_add(self.iron_ore)
+            .saturating_add(self.charcoal)
+            .saturating_add(self.tool_handles)
     }
 
     pub fn is_empty(self) -> bool {

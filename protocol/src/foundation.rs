@@ -96,6 +96,73 @@ pub struct FoundationActivityState {
     pub crude_tool_access: Vec<FoundationToolAccess>,
     #[serde(default)]
     pub shared_cache: FoundationSharedCache,
+    #[serde(default)]
+    pub cooperation: FoundationCooperationState,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct FoundationCooperationGoal {
+    pub goal_id: String,
+    pub title: String,
+    pub required_inputs: Vec<FoundationForgeMaterialAmount>,
+    pub output_tool: FoundationFieldToolKind,
+    pub solo_work_actions: u8,
+    pub cooperative_target_work_actions: u8,
+    pub work_measure: FoundationCooperationWorkMeasure,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum FoundationCooperationWorkMeasure {
+    AcceptedGatherOrForgeAction,
+}
+
+impl Default for FoundationCooperationGoal {
+    fn default() -> Self {
+        Self {
+            goal_id: "first-beacon-field-tool".to_owned(),
+            title: "Equip a neighbour for a longer harvest".to_owned(),
+            required_inputs: vec![
+                FoundationForgeMaterialAmount {
+                    kind: FoundationForgeMaterialKind::Timber,
+                    amount: 2,
+                },
+                FoundationForgeMaterialAmount {
+                    kind: FoundationForgeMaterialKind::IronOre,
+                    amount: 2,
+                },
+            ],
+            output_tool: FoundationFieldToolKind::Iron,
+            solo_work_actions: 6,
+            cooperative_target_work_actions: 5,
+            work_measure: FoundationCooperationWorkMeasure::AcceptedGatherOrForgeAction,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct FoundationCooperationContribution {
+    pub account_id: String,
+    pub materials: Vec<FoundationForgeMaterialAmount>,
+    pub work_actions: u8,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct FoundationCooperationResult {
+    pub coordinator_account_id: String,
+    pub participant_account_ids: Vec<String>,
+    pub contributions: Vec<FoundationCooperationContribution>,
+    pub trade_id: String,
+    pub work_actions: u8,
+    pub saved_work_actions: u8,
+    pub completed_tick: u64,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
+pub struct FoundationCooperationState {
+    pub goal: FoundationCooperationGoal,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub latest_result: Option<FoundationCooperationResult>,
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]

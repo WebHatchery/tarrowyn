@@ -26,6 +26,11 @@ fn support_repair_normalizes_every_persisted_inventory_counter() {
         identity.inventory.moonberries = 20_000;
         identity.inventory.seeds = 20_000;
         identity.inventory.bandages = 20_000;
+        identity.inventory.timber = 20_000;
+        identity.inventory.stone = 20_000;
+        identity.inventory.iron_ore = 20_000;
+        identity.inventory.charcoal = 20_000;
+        identity.inventory.tool_handles = 20_000;
     }
     let request = SupportRepairRequest {
         request_id: "repair-inventory-all-fields".to_owned(),
@@ -51,6 +56,11 @@ fn support_repair_normalizes_every_persisted_inventory_counter() {
         assert_eq!(inventory.moonberries, 9_999);
         assert_eq!(inventory.seeds, 9_999);
         assert_eq!(inventory.bandages, 9_999);
+        assert_eq!(inventory.timber, 9_999);
+        assert_eq!(inventory.stone, 9_999);
+        assert_eq!(inventory.iron_ore, 9_999);
+        assert_eq!(inventory.charcoal, 9_999);
+        assert_eq!(inventory.tool_handles, 9_999);
     }
     assert_eq!(
         repository

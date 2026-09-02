@@ -74,6 +74,26 @@ fn trade_bundle_summary(bundle: TradeBundle) -> String {
         let unit = if bundle.seeds == 1 { "seed" } else { "seeds" };
         parts.push(format!("{} {unit}", bundle.seeds));
     }
+    if bundle.timber > 0 {
+        parts.push(format!("{} timber", bundle.timber));
+    }
+    if bundle.stone > 0 {
+        parts.push(format!("{} stone", bundle.stone));
+    }
+    if bundle.iron_ore > 0 {
+        parts.push(format!("{} iron ore", bundle.iron_ore));
+    }
+    if bundle.charcoal > 0 {
+        parts.push(format!("{} charcoal", bundle.charcoal));
+    }
+    if bundle.tool_handles > 0 {
+        let unit = if bundle.tool_handles == 1 {
+            "handle"
+        } else {
+            "handles"
+        };
+        parts.push(format!("{} tool {unit}", bundle.tool_handles));
+    }
     if bundle.gold > 0 {
         parts.push(format!("{} gold", bundle.gold));
     }

@@ -210,6 +210,19 @@ fn phase_two_farming_and_trade_requests_round_trip_with_stable_tags() {
 }
 
 #[test]
+fn older_trade_bundles_default_foundation_materials() {
+    let bundle: TradeBundle =
+        serde_json::from_str(r#"{"wheat":1,"turnips":0,"moonberries":0,"seeds":0,"gold":0}"#)
+            .unwrap();
+
+    assert_eq!(bundle.item_count(), 1);
+    assert_eq!(bundle.timber, 0);
+    assert_eq!(bundle.iron_ore, 0);
+    assert_eq!(bundle.charcoal, 0);
+    assert_eq!(bundle.tool_handles, 0);
+}
+
+#[test]
 fn phase_three_frontier_commands_round_trip_with_stable_wire_names() {
     let combat = CombatRequest {
         request_id: "combat-1".to_owned(),

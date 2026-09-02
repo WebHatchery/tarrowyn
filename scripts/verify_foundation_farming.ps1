@@ -30,7 +30,12 @@ function Start-F3Server([string]$statePath, [string]$stdoutPath, [string]$stderr
     $process = Start-Process -FilePath "cargo.exe" -ArgumentList @("run", "-q", "-p", "tarrowyn-server") `
         -WorkingDirectory $projectRoot -PassThru -WindowStyle Hidden `
         -RedirectStandardOutput $stdoutPath -RedirectStandardError $stderrPath
-    Wait-ForHealth $process
+    try {
+        Wait-ForHealth $process
+    } catch {
+        Get-Content -LiteralPath $stderrPath -ErrorAction SilentlyContinue | Write-Error
+        throw
+    }
     return $process
 }
 
@@ -151,9 +156,10 @@ try {
     Stop-F3Server $server
     $server = $null
     $stored = Get-Content -LiteralPath $statePath -Raw | ConvertFrom-Json
-    Assert-F3 ($stored.storage_version -eq 23) "the scenario did not persist the current storage contract"
+    Assert-F3 ($stored.storage_version -eq 24) "the scenario did not persist the current storage contract"
     $stored.persisted_at_unix_millis = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds() - (15 * 60 * 1000)
-    $stored | ConvertTo-Json -Depth 100 | Set-Content -LiteralPath $statePath -Encoding utf8
+    $rewrittenState = $stored | ConvertTo-Json -Depth 100
+    [System.IO.File]::WriteAllText($statePath, $rewrittenState, [System.Text.UTF8Encoding]::new($false))
 
     $server = Start-F3Server $statePath (Join-Path $temporaryRoot "offline.out.log") (Join-Path $temporaryRoot "offline.err.log")
     $resumed = New-Guest "f3-connected-farming-scenario"

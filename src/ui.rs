@@ -282,6 +282,11 @@ fn trade_bundle_detail(bundle: tarrowyn_protocol::TradeBundle) -> String {
         (bundle.turnips, "turnips"),
         (bundle.moonberries, "moonberries"),
         (bundle.seeds, "seeds"),
+        (bundle.timber, "timber"),
+        (bundle.stone, "stone"),
+        (bundle.iron_ore, "iron ore"),
+        (bundle.charcoal, "charcoal"),
+        (bundle.tool_handles, "tool handles"),
         (bundle.gold, "gold"),
     ] {
         if amount > 0 {

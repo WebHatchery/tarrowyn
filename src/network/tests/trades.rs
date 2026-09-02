@@ -203,6 +203,7 @@ fn trade_success_notice_explains_the_accepted_exchange() {
             moonberries: 0,
             seeds: 1,
             gold: 0,
+            ..Default::default()
         },
         request: tarrowyn_protocol::TradeBundle {
             wheat: 0,
@@ -210,6 +211,7 @@ fn trade_success_notice_explains_the_accepted_exchange() {
             moonberries: 1,
             seeds: 0,
             gold: 3,
+            ..Default::default()
         },
         status: tarrowyn_protocol::TradeStatus::Accepted,
         created_tick: 2,
