@@ -38,7 +38,7 @@ player-observable acceptance test that exercises the connected experience.
 | [F3](FOUNDATIONAL_PLAYABILITY_F3_RUNBOOK.md) | The useful short session | A returning player can plant, tend, advance through offline world time, harvest, and replant during a useful 15-minute farming session using visible controls alone. | Phases 2 and 4 |
 | [F4](FOUNDATIONAL_PLAYABILITY_F4_RUNBOOK.md) | Connected production | Ore, fuel, and a timber-derived component can become an improved tool at the rough forge, and a fixed comparison proves that the tool saves actions, time, or materials over the crude fallback. | Phases 2 and 4 |
 | [F5](FOUNDATIONAL_PLAYABILITY_F5_RUNBOOK.md) | Player interdependence | Two players can complete an atomic barter and finish a fixed production goal in fewer actions or less world time by specialising and trading than by self-supplying. | Phases 2 and 5 |
-| F6 | Building the first storehouse | Players can see an unfinished storehouse, understand its needs, contribute goods from several activities, and permanently transform it into an operational settlement structure. | Phases 3–5 |
+| [F6](FOUNDATIONAL_PLAYABILITY_F6_RUNBOOK.md) | Building the first storehouse | Players can see an unfinished storehouse, understand its needs, contribute goods from several activities, and permanently transform it into an operational settlement structure. | Phases 3–5 |
 | F7 | The cohesive first hour | A fresh player can try farming, logging, mining, exploration, smithing, trade, and settlement contribution without choosing a class, then leave with a visible future-session goal. | Cross-phase integration |
 | F8 | Permanent property | A player can construct a staged home and register a bounded gated enclosure while automated guards preserve beacon commons, public routes, entrances, existing property, and escape paths. | Phase 4 |
 | F9 | The second beacon | Players can build and support a frontier beacon, travel with carried inventory but not remote storage, offer it as an arrival point, let it become dormant, and restore it. | Phases 3 and 5 |
@@ -90,6 +90,24 @@ Run its connected acceptance gate with:
 
 ```powershell
 .\scripts\verify_foundation_forge.ps1
+```
+
+F5's voluntary specialisation, atomic barter, measured cooperation, solo
+fallback, replay, and restart proof is in
+[`FOUNDATIONAL_PLAYABILITY_F5_RUNBOOK.md`](FOUNDATIONAL_PLAYABILITY_F5_RUNBOOK.md).
+Run its connected acceptance gate with:
+
+```powershell
+.\scripts\verify_foundation_cooperation.ps1
+```
+
+F6's mixed-contribution ledger, visible construction stages, infrastructure
+completion, replay, and restart proof is in
+[`FOUNDATIONAL_PLAYABILITY_F6_RUNBOOK.md`](FOUNDATIONAL_PLAYABILITY_F6_RUNBOOK.md).
+Run its connected acceptance gate with:
+
+```powershell
+.\scripts\verify_foundation_storehouse.ps1
 ```
 
 ### Foundational acceptance rules

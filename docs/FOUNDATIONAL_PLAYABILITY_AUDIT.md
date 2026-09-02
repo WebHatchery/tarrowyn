@@ -1,8 +1,8 @@
 # Foundational playability audit
 
-Status: project-27 F5 connected cooperation implemented and accepted on
-2026-09-02; subjective enjoyment and personal tent placement remain explicitly
-unproven or missing.
+Status: project-27 F6 connected storehouse construction implemented and
+accepted on 2026-09-02; subjective enjoyment, first-hour cohesion, and personal
+tent placement remain explicitly unproven or missing.
 
 This audit treats the attached **Tarrowyn Foundational Game Design Brief** as
 the design authority and uses the GDD plus the historical Phase 0–6 records as
@@ -21,9 +21,13 @@ now produce persistent timber, stone, and iron ore through shared crude tools;
 their nodes deplete and recover, and the capacity-bounded shared cache keeps
 goods at its physical camp location. The rough forge now consumes those same
 goods to prepare charcoal and a handle, then makes a six-action iron field tool
-whose fixed benefit is twice the three-action crude fallback. Personal shelter
-and construction are still absent. Mature registry-lease and property
-assumptions must be reconciled without removing the advanced systems.
+whose fixed benefit is twice the three-action crude fallback. The same carried
+timber and stone plus exact gold substitutions now feed Mara's first communal
+storehouse. Its server-owned ledger projects a marked site, dry-stone
+foundation, raised frame, and one persistent operational public building, with
+attributed contributions and replay-safe completion. Personal shelter is still
+absent. Mature registry-lease and property assumptions must be reconciled
+without removing the advanced systems.
 
 Shared plots now present their authoritative crop outlook in the nearby deck
 and expose touch-first plant, optional tend/water, and harvest actions. A
@@ -53,9 +57,9 @@ Status totals below are generated from the 132 requirements in this matrix:
 
 | Status | Count |
 |---|---:|
-| usable | 39 |
-| partial | 43 |
-| missing | 36 |
+| usable | 49 |
+| partial | 40 |
+| missing | 29 |
 | conflicting | 1 |
 | deliberately deferred | 13 |
 
@@ -85,6 +89,11 @@ Status totals below are generated from the 132 requirements in this matrix:
   `server/src/repository/trades.rs`, `src/ui_foundation.rs`,
   `scripts/verify_foundation_cooperation.ps1`, and
   `FOUNDATIONAL_PLAYABILITY_F5_RUNBOOK.md`.
+- **F6 storehouse:** `protocol/src/foundation/storehouse.rs`,
+  `server/src/repository/foundation/storehouse.rs`,
+  `src/ui_foundation/storehouse.rs`, `src/ui_map/storehouse.rs`,
+  `scripts/verify_foundation_storehouse.ps1`, and
+  `FOUNDATIONAL_PLAYABILITY_F6_RUNBOOK.md`.
 - **Civic/region:** `server/src/repository/phase4.rs`,
   `server/src/repository/phase5.rs`, `assets/data/infrastructure.json`,
   `assets/data/settlements.json`.
@@ -142,13 +151,13 @@ boundary, status, owner and risk.
 | FA-04 | Exploration discovers deposits, seeds, routes and settlement sites. | partial | Movement/travel, routes, regional sites and event projections exist. | Routes and locations are visible; discoveries are prelisted rather than found. | F2/F9 | Avoid turning exploration into a menu reveal. |
 | FA-05 | Basic smithing combines ore, fuel and components into useful tools. | usable | Proximity-checked forge atomically combines two ore, charcoal, and a timber handle into a typed iron tool. | The nearby deck exposes every preparation and crafting step plus the resulting `6/6` tool. | F4 regression | Preserve exact recipe accounting and replay safety. |
 | FA-06 | Barter/direct trade is basic and atomic. | usable | `/v1/trades` atomically moves the fixed two-ore offer and returns stable retry/restart responses. | Nearby **Offer 2 ore** and **Accept 2 ore** actions share the existing review/accept/cancel ledger. | F5 regression | Preserve the canonical trade authority; do not add a cooperation inventory. |
-| FA-07 | Construction works through the builder NPC. | missing | Baseline builder/site records; civic projects exist. | No player-builder interaction or material contribution loop. | F6 | Reuse authoritative project ledgers; do not add parallel persistence. |
+| FA-07 | Construction works through the builder NPC. | usable | Mara and the site expose the same proximity-checked storehouse authority for exact goods or gold contributions. | Connected touch actions advance the shared project and report Mara's remaining need. | F6 accepted | Keep future projects on the authoritative ledger rather than adding local progress. |
 | EC-01 | Farmers produce food, seeds and useful plant material. | partial | Crops and seeds exist and trade. | Food crops/seeds are visible; other plant materials are absent. | F3/F7 | Minimal additions should serve a real production chain. |
 | EC-02 | Loggers support fuel, fencing and tool components. | partial | Connected timber supplies forge charcoal and handles through atomic recipes. | A logger can supply both forge derivatives; fencing remains absent. | F6 | Reuse timber for only the selected construction proof. |
 | EC-03 | Miners support construction and smithing inputs. | partial | Connected iron ore is consumed by the rough forge; stone remains durable and stored. | Mining now supplies smithing directly; construction consumption remains absent. | F6 | Reuse these same goods for construction. |
 | EC-04 | Blacksmiths make useful tools from ore, fuel and other components. | usable | The unrestricted forge consumes gathered ore, prepared fuel, and a handle for an iron field tool. | Touch controls complete the whole recipe and show the resulting capacity. | F4 regression | Later specialisation may improve efficiency, not gate the base loop. |
 | EC-05 | Explorers reveal resources, routes and settlement opportunities. | partial | Regional map, events, locations and pioneer outpost exist. | Players can inspect known routes/sites; revealing them is absent. | F2/F9 | Stable discovery state must remain server-owned. |
-| EC-06 | Builders consume money/materials and create visible structures. | partial | Governance/public projects consume treasury; baseline builder/site records. | Public actions are ledgers, not builder-led structures appearing in the world. | F6 | Project completion must transform authoritative map state. |
+| EC-06 | Builders consume money/materials and create visible structures. | usable | The storehouse authority atomically consumes carried timber/stone or exact gold and creates one public-building record. | The map renders four server-owned construction stages and a persistent operational storehouse. | F6 accepted | Extend the same bounded transaction and render contract to later buildings. |
 | EC-07 | Crude tools always provide fallback; improved tools measurably save time/actions/materials. | usable | Every identity defaults to crude access; iron tools double useful field actions, and voluntary Mining practice reduces the iron-tool production path from six to five actions through barter. | Connected acceptance measures both benefits while fresh solo players retain the complete crude self-supply path. | F4/F5 regression | Later balance changes must retain measured benefits and non-blocking fallback. |
 
 ### First settlement and builder
@@ -166,15 +175,15 @@ boundary, status, owner and risk.
 | FS-09 | Nearby woodland. | usable | Stable woodland and timber-node records with bounded depletion, recovery, replay and persistence. | The map-visible woodland exposes **Gather timber** within one tile. | F2 regression | Node recovery must remain server-timed and capacity bounded. |
 | FS-10 | Nearby mineable ground. | usable | Stable shallow-seam node with bounded stone/ore deposits, recovery, replay and persistence. | The map-visible seam exposes **Mine stone** within one tile. | F2 regression | Keep local deposits distinct from regional market stock. |
 | FS-11 | Rough forge. | usable | Stable rendered landmark, typed recipes, proximity authority, persistence, and replay ledger. | Nearby touch controls inspect, prepare, and forge at the physical site. | F4 regression | Keep the forge connected to gathered inventory. |
-| FS-12 | Visible space for future construction. | partial | Stable `storehouse-site` record. | Site is not rendered. | F6 | F1 may render it without enabling contribution early. |
+| FS-12 | Visible space for future construction. | usable | Stable `storehouse-site` record and authoritative construction stage. | **SITE** is rendered from arrival and visibly transforms as work advances. | F6 accepted | Preserve collision and route clarity when personal placement arrives. |
 | FS-13 | Early projects include storehouse, well, fenced growing area, smithing shelter, carpenter yard and first homes. | partial | Civic project types and infrastructure framework exist. | Named foundational projects are not visible construction choices. | F6/F8 | Keep initial scope to the storehouse before expanding. |
-| FS-14 | The first communal project visibly shows what contributed materials will create. | missing | Baseline storehouse site and project ledgers are separate. | No unfinished structure or contribution forecast. | F6 | Needs staged authoritative state and replay-safe contribution. |
+| FS-14 | The first communal project visibly shows what contributed materials will create. | usable | Exact requirements and four material-gated stages share one replay-safe project ledger. | Nearby copy previews the next stage; the site visibly becomes foundation, frame, then storehouse. | F6 accepted | Human first-hour evidence must still assess whether the forecast is immediately clear. |
 | BP-01 | Builder introduces construction and settlement development. | usable | Mara's authoritative dialogue introduces the first storehouse and points to its need. | Players meet her through the nearby context action. | F6 extension | Introduction must lead into, not duplicate, the later contribution loop. |
-| BP-02 | Builder accepts appropriate money/resources. | missing | Generic escrow/project cost systems exist. | No builder request. | F6 | Reuse existing transaction/idempotency infrastructure. |
-| BP-03 | Builder builds or assists communal structures. | missing | Civic public actions exist. | No construction transformation. | F6 | Must produce visible persistent world change. |
+| BP-02 | Builder accepts appropriate money/resources. | usable | Mara accepts required carried goods or exact per-unit gold substitutions atomically and idempotently. | Separate touch actions expose only eligible goods and affordable gold contributions. | F6 accepted | Preserve exact pricing and clear rejection copy for future projects. |
+| BP-03 | Builder builds or assists communal structures. | usable | Completion creates exactly one durable public storehouse tied to Mara's project. | The construction site changes through foundation and frame into an operational building. | F6 accepted | Reuse the staged transformation contract for later communal structures. |
 | BP-04 | Builder may be hired for personal construction. | missing | Service orders exist but not builder housing. | No personal construction path. | F8 | Depends on tent/property placement and staged housing. |
-| BP-05 | Builder is a dependable low-population fallback. | missing | Fixed-NPC fallback philosophy and other travelling services exist. | No builder service. | F6/F8 | Baseline must remain useful without eclipsing players. |
-| BP-06 | Builder gives logging, mining, smithing and trade immediate purposes without replacing player builders. | missing | Systems exist separately. | No connected builder demand chain. | F6/F7 | Balance requires the earlier gather/forge proofs. |
+| BP-05 | Builder is a dependable low-population fallback. | usable | Permanent Mara accepts either self-gathered materials or gold without specialist or population gates. | A solo player always retains visible contribution actions beside Mara or the site. | F6 accepted | F8 must keep builder help useful without replacing player-made property. |
+| BP-06 | Builder gives logging, mining, smithing and trade immediate purposes without replacing player builders. | partial | Storehouse demand consumes gathered timber/stone or traded wealth; iron tools improve the connected production path. | Logging and mining feed the project directly, but the cohesive first hour has not yet shown smithing and trade as one legible builder chain. | F7 | Prove the complete journey without inventing a class gate. |
 
 ### Housing and beacon network
 
@@ -225,7 +234,7 @@ boundary, status, owner and risk.
 | UI-01 | Interactions primarily arise by approaching world objects/people/sites. | partial | Reusable nearest-landmark selection and authoritative proximity validation now cover F1. | Arrival promotes one nearby world action; later activities still use broader tools. | F2/F4/F6 | Extend the same context boundary rather than adding new permanent rows. |
 | UI-02 | Farm context exposes inspect/plant/water/tend/harvest. | usable | Position-bound farming endpoints plus deterministic nearby crop-choice tests. | Approaching any shared plot shows its outlook and **Plant crop**, **Tend / water**, or **Harvest crop** without keyboard input. | F3 regression | Tending intentionally carries the watering vocabulary instead of adding a redundant action. |
 | UI-03 | Woodland and mine contexts expose logging/mining. | usable | Nearest-landmark context selects typed resource commands against authoritative node records. | **Gather timber** and **Mine stone** appear beside their sites and report accepted yields or depletion. | F2 regression | Do not duplicate these actions in a permanent command row. |
-| UI-04 | Forge, NPC and construction-site contexts expose work, talk/trade/help and needs/contribution. | partial | Shared landmark context drives Mara, board, and dynamic forge work. | NPC talk and forge work are touch-first; construction needs/contribution remain absent. | F6 | Extend the same context model for contribution. |
+| UI-04 | Forge, NPC and construction-site contexts expose work, talk/trade/help and needs/contribution. | usable | Shared landmark context drives Mara, board, dynamic forge work, and typed storehouse contribution commands. | Nearby touch controls expose talk, need, eligible goods/gold, progress, and completed storehouse use. | F6 accepted | Keep later construction choices in the same context hierarchy. |
 | UI-05 | Journal carries ambitions/discoveries/work; noticeboard carries local needs/opportunities/projects. | partial | Chronicle, knowledge, notices, demands, contracts and world noticeboard context exist. | The board carries the first local need; a cohesive personal journal remains absent. | F7 | Avoid duplicating authoritative data in local saves. |
 | UI-06 | Only relevant contextual actions are prominent; every required action has a visible tap/click path. | partial | The F1–F5 nearby deck selects physical work plus eligible barter while **All tools** remains available. | Gathering, farming, forge preparation, ore offer/acceptance and recovery are touch-capable without a permanent command wall; construction and the cohesive first hour remain incomplete. | F6/F7 | Apply the same hierarchy to construction and the complete journey. |
 | AG-01 | Narrowly protect beacons, commons, routes, entrances, claims, shared resources and escape paths. | partial | Authority validates bounds/collision/claims and no-PvP ownership; baseline supplies stable spaces. | No construction placement exists to exercise most guards. | F2/F8/F9 | Spatial rules must be automated before player placement ships. |
@@ -242,7 +251,7 @@ boundary, status, owner and risk.
 | IS-04 | Rough forge, basic smithing, crude and improved tools. | usable | Physical forge recipes consume F2 materials; typed crude and iron tools have three- and six-action capacities. | The connected touch path prepares inputs, forges iron, measures its benefit, and preserves crude access. | F4 regression | Keep condition and recipe state durable. |
 | IS-05 | A few crops, trees and minerals. | usable | Three crops plus bounded timber, stone and iron-ore deposits are authoritative resource state. | Crops, woodland timber and shallow-seam minerals are productively reachable. | F2/F3 regression | Avoid content breadth beyond the fixed proof. |
 | IS-06 | Basic barter/direct trade. | usable | Atomic direct trade now carries all fixed foundation materials and anchors the durable cooperation result. | Exact ore offer/accept quick actions plus visible general review/accept/cancel. | F5 regression | Keep trade canonical and replay-safe. |
-| IS-07 | One communal construction project. | partial | Generic civic projects and storehouse-site baseline. | No visible contribution/transformation. | F6 | Storehouse is the selected first proof. |
+| IS-07 | One communal construction project. | usable | The First Beacon storehouse has exact requirements, attributed contributions, deterministic stages, and one durable completion. | Connected players can supply goods or gold and watch the public structure appear. | F6 accepted | Human F7 evidence must assess its pacing inside the full journey. |
 | IS-08 | Contextual world interactions. | partial | Server checks stable interaction IDs and authoritative distance; client selects the nearest landmark. | F1 interactions are contextual; later activities still need migration. | F2/F4/F6/F7 | Reuse the shared architecture. |
 | IS-09 | Persistent resources, property and world changes. | partial | Inventory/crops/claims/civic/region state persist. | Resources and abstract claims persist; foundational physical property does not. | F2/F6/F8 | Avoid local client truth. |
 | IS-10 | Two players can save each other meaningful time through economic connection. | usable | The connected F5 harness records two contributors completing the iron-tool goal in five accepted actions versus the six-action solo baseline. | Nearby status reports `5/6 accepted actions` and `1 saved through barter`. | F5 regression | Human preference remains separate evidence; preserve the measurable saving. |
@@ -251,8 +260,8 @@ boundary, status, owner and risk.
 | SC-03 | Players trade because cooperation saves time. | usable | The fixed two-ore trade is the causal bridge between one-action specialist extraction and the five-action shared result. | Both clients see five together versus six solo before offering/accepting and one saved afterward. | F5/F7 regression | Automation proves the incentive and path, not subjective preference. |
 | SC-04 | A 15-minute visit feels useful. | partial | The connected F3 scenario fits inspect, offline growth, harvest, replant and optional upkeep into one modeled 15-minute return. | The fixed useful actions are visible, but subjective value has not been observed with a human player. | F7 | Tune cadence from observed play; automation cannot establish enjoyment. |
 | SC-05 | A longer session creates memorable improvement or discovery. | partial | Knowledge, projects, combat, travel and chronicle changes exist. | Automated playthroughs record outcomes; human evidence remains desired. | F7 | Player meaning cannot be claimed from server state. |
-| SC-06 | Collected resources have visible purposes. | partial | Noticeboard needs, cache storage, and forge recipes use the same gathered inventory. | Timber and ore now expose a physical production purpose; settlement contribution remains absent. | F6/F7 | World sites should show needs before collection. |
-| SC-07 | Tent camp visibly develops through player effort. | missing | Storehouse baseline record plus abstract projects. | No visual tent camp or staged structure. | F6/F7 | Requires persistent render state. |
+| SC-06 | Collected resources have visible purposes. | usable | Noticeboard needs, cache, forge recipes, barter, and the storehouse consume the same authoritative gathered inventory. | Timber and stone visibly advance construction while ore supports the useful tool path. | F6 accepted | F7 must sequence these purposes into one cohesive first hour. |
+| SC-07 | Tent camp visibly develops through player effort. | partial | The staged storehouse transforms one camp site into a permanent shared building through attributed contributions. | One visible communal structure develops, but the broader camp progression and personal shelter remain absent. | F7/F8 | Add journey and property development without overstating this first structure. |
 | SC-08 | A home feels achievable but genuinely long-term. | missing | 90-day claim and service concepts only. | No house path. | F8 | Do not block F7 on post-foundation housing proof. |
 | SC-09 | Nearby scarcity encourages frontier expansion. | partial | Regional scarcity, travel and pioneer expedition exist. | Expansion is a command-driven outpost flow, not First Beacon scarcity. | F9 | Needs F2 resources and physical property pressure. |
 | SC-10 | A new beacon creates credible settlement opportunity. | missing | Multi-settlement region exists without player beacon causation. | No beacon project/lifecycle. | F9 | Reuse F1–F6 systems at the second site. |
@@ -413,14 +422,36 @@ F5 promotes `IS-10` and `SC-03` from `missing` to `usable`. `FA-06`, `EC-07`,
 changing status. Construction, first-hour cohesion, and subjective player
 preference remain conservative. The matrix remains exactly 132 rows.
 
-## Risks after the F5 cooperation boundary
+The project-27 F6 construction proof is documented in
+[`FOUNDATIONAL_PLAYABILITY_F6_RUNBOOK.md`](FOUNDATIONAL_PLAYABILITY_F6_RUNBOOK.md)
+and can be repeated with:
+
+```powershell
+.\scripts\verify_foundation_storehouse.ps1
+```
+
+On 2026-09-02 it passed focused touch and authority tests plus a live
+three-identity HTTP scenario covering real gathering, exact goods/gold costs,
+four independently observed stages, attribution, retries, restart persistence,
+one public infrastructure record, current storage integrity, and no duplicate
+charges, events, structures, or rewards. The full tree passed 837 tests before
+this evidence slice, then passed the integrated release and publish gate.
+
+F6 promotes `FA-07`, `EC-06`, `FS-12`, `FS-14`, `BP-02`, `BP-03`, `BP-05`,
+`UI-04`, `IS-07`, and `SC-06` to `usable`. It advances `BP-06` and `SC-07`
+from `missing` to `partial` because construction is connected but the complete
+first-hour chain and broader camp development remain unproven. Personal
+property and subjective experience stay conservative. The matrix remains
+exactly 132 rows.
+
+## Risks after the F6 construction boundary
 
 1. **Placement safety:** personal tents still need visible touch placement plus
    collision, commons, route, entrance and escape-path rejection without
    prematurely implementing F8's permanent enclosures.
-2. **Construction connection:** timber, stone and iron ore now feed storage,
-   barter and the rough forge, but F6 must connect the same inventory to the
-   storehouse without a parallel material source.
+2. **Journey cohesion:** gathering, farming, smithing, barter, and construction
+   are individually connected, but F7 must prove they read as one first-hour
+   journey with a modest reason to return.
 3. **Mature-state compatibility:** foundational nodes and cache state must
    continue to coexist with Phase 4–6 regional stock and claims without
    becoming a second source of truth.
