@@ -51,6 +51,8 @@ pub(crate) struct Identity {
     pub(super) movement_results: HashMap<String, MovementResponse>,
     #[serde(default)]
     pub(super) chat_results: HashMap<String, ChatResponse>,
+    #[serde(default)]
+    pub(super) foundation_resource_results: HashMap<String, FoundationResourceResponse>,
     #[serde(default = "default_weapon")]
     pub(super) weapon: WeaponKind,
     #[serde(default)]
@@ -172,6 +174,7 @@ impl RepositoryState {
             trim_replay_cache(&mut identity.trade_results);
             trim_replay_cache(&mut identity.movement_results);
             trim_replay_cache(&mut identity.chat_results);
+            trim_replay_cache(&mut identity.foundation_resource_results);
         }
         let mut phase3 = stored.phase3;
         super::phase3::archive_excess(&mut phase3);

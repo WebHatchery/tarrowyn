@@ -1,6 +1,7 @@
 use super::*;
 use crate::config::ServerConfig;
 use crate::repository::models::{RepositoryState, StoredState};
+use tarrowyn_protocol::{FoundationResourceAction, FoundationResourceRequest, GuestSessionRequest};
 
 #[test]
 fn fresh_state_exposes_shared_crude_tools_and_bounded_nodes() {
@@ -51,4 +52,184 @@ fn foundation_activity_survives_the_stored_state_boundary() {
     let restored = RepositoryState::from_stored(stored, &config);
 
     assert_eq!(restored.foundation_activity, state.foundation_activity);
+}
+
+#[test]
+fn logging_is_proximity_checked_and_replay_safe() {
+    let repository = super::super::WorldRepository::new(ServerConfig::default());
+    let session = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("f2-logging".to_owned()),
+            reset: false,
+        })
+        .unwrap()
+        .data;
+    let request = FoundationResourceRequest {
+        request_id: "log-once".to_owned(),
+        node_id: "whisperwood-edge-node".to_owned(),
+        action: FoundationResourceAction::Log,
+    };
+    let too_far = repository
+        .foundation_resource(&session.account_token, request.clone())
+        .unwrap()
+        .data;
+    assert!(!too_far.accepted);
+    assert_eq!(too_far.player.inventory.timber, 0);
+
+    let request = FoundationResourceRequest {
+        request_id: "log-nearby".to_owned(),
+        ..request
+    };
+    repository
+        .state
+        .lock()
+        .unwrap()
+        .identities
+        .get_mut("f2-logging")
+        .unwrap()
+        .position = tarrowyn_protocol::Position { x: 12, y: 3 };
+    let first = repository
+        .foundation_resource(&session.account_token, request.clone())
+        .unwrap()
+        .data;
+    let replay = repository
+        .foundation_resource(&session.account_token, request)
+        .unwrap()
+        .data;
+
+    assert!(first.accepted);
+    assert_eq!(first.player.inventory.timber, 2);
+    assert_eq!(replay, first);
+    assert_eq!(
+        repository
+            .inventory(&session.account_token)
+            .unwrap()
+            .data
+            .inventory
+            .timber,
+        2
+    );
+}
+
+#[test]
+fn mining_yields_bounded_stone_and_ore_then_recovers_on_ticks() {
+    let repository = super::super::WorldRepository::new(ServerConfig::default());
+    let session = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("f2-mining".to_owned()),
+            reset: false,
+        })
+        .unwrap()
+        .data;
+    repository
+        .state
+        .lock()
+        .unwrap()
+        .identities
+        .get_mut("f2-mining")
+        .unwrap()
+        .position = tarrowyn_protocol::Position { x: 10, y: 4 };
+
+    let first = repository
+        .foundation_resource(
+            &session.account_token,
+            FoundationResourceRequest {
+                request_id: "mine-first".to_owned(),
+                node_id: "shallow-stone-seam-node".to_owned(),
+                action: FoundationResourceAction::Mine,
+            },
+        )
+        .unwrap()
+        .data;
+
+    assert!(first.accepted);
+    assert_eq!(first.player.inventory.stone, 2);
+    assert_eq!(first.player.inventory.iron_ore, 1);
+    assert_eq!(first.node.deposits[0].remaining, 9);
+    assert_eq!(first.node.deposits[1].remaining, 3);
+
+    for _ in 0..6 {
+        repository.tick();
+    }
+    let state = repository.state.lock().unwrap();
+    assert_eq!(
+        state.foundation_activity.resource_nodes[1].deposits[0].remaining,
+        10
+    );
+    assert_eq!(
+        state.foundation_activity.resource_nodes[1].deposits[1].remaining,
+        4
+    );
+}
+
+#[test]
+fn gathering_depletion_and_replay_survive_repository_restart() {
+    let path = std::env::temp_dir().join(format!(
+        "tarrowyn-foundation-resource-{}.json",
+        std::process::id()
+    ));
+    let config = ServerConfig {
+        persistence_path: Some(path.to_string_lossy().into_owned()),
+        backup_path: None,
+        ..ServerConfig::default()
+    };
+    let first_repository = super::super::WorldRepository::new(config.clone());
+    let first_session = first_repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("f2-resource-restart".to_owned()),
+            reset: false,
+        })
+        .unwrap()
+        .data;
+    first_repository
+        .state
+        .lock()
+        .unwrap()
+        .identities
+        .get_mut("f2-resource-restart")
+        .unwrap()
+        .position = tarrowyn_protocol::Position { x: 12, y: 3 };
+    let request = FoundationResourceRequest {
+        request_id: "restart-safe-log".to_owned(),
+        node_id: "whisperwood-edge-node".to_owned(),
+        action: FoundationResourceAction::Log,
+    };
+    let original = first_repository
+        .foundation_resource(&first_session.account_token, request.clone())
+        .unwrap()
+        .data;
+    assert_eq!(original.node.deposits[0].remaining, 11);
+    drop(first_repository);
+
+    let second_repository = super::super::WorldRepository::new(config);
+    let resumed = second_repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("f2-resource-restart".to_owned()),
+            reset: false,
+        })
+        .unwrap()
+        .data;
+    let replay = second_repository
+        .foundation_resource(&resumed.account_token, request)
+        .unwrap()
+        .data;
+
+    assert_eq!(replay, original);
+    let state = second_repository.state.lock().unwrap();
+    assert_eq!(
+        state.foundation_activity.resource_nodes[0].deposits[0].remaining,
+        11
+    );
+    assert_eq!(
+        state
+            .identities
+            .get("f2-resource-restart")
+            .unwrap()
+            .inventory
+            .timber,
+        2
+    );
+    drop(state);
+    drop(second_repository);
+    let _ = std::fs::remove_file(path);
 }
