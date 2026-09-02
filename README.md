@@ -114,6 +114,16 @@ acceptance pass with:
 Its player path and authority boundaries are documented in
 [`docs/FOUNDATIONAL_PLAYABILITY_F2_RUNBOOK.md`](docs/FOUNDATIONAL_PLAYABILITY_F2_RUNBOOK.md).
 
+Run the foundational F3 touch-first crop outlook, modeled 15-minute absence,
+optional maintenance, replay, and restart acceptance pass with:
+
+```powershell
+.\scripts\verify_foundation_farming.ps1
+```
+
+Its fixed short-session path and authority boundaries are documented in
+[`docs/FOUNDATIONAL_PLAYABILITY_F3_RUNBOOK.md`](docs/FOUNDATIONAL_PLAYABILITY_F3_RUNBOOK.md).
+
 ## Architecture decisions
 
 The server uses `tiny_http` for the native process and a mutex-protected
