@@ -77,6 +77,7 @@ impl WorldRepository {
         if response.accepted && request.action == TradeAction::Accept {
             if let Some(trade) = &response.trade {
                 super::foundation::cooperation::record_trade(&mut state, trade);
+                super::foundation::journey::record_trade(&mut state, trade);
             }
         }
         if response.accepted {

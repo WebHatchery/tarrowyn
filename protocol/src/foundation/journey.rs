@@ -264,7 +264,7 @@ pub enum FoundationJourneyFutureGoalState {
     Complete,
 }
 
-#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct FoundationJourneyProgress {
     pub journey_id: String,
     pub revision: u64,
@@ -276,6 +276,19 @@ pub struct FoundationJourneyProgress {
     pub future_goal_state: FoundationJourneyFutureGoalState,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub future_goal_completed_tick: Option<u64>,
+}
+
+impl Default for FoundationJourneyProgress {
+    fn default() -> Self {
+        Self {
+            journey_id: "first-beacon-first-hour".to_owned(),
+            revision: 1,
+            credits: Vec::new(),
+            completed_tick: None,
+            future_goal_state: FoundationJourneyFutureGoalState::Locked,
+            future_goal_completed_tick: None,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]

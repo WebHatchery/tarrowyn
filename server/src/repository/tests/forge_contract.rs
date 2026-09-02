@@ -42,7 +42,7 @@ fn storage_version_twenty_two_defaults_new_forge_ledger_and_materials() {
     assert_eq!(restored_identity.inventory.charcoal, 0);
     assert_eq!(restored_identity.inventory.tool_handles, 0);
     assert!(restored_identity.foundation_forge_results.is_empty());
-    assert_eq!(restored.to_stored().storage_version, 26);
+    assert_eq!(restored.to_stored().storage_version, 27);
 }
 
 #[test]

@@ -109,6 +109,14 @@ impl super::super::WorldRepository {
                 }
             }
         }
+        if response.accepted {
+            super::journey::record_storehouse(
+                &mut state,
+                &identity_key,
+                request.action,
+                &request.request_id,
+            );
+        }
         finish(self, &mut state, identity_key, response)
     }
 }

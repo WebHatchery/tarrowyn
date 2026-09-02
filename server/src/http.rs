@@ -312,6 +312,9 @@ fn handle_request(
                 Err(error) => error_response(400, "invalid_json", error, repository.health().meta),
             }
         }
+        (Method::Get, "/v1/foundation/journey") => authenticated(&request, &repository, |token| {
+            repository.foundation_journey(token)
+        }),
         (Method::Get, "/v1/skills") => {
             authenticated(&request, &repository, |token| repository.skills(token))
         }

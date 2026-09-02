@@ -48,7 +48,7 @@ removes the isolated world afterward. It:
    unchanged inventory/gold, and one infrastructure record.
 8. Restarts the authority, reconnects all identities, replays completion, and
    requires unchanged contributors, revision, completion-event count, balances,
-   and infrastructure count in storage version 26 with healthy integrity.
+   and infrastructure count in the current storage version with healthy integrity.
 
 ## Visible touch path
 

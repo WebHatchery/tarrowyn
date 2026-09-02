@@ -102,6 +102,12 @@ impl WorldRepository {
         response.player = player_projection(&state, &identity_key);
         if response.accepted {
             super::skills::record_practice(&mut state, &identity_key, "crop-tending");
+            super::foundation::journey::record_farming(
+                &mut state,
+                &identity_key,
+                request.action,
+                &request.request_id,
+            );
             let plot = state.plots[plot_index];
             push_event(&mut state, WorldEvent::Farming(plot));
             add_notice(

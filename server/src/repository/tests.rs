@@ -23,6 +23,7 @@ mod foundation_interactions;
 mod identity_integrity;
 mod input_bounds;
 mod integrity;
+mod journey_contract;
 mod market_integrity;
 mod movement_validation;
 mod numeric_boundaries;

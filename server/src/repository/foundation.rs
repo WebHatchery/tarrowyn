@@ -11,6 +11,7 @@ use tarrowyn_protocol::{
 
 pub(super) mod cooperation;
 mod forge;
+pub(super) mod journey;
 pub(super) mod storehouse;
 
 const RESOURCE_RECOVERY_INTERVAL_TICKS: u64 = 6;
@@ -213,6 +214,12 @@ impl super::WorldRepository {
         response.accepted = true;
         response.yields = yields;
         response.node = state.foundation_activity.resource_nodes[node_index].clone();
+        journey::record_resource(
+            &mut state,
+            &identity_key,
+            request.action,
+            &request.request_id,
+        );
         let practice = match request.action {
             FoundationResourceAction::Log => "forestry",
             FoundationResourceAction::Mine => "mining",

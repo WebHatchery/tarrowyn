@@ -5,14 +5,15 @@ use tarrowyn_protocol::{
     ApiMeta, ApiResponse, ChatMessage, ChatRequest, ChatResponse, EventRecord, EventsResponse,
     FarmingRequest, FarmingResponse, FoundationCacheResponse, FoundationFieldToolKind,
     FoundationForgeResponse, FoundationInteractionRequest, FoundationInteractionResponse,
-    FoundationResourceResponse, GuestSessionRequest, GuestSessionResponse, HealthResponse,
-    Inventory, MovementIntent, MovementResponse, PlayerPresence, PlayerProjection, Position,
-    StateSnapshot, TavernFeedResponse, TavernNotice, TradeAction, TradeBundle, TradeOffer,
-    TradeRequest, TradeResponse, TradeStatus, TradesResponse, WeaponKind, WorldClock, WorldEvent,
-    WorldSnapshot, MAX_CHAT_MESSAGE_LENGTH, MAX_TRADE_ITEMS, PROTOCOL_VERSION,
+    FoundationJourneyProgress, FoundationResourceResponse, GuestSessionRequest,
+    GuestSessionResponse, HealthResponse, Inventory, MovementIntent, MovementResponse,
+    PlayerPresence, PlayerProjection, Position, StateSnapshot, TavernFeedResponse, TavernNotice,
+    TradeAction, TradeBundle, TradeOffer, TradeRequest, TradeResponse, TradeStatus, TradesResponse,
+    WeaponKind, WorldClock, WorldEvent, WorldSnapshot, MAX_CHAT_MESSAGE_LENGTH, MAX_TRADE_ITEMS,
+    PROTOCOL_VERSION,
 };
 
-pub(super) const STORAGE_VERSION: u32 = 26;
+pub(super) const STORAGE_VERSION: u32 = 27;
 const MAX_EVENTS: usize = 2048;
 const MAX_CHAT_HISTORY: usize = 64;
 const MAX_NOTICES: usize = 32;
@@ -196,6 +197,7 @@ impl WorldRepository {
                     foundation_cache_results: HashMap::new(),
                     foundation_forge_results: HashMap::new(),
                     foundation_storehouse_results: HashMap::new(),
+                    foundation_journey: FoundationJourneyProgress::default(),
                     weapon: WeaponKind::IronSword,
                     knocked_out: false,
                     injuries: 0,
@@ -218,6 +220,7 @@ impl WorldRepository {
         let token = format!("dev-session-{}", state.next_token);
         state.next_token = state.next_token.saturating_add(1);
         let tick = state.tick;
+        foundation::journey::record_arrival(&mut state, &client_key);
         state
             .identities
             .get_mut(&client_key)
@@ -345,7 +348,10 @@ impl WorldRepository {
             message
         };
 
-        Ok(ApiResponse {
+        if accepted {
+            foundation::journey::record_interaction(&mut state, &key, &interaction_id);
+        }
+        let response = ApiResponse {
             meta: meta(
                 state.tick,
                 Some(request.request_id.clone()),
@@ -359,7 +365,9 @@ impl WorldRepository {
                 title,
                 message,
             },
-        })
+        };
+        self.persist(&mut state)?;
+        Ok(response)
     }
 
     pub fn movement(

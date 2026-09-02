@@ -245,7 +245,7 @@ try {
     Assert-F6 ((Storehouse-CompletionEventCount $restartedObserver.account_token) -eq 1) "restart or replay emitted a duplicate completion event"
     Assert-F6 ($restartReplay.data.player.gold -eq ($patronStartGold - 12)) "restart or replay duplicated a charge or reward"
     $stored = Get-Content -LiteralPath $statePath -Raw | ConvertFrom-Json
-    Assert-F6 ($stored.storage_version -eq 26) "the scenario did not persist the current storehouse contract"
+    Assert-F6 ($stored.storage_version -eq 27) "the scenario did not persist the current journey-aware storehouse contract"
     Assert-F6 (@($stored.phase4.infrastructure | Where-Object infrastructure_id -eq "first-beacon-storehouse").Count -eq 1) "persisted state contains a duplicate storehouse"
     $ops = Invoke-RestMethod -Method Get -Uri "$script:baseUrl/v1/ops/health"
     Assert-F6 ($ops.data.ready -and $ops.data.integrity_ok) "the restarted F6 fixture failed readiness checks"

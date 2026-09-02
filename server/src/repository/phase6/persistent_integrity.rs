@@ -2,7 +2,8 @@ use super::super::models::RepositoryState;
 use crate::config::ServerConfig;
 use std::collections::HashSet;
 use tarrowyn_protocol::{
-    ClaimStatus, ContractStatus, ExpeditionStatus, FoundationResourceKind,
+    ClaimStatus, ContractStatus, ExpeditionStatus, FoundationJourneyContract,
+    FoundationJourneyFutureGoalState, FoundationJourneyProgress, FoundationResourceKind,
     FoundationStorehouseContributionInput, FoundationStorehouseStage, FoundationStorehouseState,
     TradeStatus,
 };
@@ -49,6 +50,7 @@ fn core_ok(state: &RepositoryState, config: &ServerConfig, account_ids: &HashSet
             && identity.last_seen_tick <= state.tick
             && identity.last_tax_day <= state.clock.day
             && super::super::skills::skill_ledger_integrity_ok(&identity.skills)
+            && journey_ok(&identity.foundation_journey, state.tick)
     });
     let plots_ok = unique_positions(state.plots.iter().map(|plot| plot.position))
         && state.plots.iter().all(|plot| {
@@ -210,6 +212,63 @@ fn core_ok(state: &RepositoryState, config: &ServerConfig, account_ids: &HashSet
         && trades_ok
         && cooperation_ok
         && storehouse_ok
+}
+
+fn journey_ok(progress: &FoundationJourneyProgress, world_tick: u64) -> bool {
+    let contract = FoundationJourneyContract::default();
+    if progress.journey_id != contract.journey_id
+        || progress.revision == 0
+        || progress.credits.len() > super::super::foundation::journey::MAX_JOURNEY_CREDITS
+        || !unique_non_empty(
+            progress
+                .credits
+                .iter()
+                .map(|credit| credit.milestone_id.as_str()),
+        )
+    {
+        return false;
+    }
+    let credits_ok = progress.credits.iter().all(|credit| {
+        contract
+            .milestones
+            .iter()
+            .find(|milestone| milestone.milestone_id == credit.milestone_id)
+            .is_some_and(|milestone| {
+                credit.evidence_kind == milestone.evidence_kind
+                    && bounded_text(&credit.evidence_ref, 255)
+                    && credit.credited_tick <= world_tick
+            })
+    });
+    let complete = progress.credits.len() == contract.milestones.len();
+    let completion_ok = match (complete, progress.completed_tick) {
+        (false, None) => {
+            progress.future_goal_state == FoundationJourneyFutureGoalState::Locked
+                && progress.future_goal_completed_tick.is_none()
+        }
+        (true, Some(completed_tick)) => {
+            completed_tick <= world_tick
+                && progress
+                    .credits
+                    .iter()
+                    .all(|credit| credit.credited_tick <= completed_tick)
+                && match progress.future_goal_state {
+                    FoundationJourneyFutureGoalState::Locked => false,
+                    FoundationJourneyFutureGoalState::Active => {
+                        progress.future_goal_completed_tick.is_none()
+                    }
+                    FoundationJourneyFutureGoalState::Complete => progress
+                        .future_goal_completed_tick
+                        .is_some_and(|tick| tick >= completed_tick && tick <= world_tick),
+                }
+        }
+        _ => false,
+    };
+    let expected_revision = 1_u64
+        .saturating_add(progress.credits.len() as u64)
+        .saturating_add(u64::from(
+            progress.future_goal_state == FoundationJourneyFutureGoalState::Complete,
+        ));
+    credits_ok && completion_ok && progress.revision == expected_revision
 }
 
 fn storehouse_ok(state: &RepositoryState, account_ids: &HashSet<&str>) -> bool {
