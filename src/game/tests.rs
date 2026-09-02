@@ -1,5 +1,7 @@
 use super::{
-    actions::{apply_chronicle_key, parse_foundation_cache_command},
+    actions::{
+        apply_chronicle_key, parse_foundation_cache_command, parse_foundation_forge_command,
+    },
     input::{
         keyboard_gameplay_blocked, keyboard_movement_direction, normalized_movement_direction,
         rendered_tile,
@@ -19,6 +21,22 @@ fn held_arrow_keys_form_a_free_two_dimensional_direction() {
     assert_eq!(direction, vec2(1.0, -1.0));
     assert!((normalized.length() - 1.0).abs() < 0.0001);
     assert!((normalized.x + normalized.y).abs() < 0.0001);
+}
+
+#[test]
+fn forge_commands_only_accept_typed_nearby_actions() {
+    assert_eq!(
+        parse_foundation_forge_command("foundation-forge:burn-charcoal"),
+        Some(tarrowyn_protocol::FoundationForgeAction::BurnCharcoal)
+    );
+    assert_eq!(
+        parse_foundation_forge_command("foundation-forge:forge-field-tool"),
+        Some(tarrowyn_protocol::FoundationForgeAction::ForgeFieldTool)
+    );
+    assert_eq!(
+        parse_foundation_forge_command("foundation-forge:repair"),
+        None
+    );
 }
 
 #[test]

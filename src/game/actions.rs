@@ -28,6 +28,16 @@ pub(super) fn parse_foundation_cache_command(
     (parts.next().is_none() && valid_pair).then_some((action, resource))
 }
 
+pub(super) fn parse_foundation_forge_command(value: &str) -> Option<FoundationForgeAction> {
+    match value.strip_prefix("foundation-forge:")? {
+        "inspect" => Some(FoundationForgeAction::Inspect),
+        "burn-charcoal" => Some(FoundationForgeAction::BurnCharcoal),
+        "shape-handle" => Some(FoundationForgeAction::ShapeHandle),
+        "forge-field-tool" => Some(FoundationForgeAction::ForgeFieldTool),
+        _ => None,
+    }
+}
+
 pub(super) fn apply_chronicle_key(query: &mut String, key: &str) {
     match key {
         "space" if query.chars().count() < 80 => query.push(' '),
@@ -156,6 +166,10 @@ impl Game {
         let client = &mut self.mode;
         if let Some((action, resource)) = parse_foundation_cache_command(id) {
             client.queue_foundation_cache(action, resource);
+            return;
+        }
+        if let Some(action) = parse_foundation_forge_command(id) {
+            client.queue_foundation_forge(action);
             return;
         }
         if let Some(interaction_id) = id.strip_prefix("foundation:") {

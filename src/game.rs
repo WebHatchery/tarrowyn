@@ -14,8 +14,8 @@ use macroquad_toolkit::notifications::{
 };
 use macroquad_toolkit::prelude::{begin_virtual_ui_frame, dark, end_virtual_ui_frame};
 use tarrowyn_protocol::{
-    FarmingAction, FoundationCacheAction, FoundationResourceKind, TradeAction, TradeBundle,
-    TradeRequest,
+    FarmingAction, FoundationCacheAction, FoundationForgeAction, FoundationResourceKind,
+    TradeAction, TradeBundle, TradeRequest,
 };
 
 #[path = "game/actions.rs"]
@@ -230,6 +230,11 @@ impl Game {
                     .player
                     .as_ref()
                     .map(|player| player.field_tool_condition),
+                field_tool_kind: client
+                    .projection
+                    .player
+                    .as_ref()
+                    .map(|player| player.field_tool_kind),
                 field_weather: client
                     .projection
                     .player

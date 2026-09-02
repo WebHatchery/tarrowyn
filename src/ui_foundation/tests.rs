@@ -2,8 +2,9 @@ use super::*;
 use crate::state::{CropKind, CropState, TileKind, WorldState};
 use macroquad_toolkit::grid::FlatGrid;
 use tarrowyn_protocol::{
-    FieldWeather, FoundationActivityState, FoundationInteraction, FoundationResourceDeposit,
-    FoundationResourceKind, FoundationResourceNode, Position,
+    FieldWeather, FoundationActivityState, FoundationFieldToolKind, FoundationForgeAction,
+    FoundationInteraction, FoundationResourceDeposit, FoundationResourceKind,
+    FoundationResourceNode, Position,
 };
 
 fn farm_world(crop: Option<CropState>) -> WorldState {
@@ -17,6 +18,61 @@ fn farm_world(crop: Option<CropState>) -> WorldState {
         crops,
         reachable: Default::default(),
     }
+}
+
+#[test]
+fn forge_choice_walks_the_touch_first_preparation_chain() {
+    let inventory = tarrowyn_protocol::Inventory {
+        timber: 2,
+        iron_ore: 2,
+        ..Default::default()
+    };
+    let charcoal = nearby_forge_choice(
+        Some(&inventory),
+        Some(FoundationFieldToolKind::Crude),
+        Some(2),
+    );
+    assert_eq!(charcoal.action, FoundationForgeAction::BurnCharcoal);
+    assert_eq!(charcoal.label, "Burn charcoal");
+    assert!(charcoal.detail.contains("2 timber, 2 ore"));
+    assert!(charcoal
+        .detail
+        .contains("missing 0 ore, 1 charcoal, 1 handle"));
+
+    let inventory = tarrowyn_protocol::Inventory {
+        timber: 1,
+        iron_ore: 2,
+        charcoal: 1,
+        ..Default::default()
+    };
+    let handle = nearby_forge_choice(Some(&inventory), None, Some(1));
+    assert_eq!(handle.action, FoundationForgeAction::ShapeHandle);
+    assert_eq!(handle.label, "Shape tool handle");
+}
+
+#[test]
+fn forge_choice_exposes_ready_recipe_and_improved_capacity() {
+    let ready = tarrowyn_protocol::Inventory {
+        iron_ore: 2,
+        charcoal: 1,
+        tool_handles: 1,
+        ..Default::default()
+    };
+    let choice = nearby_forge_choice(Some(&ready), Some(FoundationFieldToolKind::Crude), Some(1));
+    assert_eq!(choice.action, FoundationForgeAction::ForgeFieldTool);
+    assert_eq!(
+        foundation_forge_command(choice.action),
+        "foundation-forge:forge-field-tool"
+    );
+
+    let iron = nearby_forge_choice(
+        Some(&Inventory::default()),
+        Some(FoundationFieldToolKind::Iron),
+        Some(6),
+    );
+    assert_eq!(iron.action, FoundationForgeAction::Inspect);
+    assert!(iron.detail.contains("iron field tool 6/6"));
+    assert!(iron.detail.contains("ready for 6 field actions"));
 }
 
 #[test]

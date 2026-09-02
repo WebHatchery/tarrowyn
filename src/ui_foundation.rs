@@ -2,8 +2,8 @@ use super::*;
 use macroquad_toolkit::ui::draw_ui_text_ex;
 use tarrowyn_protocol::{
     FarmingAction, FieldWeather, FoundationActivityState, FoundationBaseline,
-    FoundationCacheAction, FoundationLandmark, FoundationResourceAction, FoundationResourceKind,
-    Inventory,
+    FoundationCacheAction, FoundationFieldToolKind, FoundationForgeAction, FoundationLandmark,
+    FoundationResourceAction, FoundationResourceKind, Inventory,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -75,6 +75,66 @@ struct NearbyFarmChoice {
     action: FarmingAction,
     label: &'static str,
     detail: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct NearbyForgeChoice {
+    action: FoundationForgeAction,
+    label: &'static str,
+    detail: String,
+}
+
+fn nearby_forge_choice(
+    inventory: Option<&Inventory>,
+    field_tool_kind: Option<FoundationFieldToolKind>,
+    field_tool_condition: Option<u8>,
+) -> NearbyForgeChoice {
+    let inventory = inventory.cloned().unwrap_or_default();
+    let kind = field_tool_kind.unwrap_or_default();
+    let condition = field_tool_condition.unwrap_or(0);
+    let ready = inventory.iron_ore >= 2
+        && inventory.charcoal >= 1
+        && inventory.tool_handles >= 1
+        && (kind != FoundationFieldToolKind::Iron
+            || condition < FoundationFieldToolKind::Iron.max_condition());
+    let (action, label) = if ready {
+        (
+            FoundationForgeAction::ForgeFieldTool,
+            "Forge iron field tool",
+        )
+    } else if inventory.charcoal == 0 && inventory.timber > 0 {
+        (FoundationForgeAction::BurnCharcoal, "Burn charcoal")
+    } else if inventory.tool_handles == 0 && inventory.timber > 0 {
+        (FoundationForgeAction::ShapeHandle, "Shape tool handle")
+    } else {
+        (FoundationForgeAction::Inspect, "Inspect forge")
+    };
+    let need = if kind == FoundationFieldToolKind::Iron
+        && condition == FoundationFieldToolKind::Iron.max_condition()
+    {
+        "Iron tool is ready for 6 field actions.".to_owned()
+    } else {
+        format!(
+            "Iron tool needs 2 ore + 1 charcoal + 1 handle; missing {} ore, {} charcoal, {} handle.",
+            2_u32.saturating_sub(inventory.iron_ore),
+            1_u32.saturating_sub(inventory.charcoal),
+            1_u32.saturating_sub(inventory.tool_handles)
+        )
+    };
+    NearbyForgeChoice {
+        action,
+        label,
+        detail: format!(
+            "Materials: {} timber, {} ore, {} charcoal, {} handles. {} {}/{}. {need}",
+            inventory.timber,
+            inventory.iron_ore,
+            inventory.charcoal,
+            inventory.tool_handles,
+            kind.label(),
+            condition,
+            kind.max_condition()
+        ),
+    }
 }
 
 fn nearby_farm_choice(
@@ -236,6 +296,16 @@ pub(super) fn draw_context_deck(
             ctx.field_pest_pressure,
         ),
     };
+    let forge_choice = context
+        .as_ref()
+        .filter(|context| context.interaction_action == "smith")
+        .map(|_| {
+            nearby_forge_choice(
+                ctx.player_inventory,
+                ctx.field_tool_kind,
+                ctx.field_tool_condition,
+            )
+        });
     draw_ui_text_ex(
         "NEARBY",
         18.0,
@@ -248,15 +318,16 @@ pub(super) fn draw_context_deck(
         (None, Some(_)) => "Shared fields",
         (None, None) => "First Beacon camp",
     };
-    let detail = farm_choice.as_ref().map_or_else(
-        || {
+    let detail = farm_choice
+        .as_ref()
+        .map(|choice| choice.detail.as_str())
+        .or_else(|| forge_choice.as_ref().map(|choice| choice.detail.as_str()))
+        .unwrap_or_else(|| {
             context.as_ref().map_or(
                 "Tap the road to walk. Find MARA or the NOTICEBOARD.",
                 |context| context.landmark.note.as_str(),
             )
-        },
-        |choice| choice.detail.as_str(),
-    );
+        });
     draw_ui_text_ex(
         &format!(
             "{}  •  {}",
@@ -269,16 +340,17 @@ pub(super) fn draw_context_deck(
     );
 
     if context.is_some() || farm_choice.is_some() {
-        let label = farm_choice.as_ref().map_or_else(
-            || {
+        let label = farm_choice
+            .as_ref()
+            .map(|choice| choice.label)
+            .or_else(|| forge_choice.as_ref().map(|choice| choice.label))
+            .unwrap_or_else(|| {
                 context
                     .as_ref()
                     .expect("context exists")
                     .action_label
                     .as_str()
-            },
-            |choice| choice.label,
-        );
+            });
         let enabled = ctx.connection == ConnectionState::Online
             && ctx.player_position_authoritative
             && if farm_choice.is_some() {
@@ -302,6 +374,8 @@ pub(super) fn draw_context_deck(
                         unreachable!("field choice does not target animals")
                     }
                 }
+            } else if let Some(choice) = forge_choice.as_ref() {
+                foundation_forge_command(choice.action)
             } else {
                 let context = context.as_ref().expect("context exists");
                 match (
@@ -333,6 +407,16 @@ pub(super) fn draw_context_deck(
     ) {
         actions.push(UiAction::Interact("menu-toggle".to_owned()));
     }
+}
+
+fn foundation_forge_command(action: FoundationForgeAction) -> String {
+    let action = match action {
+        FoundationForgeAction::Inspect => "inspect",
+        FoundationForgeAction::BurnCharcoal => "burn-charcoal",
+        FoundationForgeAction::ShapeHandle => "shape-handle",
+        FoundationForgeAction::ForgeFieldTool => "forge-field-tool",
+    };
+    format!("foundation-forge:{action}")
 }
 
 fn foundation_cache_command(

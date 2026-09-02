@@ -6,6 +6,7 @@ impl OnlineClient {
             || self.pending_foundation.is_some()
             || self.pending_foundation_resource.is_some()
             || self.pending_foundation_cache.is_some()
+            || self.pending_foundation_forge.is_some()
         {
             self.status_message =
                 "Wait for the current First Beacon conversation to finish.".to_owned();
@@ -24,6 +25,7 @@ impl OnlineClient {
         self.pending_foundation.is_some()
             || self.pending_foundation_resource.is_some()
             || self.pending_foundation_cache.is_some()
+            || self.pending_foundation_forge.is_some()
     }
 
     pub(super) fn poll_foundation(&mut self, dt: f32, notices: &mut Vec<NetworkNotice>) {
@@ -62,6 +64,7 @@ impl OnlineClient {
             || self.pending_foundation.is_some()
             || self.pending_foundation_resource.is_some()
             || self.pending_foundation_cache.is_some()
+            || self.pending_foundation_forge.is_some()
         {
             self.status_message = "Wait for the current nearby work to finish.".to_owned();
             return false;
@@ -242,6 +245,111 @@ impl OnlineClient {
             Err(error) => self.connection_failed(error, notices),
         }
     }
+
+    pub fn queue_foundation_forge(&mut self, action: FoundationForgeAction) -> bool {
+        if !self.mutations_ready() || self.foundation_interaction_pending() {
+            self.status_message = "Wait for the current nearby work to finish.".to_owned();
+            return false;
+        }
+        let request = FoundationForgeRequest {
+            request_id: self.next_request_id("foundation-forge"),
+            action,
+        };
+        self.pending_foundation_forge = Some(PendingFoundationForge {
+            pending: Some(self.api.post_json("/v1/foundation/forge", &request)),
+            request,
+            retries: 0,
+            retry_timer: 0.0,
+        });
+        self.status_message = match action {
+            FoundationForgeAction::Inspect => "Reading the rough-forge ledger…",
+            FoundationForgeAction::BurnCharcoal => "Banking timber into charcoal…",
+            FoundationForgeAction::ShapeHandle => "Shaping a field-tool handle…",
+            FoundationForgeAction::ForgeFieldTool => "Forging an iron field tool…",
+        }
+        .to_owned();
+        true
+    }
+
+    pub(super) fn poll_foundation_forge(&mut self, dt: f32, notices: &mut Vec<NetworkNotice>) {
+        let Some(mut pending) = self.pending_foundation_forge.take() else {
+            return;
+        };
+        pending.retry_timer = (pending.retry_timer - dt.max(0.0)).max(0.0);
+        if pending.retry_timer > 0.0 {
+            self.pending_foundation_forge = Some(pending);
+            return;
+        }
+        if pending.pending.is_none() {
+            pending.pending = Some(self.api.post_json("/v1/foundation/forge", &pending.request));
+        }
+        let Some(result) = pending
+            .pending
+            .as_mut()
+            .and_then(|request| request.poll_timed(dt, REQUEST_TIMEOUT_SECONDS))
+        else {
+            self.pending_foundation_forge = Some(pending);
+            return;
+        };
+        pending.pending = None;
+        match result {
+            Ok(response) => {
+                self.projection
+                    .record_response_version(response.meta.server_tick, response.meta.cursor);
+                let data = response.data;
+                self.projection.player = Some(data.player.clone());
+                let detail = if data.accepted {
+                    foundation_forge_success_notice(data.action, &data.player)
+                } else {
+                    data.reason
+                        .unwrap_or_else(|| "The rough forge rejected that request.".to_owned())
+                };
+                self.status_message = detail.clone();
+                notices.push(if data.accepted {
+                    NetworkNotice::Success(detail)
+                } else {
+                    NetworkNotice::Warning(detail)
+                });
+                self.state_refresh = 0.0;
+            }
+            Err(error)
+                if is_transient_transport_error(&error)
+                    && pending.retries < super::commands::MAX_COMMAND_RETRIES =>
+            {
+                pending.retries += 1;
+                pending.retry_timer = super::commands::COMMAND_RETRY_DELAY_SECONDS;
+                let retries = pending.retries;
+                self.pending_foundation_forge = Some(pending);
+                notices.push(NetworkNotice::Warning(format!(
+                    "The forge result could not be confirmed; retrying the same request ({retries}/{}).",
+                    super::commands::MAX_COMMAND_RETRIES
+                )));
+            }
+            Err(error) => self.connection_failed(error, notices),
+        }
+    }
+}
+
+pub(super) fn foundation_forge_success_notice(
+    action: FoundationForgeAction,
+    player: &PlayerProjection,
+) -> String {
+    let outcome = match action {
+        FoundationForgeAction::Inspect => "Rough forge inspected",
+        FoundationForgeAction::BurnCharcoal => "Burned 1 timber into charcoal",
+        FoundationForgeAction::ShapeHandle => "Shaped 1 timber into a tool handle",
+        FoundationForgeAction::ForgeFieldTool => "Forged an iron field tool",
+    };
+    format!(
+        "{outcome}. Materials: {} timber, {} iron ore, {} charcoal, {} handles; {} {}/{}.",
+        player.inventory.timber,
+        player.inventory.iron_ore,
+        player.inventory.charcoal,
+        player.inventory.tool_handles,
+        player.field_tool_kind.label(),
+        player.field_tool_condition,
+        player.field_tool_kind.max_condition()
+    )
 }
 
 pub(super) fn foundation_cache_success_notice(

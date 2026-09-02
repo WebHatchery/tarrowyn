@@ -41,6 +41,7 @@ pub struct UiContext<'a> {
     pub foundation_activity: &'a FoundationActivityState,
     pub player_inventory: Option<&'a tarrowyn_protocol::Inventory>,
     pub field_tool_condition: Option<u8>,
+    pub field_tool_kind: Option<tarrowyn_protocol::FoundationFieldToolKind>,
     pub field_weather: Option<tarrowyn_protocol::FieldWeather>,
     pub field_pest_pressure: Option<u8>,
     pub foundation_interaction_pending: bool,
