@@ -3,12 +3,13 @@ use std::collections::{HashMap, VecDeque};
 use std::sync::Mutex;
 use tarrowyn_protocol::{
     ApiMeta, ApiResponse, ChatMessage, ChatRequest, ChatResponse, EventRecord, EventsResponse,
-    FarmingRequest, FarmingResponse, FoundationInteractionRequest, FoundationInteractionResponse,
-    FoundationResourceResponse, GuestSessionRequest, GuestSessionResponse, HealthResponse,
-    Inventory, MovementIntent, MovementResponse, PlayerPresence, PlayerProjection, Position,
-    StateSnapshot, TavernFeedResponse, TavernNotice, TradeAction, TradeBundle, TradeOffer,
-    TradeRequest, TradeResponse, TradeStatus, TradesResponse, WeaponKind, WorldClock, WorldEvent,
-    WorldSnapshot, MAX_CHAT_MESSAGE_LENGTH, MAX_TRADE_ITEMS, PROTOCOL_VERSION,
+    FarmingRequest, FarmingResponse, FoundationCacheResponse, FoundationInteractionRequest,
+    FoundationInteractionResponse, FoundationResourceResponse, GuestSessionRequest,
+    GuestSessionResponse, HealthResponse, Inventory, MovementIntent, MovementResponse,
+    PlayerPresence, PlayerProjection, Position, StateSnapshot, TavernFeedResponse, TavernNotice,
+    TradeAction, TradeBundle, TradeOffer, TradeRequest, TradeResponse, TradeStatus, TradesResponse,
+    WeaponKind, WorldClock, WorldEvent, WorldSnapshot, MAX_CHAT_MESSAGE_LENGTH, MAX_TRADE_ITEMS,
+    PROTOCOL_VERSION,
 };
 
 pub(super) const STORAGE_VERSION: u32 = 21;
@@ -191,6 +192,7 @@ impl WorldRepository {
                     movement_results: HashMap::new(),
                     chat_results: HashMap::new(),
                     foundation_resource_results: HashMap::new(),
+                    foundation_cache_results: HashMap::new(),
                     weapon: WeaponKind::IronSword,
                     knocked_out: false,
                     injuries: 0,

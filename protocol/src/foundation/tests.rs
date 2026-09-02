@@ -73,6 +73,14 @@ fn foundation_resource_contract_round_trips_depletion_and_crude_access() {
             ],
             available_to_all: true,
         }],
+        shared_cache: FoundationSharedCache {
+            landmark_id: "first-beacon-cache".to_owned(),
+            inventory: crate::Inventory {
+                timber: 3,
+                ..crate::Inventory::default()
+            },
+            capacity: 64,
+        },
     };
     let request = FoundationResourceRequest {
         request_id: "gather-1".to_owned(),
@@ -87,4 +95,21 @@ fn foundation_resource_contract_round_trips_depletion_and_crude_access() {
     assert_eq!(decoded, (activity, request));
     assert!(encoded.contains("\"kind\":\"timber\""));
     assert!(encoded.contains("\"action\":\"log\""));
+}
+
+#[test]
+fn shared_cache_commands_keep_resource_selectors_typed() {
+    let request = FoundationCacheRequest {
+        request_id: "cache-1".to_owned(),
+        action: FoundationCacheAction::Deposit,
+        resource: Some(FoundationResourceKind::Timber),
+        amount: 2,
+    };
+
+    let encoded = serde_json::to_string(&request).unwrap();
+    let decoded: FoundationCacheRequest = serde_json::from_str(&encoded).unwrap();
+
+    assert_eq!(decoded, request);
+    assert!(encoded.contains("\"action\":\"deposit\""));
+    assert!(encoded.contains("\"resource\":\"timber\""));
 }

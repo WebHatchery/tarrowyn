@@ -58,3 +58,17 @@ These instructions apply to all Rust game projects in this workspace.
 - Do not preserve the limit by stripping useful spacing, compressing formatting, moving a single small function, or making other cosmetic line-count changes.
 - If a meaningful change would push a file over the limit, extract a cohesive responsibility into one or more nearby modules before or alongside the change.
 - If any file is already over 800 lines, make the restructure part of the current task before considering the task complete.
+
+## Is It Done Yet Goal Loop
+
+These rules apply whenever work is being directed by Is It Done Yet project `27`.
+
+- Treat the API tree as the source of truth. Read the selected goal or task status before starting its implementation.
+- Work one lowest actionable leaf at a time. If a leaf contains multiple independently testable implementation boundaries, call `break_down_goal` before implementing it.
+- At the end of every leaf implementation slice, finish the relevant validation and commit boundary, then update the API before starting another leaf.
+- Re-read the leaf status immediately before the write. If its exact acceptance criteria are satisfied, call `complete_task` with the current revision, `reassessed: true`, and evidence naming the commit, tests, publish result, and relevant files or documents.
+- If the leaf is not complete, do not leave the site stale. Either split it into concrete child tasks or call `record_task_result` with `blocked` or `failed`, plus the durable reason and available evidence.
+- After every write, read the leaf and parent status back. Do not proceed until the write succeeded and the returned tree reflects the result.
+- When a parent appears in `reassessment_required`, explicitly ask whether its acceptance criteria are now satisfied. Complete it only after that decision; otherwise add the newly discovered child work.
+- Use a stable idempotency key for each logical write. On a revision conflict, refresh status and retry the same logical write with the same key.
+- A code commit, passing test suite, or successful publish is evidence, not automatic completion. The API reassessment and successful read-back are mandatory task-boundary steps.

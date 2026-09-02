@@ -2,10 +2,11 @@
 
 use super::models::RepositoryState;
 use tarrowyn_protocol::{
-    ApiResponse, FoundationActivityState, FoundationCrudeToolKind, FoundationResourceAction,
+    ApiResponse, FoundationActivityState, FoundationCacheAction, FoundationCacheRequest,
+    FoundationCacheResponse, FoundationCrudeToolKind, FoundationResourceAction,
     FoundationResourceAmount, FoundationResourceDeposit, FoundationResourceKind,
     FoundationResourceNode, FoundationResourceRequest, FoundationResourceResponse,
-    FoundationToolAccess,
+    FoundationSharedCache, FoundationToolAccess, Inventory,
 };
 
 const RESOURCE_RECOVERY_INTERVAL_TICKS: u64 = 6;
@@ -39,6 +40,17 @@ pub(super) fn fresh() -> FoundationActivityState {
             ],
             available_to_all: true,
         }],
+        shared_cache: FoundationSharedCache {
+            landmark_id: "first-beacon-cache".to_owned(),
+            inventory: Inventory::default(),
+            capacity: 64,
+        },
+    }
+}
+
+pub(super) fn restore(activity: &mut FoundationActivityState) {
+    if activity.shared_cache.landmark_id.is_empty() || activity.shared_cache.capacity == 0 {
+        activity.shared_cache = fresh().shared_cache;
     }
 }
 
@@ -272,6 +284,184 @@ fn apply_yields(
         *quantity = quantity.saturating_add(yielded.amount);
     }
     Some(yields)
+}
+
+impl super::WorldRepository {
+    pub fn foundation_cache(
+        &self,
+        token: &str,
+        request: FoundationCacheRequest,
+    ) -> Result<ApiResponse<FoundationCacheResponse>, super::RepositoryError> {
+        let mut state = self.state.lock().expect("world repository lock poisoned");
+        self.expire_and_persist_sessions(&mut state)?;
+        let identity_key = super::authenticate(&mut state, token, &self.config)?;
+        super::validate_request_id(&request.request_id)?;
+        if let Some(previous) = state
+            .identities
+            .get(&identity_key)
+            .and_then(|identity| identity.foundation_cache_results.get(&request.request_id))
+            .cloned()
+        {
+            return Ok(ApiResponse {
+                meta: super::meta(state.tick, Some(request.request_id), Some(state.cursor)),
+                data: previous,
+            });
+        }
+        let mut response = FoundationCacheResponse {
+            request_id: request.request_id.clone(),
+            action: request.action,
+            accepted: false,
+            cache: state.foundation_activity.shared_cache.clone(),
+            player: super::player_projection(&state, &identity_key),
+            reason: None,
+        };
+        if state
+            .identities
+            .get(&identity_key)
+            .is_some_and(|identity| identity.knocked_out)
+        {
+            response.reason =
+                Some("Recover before moving goods through the shared cache.".to_owned());
+            return self.store_foundation_cache_result(&mut state, identity_key, response);
+        }
+        let cache_position = crate::content::foundation_baseline()
+            .landmarks
+            .into_iter()
+            .find(|landmark| landmark.id == state.foundation_activity.shared_cache.landmark_id)
+            .map(|landmark| landmark.position)
+            .expect("validated shared cache references a landmark");
+        let player_position = state
+            .identities
+            .get(&identity_key)
+            .expect("identity exists")
+            .position;
+        if player_position.manhattan_distance(cache_position) > 1 {
+            response.reason = Some("Stand beside the shared cache before moving goods.".to_owned());
+            return self.store_foundation_cache_result(&mut state, identity_key, response);
+        }
+        if request.action == FoundationCacheAction::Inspect {
+            response.accepted = true;
+            return self.store_foundation_cache_result(&mut state, identity_key, response);
+        }
+        let Some(resource) = request.resource else {
+            response.reason = Some("Choose timber, stone, or iron ore to move.".to_owned());
+            return self.store_foundation_cache_result(&mut state, identity_key, response);
+        };
+        if request.amount == 0 || request.amount > 99 {
+            response.reason = Some("Move between 1 and 99 materials at a time.".to_owned());
+            return self.store_foundation_cache_result(&mut state, identity_key, response);
+        }
+        let player_inventory = state
+            .identities
+            .get(&identity_key)
+            .expect("identity exists")
+            .inventory;
+        let cache_inventory = state.foundation_activity.shared_cache.inventory;
+        match request.action {
+            FoundationCacheAction::Deposit => {
+                if material_amount(&player_inventory, resource) < request.amount {
+                    response.reason = Some("You do not carry that many materials.".to_owned());
+                } else if cache_inventory.total_items().saturating_add(request.amount)
+                    > state.foundation_activity.shared_cache.capacity
+                {
+                    response.reason =
+                        Some("The shared cache has no room for those goods.".to_owned());
+                } else {
+                    let RepositoryState {
+                        identities,
+                        foundation_activity,
+                        ..
+                    } = &mut *state;
+                    move_material(
+                        &mut identities
+                            .get_mut(&identity_key)
+                            .expect("identity exists")
+                            .inventory,
+                        &mut foundation_activity.shared_cache.inventory,
+                        resource,
+                        request.amount,
+                    );
+                    response.accepted = true;
+                }
+            }
+            FoundationCacheAction::Withdraw => {
+                if material_amount(&cache_inventory, resource) < request.amount {
+                    response.reason =
+                        Some("The shared cache does not hold that many materials.".to_owned());
+                } else {
+                    let RepositoryState {
+                        identities,
+                        foundation_activity,
+                        ..
+                    } = &mut *state;
+                    move_material(
+                        &mut foundation_activity.shared_cache.inventory,
+                        &mut identities
+                            .get_mut(&identity_key)
+                            .expect("identity exists")
+                            .inventory,
+                        resource,
+                        request.amount,
+                    );
+                    response.accepted = true;
+                }
+            }
+            FoundationCacheAction::Inspect => unreachable!("inspection is handled above"),
+        }
+        response.cache = state.foundation_activity.shared_cache.clone();
+        response.player = super::player_projection(&state, &identity_key);
+        self.store_foundation_cache_result(&mut state, identity_key, response)
+    }
+
+    fn store_foundation_cache_result(
+        &self,
+        state: &mut RepositoryState,
+        identity_key: String,
+        response: FoundationCacheResponse,
+    ) -> Result<ApiResponse<FoundationCacheResponse>, super::RepositoryError> {
+        let request_id = response.request_id.clone();
+        let results = &mut state
+            .identities
+            .get_mut(&identity_key)
+            .expect("identity exists")
+            .foundation_cache_results;
+        results.insert(request_id.clone(), response.clone());
+        super::models::trim_replay_cache(results);
+        super::record_command_outcome(state, response.accepted);
+        self.persist(state)?;
+        Ok(ApiResponse {
+            meta: super::meta(state.tick, Some(request_id), Some(state.cursor)),
+            data: response,
+        })
+    }
+}
+
+fn material_amount(inventory: &Inventory, resource: FoundationResourceKind) -> u32 {
+    match resource {
+        FoundationResourceKind::Timber => inventory.timber,
+        FoundationResourceKind::Stone => inventory.stone,
+        FoundationResourceKind::IronOre => inventory.iron_ore,
+    }
+}
+
+fn material_amount_mut(inventory: &mut Inventory, resource: FoundationResourceKind) -> &mut u32 {
+    match resource {
+        FoundationResourceKind::Timber => &mut inventory.timber,
+        FoundationResourceKind::Stone => &mut inventory.stone,
+        FoundationResourceKind::IronOre => &mut inventory.iron_ore,
+    }
+}
+
+fn move_material(
+    from: &mut Inventory,
+    to: &mut Inventory,
+    resource: FoundationResourceKind,
+    amount: u32,
+) {
+    let source = material_amount_mut(from, resource);
+    *source -= amount;
+    let target = material_amount_mut(to, resource);
+    *target = target.saturating_add(amount);
 }
 
 #[cfg(test)]

@@ -102,6 +102,7 @@ fn nearby_woodland_becomes_a_productive_resource_command() {
             last_recovered_tick: 0,
         }],
         crude_tool_access: Vec::new(),
+        shared_cache: tarrowyn_protocol::FoundationSharedCache::default(),
     };
 
     let context = nearby_context(&fixture, &activity, TilePos::new(12, 3)).unwrap();

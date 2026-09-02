@@ -1,7 +1,10 @@
 use super::*;
 use crate::config::ServerConfig;
 use crate::repository::models::{RepositoryState, StoredState};
-use tarrowyn_protocol::{FoundationResourceAction, FoundationResourceRequest, GuestSessionRequest};
+use tarrowyn_protocol::{
+    FoundationCacheAction, FoundationCacheRequest, FoundationResourceAction,
+    FoundationResourceKind, FoundationResourceRequest, GuestSessionRequest,
+};
 
 #[test]
 fn fresh_state_exposes_shared_crude_tools_and_bounded_nodes() {
@@ -232,4 +235,135 @@ fn gathering_depletion_and_replay_survive_repository_restart() {
     drop(state);
     drop(second_repository);
     let _ = std::fs::remove_file(path);
+}
+
+#[test]
+fn shared_cache_transfer_and_replay_survive_repository_restart() {
+    let path = std::env::temp_dir().join(format!(
+        "tarrowyn-foundation-cache-{}.json",
+        std::process::id()
+    ));
+    let config = ServerConfig {
+        persistence_path: Some(path.to_string_lossy().into_owned()),
+        backup_path: None,
+        ..ServerConfig::default()
+    };
+    let first_repository = super::super::WorldRepository::new(config.clone());
+    let first_session = first_repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("f2-cache-restart".to_owned()),
+            reset: false,
+        })
+        .unwrap()
+        .data;
+    first_repository
+        .state
+        .lock()
+        .unwrap()
+        .identities
+        .get_mut("f2-cache-restart")
+        .unwrap()
+        .inventory
+        .timber = 3;
+    let deposit = FoundationCacheRequest {
+        request_id: "cache-deposit".to_owned(),
+        action: FoundationCacheAction::Deposit,
+        resource: Some(FoundationResourceKind::Timber),
+        amount: 2,
+    };
+    let stored = first_repository
+        .foundation_cache(&first_session.account_token, deposit.clone())
+        .unwrap()
+        .data;
+    assert!(stored.accepted);
+    assert_eq!(stored.player.inventory.timber, 1);
+    assert_eq!(stored.cache.inventory.timber, 2);
+    drop(first_repository);
+
+    let second_repository = super::super::WorldRepository::new(config);
+    let resumed = second_repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("f2-cache-restart".to_owned()),
+            reset: false,
+        })
+        .unwrap()
+        .data;
+    let replay = second_repository
+        .foundation_cache(&resumed.account_token, deposit)
+        .unwrap()
+        .data;
+    assert_eq!(replay, stored);
+
+    let withdrawn = second_repository
+        .foundation_cache(
+            &resumed.account_token,
+            FoundationCacheRequest {
+                request_id: "cache-withdraw".to_owned(),
+                action: FoundationCacheAction::Withdraw,
+                resource: Some(FoundationResourceKind::Timber),
+                amount: 1,
+            },
+        )
+        .unwrap()
+        .data;
+    assert!(withdrawn.accepted);
+    assert_eq!(withdrawn.player.inventory.timber, 2);
+    assert_eq!(withdrawn.cache.inventory.timber, 1);
+    drop(second_repository);
+    let _ = std::fs::remove_file(path);
+}
+
+#[test]
+fn shared_cache_rejects_over_capacity_and_unowned_goods_atomically() {
+    let repository = super::super::WorldRepository::new(ServerConfig::default());
+    let session = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("f2-cache-capacity".to_owned()),
+            reset: false,
+        })
+        .unwrap()
+        .data;
+    {
+        let mut state = repository.state.lock().unwrap();
+        state
+            .identities
+            .get_mut("f2-cache-capacity")
+            .unwrap()
+            .inventory
+            .stone = 2;
+        state.foundation_activity.shared_cache.inventory.timber = 64;
+    }
+    let rejected = repository
+        .foundation_cache(
+            &session.account_token,
+            FoundationCacheRequest {
+                request_id: "cache-over-capacity".to_owned(),
+                action: FoundationCacheAction::Deposit,
+                resource: Some(FoundationResourceKind::Stone),
+                amount: 1,
+            },
+        )
+        .unwrap()
+        .data;
+
+    assert!(!rejected.accepted);
+    assert_eq!(rejected.player.inventory.stone, 2);
+    assert_eq!(rejected.cache.inventory.timber, 64);
+    assert_eq!(rejected.cache.inventory.stone, 0);
+
+    let unavailable = repository
+        .foundation_cache(
+            &session.account_token,
+            FoundationCacheRequest {
+                request_id: "cache-unavailable".to_owned(),
+                action: FoundationCacheAction::Withdraw,
+                resource: Some(FoundationResourceKind::IronOre),
+                amount: 1,
+            },
+        )
+        .unwrap()
+        .data;
+    assert!(!unavailable.accepted);
+    assert_eq!(unavailable.player.inventory.iron_ore, 0);
+    assert_eq!(unavailable.cache.inventory.iron_ore, 0);
 }

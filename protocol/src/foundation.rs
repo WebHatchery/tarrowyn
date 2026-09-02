@@ -94,6 +94,44 @@ pub struct FoundationToolAccess {
 pub struct FoundationActivityState {
     pub resource_nodes: Vec<FoundationResourceNode>,
     pub crude_tool_access: Vec<FoundationToolAccess>,
+    #[serde(default)]
+    pub shared_cache: FoundationSharedCache,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
+pub struct FoundationSharedCache {
+    pub landmark_id: String,
+    pub inventory: crate::Inventory,
+    pub capacity: u32,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum FoundationCacheAction {
+    Inspect,
+    Deposit,
+    Withdraw,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct FoundationCacheRequest {
+    pub request_id: String,
+    pub action: FoundationCacheAction,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub resource: Option<FoundationResourceKind>,
+    #[serde(default)]
+    pub amount: u32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct FoundationCacheResponse {
+    pub request_id: String,
+    pub action: FoundationCacheAction,
+    pub accepted: bool,
+    pub cache: FoundationSharedCache,
+    pub player: PlayerProjection,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reason: Option<String>,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]

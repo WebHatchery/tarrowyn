@@ -53,6 +53,8 @@ pub(crate) struct Identity {
     pub(super) chat_results: HashMap<String, ChatResponse>,
     #[serde(default)]
     pub(super) foundation_resource_results: HashMap<String, FoundationResourceResponse>,
+    #[serde(default)]
+    pub(super) foundation_cache_results: HashMap<String, FoundationCacheResponse>,
     #[serde(default = "default_weapon")]
     pub(super) weapon: WeaponKind,
     #[serde(default)]
@@ -175,7 +177,10 @@ impl RepositoryState {
             trim_replay_cache(&mut identity.movement_results);
             trim_replay_cache(&mut identity.chat_results);
             trim_replay_cache(&mut identity.foundation_resource_results);
+            trim_replay_cache(&mut identity.foundation_cache_results);
         }
+        let mut foundation_activity = stored.foundation_activity;
+        super::foundation::restore(&mut foundation_activity);
         let mut phase3 = stored.phase3;
         super::phase3::archive_excess(&mut phase3);
         super::phase3::trim_expedition_members(&mut phase3);
@@ -301,7 +306,7 @@ impl RepositoryState {
             chat_history: trim_queue(stored.chat_history, MAX_CHAT_HISTORY),
             notices: trim_queue(stored.notices, MAX_NOTICES),
             trades,
-            foundation_activity: stored.foundation_activity,
+            foundation_activity,
             phase3,
             phase4,
             phase5,

@@ -9,7 +9,7 @@ use std::time::{Duration, Instant};
 use tarrowyn_protocol::{
     AccountDeletionRequest, ApiErrorResponse, ApiMeta, ApiResponse, AuthLinkRequest,
     AuthRefreshRequest, AuthRevokeRequest, ChatRequest, ClaimLifecycleRequest, ClaimRequest,
-    CombatRequest, ContractRequest, ExpeditionRequest, FarmingRequest,
+    CombatRequest, ContractRequest, ExpeditionRequest, FarmingRequest, FoundationCacheRequest,
     FoundationInteractionRequest, FoundationResourceRequest, GovernanceAction, GovernanceRequest,
     KnowledgeAction, KnowledgeRequest, LocalCombatRequest, MarketOrderRequest,
     ModerationReportRequest, MovementIntent, OpsHealthResponse, ProfessionRequest, RecoveryRequest,
@@ -283,6 +283,14 @@ fn handle_request(
             match read_json::<FoundationResourceRequest>(&mut request) {
                 Ok(body) => authenticated(&request, &repository, |token| {
                     repository.foundation_resource(token, body)
+                }),
+                Err(error) => error_response(400, "invalid_json", error, repository.health().meta),
+            }
+        }
+        (Method::Post, "/v1/foundation/cache") => {
+            match read_json::<FoundationCacheRequest>(&mut request) {
+                Ok(body) => authenticated(&request, &repository, |token| {
+                    repository.foundation_cache(token, body)
                 }),
                 Err(error) => error_response(400, "invalid_json", error, repository.health().meta),
             }
