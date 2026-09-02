@@ -153,6 +153,7 @@ struct RegionManifest {
     calendar: CalendarManifest,
     farm_plots: Vec<Position>,
     farm_animal_position: Position,
+    foundation_baseline: tarrowyn_protocol::FoundationBaseline,
     locations: Vec<LocationManifest>,
     routes: Vec<RouteManifest>,
 }
@@ -363,6 +364,10 @@ pub(crate) fn farm_plot_positions() -> Vec<Position> {
 
 pub(crate) fn farm_animal_position() -> Position {
     region_catalog().farm_animal_position
+}
+
+pub(crate) fn foundation_baseline() -> tarrowyn_protocol::FoundationBaseline {
+    region_catalog().foundation_baseline.clone()
 }
 
 pub(crate) fn region_id() -> String {

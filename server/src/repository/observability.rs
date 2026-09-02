@@ -31,6 +31,7 @@ pub(super) fn snapshot(
             materials: config.expedition_min_materials,
             safety: config.expedition_min_safety,
         },
+        foundation: crate::content::foundation_baseline(),
     }
 }
 

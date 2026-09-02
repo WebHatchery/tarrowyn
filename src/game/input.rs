@@ -34,7 +34,7 @@ impl Game {
         if self.menu_open || self.art_catalog_open {
             return;
         }
-        let direction = keyboard_movement_direction(|key| is_key_down(key));
+        let direction = keyboard_movement_direction(is_key_down);
         if direction.length_squared() > f32::EPSILON {
             self.advance_player_movement(direction, dt);
             self.movement_advanced_this_frame = true;

@@ -326,6 +326,49 @@ fn farm_animal_position_follows_the_validated_region_manifest() {
 }
 
 #[test]
+fn foundation_baseline_keeps_required_stable_records() {
+    let baseline = super::foundation_baseline();
+    assert_eq!(baseline.fixture_id, "first-beacon-baseline-v1");
+    assert_eq!(baseline.schema_version, 1);
+    assert_eq!(baseline.settlement_id, "hearth-settlement");
+    assert_eq!(baseline.landmarks.len(), 12);
+    assert_eq!(baseline.interactions.len(), 12);
+    let beacon = baseline
+        .landmarks
+        .iter()
+        .find(|landmark| landmark.id == "first-beacon")
+        .expect("the permanent beacon record should exist");
+    assert!(beacon.visible);
+    assert!(beacon.permanent);
+    assert_eq!(beacon.position, tarrowyn_protocol::Position { x: 8, y: 6 });
+    for required in [
+        "first-beacon-tents",
+        "first-beacon-fire",
+        "builder-mara",
+        "first-beacon-noticeboard",
+        "first-beacon-cache",
+        "first-beacon-tool-rack",
+        "first-beacon-fields",
+        "whisperwood-edge",
+        "first-beacon-mine",
+        "first-beacon-forge",
+        "storehouse-site",
+    ] {
+        assert!(baseline
+            .landmarks
+            .iter()
+            .any(|landmark| landmark.id == required));
+    }
+    assert!(baseline.interactions.iter().all(|interaction| {
+        interaction.authority == "server"
+            && baseline
+                .landmarks
+                .iter()
+                .any(|landmark| landmark.id == interaction.landmark_id)
+    }));
+}
+
+#[test]
 fn regional_bootstrap_ids_follow_the_validated_catalogs() {
     assert_eq!(
         super::region_location_ids(),

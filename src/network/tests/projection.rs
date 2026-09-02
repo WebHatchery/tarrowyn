@@ -203,6 +203,7 @@ fn oversized_state_snapshot_is_rejected_before_grid_allocation() {
             claim: None,
             expedition: None,
             expedition_requirements: ExpeditionRequirements::default(),
+            foundation: tarrowyn_protocol::FoundationBaseline::default(),
         },
         player: PlayerProjection {
             account_id: "account".to_owned(),
@@ -273,6 +274,7 @@ fn small_state_snapshot(tiles: Vec<WorldTile>) -> StateSnapshot {
             claim: None,
             expedition: None,
             expedition_requirements: ExpeditionRequirements::default(),
+            foundation: tarrowyn_protocol::FoundationBaseline::default(),
         },
         player: PlayerProjection {
             account_id: "account".to_owned(),
@@ -303,6 +305,20 @@ fn small_state_snapshot(tiles: Vec<WorldTile>) -> StateSnapshot {
         },
         cursor: 1,
     }
+}
+
+#[test]
+fn foundation_baseline_is_retained_from_the_authoritative_snapshot() {
+    let mut projection = WorldProjection::new(&config());
+    let mut snapshot = small_state_snapshot(complete_test_tiles());
+    snapshot.world.foundation.fixture_id = "first-beacon-baseline-v1".to_owned();
+    snapshot.world.foundation.schema_version = 1;
+    snapshot.world.foundation.settlement_id = "hearth-settlement".to_owned();
+
+    assert!(projection.apply_state(snapshot, 1));
+    assert_eq!(projection.foundation.fixture_id, "first-beacon-baseline-v1");
+    assert_eq!(projection.foundation.schema_version, 1);
+    assert_eq!(projection.foundation.settlement_id, "hearth-settlement");
 }
 
 #[test]

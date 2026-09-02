@@ -2,6 +2,8 @@
 
 use serde::{de, Deserialize, Serialize};
 
+mod foundation;
+pub use foundation::*;
 mod phase3;
 pub use phase3::*;
 mod phase4;
@@ -230,6 +232,8 @@ pub struct WorldSnapshot {
     pub expedition: Option<Expedition>,
     #[serde(default)]
     pub expedition_requirements: ExpeditionRequirements,
+    #[serde(default)]
+    pub foundation: FoundationBaseline,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]

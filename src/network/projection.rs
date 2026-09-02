@@ -37,6 +37,7 @@ impl WorldProjection {
             outpost: None,
             expedition: None,
             expedition_requirements: ExpeditionRequirements::default(),
+            foundation: FoundationBaseline::default(),
         }
     }
 
@@ -106,6 +107,7 @@ impl WorldProjection {
         self.claim = snapshot.claim;
         self.expedition = snapshot.expedition;
         self.expedition_requirements = snapshot.expedition_requirements;
+        self.foundation = snapshot.foundation;
         if let Some(player) = self
             .players
             .iter()

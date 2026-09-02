@@ -424,6 +424,29 @@ if ($dayLength -ne [double]$calendar.day_seconds) {
 }
 $locationsRecords = @($region.locations)
 $routesRecords = @($region.routes)
+$foundation = $region.foundation_baseline
+if ($null -eq $foundation -or [string]$foundation.fixture_id -ne "first-beacon-baseline-v1" -or [int]$foundation.schema_version -ne 1 -or [string]$foundation.settlement_id -ne "hearth-settlement") {
+    throw "Region manifest must define the versioned First Beacon F0 baseline."
+}
+$foundationLandmarks = @($foundation.landmarks)
+$foundationInteractions = @($foundation.interactions)
+Assert-Records "foundation landmarks" $foundationLandmarks @("kind", "name", "note") @()
+Assert-Records "foundation interactions" $foundationInteractions @("landmark_id", "action", "authority", "note") @()
+$requiredFoundationLandmarks = @(
+    "first-beacon", "first-beacon-tents", "first-beacon-fire", "builder-mara",
+    "first-beacon-noticeboard", "first-beacon-cache", "first-beacon-tool-rack",
+    "first-beacon-fields", "whisperwood-edge", "first-beacon-mine",
+    "first-beacon-forge", "storehouse-site"
+)
+Assert-RequiredRecordIds "Foundation landmarks" $foundationLandmarks $requiredFoundationLandmarks
+$foundationLandmarkIds = @($foundationLandmarks | ForEach-Object { [string]$_.id })
+if ($foundationInteractions.Count -ne $foundationLandmarks.Count -or @($foundationInteractions | Where-Object { [string]$_.authority -ne "server" -or $foundationLandmarkIds -notcontains [string]$_.landmark_id }).Count -gt 0) {
+    throw "Every foundation landmark needs one valid server-authoritative interaction record."
+}
+$firstBeacon = $foundationLandmarks | Where-Object { [string]$_.id -eq "first-beacon" } | Select-Object -First 1
+if (-not [bool]$firstBeacon.visible -or -not [bool]$firstBeacon.permanent -or [int]$firstBeacon.position.x -ne 8 -or [int]$firstBeacon.position.y -ne 6) {
+    throw "The permanent First Beacon must remain visible at the authoritative arrival point."
+}
 Assert-Records "region locations" $locationsRecords @("name", "kind", "role", "access_note") @("resources", "services")
 Assert-Records "region routes" $routesRecords @("name", "transport", "origin", "destination", "status", "note") @()
 if (@($routesRecords | Where-Object { [string]$_.origin -eq [string]$_.destination }).Count -gt 0) {

@@ -32,7 +32,7 @@ player-observable acceptance test that exercises the connected experience.
 
 | Phase | Name | Testable completion goal | Existing foundation |
 |---|---|---|---|
-| F0 | Foundation baseline | A reproducible First Beacon fixture exists, and a requirements matrix identifies every foundational feature as usable, missing, conflicting, or deliberately deferred. | Phases 0–6 |
+| [F0](FOUNDATIONAL_PLAYABILITY_AUDIT.md) | Foundation baseline | A reproducible First Beacon fixture exists, and a requirements matrix identifies every foundational feature as usable, missing, conflicting, or deliberately deferred. | Phases 0–6 |
 | F1 | Arriving at the First Beacon | Three touch-controlled clients can arrive, move through the same tent settlement, meet the builder, read the local need, disconnect, and return to the correct shared state. | Phases 0–1 |
 | F2 | Living off the land | A player can explore, gather timber and minerals, use crude tools, place a valid personal tent, reject obstructive placement, store goods, and recover it all after restart. | Phases 2–4 |
 | F3 | The useful short session | A returning player can plant, tend, advance through offline world time, harvest, and replant during a useful 15-minute farming session using visible controls alone. | Phases 2 and 4 |
@@ -48,6 +48,15 @@ player-observable acceptance test that exercises the connected experience.
 Phase 6 complete while foundational playability remains in progress. `F8`–
 `F10` are post-foundation proofs of long-term property, expansion, and world
 stewardship rather than prerequisites for the first cohesive release.
+
+The F0 audit, baseline fixture contract, current status counts, risks, and
+verification record are in
+[`FOUNDATIONAL_PLAYABILITY_AUDIT.md`](FOUNDATIONAL_PLAYABILITY_AUDIT.md).
+Run its focused automated gate from the project root with:
+
+```powershell
+.\scripts\verify_foundation_baseline.ps1
+```
 
 ### Foundational acceptance rules
 

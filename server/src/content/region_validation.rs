@@ -37,6 +37,7 @@ pub(super) fn validate_region(
             "region farm animal must be inside the world and one tile from a plot".to_owned(),
         );
     }
+    validate_foundation_baseline(region, game_config)?;
     if region.locations.iter().any(|location| {
         location.position.x < 0
             || location.position.y < 0
@@ -164,6 +165,102 @@ pub(super) fn validate_region(
                 "launch route {route_id} must connect {origin} to {destination}"
             ));
         }
+    }
+    Ok(())
+}
+
+fn validate_foundation_baseline(
+    region: &RegionManifest,
+    game_config: &GameConfigManifest,
+) -> Result<(), String> {
+    let baseline = &region.foundation_baseline;
+    if baseline.fixture_id != "first-beacon-baseline-v1"
+        || baseline.schema_version != 1
+        || baseline.settlement_id != "hearth-settlement"
+    {
+        return Err(
+            "foundation baseline must keep its F0 fixture, schema, and settlement IDs".to_owned(),
+        );
+    }
+    validate_id_list(
+        "foundation landmark",
+        baseline
+            .landmarks
+            .iter()
+            .map(|landmark| landmark.id.as_str())
+            .collect(),
+    )?;
+    validate_id_list(
+        "foundation interaction",
+        baseline
+            .interactions
+            .iter()
+            .map(|interaction| interaction.id.as_str())
+            .collect(),
+    )?;
+    let required_landmarks = [
+        "first-beacon",
+        "first-beacon-tents",
+        "first-beacon-fire",
+        "builder-mara",
+        "first-beacon-noticeboard",
+        "first-beacon-cache",
+        "first-beacon-tool-rack",
+        "first-beacon-fields",
+        "whisperwood-edge",
+        "first-beacon-mine",
+        "first-beacon-forge",
+        "storehouse-site",
+    ];
+    let landmark_ids: HashSet<&str> = baseline
+        .landmarks
+        .iter()
+        .map(|landmark| landmark.id.as_str())
+        .collect();
+    validate_required_ids("foundation landmark", &landmark_ids, &required_landmarks)?;
+    if baseline.landmarks.iter().any(|landmark| {
+        landmark.kind.trim().is_empty()
+            || landmark.name.trim().is_empty()
+            || landmark.note.trim().is_empty()
+            || !landmark.visible
+            || landmark.position.x < 0
+            || landmark.position.y < 0
+            || landmark.position.x as u32 >= game_config.world_width
+            || landmark.position.y as u32 >= game_config.world_height
+    }) {
+        return Err(
+            "foundation landmarks must be visible, complete, and inside the world".to_owned(),
+        );
+    }
+    let beacon = baseline
+        .landmarks
+        .iter()
+        .find(|landmark| landmark.id == "first-beacon")
+        .expect("required beacon exists after validation");
+    if !beacon.permanent || beacon.position != (Position { x: 8, y: 6 }) {
+        return Err(
+            "the permanent First Beacon must remain at the authoritative arrival point".to_owned(),
+        );
+    }
+    if baseline.interactions.iter().any(|interaction| {
+        interaction.action.trim().is_empty()
+            || interaction.authority != "server"
+            || interaction.note.trim().is_empty()
+            || !landmark_ids.contains(interaction.landmark_id.as_str())
+    }) {
+        return Err(
+            "foundation interactions must be complete server-owned landmark references".to_owned(),
+        );
+    }
+    if baseline.interactions.len() != baseline.landmarks.len()
+        || baseline.landmarks.iter().any(|landmark| {
+            !baseline
+                .interactions
+                .iter()
+                .any(|interaction| interaction.landmark_id == landmark.id)
+        })
+    {
+        return Err("every foundation landmark must have an interaction record".to_owned());
     }
     Ok(())
 }

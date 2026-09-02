@@ -12,6 +12,39 @@
     {"x": 10, "y": 8}
   ],
   "farm_animal_position": {"x": 3, "y": 8},
+  "foundation_baseline": {
+    "fixture_id": "first-beacon-baseline-v1",
+    "schema_version": 1,
+    "settlement_id": "hearth-settlement",
+    "landmarks": [
+      {"id":"first-beacon","kind":"beacon","name":"First Beacon","position":{"x":8,"y":6},"visible":true,"permanent":true,"note":"The permanent arrival and travel anchor; it never degrades."},
+      {"id":"first-beacon-tents","kind":"tent_settlement","name":"First Beacon tents","position":{"x":6,"y":4},"visible":true,"permanent":false,"note":"The authored starting camp is primarily tents with room to grow."},
+      {"id":"first-beacon-fire","kind":"gathering_place","name":"Beacon fire","position":{"x":8,"y":5},"visible":true,"permanent":false,"note":"A communal fire gives the camp a shared gathering place."},
+      {"id":"builder-mara","kind":"npc","name":"Mara the Builder","position":{"x":7,"y":5},"visible":true,"permanent":true,"note":"The fixed foundational builder provides dependable construction help."},
+      {"id":"first-beacon-noticeboard","kind":"noticeboard","name":"First Beacon noticeboard","position":{"x":9,"y":5},"visible":true,"permanent":false,"note":"The board names local needs and communal work."},
+      {"id":"first-beacon-cache","kind":"shared_storage","name":"Shared cache","position":{"x":7,"y":6},"visible":true,"permanent":false,"note":"A collection point for the camp's useful materials."},
+      {"id":"first-beacon-tool-rack","kind":"crude_tools","name":"Crude tool rack","position":{"x":9,"y":6},"visible":true,"permanent":false,"note":"Fallback tools keep foundational work available without a specialist."},
+      {"id":"first-beacon-fields","kind":"farmland","name":"Common fields","position":{"x":2,"y":8},"visible":true,"permanent":false,"note":"Nearby shared plots provide the simple farming entry path."},
+      {"id":"whisperwood-edge","kind":"woodland","name":"Whisperwood edge","position":{"x":13,"y":3},"visible":true,"permanent":false,"note":"Nearby trees mark the foundational logging ground."},
+      {"id":"first-beacon-mine","kind":"mineable_ground","name":"Shallow stone seam","position":{"x":10,"y":3},"visible":true,"permanent":false,"note":"Nearby stone and ore-bearing ground mark the mining entry path."},
+      {"id":"first-beacon-forge","kind":"rough_forge","name":"Rough forge","position":{"x":10,"y":5},"visible":true,"permanent":false,"note":"The camp forge connects ore, fuel, timber components and useful tools."},
+      {"id":"storehouse-site","kind":"construction_space","name":"Storehouse site","position":{"x":6,"y":7},"visible":true,"permanent":false,"note":"A visible unfinished site reserves room for the first communal project."}
+    ],
+    "interactions": [
+      {"id":"arrive-first-beacon","landmark_id":"first-beacon","action":"arrive_or_travel","authority":"server","note":"Fresh characters arrive at the permanent beacon."},
+      {"id":"inspect-tent-settlement","landmark_id":"first-beacon-tents","action":"inspect_shelter","authority":"server","note":"The settlement state can identify its starting tents."},
+      {"id":"gather-at-beacon-fire","landmark_id":"first-beacon-fire","action":"gather","authority":"server","note":"The communal meeting point is addressable by stable ID."},
+      {"id":"speak-with-builder","landmark_id":"builder-mara","action":"speak_or_request_construction","authority":"server","note":"Construction requests remain authoritative."},
+      {"id":"read-local-needs","landmark_id":"first-beacon-noticeboard","action":"read_needs","authority":"server","note":"Local needs have a world location rather than only a menu label."},
+      {"id":"use-shared-cache","landmark_id":"first-beacon-cache","action":"deposit_or_collect","authority":"server","note":"Shared goods remain settlement-owned state."},
+      {"id":"borrow-crude-tools","landmark_id":"first-beacon-tool-rack","action":"borrow_crude_tool","authority":"server","note":"Fallback access is explicit and can later be balanced against crafted tools."},
+      {"id":"work-common-fields","landmark_id":"first-beacon-fields","action":"farm","authority":"server","note":"Plant, tend and harvest use the existing authoritative farm records."},
+      {"id":"work-whisperwood-edge","landmark_id":"whisperwood-edge","action":"log","authority":"server","note":"Logging work will be attached to this world record in F2."},
+      {"id":"work-shallow-stone-seam","landmark_id":"first-beacon-mine","action":"mine","authority":"server","note":"Mining work will be attached to this world record in F2."},
+      {"id":"work-rough-forge","landmark_id":"first-beacon-forge","action":"smith","authority":"server","note":"The connected production proof remains owned by F4."},
+      {"id":"inspect-storehouse-site","landmark_id":"storehouse-site","action":"inspect_or_contribute","authority":"server","note":"The visible communal construction loop remains owned by F6."}
+    ]
+  },
   "locations": [
     {
       "id": "hearth",
