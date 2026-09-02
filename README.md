@@ -104,6 +104,16 @@ concurrent 20-client polling acceptance pass with:
 .\scripts\verify_phase3.ps1
 ```
 
+Run the foundational F2 logging, mining, shared-cache, replay, and restart
+acceptance pass with:
+
+```powershell
+.\scripts\verify_foundation_resources.ps1
+```
+
+Its player path and authority boundaries are documented in
+[`docs/FOUNDATIONAL_PLAYABILITY_F2_RUNBOOK.md`](docs/FOUNDATIONAL_PLAYABILITY_F2_RUNBOOK.md).
+
 ## Architecture decisions
 
 The server uses `tiny_http` for the native process and a mutex-protected
