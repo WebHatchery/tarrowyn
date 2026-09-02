@@ -8,11 +8,13 @@ use std::collections::VecDeque;
 use tarrowyn_protocol::{
     ApiResponse, ChatMessage, ChatRequest, ChronicleEntry, ChronicleSummary, EventsResponse,
     Expedition, ExpeditionRequirements, FarmAnimal, FarmingAction, FarmingRequest,
-    FoundationBaseline, FoundationInteractionRequest, FoundationInteractionResponse, FrontierEvent,
-    GuestSessionRequest, GuestSessionResponse, LandClaim, MovementIntent, OpportunitySignal,
-    OpsHealthResponse, PlayerPresence, PlayerProjection, StateSnapshot, TavernFeedResponse,
-    TimeOfDay, TradeAction, TradeOffer, TradeRequest, TradesResponse, WildernessZone, WorldClock,
-    WorldEvent, WorldSnapshot, MAX_CHAT_MESSAGE_LENGTH,
+    FoundationActivityState, FoundationBaseline, FoundationInteractionRequest,
+    FoundationInteractionResponse, FoundationResourceAction, FoundationResourceAmount,
+    FoundationResourceKind, FoundationResourceRequest, FrontierEvent, GuestSessionRequest,
+    GuestSessionResponse, LandClaim, MovementIntent, OpportunitySignal, OpsHealthResponse,
+    PlayerPresence, PlayerProjection, StateSnapshot, TavernFeedResponse, TimeOfDay, TradeAction,
+    TradeOffer, TradeRequest, TradesResponse, WildernessZone, WorldClock, WorldEvent,
+    WorldSnapshot, MAX_CHAT_MESSAGE_LENGTH,
 };
 
 const REQUEST_TIMEOUT_SECONDS: f32 = 6.0;
@@ -51,7 +53,9 @@ pub(super) use chronicle::merge_chronicle_entry;
 use frontier::FrontierClient;
 pub(crate) use phase4::CraftingView;
 use phase4::Phase4Client;
-use requests::{PendingChat, PendingFarming, PendingMovement, PendingTrade};
+use requests::{
+    PendingChat, PendingFarming, PendingFoundationResource, PendingMovement, PendingTrade,
+};
 pub use types::{ConnectionState, NetworkNotice, RemotePlayer};
 
 pub struct WorldProjection {
@@ -82,6 +86,7 @@ pub struct WorldProjection {
     pub expedition: Option<Expedition>,
     pub expedition_requirements: ExpeditionRequirements,
     pub foundation: FoundationBaseline,
+    pub foundation_activity: FoundationActivityState,
 }
 
 pub struct OnlineClient {
@@ -101,6 +106,7 @@ pub struct OnlineClient {
     pending_chat: Option<PendingChat>,
     pending_farming: Option<PendingFarming>,
     pending_foundation: Option<Pending<ApiResponse<FoundationInteractionResponse>>>,
+    pending_foundation_resource: Option<PendingFoundationResource>,
     pending_trades: Option<Pending<ApiResponse<TradesResponse>>>,
     pending_trade: Option<PendingTrade>,
     movement_queue: VecDeque<MovementIntent>,
@@ -146,6 +152,7 @@ impl OnlineClient {
             pending_chat: None,
             pending_farming: None,
             pending_foundation: None,
+            pending_foundation_resource: None,
             pending_trades: None,
             pending_trade: None,
             movement_queue: VecDeque::new(),
@@ -184,6 +191,7 @@ impl OnlineClient {
         self.poll_chat(dt, &mut notices);
         self.poll_farming(dt, &mut notices);
         self.poll_foundation(dt, &mut notices);
+        self.poll_foundation_resource(dt, &mut notices);
         self.poll_trade_requests(dt, &mut notices);
         let mutations_ready = self.mutations_ready();
         let frontier_cursor_boundary =
@@ -262,6 +270,7 @@ impl OnlineClient {
         self.pending_chat = None;
         self.pending_farming = None;
         self.pending_foundation = None;
+        self.pending_foundation_resource = None;
         self.pending_trades = None;
         self.pending_trade = None;
         self.movement_correction = self.projection.authoritative_player_position();
@@ -360,6 +369,7 @@ impl OnlineClient {
         self.pending_chat = None;
         self.pending_farming = None;
         self.pending_foundation = None;
+        self.pending_foundation_resource = None;
         self.pending_trades = None;
         self.pending_trade = None;
         self.frontier.clear();
@@ -526,6 +536,7 @@ impl OnlineClient {
         self.pending_chat = None;
         self.pending_farming = None;
         self.pending_foundation = None;
+        self.pending_foundation_resource = None;
         self.pending_trades = None;
         self.pending_trade = None;
         self.movement_correction = self.projection.authoritative_player_position();
@@ -562,6 +573,7 @@ impl OnlineClient {
         self.pending_movement.is_some()
             || self.pending_chat.is_some()
             || self.pending_farming.is_some()
+            || self.pending_foundation_resource.is_some()
             || !self.movement_queue.is_empty()
             || !self.chat_queue.is_empty()
             || !self.farming_queue.is_empty()

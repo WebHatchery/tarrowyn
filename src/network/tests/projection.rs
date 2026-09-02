@@ -316,11 +316,24 @@ fn foundation_baseline_is_retained_from_the_authoritative_snapshot() {
     snapshot.world.foundation.fixture_id = "first-beacon-baseline-v1".to_owned();
     snapshot.world.foundation.schema_version = 1;
     snapshot.world.foundation.settlement_id = "hearth-settlement".to_owned();
+    snapshot.world.foundation_activity.resource_nodes.push(
+        tarrowyn_protocol::FoundationResourceNode {
+            node_id: "whisperwood-edge-node".to_owned(),
+            landmark_id: "whisperwood-edge".to_owned(),
+            deposits: Vec::new(),
+            recovery_interval_ticks: 6,
+            last_recovered_tick: 0,
+        },
+    );
 
     assert!(projection.apply_state(snapshot, 1));
     assert_eq!(projection.foundation.fixture_id, "first-beacon-baseline-v1");
     assert_eq!(projection.foundation.schema_version, 1);
     assert_eq!(projection.foundation.settlement_id, "hearth-settlement");
+    assert_eq!(
+        projection.foundation_activity.resource_nodes[0].node_id,
+        "whisperwood-edge-node"
+    );
 }
 
 #[test]

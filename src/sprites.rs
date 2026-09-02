@@ -57,6 +57,8 @@ pub enum FoundationSprite {
     ToolRack,
     RoughForge,
     ConstructionSite,
+    Woodland,
+    Mine,
 }
 
 impl FoundationSprite {
@@ -70,6 +72,8 @@ impl FoundationSprite {
             "crude_tools" => Some(Self::ToolRack),
             "rough_forge" => Some(Self::RoughForge),
             "construction_space" => Some(Self::ConstructionSite),
+            "woodland" => Some(Self::Woodland),
+            "mineable_ground" => Some(Self::Mine),
             _ => None,
         }
     }
@@ -331,6 +335,8 @@ impl SpriteAssets {
             FoundationSprite::ToolRack => (ArtAtlas::Economy, 9, 0.90, -0.06),
             FoundationSprite::RoughForge => (ArtAtlas::UiIcons, 31, 0.92, -0.04),
             FoundationSprite::ConstructionSite => (ArtAtlas::Settlements, 39, 1.30, -0.16),
+            FoundationSprite::Woodland => (ArtAtlas::Terrain, 24, 1.18, -0.04),
+            FoundationSprite::Mine => (ArtAtlas::Terrain, 40, 1.18, -0.04),
         };
         self.draw_atlas_cell(
             atlas,

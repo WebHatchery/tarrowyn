@@ -92,3 +92,27 @@ fn later_foundation_work_is_visible_but_not_enabled_early() {
         .message
         .contains("later foundational milestone"));
 }
+
+#[test]
+fn crude_tool_rack_keeps_logging_and_mining_open_to_every_player() {
+    let repository = repo();
+    let session = guest(&repository, "foundation-crude-tools");
+
+    let response = repository
+        .foundation_interaction(
+            &session.account_token,
+            FoundationInteractionRequest {
+                request_id: "inspect-crude-tools".to_owned(),
+                interaction_id: "borrow-crude-tools".to_owned(),
+            },
+        )
+        .expect("tool rack interaction");
+
+    assert!(response.data.accepted);
+    assert!(response.data.message.contains("hand axe"));
+    assert!(response.data.message.contains("stone pick"));
+    assert!(response
+        .data
+        .message
+        .contains("without choosing a profession"));
+}

@@ -259,6 +259,8 @@ impl OnlineClient {
         if self.phase4.mutation_in_flight()
             || self.frontier.command_in_flight()
             || self.pending_trade.is_some()
+            || self.pending_foundation.is_some()
+            || self.pending_foundation_resource.is_some()
         {
             return;
         }

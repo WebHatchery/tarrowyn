@@ -535,6 +535,7 @@ fn foundation_interaction_copy(
         "gather-at-beacon-fire" => "The communal fire is open to everyone. Travellers meet here before choosing work of their own.".to_owned(),
         "speak-with-builder" => "Mara: Welcome to the First Beacon. I am setting out the camp's first storehouse. Read the noticeboard beside me to see what the settlement needs.".to_owned(),
         "read-local-needs" => "LOCAL NEED — First storehouse: timber for the frame and stone for a dry foundation. Mara can explain what this shared shelter will become.".to_owned(),
+        "borrow-crude-tools" => "The shared rack holds a hand axe and stone pick. Every traveller may use these crude tools for nearby logging and mining without choosing a profession.".to_owned(),
         _ => return (false, title, "That place can be inspected, but its work belongs to a later foundational milestone.".to_owned()),
     };
     (true, title, message)

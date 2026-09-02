@@ -1,5 +1,8 @@
 use super::*;
-use tarrowyn_protocol::{FoundationInteraction, Position};
+use tarrowyn_protocol::{
+    FoundationActivityState, FoundationInteraction, FoundationResourceDeposit,
+    FoundationResourceKind, FoundationResourceNode, Position,
+};
 
 fn baseline() -> FoundationBaseline {
     FoundationBaseline {
@@ -48,7 +51,8 @@ fn baseline() -> FoundationBaseline {
 #[test]
 fn exact_landmark_wins_over_an_adjacent_landmark() {
     let fixture = baseline();
-    let context = nearby_context(&fixture, TilePos::new(7, 5)).expect("nearby context");
+    let activity = FoundationActivityState::default();
+    let context = nearby_context(&fixture, &activity, TilePos::new(7, 5)).expect("nearby context");
 
     assert_eq!(context.landmark.id, "builder-mara");
     assert_eq!(context.action_label, "Talk to Mara");
@@ -58,5 +62,51 @@ fn exact_landmark_wins_over_an_adjacent_landmark() {
 fn context_requires_visible_adjacent_landmark() {
     let fixture = baseline();
 
-    assert!(nearby_context(&fixture, TilePos::new(2, 2)).is_none());
+    assert!(nearby_context(
+        &fixture,
+        &FoundationActivityState::default(),
+        TilePos::new(2, 2)
+    )
+    .is_none());
+}
+
+#[test]
+fn nearby_woodland_becomes_a_productive_resource_command() {
+    let mut fixture = baseline();
+    fixture.landmarks.push(FoundationLandmark {
+        id: "whisperwood-edge".to_owned(),
+        kind: "woodland".to_owned(),
+        name: "Whisperwood edge".to_owned(),
+        position: Position { x: 13, y: 3 },
+        visible: true,
+        permanent: false,
+        note: "Nearby timber".to_owned(),
+    });
+    fixture.interactions.push(FoundationInteraction {
+        id: "work-whisperwood-edge".to_owned(),
+        landmark_id: "whisperwood-edge".to_owned(),
+        action: "log".to_owned(),
+        authority: "server".to_owned(),
+        note: String::new(),
+    });
+    let activity = FoundationActivityState {
+        resource_nodes: vec![FoundationResourceNode {
+            node_id: "whisperwood-edge-node".to_owned(),
+            landmark_id: "whisperwood-edge".to_owned(),
+            deposits: vec![FoundationResourceDeposit {
+                kind: FoundationResourceKind::Timber,
+                remaining: 12,
+                capacity: 12,
+            }],
+            recovery_interval_ticks: 6,
+            last_recovered_tick: 0,
+        }],
+        crude_tool_access: Vec::new(),
+    };
+
+    let context = nearby_context(&fixture, &activity, TilePos::new(12, 3)).unwrap();
+
+    assert_eq!(context.action_label, "Gather timber");
+    assert_eq!(context.resource_node_id, Some("whisperwood-edge-node"));
+    assert_eq!(context.resource_action, Some(FoundationResourceAction::Log));
 }

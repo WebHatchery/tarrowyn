@@ -1,16 +1,21 @@
 use super::*;
 use macroquad_toolkit::ui::draw_ui_text_ex;
-use tarrowyn_protocol::{FoundationBaseline, FoundationLandmark};
+use tarrowyn_protocol::{
+    FoundationActivityState, FoundationBaseline, FoundationLandmark, FoundationResourceAction,
+};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct FoundationContext<'a> {
     pub landmark: &'a FoundationLandmark,
     pub interaction_id: &'a str,
     pub action_label: &'static str,
+    pub resource_node_id: Option<&'a str>,
+    pub resource_action: Option<FoundationResourceAction>,
 }
 
 pub(crate) fn nearby_context<'a>(
     baseline: &'a FoundationBaseline,
+    activity: &'a FoundationActivityState,
     player: TilePos,
 ) -> Option<FoundationContext<'a>> {
     baseline
@@ -27,10 +32,26 @@ pub(crate) fn nearby_context<'a>(
             (landmark.visible && distance <= 1).then_some((distance, index, landmark, interaction))
         })
         .min_by_key(|(distance, index, _, _)| (*distance, *index))
-        .map(|(_, _, landmark, interaction)| FoundationContext {
-            landmark,
-            interaction_id: interaction.id.as_str(),
-            action_label: action_label(&interaction.action),
+        .map(|(_, _, landmark, interaction)| {
+            let resource_action = match interaction.action.as_str() {
+                "log" => Some(FoundationResourceAction::Log),
+                "mine" => Some(FoundationResourceAction::Mine),
+                _ => None,
+            };
+            let resource_node_id = resource_action.and_then(|_| {
+                activity
+                    .resource_nodes
+                    .iter()
+                    .find(|node| node.landmark_id == landmark.id)
+                    .map(|node| node.node_id.as_str())
+            });
+            FoundationContext {
+                landmark,
+                interaction_id: interaction.id.as_str(),
+                action_label: action_label(&interaction.action),
+                resource_node_id,
+                resource_action,
+            }
         })
 }
 
@@ -42,10 +63,10 @@ fn action_label(action: &str) -> &'static str {
         "speak_or_request_construction" => "Talk to Mara",
         "read_needs" => "Read local need",
         "deposit_or_collect" => "Inspect cache",
-        "borrow_crude_tool" => "Inspect tools",
+        "borrow_crude_tool" => "Use crude tools",
         "farm" => "Inspect fields",
-        "log" => "Inspect woodland",
-        "mine" => "Inspect seam",
+        "log" => "Gather timber",
+        "mine" => "Mine stone",
         "smith" => "Inspect forge",
         "inspect_or_contribute" => "Inspect site",
         _ => "Inspect",
@@ -58,7 +79,7 @@ pub(super) fn draw_context_deck(
     mouse: Vec2,
     actions: &mut Vec<UiAction>,
 ) {
-    let context = nearby_context(ctx.foundation, ctx.player_position);
+    let context = nearby_context(ctx.foundation, ctx.foundation_activity, ctx.player_position);
     draw_ui_text_ex(
         "NEARBY",
         18.0,
@@ -100,10 +121,16 @@ pub(super) fn draw_context_deck(
             ButtonTone::Positive,
             mouse,
         ) {
-            actions.push(UiAction::Interact(format!(
-                "foundation:{}",
-                context.interaction_id
-            )));
+            let command = match (context.resource_node_id, context.resource_action) {
+                (Some(node_id), Some(FoundationResourceAction::Log)) => {
+                    format!("foundation-resource:{node_id}:log")
+                }
+                (Some(node_id), Some(FoundationResourceAction::Mine)) => {
+                    format!("foundation-resource:{node_id}:mine")
+                }
+                _ => format!("foundation:{}", context.interaction_id),
+            };
+            actions.push(UiAction::Interact(command));
         }
     }
     if super::virtual_button(

@@ -10,6 +10,7 @@ use tarrowyn_protocol::{
 mod account_lifecycle;
 mod connection_recovery;
 mod farming;
+mod foundation_actions;
 mod input_guards;
 mod location_projection;
 mod projection;

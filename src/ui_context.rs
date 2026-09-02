@@ -4,8 +4,8 @@ use crate::state::WorldState;
 use macroquad_toolkit::grid::TilePos;
 use macroquad_toolkit::ui::VirtualUi;
 use tarrowyn_protocol::{
-    ChronicleEntry, ChronicleSummary, FoundationBaseline, LocalCombatState, RegionSnapshot,
-    TradeOffer, WildernessZone,
+    ChronicleEntry, ChronicleSummary, FoundationActivityState, FoundationBaseline,
+    LocalCombatState, RegionSnapshot, TradeOffer, WildernessZone,
 };
 
 #[derive(Debug, Clone, PartialEq)]
@@ -38,6 +38,7 @@ pub struct UiContext<'a> {
     pub trade_pending: bool,
     pub farming_pending: bool,
     pub foundation: &'a FoundationBaseline,
+    pub foundation_activity: &'a FoundationActivityState,
     pub foundation_interaction_pending: bool,
     pub server_tick: u64,
     pub connection: ConnectionState,

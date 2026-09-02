@@ -130,6 +130,19 @@ impl Game {
             client.queue_foundation_interaction(interaction_id);
             return;
         }
+        if let Some(resource) = id.strip_prefix("foundation-resource:") {
+            let mut parts = resource.split(':');
+            let node_id = parts.next().unwrap_or_default();
+            let action = match parts.next() {
+                Some("log") => Some(tarrowyn_protocol::FoundationResourceAction::Log),
+                Some("mine") => Some(tarrowyn_protocol::FoundationResourceAction::Mine),
+                _ => None,
+            };
+            if let Some(action) = action {
+                client.queue_foundation_resource(node_id, action);
+            }
+            return;
+        }
         match id {
             "plant" => client.queue_farming(FarmingAction::Plant),
             "tend" => client.queue_farming(FarmingAction::Tend),
