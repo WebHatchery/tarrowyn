@@ -101,6 +101,7 @@ fn draw_foundation_landmarks(ctx: &UiContext<'_>, view: &MapView, rect: Rect) {
         ctx.foundation,
         ctx.foundation_activity,
         ctx.player_position,
+        ctx.player_inventory,
     )
     .map(|context| context.landmark.id.as_str());
     for landmark in ctx

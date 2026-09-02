@@ -52,7 +52,8 @@ fn baseline() -> FoundationBaseline {
 fn exact_landmark_wins_over_an_adjacent_landmark() {
     let fixture = baseline();
     let activity = FoundationActivityState::default();
-    let context = nearby_context(&fixture, &activity, TilePos::new(7, 5)).expect("nearby context");
+    let context =
+        nearby_context(&fixture, &activity, TilePos::new(7, 5), None).expect("nearby context");
 
     assert_eq!(context.landmark.id, "builder-mara");
     assert_eq!(context.action_label, "Talk to Mara");
@@ -65,7 +66,8 @@ fn context_requires_visible_adjacent_landmark() {
     assert!(nearby_context(
         &fixture,
         &FoundationActivityState::default(),
-        TilePos::new(2, 2)
+        TilePos::new(2, 2),
+        None,
     )
     .is_none());
 }
@@ -105,9 +107,76 @@ fn nearby_woodland_becomes_a_productive_resource_command() {
         shared_cache: tarrowyn_protocol::FoundationSharedCache::default(),
     };
 
-    let context = nearby_context(&fixture, &activity, TilePos::new(12, 3)).unwrap();
+    let context = nearby_context(&fixture, &activity, TilePos::new(12, 3), None).unwrap();
 
     assert_eq!(context.action_label, "Gather timber");
     assert_eq!(context.resource_node_id, Some("whisperwood-edge-node"));
     assert_eq!(context.resource_action, Some(FoundationResourceAction::Log));
+}
+
+#[test]
+fn nearby_cache_prefers_a_visible_store_action_for_carried_materials() {
+    let (fixture, activity) = cache_fixture(tarrowyn_protocol::Inventory::default());
+    let inventory = tarrowyn_protocol::Inventory {
+        stone: 2,
+        ..Default::default()
+    };
+
+    let context =
+        nearby_context(&fixture, &activity, TilePos::new(9, 6), Some(&inventory)).unwrap();
+
+    assert_eq!(context.action_label, "Store stone");
+    assert_eq!(context.cache_action, Some(FoundationCacheAction::Deposit));
+    assert_eq!(context.cache_resource, Some(FoundationResourceKind::Stone));
+}
+
+#[test]
+fn nearby_cache_exposes_collection_when_the_player_carries_no_materials() {
+    let cache_inventory = tarrowyn_protocol::Inventory {
+        iron_ore: 1,
+        ..Default::default()
+    };
+    let (fixture, activity) = cache_fixture(cache_inventory);
+    let inventory = tarrowyn_protocol::Inventory::default();
+
+    let context =
+        nearby_context(&fixture, &activity, TilePos::new(9, 6), Some(&inventory)).unwrap();
+
+    assert_eq!(context.action_label, "Collect iron ore");
+    assert_eq!(context.cache_action, Some(FoundationCacheAction::Withdraw));
+    assert_eq!(
+        context.cache_resource,
+        Some(FoundationResourceKind::IronOre)
+    );
+}
+
+fn cache_fixture(
+    inventory: tarrowyn_protocol::Inventory,
+) -> (FoundationBaseline, FoundationActivityState) {
+    let mut fixture = baseline();
+    fixture.landmarks.push(FoundationLandmark {
+        id: "first-beacon-cache".to_owned(),
+        kind: "cache".to_owned(),
+        name: "Shared cache".to_owned(),
+        position: Position { x: 9, y: 6 },
+        visible: true,
+        permanent: true,
+        note: "Shared materials".to_owned(),
+    });
+    fixture.interactions.push(FoundationInteraction {
+        id: "use-shared-cache".to_owned(),
+        landmark_id: "first-beacon-cache".to_owned(),
+        action: "deposit_or_collect".to_owned(),
+        authority: "server".to_owned(),
+        note: String::new(),
+    });
+    let activity = FoundationActivityState {
+        shared_cache: tarrowyn_protocol::FoundationSharedCache {
+            landmark_id: "first-beacon-cache".to_owned(),
+            inventory,
+            capacity: 64,
+        },
+        ..Default::default()
+    };
+    (fixture, activity)
 }

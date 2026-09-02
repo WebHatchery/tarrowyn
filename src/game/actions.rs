@@ -1,5 +1,33 @@
 use super::*;
 
+pub(super) fn parse_foundation_cache_command(
+    value: &str,
+) -> Option<(FoundationCacheAction, Option<FoundationResourceKind>)> {
+    let mut parts = value.strip_prefix("foundation-cache:")?.split(':');
+    let action = match parts.next()? {
+        "inspect" => FoundationCacheAction::Inspect,
+        "deposit" => FoundationCacheAction::Deposit,
+        "withdraw" => FoundationCacheAction::Withdraw,
+        _ => return None,
+    };
+    let resource = match parts.next()? {
+        "timber" => Some(FoundationResourceKind::Timber),
+        "stone" => Some(FoundationResourceKind::Stone),
+        "iron-ore" => Some(FoundationResourceKind::IronOre),
+        "none" if action == FoundationCacheAction::Inspect => None,
+        _ => return None,
+    };
+    let valid_pair = matches!(
+        (action, resource),
+        (FoundationCacheAction::Inspect, None)
+            | (
+                FoundationCacheAction::Deposit | FoundationCacheAction::Withdraw,
+                Some(_)
+            )
+    );
+    (parts.next().is_none() && valid_pair).then_some((action, resource))
+}
+
 pub(super) fn apply_chronicle_key(query: &mut String, key: &str) {
     match key {
         "space" if query.chars().count() < 80 => query.push(' '),
@@ -126,6 +154,10 @@ impl Game {
             self.account_open = false;
         }
         let client = &mut self.mode;
+        if let Some((action, resource)) = parse_foundation_cache_command(id) {
+            client.queue_foundation_cache(action, resource);
+            return;
+        }
         if let Some(interaction_id) = id.strip_prefix("foundation:") {
             client.queue_foundation_interaction(interaction_id);
             return;

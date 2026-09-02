@@ -13,7 +13,10 @@ use macroquad_toolkit::notifications::{
     NotificationAnchor, NotificationManager, NotificationRenderConfig,
 };
 use macroquad_toolkit::prelude::{begin_virtual_ui_frame, dark, end_virtual_ui_frame};
-use tarrowyn_protocol::{FarmingAction, TradeAction, TradeBundle, TradeRequest};
+use tarrowyn_protocol::{
+    FarmingAction, FoundationCacheAction, FoundationResourceKind, TradeAction, TradeBundle,
+    TradeRequest,
+};
 
 #[path = "game/actions.rs"]
 mod actions;
@@ -217,6 +220,11 @@ impl Game {
                 farming_pending: client.farming_pending(),
                 foundation: &client.projection.foundation,
                 foundation_activity: &client.projection.foundation_activity,
+                player_inventory: client
+                    .projection
+                    .player
+                    .as_ref()
+                    .map(|player| &player.inventory),
                 foundation_interaction_pending: client.foundation_interaction_pending(),
                 server_tick: client.projection.server_tick,
                 connection: client.state,

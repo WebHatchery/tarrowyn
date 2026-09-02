@@ -39,6 +39,7 @@ pub struct UiContext<'a> {
     pub farming_pending: bool,
     pub foundation: &'a FoundationBaseline,
     pub foundation_activity: &'a FoundationActivityState,
+    pub player_inventory: Option<&'a tarrowyn_protocol::Inventory>,
     pub foundation_interaction_pending: bool,
     pub server_tick: u64,
     pub connection: ConnectionState,

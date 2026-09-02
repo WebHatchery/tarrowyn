@@ -261,6 +261,7 @@ impl OnlineClient {
             || self.pending_trade.is_some()
             || self.pending_foundation.is_some()
             || self.pending_foundation_resource.is_some()
+            || self.pending_foundation_cache.is_some()
         {
             return;
         }

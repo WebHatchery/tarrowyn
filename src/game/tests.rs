@@ -1,5 +1,5 @@
 use super::{
-    actions::apply_chronicle_key,
+    actions::{apply_chronicle_key, parse_foundation_cache_command},
     input::{
         keyboard_gameplay_blocked, keyboard_movement_direction, normalized_movement_direction,
         rendered_tile,
@@ -9,6 +9,7 @@ use super::{
 use crate::network::{ConnectionState, CraftingView};
 use macroquad::prelude::{vec2, KeyCode};
 use macroquad_toolkit::grid::TilePos;
+use tarrowyn_protocol::{FoundationCacheAction, FoundationResourceKind};
 
 #[test]
 fn held_arrow_keys_form_a_free_two_dimensional_direction() {
@@ -39,6 +40,25 @@ fn chronicle_touch_keys_build_and_edit_a_query() {
 
     apply_chronicle_key(&mut query, "clear");
     assert!(query.is_empty());
+}
+
+#[test]
+fn shared_cache_touch_commands_route_to_typed_actions() {
+    assert_eq!(
+        parse_foundation_cache_command("foundation-cache:deposit:stone"),
+        Some((
+            FoundationCacheAction::Deposit,
+            Some(FoundationResourceKind::Stone)
+        ))
+    );
+    assert_eq!(
+        parse_foundation_cache_command("foundation-cache:inspect:none"),
+        Some((FoundationCacheAction::Inspect, None))
+    );
+    assert_eq!(
+        parse_foundation_cache_command("foundation-cache:deposit:none"),
+        None
+    );
 }
 
 #[test]
