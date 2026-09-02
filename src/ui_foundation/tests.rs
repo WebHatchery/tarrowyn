@@ -1,8 +1,81 @@
 use super::*;
+use crate::state::{CropKind, CropState, TileKind, WorldState};
+use macroquad_toolkit::grid::FlatGrid;
 use tarrowyn_protocol::{
-    FoundationActivityState, FoundationInteraction, FoundationResourceDeposit,
+    FieldWeather, FoundationActivityState, FoundationInteraction, FoundationResourceDeposit,
     FoundationResourceKind, FoundationResourceNode, Position,
 };
+
+fn farm_world(crop: Option<CropState>) -> WorldState {
+    let mut tiles = FlatGrid::new(4, 4, TileKind::Meadow);
+    let mut crops = FlatGrid::new(4, 4, None);
+    let plot = TilePos::new(2, 2);
+    tiles.set(plot, TileKind::Field);
+    crops.set(plot, crop);
+    WorldState {
+        tiles,
+        crops,
+        reachable: Default::default(),
+    }
+}
+
+#[test]
+fn nearby_empty_plot_exposes_touch_first_planting() {
+    let choice = nearby_farm_choice(
+        &farm_world(None),
+        TilePos::new(2, 1),
+        Some(2),
+        Some(FieldWeather::Clear),
+        Some(0),
+    )
+    .expect("nearby plot");
+
+    assert_eq!(choice.action, FarmingAction::Plant);
+    assert_eq!(choice.label, "Plant crop");
+    assert!(choice.detail.contains("uses one seed"));
+}
+
+#[test]
+fn growing_crop_explains_optional_maintenance_and_conditions() {
+    let choice = nearby_farm_choice(
+        &farm_world(Some(CropState {
+            kind: CropKind::Turnip,
+            stage: 2,
+        })),
+        TilePos::new(2, 2),
+        Some(1),
+        Some(FieldWeather::HeavyRain),
+        Some(2),
+    )
+    .expect("nearby crop");
+
+    assert_eq!(choice.action, FarmingAction::Tend);
+    assert_eq!(choice.label, "Tend / water");
+    assert!(choice.detail.contains("stage 2/3"));
+    assert!(choice.detail.contains("optional"));
+    assert!(choice.detail.contains("Tool 1/3"));
+    assert!(choice.detail.contains("heavy rain"));
+    assert!(choice.detail.contains("pests 2/2"));
+}
+
+#[test]
+fn mature_crop_exposes_touch_first_harvest() {
+    let choice = nearby_farm_choice(
+        &farm_world(Some(CropState {
+            kind: CropKind::Moonberry,
+            stage: CropState::MATURE_STAGE,
+        })),
+        TilePos::new(1, 2),
+        None,
+        None,
+        None,
+    )
+    .expect("nearby crop");
+
+    assert_eq!(choice.action, FarmingAction::Harvest);
+    assert_eq!(choice.label, "Harvest crop");
+    assert!(choice.detail.contains("Moonberry is ready"));
+}
 
 fn baseline() -> FoundationBaseline {
     FoundationBaseline {

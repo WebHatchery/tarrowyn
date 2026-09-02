@@ -225,6 +225,21 @@ impl Game {
                     .player
                     .as_ref()
                     .map(|player| &player.inventory),
+                field_tool_condition: client
+                    .projection
+                    .player
+                    .as_ref()
+                    .map(|player| player.field_tool_condition),
+                field_weather: client
+                    .projection
+                    .player
+                    .as_ref()
+                    .map(|player| player.field_weather),
+                field_pest_pressure: client
+                    .projection
+                    .player
+                    .as_ref()
+                    .map(|player| player.field_pest_pressure),
                 foundation_interaction_pending: client.foundation_interaction_pending(),
                 server_tick: client.projection.server_tick,
                 connection: client.state,
