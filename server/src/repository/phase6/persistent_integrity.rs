@@ -98,7 +98,58 @@ fn core_ok(state: &RepositoryState, config: &ServerConfig, account_ids: &HashSet
                 )
         });
     let cooperation = &state.foundation_activity.cooperation;
+    let recent_work_ok = cooperation.recent_work.len() <= 64
+        && cooperation.recent_work.iter().all(|credit| {
+            account_reference_ok(&credit.account_id, account_ids)
+                && credit.tick <= state.tick
+                && credit.materials.iter().all(|material| material.amount > 0)
+        });
+    let active_attempts_ok = cooperation.active_attempts.len() <= 8
+        && unique_non_empty(
+            cooperation
+                .active_attempts
+                .iter()
+                .map(|attempt| attempt.coordinator_account_id.as_str()),
+        )
+        && cooperation.active_attempts.iter().all(|attempt| {
+            account_reference_ok(&attempt.coordinator_account_id, account_ids)
+                && attempt.participant_account_ids.len() == 2
+                && unique_non_empty(attempt.participant_account_ids.iter().map(String::as_str))
+                && attempt
+                    .participant_account_ids
+                    .iter()
+                    .all(|account_id| account_reference_ok(account_id, account_ids))
+                && attempt
+                    .participant_account_ids
+                    .contains(&attempt.coordinator_account_id)
+                && attempt.contributions.len() == attempt.participant_account_ids.len()
+                && attempt.contributions.iter().all(|contribution| {
+                    attempt
+                        .participant_account_ids
+                        .contains(&contribution.account_id)
+                        && !contribution.materials.is_empty()
+                        && contribution
+                            .materials
+                            .iter()
+                            .all(|material| material.amount > 0)
+                })
+                && attempt
+                    .contributions
+                    .iter()
+                    .map(|contribution| u16::from(contribution.work_actions))
+                    .sum::<u16>()
+                    == u16::from(attempt.work_actions)
+                && !attempt.trade_id.trim().is_empty()
+                && state.trades.get(&attempt.trade_id).is_none_or(|trade| {
+                    trade.status == TradeStatus::Accepted
+                        && trade.recipient_account_id == attempt.coordinator_account_id
+                })
+                && attempt.work_actions <= cooperation.goal.solo_work_actions
+                && attempt.started_tick <= state.tick
+        });
     let cooperation_ok = cooperation.goal == Default::default()
+        && recent_work_ok
+        && active_attempts_ok
         && cooperation.latest_result.as_ref().is_none_or(|result| {
             account_reference_ok(&result.coordinator_account_id, account_ids)
                 && result.participant_account_ids.len() >= 2

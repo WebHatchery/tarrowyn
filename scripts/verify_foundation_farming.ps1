@@ -156,7 +156,7 @@ try {
     Stop-F3Server $server
     $server = $null
     $stored = Get-Content -LiteralPath $statePath -Raw | ConvertFrom-Json
-    Assert-F3 ($stored.storage_version -eq 24) "the scenario did not persist the current storage contract"
+    Assert-F3 ($stored.storage_version -eq 25) "the scenario did not persist the current storage contract"
     $stored.persisted_at_unix_millis = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds() - (15 * 60 * 1000)
     $rewrittenState = $stored | ConvertTo-Json -Depth 100
     [System.IO.File]::WriteAllText($statePath, $rewrittenState, [System.Text.UTF8Encoding]::new($false))

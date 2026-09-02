@@ -110,6 +110,7 @@ fn erase_account(state: &mut RepositoryState, request: &PendingAccountDeletion) 
         trade.creator_account_id != request.account_id
             && trade.recipient_account_id != request.account_id
     });
+    super::super::foundation::cooperation::remove_account(state, &request.account_id);
     super::super::phase5::close_deleted_account_orders(state, &request.account_id);
     anonymize_phase5_replay_orders(state, &request.account_id);
 

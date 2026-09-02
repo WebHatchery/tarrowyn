@@ -156,6 +156,7 @@ pub(super) fn reset_guest(state: &mut RepositoryState, identity_key: &str) {
     state.trades.retain(|_, trade| {
         trade.creator_account_id != old_account_id && trade.recipient_account_id != old_account_id
     });
+    super::foundation::cooperation::remove_account(state, &old_account_id);
     super::phase5::close_deleted_account_orders(state, &old_account_id);
     anonymize_phase5_replay_orders(state, &old_account_id);
     reset_phase3_public_ownership(state, &old_account_id);

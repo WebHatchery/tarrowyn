@@ -9,6 +9,7 @@ use tarrowyn_protocol::{
     FoundationSharedCache, FoundationToolAccess, Inventory,
 };
 
+pub(super) mod cooperation;
 mod forge;
 
 const RESOURCE_RECOVERY_INTERVAL_TICKS: u64 = 6;
@@ -212,6 +213,7 @@ impl super::WorldRepository {
             FoundationResourceAction::Mine => "mining",
         };
         super::skills::record_practice(&mut state, &identity_key, practice);
+        cooperation::record_gather(&mut state, &identity_key, request.action, &response.yields);
         response.player = super::player_projection(&state, &identity_key);
         self.store_foundation_resource_result(&mut state, identity_key, response)
     }
@@ -251,6 +253,8 @@ fn apply_yields(
     node_index: usize,
     action: FoundationResourceAction,
 ) -> Option<Vec<FoundationResourceAmount>> {
+    let efficient_mining = action == FoundationResourceAction::Mine
+        && cooperation::mining_is_efficient(state, identity_key);
     let node = &mut state.foundation_activity.resource_nodes[node_index];
     let required = match action {
         FoundationResourceAction::Log => FoundationResourceKind::Timber,
@@ -269,10 +273,15 @@ fn apply_yields(
         if let Some(ore) = node.deposits.iter_mut().find(|deposit| {
             deposit.kind == FoundationResourceKind::IronOre && deposit.remaining > 0
         }) {
-            ore.remaining -= 1;
+            let amount = if efficient_mining {
+                ore.remaining.min(2)
+            } else {
+                1
+            };
+            ore.remaining -= amount;
             yields.push(FoundationResourceAmount {
                 kind: FoundationResourceKind::IronOre,
-                amount: 1,
+                amount,
             });
         }
     }

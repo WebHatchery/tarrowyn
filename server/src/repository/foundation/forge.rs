@@ -111,6 +111,7 @@ impl WorldRepository {
         response.accepted = response.reason.is_none();
         if response.accepted && request.action != FoundationForgeAction::Inspect {
             skills::record_practice(&mut state, &identity_key, "smithing");
+            super::cooperation::record_forge(&mut state, &identity_key, request.action);
         }
         response.player = player_projection(&state, &identity_key);
         self.store_forge_result(&mut state, identity_key, response)

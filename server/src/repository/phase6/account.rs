@@ -17,6 +17,8 @@ pub(super) fn migrate_guest_account_references(
         return;
     }
 
+    super::super::foundation::cooperation::migrate_account(state, old_account_id, new_account_id);
+
     migrate_identity_replay_caches(state, old_account_id, new_account_id, new_display_name);
     migrate_phase4_replay_caches(state, old_account_id, new_account_id, new_display_name);
     migrate_phase6_replay_caches(state, old_account_id, new_account_id);

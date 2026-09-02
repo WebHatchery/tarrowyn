@@ -147,6 +147,34 @@ pub struct FoundationCooperationContribution {
     pub work_actions: u8,
 }
 
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum FoundationCooperationWorkKind {
+    Log,
+    Mine,
+    BurnCharcoal,
+    ShapeHandle,
+    ForgeFieldTool,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct FoundationCooperationWorkCredit {
+    pub account_id: String,
+    pub kind: FoundationCooperationWorkKind,
+    pub materials: Vec<FoundationForgeMaterialAmount>,
+    pub tick: u64,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct FoundationCooperationAttempt {
+    pub coordinator_account_id: String,
+    pub participant_account_ids: Vec<String>,
+    pub contributions: Vec<FoundationCooperationContribution>,
+    pub trade_id: String,
+    pub work_actions: u8,
+    pub started_tick: u64,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct FoundationCooperationResult {
     pub coordinator_account_id: String,
@@ -161,6 +189,10 @@ pub struct FoundationCooperationResult {
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
 pub struct FoundationCooperationState {
     pub goal: FoundationCooperationGoal,
+    #[serde(default)]
+    pub recent_work: Vec<FoundationCooperationWorkCredit>,
+    #[serde(default)]
+    pub active_attempts: Vec<FoundationCooperationAttempt>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub latest_result: Option<FoundationCooperationResult>,
 }

@@ -163,4 +163,12 @@ fn cooperative_goal_names_raw_inputs_and_a_smaller_work_target() {
         FoundationCooperationWorkMeasure::AcceptedGatherOrForgeAction
     );
     assert_eq!(state.goal.required_inputs.len(), 2);
+
+    let mut older = serde_json::to_value(&state).unwrap();
+    let object = older.as_object_mut().unwrap();
+    object.remove("recent_work");
+    object.remove("active_attempts");
+    let decoded_older: FoundationCooperationState = serde_json::from_value(older).unwrap();
+    assert!(decoded_older.recent_work.is_empty());
+    assert!(decoded_older.active_attempts.is_empty());
 }

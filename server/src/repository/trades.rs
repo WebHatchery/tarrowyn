@@ -74,6 +74,11 @@ impl WorldRepository {
             TradeAction::Accept => accept_trade(&mut state, &identity_key, &request),
             TradeAction::Cancel => cancel_trade(&mut state, &identity_key, &request),
         };
+        if response.accepted && request.action == TradeAction::Accept {
+            if let Some(trade) = &response.trade {
+                super::foundation::cooperation::record_trade(&mut state, trade);
+            }
+        }
         if response.accepted {
             if let Some(trade) = &response.trade {
                 push_event(&mut state, WorldEvent::Trade(trade.clone()));
