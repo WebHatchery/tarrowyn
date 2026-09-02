@@ -48,6 +48,7 @@ mod request_validation;
 mod reset;
 mod settlement_integrity;
 mod skill_integrity;
+mod storehouse_contract;
 mod telemetry;
 mod trade_retention;
 mod trade_validation;

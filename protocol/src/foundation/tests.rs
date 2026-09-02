@@ -82,6 +82,7 @@ fn foundation_resource_contract_round_trips_depletion_and_crude_access() {
             capacity: 64,
         },
         cooperation: FoundationCooperationState::default(),
+        storehouse: FoundationStorehouseState::default(),
     };
     let request = FoundationResourceRequest {
         request_id: "gather-1".to_owned(),
@@ -171,4 +172,64 @@ fn cooperative_goal_names_raw_inputs_and_a_smaller_work_target() {
     let decoded_older: FoundationCooperationState = serde_json::from_value(older).unwrap();
     assert!(decoded_older.recent_work.is_empty());
     assert!(decoded_older.active_attempts.is_empty());
+}
+
+#[test]
+fn storehouse_contract_has_exact_substitutable_needs_and_bounded_visible_stages() {
+    let state = FoundationStorehouseState::default();
+    let request = FoundationStorehouseRequest {
+        request_id: "storehouse-gold-1".to_owned(),
+        action: FoundationStorehouseAction::Contribute,
+        contribution: Some(FoundationStorehouseContributionInput::Gold {
+            toward: FoundationResourceKind::Stone,
+            amount: 6,
+        }),
+    };
+
+    let encoded = serde_json::to_string(&(state.clone(), request.clone())).unwrap();
+    let decoded: (FoundationStorehouseState, FoundationStorehouseRequest) =
+        serde_json::from_str(&encoded).unwrap();
+
+    assert_eq!(decoded, (state.clone(), request));
+    assert_eq!(state.builder_landmark_id, "builder-mara");
+    assert_eq!(state.noticeboard_landmark_id, "first-beacon-noticeboard");
+    assert_eq!(state.site_landmark_id, "storehouse-site");
+    assert_eq!(state.requirements.len(), 2);
+    assert_eq!(state.requirements[0].units_required, 8);
+    assert_eq!(state.requirements[0].gold_per_unit, 2);
+    assert_eq!(state.requirements[1].units_required, 6);
+    assert_eq!(state.requirements[1].gold_per_unit, 3);
+    assert_eq!(state.stages.len(), 4);
+    assert_eq!(
+        state.stages.last().unwrap().stage,
+        FoundationStorehouseStage::Operational
+    );
+    assert_eq!(
+        state.stages.last().unwrap().credited_units_required,
+        vec![
+            FoundationResourceAmount {
+                kind: FoundationResourceKind::Timber,
+                amount: 8,
+            },
+            FoundationResourceAmount {
+                kind: FoundationResourceKind::Stone,
+                amount: 6,
+            },
+        ]
+    );
+    assert_eq!(
+        state.operational_infrastructure_id,
+        "first-beacon-storehouse"
+    );
+    assert!(encoded.contains("\"source\":\"gold\""));
+}
+
+#[test]
+fn older_foundation_activity_defaults_the_storehouse_contract() {
+    let mut value = serde_json::to_value(FoundationActivityState::default()).unwrap();
+    value.as_object_mut().unwrap().remove("storehouse");
+
+    let decoded: FoundationActivityState = serde_json::from_value(value).unwrap();
+
+    assert_eq!(decoded.storehouse, FoundationStorehouseState::default());
 }

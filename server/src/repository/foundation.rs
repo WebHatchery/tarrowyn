@@ -49,6 +49,7 @@ pub(super) fn fresh() -> FoundationActivityState {
             capacity: 64,
         },
         cooperation: Default::default(),
+        storehouse: Default::default(),
     }
 }
 
@@ -58,6 +59,9 @@ pub(super) fn restore(activity: &mut FoundationActivityState) {
     }
     if activity.cooperation.goal.goal_id.is_empty() {
         activity.cooperation = Default::default();
+    }
+    if activity.storehouse.project_id.is_empty() {
+        activity.storehouse = Default::default();
     }
 }
 

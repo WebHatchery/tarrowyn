@@ -365,6 +365,7 @@ fn nearby_woodland_becomes_a_productive_resource_command() {
         crude_tool_access: Vec::new(),
         shared_cache: tarrowyn_protocol::FoundationSharedCache::default(),
         cooperation: Default::default(),
+        storehouse: Default::default(),
     };
 
     let context = nearby_context(&fixture, &activity, TilePos::new(12, 3), None).unwrap();

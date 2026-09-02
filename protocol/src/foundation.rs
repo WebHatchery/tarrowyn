@@ -1,6 +1,10 @@
 use crate::{PlayerProjection, Position};
 use serde::{Deserialize, Serialize};
 
+mod storehouse;
+
+pub use storehouse::*;
+
 #[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
 pub struct FoundationBaseline {
     pub fixture_id: String,
@@ -98,6 +102,8 @@ pub struct FoundationActivityState {
     pub shared_cache: FoundationSharedCache,
     #[serde(default)]
     pub cooperation: FoundationCooperationState,
+    #[serde(default)]
+    pub storehouse: FoundationStorehouseState,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
