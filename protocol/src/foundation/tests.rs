@@ -1,6 +1,7 @@
 use super::*;
 
 mod journey;
+mod property;
 
 #[test]
 fn foundation_baseline_round_trips_with_stable_records() {
