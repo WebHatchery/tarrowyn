@@ -220,6 +220,7 @@ impl Game {
                 farming_pending: client.farming_pending(),
                 foundation: &client.projection.foundation,
                 foundation_activity: &client.projection.foundation_activity,
+                journey: client.projection.journey.as_ref(),
                 player_inventory: client
                     .projection
                     .player

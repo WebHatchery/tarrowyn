@@ -7,6 +7,15 @@ fn linked_account_handoff_discards_stale_world_and_trade_projections() {
     client.pending_state = Some(Pending::failed("guest state still in flight"));
     client.pending_events = Some(Pending::failed("guest events still in flight"));
     client.pending_trades = Some(Pending::failed("guest trades still in flight"));
+    client.pending_foundation_journey = Some(Pending::failed("guest journey still in flight"));
+    client.projection.journey = Some(tarrowyn_protocol::FoundationJourneyProjection {
+        contract: Default::default(),
+        progress: Default::default(),
+        completed_milestones: 1,
+        total_milestones: 12,
+        next_milestone: None,
+        next_action: "guest journey".to_owned(),
+    });
     client.pending_trade_action = Some(TradeAction::Review);
     client.trades.push(tarrowyn_protocol::TradeOffer {
         trade_id: "guest-trade".to_owned(),
@@ -73,10 +82,12 @@ fn linked_account_handoff_discards_stale_world_and_trade_projections() {
     assert!(client.pending_state.is_none());
     assert!(client.pending_events.is_none());
     assert!(client.pending_trades.is_none());
+    assert!(client.pending_foundation_journey.is_none());
     assert!(client.pending_trade_action.is_none());
     assert!(client.trades.is_empty());
     assert!(client.projection.player.is_none());
     assert_eq!(client.projection.authoritative_player_position(), None);
     assert!(client.projection.trades.is_empty());
+    assert!(client.projection.journey.is_none());
     assert_eq!(client.state_refresh, 0.0);
 }

@@ -2,7 +2,8 @@ use super::*;
 use macroquad_toolkit::ui::draw_ui_text_ex;
 use tarrowyn_protocol::{
     FarmingAction, FieldWeather, FoundationActivityState, FoundationBaseline,
-    FoundationCacheAction, FoundationFieldToolKind, FoundationForgeAction, FoundationLandmark,
+    FoundationCacheAction, FoundationFieldToolKind, FoundationForgeAction,
+    FoundationJourneyFutureGoalState, FoundationJourneyProjection, FoundationLandmark,
     FoundationResourceAction, FoundationResourceKind, Inventory, TradeOffer, TradeStatus,
 };
 
@@ -518,11 +519,12 @@ pub(super) fn draw_context_deck(
                 |context| context.landmark.note.as_str(),
             )
         });
+    let guidance = journey_guidance(ctx.journey);
     draw_ui_text_ex(
         &format!(
             "{}  •  {}",
             name.to_ascii_uppercase(),
-            ellipsize(detail, 92)
+            ellipsize(guidance.as_deref().unwrap_or(detail), 92)
         ),
         18.0,
         dock.y + 43.0,
@@ -606,6 +608,33 @@ pub(super) fn draw_context_deck(
         mouse,
     ) {
         actions.push(UiAction::Interact("menu-toggle".to_owned()));
+    }
+}
+
+pub(crate) fn journey_guidance(journey: Option<&FoundationJourneyProjection>) -> Option<String> {
+    let journey = journey?;
+    if let Some(next) = &journey.next_milestone {
+        return Some(format!(
+            "NEXT {}/{}: {} — {}",
+            journey.completed_milestones.saturating_add(1),
+            journey.total_milestones,
+            next.title,
+            next.direction
+        ));
+    }
+    match journey.progress.future_goal_state {
+        FoundationJourneyFutureGoalState::Active => Some(format!(
+            "RETURN GOAL: {} — {}",
+            journey.contract.future_goal.title, journey.next_action
+        )),
+        FoundationJourneyFutureGoalState::Complete => Some(format!(
+            "JOURNEY {}/{}: Return goal complete",
+            journey.completed_milestones, journey.total_milestones
+        )),
+        FoundationJourneyFutureGoalState::Locked => Some(format!(
+            "JOURNEY {}/{}: {}",
+            journey.completed_milestones, journey.total_milestones, journey.next_action
+        )),
     }
 }
 

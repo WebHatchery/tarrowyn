@@ -11,6 +11,52 @@ use tarrowyn_protocol::{
     TradeOffer, TradeStatus,
 };
 
+#[test]
+fn journey_guidance_names_progress_and_the_concrete_next_step() {
+    let contract = tarrowyn_protocol::FoundationJourneyContract::default();
+    let next = contract.milestones[1].clone();
+    let projection = tarrowyn_protocol::FoundationJourneyProjection {
+        contract,
+        progress: Default::default(),
+        completed_milestones: 1,
+        total_milestones: 12,
+        next_milestone: Some(next),
+        next_action: "Talk to Mara.".to_owned(),
+    };
+
+    let guidance = journey_guidance(Some(&projection)).unwrap();
+    assert!(guidance.contains("NEXT 2/12"));
+    assert!(guidance.contains("Ask what the camp needs"));
+    assert!(guidance.contains("Talk to Mara or read the noticeboard"));
+}
+
+#[test]
+fn journey_guidance_names_the_durable_return_goal() {
+    let mut projection = tarrowyn_protocol::FoundationJourneyProjection {
+        contract: Default::default(),
+        progress: tarrowyn_protocol::FoundationJourneyProgress {
+            future_goal_state: tarrowyn_protocol::FoundationJourneyFutureGoalState::Active,
+            ..Default::default()
+        },
+        completed_milestones: 12,
+        total_milestones: 12,
+        next_milestone: None,
+        next_action: "Come back when the replanted crop is mature.".to_owned(),
+    };
+
+    let guidance = journey_guidance(Some(&projection)).unwrap();
+    assert!(guidance.contains("RETURN GOAL"));
+    assert!(guidance.contains("Return for the next harvest"));
+    assert!(guidance.contains("Come back when the replanted crop is mature"));
+
+    projection.progress.future_goal_state =
+        tarrowyn_protocol::FoundationJourneyFutureGoalState::Complete;
+    assert!(journey_guidance(Some(&projection))
+        .unwrap()
+        .contains("Return goal complete"));
+    assert_eq!(journey_guidance(None), None);
+}
+
 fn work_credit(
     account_id: &str,
     kind: FoundationCooperationWorkKind,

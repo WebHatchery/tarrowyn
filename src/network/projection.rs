@@ -39,6 +39,7 @@ impl WorldProjection {
             expedition_requirements: ExpeditionRequirements::default(),
             foundation: FoundationBaseline::default(),
             foundation_activity: FoundationActivityState::default(),
+            journey: None,
         }
     }
 

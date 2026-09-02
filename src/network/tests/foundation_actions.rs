@@ -6,6 +6,47 @@ use tarrowyn_protocol::{
 };
 
 #[test]
+fn journey_projection_accepts_equal_or_newer_revisions_only() {
+    let mut current = Some(tarrowyn_protocol::FoundationJourneyProjection {
+        contract: Default::default(),
+        progress: tarrowyn_protocol::FoundationJourneyProgress {
+            revision: 4,
+            ..Default::default()
+        },
+        completed_milestones: 3,
+        total_milestones: 12,
+        next_milestone: None,
+        next_action: "current".to_owned(),
+    });
+    let stale = tarrowyn_protocol::FoundationJourneyProjection {
+        contract: Default::default(),
+        progress: tarrowyn_protocol::FoundationJourneyProgress {
+            revision: 3,
+            ..Default::default()
+        },
+        completed_milestones: 2,
+        total_milestones: 12,
+        next_milestone: None,
+        next_action: "stale".to_owned(),
+    };
+
+    assert!(!super::super::foundation::apply_foundation_journey(
+        &mut current,
+        stale
+    ));
+    assert_eq!(current.as_ref().unwrap().progress.revision, 4);
+
+    let mut newer = current.clone().unwrap();
+    newer.progress.revision = 5;
+    newer.next_action = "newer".to_owned();
+    assert!(super::super::foundation::apply_foundation_journey(
+        &mut current,
+        newer
+    ));
+    assert_eq!(current.as_ref().unwrap().next_action, "newer");
+}
+
+#[test]
 fn nearby_resource_queue_uses_one_non_blocking_authoritative_command() {
     let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
     client.state = ConnectionState::Online;

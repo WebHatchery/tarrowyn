@@ -250,6 +250,9 @@ impl OnlineClient {
         if self.pending_state.is_none() && self.state_refresh <= 0.0 {
             self.pending_state = Some(self.api.get("/v1/state"));
         }
+        if self.pending_foundation_journey.is_none() && self.state_refresh <= 0.0 {
+            self.pending_foundation_journey = Some(self.api.get("/v1/foundation/journey"));
+        }
         if self.pending_events.is_none() {
             self.pending_events = Some(
                 self.api

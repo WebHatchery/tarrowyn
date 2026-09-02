@@ -19,6 +19,7 @@ pub(super) fn recover_from_cursor_boundary(
     client.pending_state = None;
     client.pending_events = None;
     client.pending_trades = None;
+    client.pending_foundation_journey = None;
     client.pending_movement = None;
     client.pending_chat = None;
     client.pending_farming = None;
@@ -72,6 +73,7 @@ pub(super) fn reset_projection_history(projection: &mut WorldProjection) {
     projection.claim = None;
     projection.outpost = None;
     projection.expedition = None;
+    projection.journey = None;
 }
 
 #[cfg(test)]

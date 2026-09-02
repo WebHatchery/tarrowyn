@@ -1,6 +1,24 @@
 use super::*;
 
 impl OnlineClient {
+    pub(super) fn poll_foundation_journey(&mut self, dt: f32, notices: &mut Vec<NetworkNotice>) {
+        let result = self
+            .pending_foundation_journey
+            .as_mut()
+            .and_then(|pending| pending.poll_timed(dt, REQUEST_TIMEOUT_SECONDS));
+        let Some(result) = result else { return };
+        self.pending_foundation_journey = None;
+        match result {
+            Ok(response) => {
+                apply_foundation_journey(&mut self.projection.journey, response.data);
+            }
+            Err(error) => notices.push(NetworkNotice::Warning(format!(
+                "Journey guidance is temporarily unavailable; nearby work remains open. {}",
+                short_error(&error)
+            ))),
+        }
+    }
+
     pub fn queue_foundation_interaction(&mut self, interaction_id: &str) -> bool {
         if !self.mutations_ready()
             || self.pending_foundation.is_some()
@@ -433,6 +451,20 @@ impl OnlineClient {
             Err(error) => self.connection_failed(error, notices),
         }
     }
+}
+
+pub(super) fn apply_foundation_journey(
+    current: &mut Option<FoundationJourneyProjection>,
+    incoming: FoundationJourneyProjection,
+) -> bool {
+    if current
+        .as_ref()
+        .is_some_and(|existing| existing.progress.revision > incoming.progress.revision)
+    {
+        return false;
+    }
+    *current = Some(incoming);
+    true
 }
 
 pub(super) fn foundation_storehouse_success_notice(

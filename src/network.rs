@@ -10,13 +10,13 @@ use tarrowyn_protocol::{
     Expedition, ExpeditionRequirements, FarmAnimal, FarmingAction, FarmingRequest,
     FoundationActivityState, FoundationBaseline, FoundationCacheAction, FoundationCacheRequest,
     FoundationForgeAction, FoundationForgeRequest, FoundationInteractionRequest,
-    FoundationInteractionResponse, FoundationResourceAction, FoundationResourceAmount,
-    FoundationResourceKind, FoundationResourceRequest, FoundationStorehouseAction,
-    FoundationStorehouseContributionInput, FoundationStorehouseRequest, FrontierEvent,
-    GuestSessionRequest, GuestSessionResponse, LandClaim, MovementIntent, OpportunitySignal,
-    OpsHealthResponse, PlayerPresence, PlayerProjection, StateSnapshot, TavernFeedResponse,
-    TimeOfDay, TradeAction, TradeOffer, TradeRequest, TradesResponse, WildernessZone, WorldClock,
-    WorldEvent, WorldSnapshot, MAX_CHAT_MESSAGE_LENGTH,
+    FoundationInteractionResponse, FoundationJourneyProjection, FoundationResourceAction,
+    FoundationResourceAmount, FoundationResourceKind, FoundationResourceRequest,
+    FoundationStorehouseAction, FoundationStorehouseContributionInput, FoundationStorehouseRequest,
+    FrontierEvent, GuestSessionRequest, GuestSessionResponse, LandClaim, MovementIntent,
+    OpportunitySignal, OpsHealthResponse, PlayerPresence, PlayerProjection, StateSnapshot,
+    TavernFeedResponse, TimeOfDay, TradeAction, TradeOffer, TradeRequest, TradesResponse,
+    WildernessZone, WorldClock, WorldEvent, WorldSnapshot, MAX_CHAT_MESSAGE_LENGTH,
 };
 
 const REQUEST_TIMEOUT_SECONDS: f32 = 6.0;
@@ -90,6 +90,7 @@ pub struct WorldProjection {
     pub expedition_requirements: ExpeditionRequirements,
     pub foundation: FoundationBaseline,
     pub foundation_activity: FoundationActivityState,
+    pub journey: Option<FoundationJourneyProjection>,
 }
 
 pub struct OnlineClient {
@@ -113,6 +114,7 @@ pub struct OnlineClient {
     pending_foundation_cache: Option<PendingFoundationCache>,
     pending_foundation_forge: Option<PendingFoundationForge>,
     pending_foundation_storehouse: Option<PendingFoundationStorehouse>,
+    pending_foundation_journey: Option<Pending<ApiResponse<FoundationJourneyProjection>>>,
     pending_trades: Option<Pending<ApiResponse<TradesResponse>>>,
     pending_trade: Option<PendingTrade>,
     movement_queue: VecDeque<MovementIntent>,
@@ -162,6 +164,7 @@ impl OnlineClient {
             pending_foundation_cache: None,
             pending_foundation_forge: None,
             pending_foundation_storehouse: None,
+            pending_foundation_journey: None,
             pending_trades: None,
             pending_trade: None,
             movement_queue: VecDeque::new(),
@@ -204,6 +207,7 @@ impl OnlineClient {
         self.poll_foundation_cache(dt, &mut notices);
         self.poll_foundation_forge(dt, &mut notices);
         self.poll_foundation_storehouse(dt, &mut notices);
+        self.poll_foundation_journey(dt, &mut notices);
         self.poll_trade_requests(dt, &mut notices);
         let mutations_ready = self.mutations_ready();
         let frontier_cursor_boundary =
@@ -286,6 +290,7 @@ impl OnlineClient {
         self.pending_foundation_cache = None;
         self.pending_foundation_forge = None;
         self.pending_foundation_storehouse = None;
+        self.pending_foundation_journey = None;
         self.pending_trades = None;
         self.pending_trade = None;
         self.movement_correction = self.projection.authoritative_player_position();
@@ -306,6 +311,7 @@ impl OnlineClient {
         self.projection.claim = None;
         self.projection.outpost = None;
         self.projection.expedition = None;
+        self.projection.journey = None;
         self.state_refresh = 0.0;
         self.state_reload_pending = true;
     }
@@ -388,6 +394,7 @@ impl OnlineClient {
         self.pending_foundation_cache = None;
         self.pending_foundation_forge = None;
         self.pending_foundation_storehouse = None;
+        self.pending_foundation_journey = None;
         self.pending_trades = None;
         self.pending_trade = None;
         self.frontier.clear();
@@ -558,6 +565,7 @@ impl OnlineClient {
         self.pending_foundation_cache = None;
         self.pending_foundation_forge = None;
         self.pending_foundation_storehouse = None;
+        self.pending_foundation_journey = None;
         self.pending_trades = None;
         self.pending_trade = None;
         self.movement_correction = self.projection.authoritative_player_position();

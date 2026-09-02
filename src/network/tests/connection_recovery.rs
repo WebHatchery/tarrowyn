@@ -7,6 +7,7 @@ fn connection_failure_discards_in_flight_low_level_requests_and_indicators() {
     client.pending_state = Some(Pending::failed("state unavailable"));
     client.pending_events = Some(Pending::failed("events unavailable"));
     client.pending_trades = Some(Pending::failed("trades unavailable"));
+    client.pending_foundation_journey = Some(Pending::failed("journey unavailable"));
     client.pending_movement = Some(PendingMovement {
         pending: Some(Pending::failed("movement unavailable")),
         request: MovementIntent {
@@ -85,6 +86,7 @@ fn connection_failure_discards_in_flight_low_level_requests_and_indicators() {
     assert!(client.pending_state.is_none());
     assert!(client.pending_events.is_none());
     assert!(client.pending_trades.is_none());
+    assert!(client.pending_foundation_journey.is_none());
     assert!(client.pending_movement.is_none());
     assert!(client.pending_chat.is_none());
     assert!(client.pending_farming.is_none());
