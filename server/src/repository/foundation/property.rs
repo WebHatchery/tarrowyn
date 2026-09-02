@@ -87,13 +87,12 @@ impl super::super::WorldRepository {
         }
 
         let preview = match request.action {
-            FoundationPropertyAction::PreviewPlacement => Some(preview_placement(
-                &state,
-                &identity_key,
-                &request,
-                &self.config,
-                None,
-            )),
+            FoundationPropertyAction::PreviewPlacement => {
+                let preview =
+                    preview_placement(&state, &identity_key, &request, &self.config, None);
+                response.accepted = preview.accepted;
+                Some(preview)
+            }
             FoundationPropertyAction::PlaceTent => place_tent(
                 &mut state,
                 &identity_key,

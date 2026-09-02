@@ -38,6 +38,90 @@ pub(super) fn parse_foundation_forge_command(value: &str) -> Option<FoundationFo
     }
 }
 
+pub(super) fn parse_foundation_property_command(
+    value: &str,
+) -> Option<tarrowyn_protocol::FoundationPropertyRequest> {
+    use tarrowyn_protocol::{
+        FoundationPropertyAccess, FoundationPropertyAction, FoundationPropertyRequest,
+        FoundationResourceKind, Position,
+    };
+    let mut parts = value.strip_prefix("foundation-property:")?.split(':');
+    let verb = parts.next()?;
+    let mut request = FoundationPropertyRequest {
+        request_id: String::new(),
+        action: FoundationPropertyAction::Inspect,
+        property_id: None,
+        anchor: None,
+        entrance: None,
+        access: None,
+        resource: None,
+        amount: 0,
+    };
+    match verb {
+        "preview" | "place" => {
+            request.action = if verb == "preview" {
+                FoundationPropertyAction::PreviewPlacement
+            } else {
+                FoundationPropertyAction::PlaceTent
+            };
+            request.anchor = Some(Position {
+                x: parts.next()?.parse().ok()?,
+                y: parts.next()?.parse().ok()?,
+            });
+            request.entrance = Some(parse_property_direction(parts.next()?)?);
+        }
+        "inspect" | "upgrade" | "builder" | "maintain" => {
+            request.action = match verb {
+                "inspect" => FoundationPropertyAction::Inspect,
+                "upgrade" => FoundationPropertyAction::UpgradeWithMaterials,
+                "builder" => FoundationPropertyAction::HireBuilder,
+                _ => FoundationPropertyAction::Maintain,
+            };
+            request.property_id = Some(parts.next()?.to_owned());
+        }
+        "access" => {
+            request.action = FoundationPropertyAction::SetAccess;
+            request.property_id = Some(parts.next()?.to_owned());
+            request.access = Some(match parts.next()? {
+                "owner" => FoundationPropertyAccess::OwnerOnly,
+                "guests" => FoundationPropertyAccess::GuestsAllowed,
+                _ => return None,
+            });
+        }
+        "store" | "collect" => {
+            request.action = if verb == "store" {
+                FoundationPropertyAction::Store
+            } else {
+                FoundationPropertyAction::Collect
+            };
+            request.property_id = Some(parts.next()?.to_owned());
+            request.resource = Some(match parts.next()? {
+                "timber" => FoundationResourceKind::Timber,
+                "stone" => FoundationResourceKind::Stone,
+                "iron-ore" => FoundationResourceKind::IronOre,
+                _ => return None,
+            });
+            request.amount = parts.next()?.parse().ok()?;
+            if request.amount == 0 {
+                return None;
+            }
+        }
+        _ => return None,
+    }
+    parts.next().is_none().then_some(request)
+}
+
+fn parse_property_direction(value: &str) -> Option<tarrowyn_protocol::FoundationPropertyDirection> {
+    use tarrowyn_protocol::FoundationPropertyDirection::*;
+    match value {
+        "north" => Some(North),
+        "east" => Some(East),
+        "south" => Some(South),
+        "west" => Some(West),
+        _ => None,
+    }
+}
+
 pub(super) fn parse_foundation_storehouse_command(
     value: &str,
 ) -> Option<(
@@ -237,6 +321,10 @@ impl Game {
         }
         if let Some(action) = parse_foundation_forge_command(id) {
             client.queue_foundation_forge(action);
+            return;
+        }
+        if let Some(request) = parse_foundation_property_command(id) {
+            client.queue_foundation_property(request);
             return;
         }
         if let Some((landmark_id, contribution)) = parse_foundation_storehouse_command(id) {

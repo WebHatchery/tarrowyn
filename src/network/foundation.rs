@@ -26,6 +26,7 @@ impl OnlineClient {
             || self.pending_foundation_cache.is_some()
             || self.pending_foundation_forge.is_some()
             || self.pending_foundation_storehouse.is_some()
+            || self.pending_foundation_property.is_some()
         {
             self.status_message =
                 "Wait for the current First Beacon conversation to finish.".to_owned();
@@ -46,6 +47,7 @@ impl OnlineClient {
             || self.pending_foundation_cache.is_some()
             || self.pending_foundation_forge.is_some()
             || self.pending_foundation_storehouse.is_some()
+            || self.pending_foundation_property.is_some()
     }
 
     pub(super) fn poll_foundation(&mut self, dt: f32, notices: &mut Vec<NetworkNotice>) {

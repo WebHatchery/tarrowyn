@@ -10,7 +10,8 @@ use tarrowyn_protocol::{
     Expedition, ExpeditionRequirements, FarmAnimal, FarmingAction, FarmingRequest,
     FoundationActivityState, FoundationBaseline, FoundationCacheAction, FoundationCacheRequest,
     FoundationForgeAction, FoundationForgeRequest, FoundationInteractionRequest,
-    FoundationInteractionResponse, FoundationJourneyProjection, FoundationResourceAction,
+    FoundationInteractionResponse, FoundationJourneyProjection, FoundationPropertyContract,
+    FoundationPropertyProjection, FoundationPropertyRequest, FoundationResourceAction,
     FoundationResourceAmount, FoundationResourceKind, FoundationResourceRequest,
     FoundationStorehouseAction, FoundationStorehouseContributionInput, FoundationStorehouseRequest,
     FrontierEvent, GuestSessionRequest, GuestSessionResponse, LandClaim, MovementIntent,
@@ -45,6 +46,7 @@ mod maintenance;
 mod phase4;
 mod phase5;
 mod projection;
+mod property;
 mod queue;
 mod requests;
 mod trade_client;
@@ -57,7 +59,8 @@ pub(crate) use phase4::CraftingView;
 use phase4::Phase4Client;
 use requests::{
     PendingChat, PendingFarming, PendingFoundationCache, PendingFoundationForge,
-    PendingFoundationResource, PendingFoundationStorehouse, PendingMovement, PendingTrade,
+    PendingFoundationProperty, PendingFoundationResource, PendingFoundationStorehouse,
+    PendingMovement, PendingTrade,
 };
 pub use types::{ConnectionState, NetworkNotice, RemotePlayer};
 
@@ -91,6 +94,7 @@ pub struct WorldProjection {
     pub foundation: FoundationBaseline,
     pub foundation_activity: FoundationActivityState,
     pub journey: Option<FoundationJourneyProjection>,
+    pub property: FoundationPropertyProjection,
 }
 
 pub struct OnlineClient {
@@ -115,6 +119,8 @@ pub struct OnlineClient {
     pending_foundation_forge: Option<PendingFoundationForge>,
     pending_foundation_storehouse: Option<PendingFoundationStorehouse>,
     pending_foundation_journey: Option<Pending<ApiResponse<FoundationJourneyProjection>>>,
+    pending_foundation_property_view: Option<Pending<ApiResponse<FoundationPropertyProjection>>>,
+    pending_foundation_property: Option<PendingFoundationProperty>,
     pending_trades: Option<Pending<ApiResponse<TradesResponse>>>,
     pending_trade: Option<PendingTrade>,
     movement_queue: VecDeque<MovementIntent>,
@@ -165,6 +171,8 @@ impl OnlineClient {
             pending_foundation_forge: None,
             pending_foundation_storehouse: None,
             pending_foundation_journey: None,
+            pending_foundation_property_view: None,
+            pending_foundation_property: None,
             pending_trades: None,
             pending_trade: None,
             movement_queue: VecDeque::new(),
@@ -208,6 +216,8 @@ impl OnlineClient {
         self.poll_foundation_forge(dt, &mut notices);
         self.poll_foundation_storehouse(dt, &mut notices);
         self.poll_foundation_journey(dt, &mut notices);
+        self.poll_foundation_property_view(dt, &mut notices);
+        self.poll_foundation_property(dt, &mut notices);
         self.poll_trade_requests(dt, &mut notices);
         let mutations_ready = self.mutations_ready();
         let frontier_cursor_boundary =
@@ -291,6 +301,8 @@ impl OnlineClient {
         self.pending_foundation_forge = None;
         self.pending_foundation_storehouse = None;
         self.pending_foundation_journey = None;
+        self.pending_foundation_property_view = None;
+        self.pending_foundation_property = None;
         self.pending_trades = None;
         self.pending_trade = None;
         self.movement_correction = self.projection.authoritative_player_position();
@@ -312,6 +324,7 @@ impl OnlineClient {
         self.projection.outpost = None;
         self.projection.expedition = None;
         self.projection.journey = None;
+        self.projection.property = property_projection_default();
         self.state_refresh = 0.0;
         self.state_reload_pending = true;
     }
@@ -395,6 +408,8 @@ impl OnlineClient {
         self.pending_foundation_forge = None;
         self.pending_foundation_storehouse = None;
         self.pending_foundation_journey = None;
+        self.pending_foundation_property_view = None;
+        self.pending_foundation_property = None;
         self.pending_trades = None;
         self.pending_trade = None;
         self.frontier.clear();
@@ -566,6 +581,8 @@ impl OnlineClient {
         self.pending_foundation_forge = None;
         self.pending_foundation_storehouse = None;
         self.pending_foundation_journey = None;
+        self.pending_foundation_property_view = None;
+        self.pending_foundation_property = None;
         self.pending_trades = None;
         self.pending_trade = None;
         self.movement_correction = self.projection.authoritative_player_position();
@@ -606,9 +623,19 @@ impl OnlineClient {
             || self.pending_foundation_cache.is_some()
             || self.pending_foundation_forge.is_some()
             || self.pending_foundation_storehouse.is_some()
+            || self.pending_foundation_property.is_some()
             || !self.movement_queue.is_empty()
             || !self.chat_queue.is_empty()
             || !self.farming_queue.is_empty()
+    }
+}
+
+fn property_projection_default() -> FoundationPropertyProjection {
+    FoundationPropertyProjection {
+        contract: FoundationPropertyContract::default(),
+        properties: Vec::new(),
+        own_property: None,
+        placement_preview: None,
     }
 }
 

@@ -1,5 +1,7 @@
 use super::*;
 
+#[path = "ui_map/property.rs"]
+mod property;
 #[path = "ui_map/storehouse.rs"]
 mod storehouse;
 use crate::sprites::{ArtAtlas, FoundationSprite, ItemSprite, NpcSprite, SpriteAssets};
@@ -82,6 +84,7 @@ pub(crate) fn draw_map(ctx: &UiContext<'_>, rect: Rect) {
     if ctx.foundation.landmarks.is_empty() {
         draw_wilderness_monster(ctx, &view, rect);
     }
+    property::draw(ctx, &view, rect);
     if should_draw_player_marker(ctx.player_position_authoritative) {
         draw_character_at_position(
             ctx.sprites,

@@ -1,7 +1,8 @@
 use super::{
     actions::{
         apply_chronicle_key, parse_cooperation_trade_command, parse_foundation_cache_command,
-        parse_foundation_forge_command, parse_foundation_storehouse_command,
+        parse_foundation_forge_command, parse_foundation_property_command,
+        parse_foundation_storehouse_command,
     },
     input::{
         keyboard_gameplay_blocked, keyboard_movement_direction, normalized_movement_direction,
@@ -22,6 +23,36 @@ fn held_arrow_keys_form_a_free_two_dimensional_direction() {
     assert_eq!(direction, vec2(1.0, -1.0));
     assert!((normalized.length() - 1.0).abs() < 0.0001);
     assert!((normalized.x + normalized.y).abs() < 0.0001);
+}
+
+#[test]
+fn property_touch_commands_keep_spatial_and_access_fields_typed() {
+    let preview = parse_foundation_property_command("foundation-property:preview:4:8:south")
+        .expect("property preview");
+    assert_eq!(
+        preview.action,
+        tarrowyn_protocol::FoundationPropertyAction::PreviewPlacement
+    );
+    assert_eq!(
+        preview.anchor,
+        Some(tarrowyn_protocol::Position { x: 4, y: 8 })
+    );
+    let access =
+        parse_foundation_property_command("foundation-property:access:personal-property-1:guests")
+            .expect("property access");
+    assert_eq!(
+        access.access,
+        Some(tarrowyn_protocol::FoundationPropertyAccess::GuestsAllowed)
+    );
+    let store = parse_foundation_property_command(
+        "foundation-property:store:personal-property-1:iron-ore:1",
+    )
+    .expect("property store");
+    assert_eq!(
+        store.resource,
+        Some(tarrowyn_protocol::FoundationResourceKind::IronOre)
+    );
+    assert!(parse_foundation_property_command("foundation-property:store:p:timber:0").is_none());
 }
 
 #[test]

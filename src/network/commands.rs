@@ -82,6 +82,9 @@ impl OnlineClient {
                 if current {
                     self.projection
                         .set_authoritative_player_position(TilePos::new(position.x, position.y));
+                    if response.data.accepted {
+                        self.projection.property.placement_preview = None;
+                    }
                 }
                 if !response.data.accepted {
                     self.movement_queue.clear();
@@ -253,6 +256,9 @@ impl OnlineClient {
         if self.pending_foundation_journey.is_none() && self.state_refresh <= 0.0 {
             self.pending_foundation_journey = Some(self.api.get("/v1/foundation/journey"));
         }
+        if self.pending_foundation_property_view.is_none() && self.state_refresh <= 0.0 {
+            self.pending_foundation_property_view = Some(self.api.get("/v1/foundation/properties"));
+        }
         if self.pending_events.is_none() {
             self.pending_events = Some(
                 self.api
@@ -267,6 +273,7 @@ impl OnlineClient {
             || self.pending_foundation_cache.is_some()
             || self.pending_foundation_forge.is_some()
             || self.pending_foundation_storehouse.is_some()
+            || self.pending_foundation_property.is_some()
         {
             return;
         }

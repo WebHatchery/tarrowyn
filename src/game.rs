@@ -221,6 +221,7 @@ impl Game {
                 foundation: &client.projection.foundation,
                 foundation_activity: &client.projection.foundation_activity,
                 journey: client.projection.journey.as_ref(),
+                property: &client.projection.property,
                 player_inventory: client
                     .projection
                     .player
@@ -248,6 +249,7 @@ impl Game {
                     .as_ref()
                     .map(|player| player.field_pest_pressure),
                 foundation_interaction_pending: client.foundation_interaction_pending(),
+                foundation_property_pending: client.foundation_property_pending(),
                 server_tick: client.projection.server_tick,
                 connection: client.state,
                 status_message: &client.status_message,

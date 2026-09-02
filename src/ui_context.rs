@@ -5,7 +5,8 @@ use macroquad_toolkit::grid::TilePos;
 use macroquad_toolkit::ui::VirtualUi;
 use tarrowyn_protocol::{
     ChronicleEntry, ChronicleSummary, FoundationActivityState, FoundationBaseline,
-    FoundationJourneyProjection, LocalCombatState, RegionSnapshot, TradeOffer, WildernessZone,
+    FoundationJourneyProjection, FoundationPropertyProjection, LocalCombatState, RegionSnapshot,
+    TradeOffer, WildernessZone,
 };
 
 #[derive(Debug, Clone, PartialEq)]
@@ -40,6 +41,7 @@ pub struct UiContext<'a> {
     pub foundation: &'a FoundationBaseline,
     pub foundation_activity: &'a FoundationActivityState,
     pub journey: Option<&'a FoundationJourneyProjection>,
+    pub property: &'a FoundationPropertyProjection,
     pub player_inventory: Option<&'a tarrowyn_protocol::Inventory>,
     pub player_gold: Option<u32>,
     pub field_tool_condition: Option<u8>,
@@ -47,6 +49,7 @@ pub struct UiContext<'a> {
     pub field_weather: Option<tarrowyn_protocol::FieldWeather>,
     pub field_pest_pressure: Option<u8>,
     pub foundation_interaction_pending: bool,
+    pub foundation_property_pending: bool,
     pub server_tick: u64,
     pub connection: ConnectionState,
     pub status_message: &'a str,

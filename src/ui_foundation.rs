@@ -7,8 +7,11 @@ use tarrowyn_protocol::{
     FoundationResourceAction, FoundationResourceKind, Inventory, TradeOffer, TradeStatus,
 };
 
+#[path = "ui_foundation/property.rs"]
+mod property;
 #[path = "ui_foundation/storehouse.rs"]
 mod storehouse;
+use property::{draw_controls as draw_property_controls, nearby_choice as nearby_property_choice};
 use storehouse::{
     draw_controls as draw_storehouse_controls, nearby_choice as nearby_storehouse_choice,
 };
@@ -75,6 +78,14 @@ pub(crate) fn nearby_context<'a>(
                 cache_resource: cache_choice.and_then(|choice| choice.resource),
             }
         })
+}
+
+pub(crate) fn property_touch_command(
+    projection: &tarrowyn_protocol::FoundationPropertyProjection,
+    player: TilePos,
+    tile: TilePos,
+) -> Option<String> {
+    property::touch_command(projection, player, tile)
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -461,6 +472,15 @@ pub(super) fn draw_context_deck(
         ctx.player_inventory,
         ctx.player_gold,
     );
+    let property_choice = nearby_property_choice(
+        ctx.property,
+        ctx.foundation,
+        ctx.player_position,
+        ctx.own_account_id,
+        ctx.player_inventory,
+        ctx.player_gold,
+        context.is_none() && farm_choice.is_none(),
+    );
     let cooperation_choice = storehouse_choice
         .is_none()
         .then(|| {
@@ -482,16 +502,18 @@ pub(super) fn draw_context_deck(
     );
 
     let name = match (
+        property_choice.as_ref(),
         storehouse_choice.as_ref(),
         cooperation_choice.as_ref(),
         context.as_ref(),
         farm_choice.as_ref(),
     ) {
-        (Some(_), _, Some(context), _) => context.landmark.name.as_str(),
-        (_, Some(_), _, _) => ctx.foundation_activity.cooperation.goal.title.as_str(),
-        (_, None, Some(context), _) => context.landmark.name.as_str(),
-        (_, None, None, Some(_)) => "Shared fields",
-        (_, None, None, None) => "First Beacon camp",
+        (Some(choice), _, _, _, _) => choice.name.as_str(),
+        (_, Some(_), _, Some(context), _) => context.landmark.name.as_str(),
+        (_, _, Some(_), _, _) => ctx.foundation_activity.cooperation.goal.title.as_str(),
+        (_, _, None, Some(context), _) => context.landmark.name.as_str(),
+        (_, _, None, None, Some(_)) => "Shared fields",
+        (_, _, None, None, None) => "First Beacon camp",
     };
     let cooperation_relevant = cooperation_choice.is_some()
         || context.as_ref().is_some_and(|context| {
@@ -502,9 +524,14 @@ pub(super) fn draw_context_deck(
         });
     let cooperation_status = cooperation_relevant
         .then(|| cooperation_detail(ctx.foundation_activity, ctx.own_account_id));
-    let detail = storehouse_choice
+    let detail = property_choice
         .as_ref()
         .map(|choice| choice.detail.as_str())
+        .or_else(|| {
+            storehouse_choice
+                .as_ref()
+                .map(|choice| choice.detail.as_str())
+        })
         .or_else(|| {
             cooperation_choice
                 .as_ref()
@@ -519,7 +546,10 @@ pub(super) fn draw_context_deck(
                 |context| context.landmark.note.as_str(),
             )
         });
-    let guidance = journey_guidance(ctx.journey);
+    let guidance = property_choice
+        .is_none()
+        .then(|| journey_guidance(ctx.journey))
+        .flatten();
     draw_ui_text_ex(
         &format!(
             "{}  •  {}",
@@ -531,7 +561,9 @@ pub(super) fn draw_context_deck(
         TextStyle::new(10.0, CREAM).params(),
     );
 
-    if let Some(choice) = storehouse_choice
+    if let Some(choice) = property_choice.as_ref() {
+        draw_property_controls(ctx, dock, mouse, actions, choice);
+    } else if let Some(choice) = storehouse_choice
         .as_ref()
         .filter(|choice| choice.contribution_controls)
     {

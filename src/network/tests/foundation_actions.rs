@@ -1,6 +1,7 @@
 use super::*;
 use tarrowyn_protocol::{
     FoundationCacheAction, FoundationFieldToolKind, FoundationForgeAction,
+    FoundationPropertyAction, FoundationPropertyDirection, FoundationPropertyRequest,
     FoundationResourceAction, FoundationResourceAmount, FoundationResourceKind,
     FoundationStorehouseAction, FoundationStorehouseContributionInput,
 };
@@ -44,6 +45,102 @@ fn journey_projection_accepts_equal_or_newer_revisions_only() {
         newer
     ));
     assert_eq!(current.as_ref().unwrap().next_action, "newer");
+}
+
+#[test]
+fn property_queue_keeps_one_typed_request_for_safe_retries() {
+    let mut client = OnlineClient::new("http://127.0.0.1:8787", &config());
+    client.state = ConnectionState::Online;
+    client.state_reload_pending = false;
+    let request = FoundationPropertyRequest {
+        request_id: String::new(),
+        action: FoundationPropertyAction::PlaceTent,
+        property_id: None,
+        anchor: Some(Position { x: 4, y: 8 }),
+        entrance: Some(FoundationPropertyDirection::South),
+        access: None,
+        resource: None,
+        amount: 0,
+    };
+    assert!(client.queue_foundation_property(request));
+    let retry = client
+        .pending_foundation_property
+        .as_ref()
+        .unwrap()
+        .request
+        .clone();
+    let pending = client.pending_foundation_property.as_ref().unwrap();
+    assert_eq!(pending.request.action, FoundationPropertyAction::PlaceTent);
+    assert!(pending
+        .request
+        .request_id
+        .starts_with("foundation-property-"));
+    assert!(!client.queue_foundation_property(retry));
+}
+
+#[test]
+fn property_projection_rejects_a_poll_that_would_erase_newer_state() {
+    let contract = tarrowyn_protocol::FoundationPropertyContract::default();
+    let property = tarrowyn_protocol::FoundationPropertySummary {
+        property_id: "personal-property-1".to_owned(),
+        owner_account_id: "owner".to_owned(),
+        owner_name: "Owner".to_owned(),
+        stage: tarrowyn_protocol::FoundationPropertyStage::Camp,
+        anchor: Position { x: 4, y: 8 },
+        entrance: FoundationPropertyDirection::South,
+        access: tarrowyn_protocol::FoundationPropertyAccess::OwnerOnly,
+        revision: 2,
+        condition: 100,
+        stored_units: 0,
+        storage_capacity: 24,
+    };
+    let mut current = tarrowyn_protocol::FoundationPropertyProjection {
+        contract: contract.clone(),
+        properties: vec![property],
+        own_property: None,
+        placement_preview: None,
+    };
+    let stale = tarrowyn_protocol::FoundationPropertyProjection {
+        contract,
+        properties: Vec::new(),
+        own_property: None,
+        placement_preview: None,
+    };
+    assert!(!super::super::property::apply_property_projection(
+        &mut current,
+        stale
+    ));
+    assert_eq!(current.properties[0].revision, 2);
+}
+
+#[test]
+fn property_poll_preserves_an_active_placement_preview() {
+    let contract = tarrowyn_protocol::FoundationPropertyContract::default();
+    let preview = tarrowyn_protocol::FoundationPropertyPlacementPreview {
+        anchor: Position { x: 4, y: 8 },
+        entrance: FoundationPropertyDirection::South,
+        footprint: contract.stages[0].footprint,
+        accepted: true,
+        rejected_rules: Vec::new(),
+        message: "Clear ground.".to_owned(),
+    };
+    let mut current = tarrowyn_protocol::FoundationPropertyProjection {
+        contract: contract.clone(),
+        properties: Vec::new(),
+        own_property: None,
+        placement_preview: Some(preview),
+    };
+    let poll = tarrowyn_protocol::FoundationPropertyProjection {
+        contract,
+        properties: Vec::new(),
+        own_property: None,
+        placement_preview: None,
+    };
+    assert!(super::super::property::apply_property_projection(
+        &mut current,
+        poll
+    ));
+    assert!(current.placement_preview.is_some());
 }
 
 #[test]

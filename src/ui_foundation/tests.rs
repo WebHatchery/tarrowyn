@@ -31,6 +31,101 @@ fn journey_guidance_names_progress_and_the_concrete_next_step() {
 }
 
 #[test]
+fn property_touch_choice_previews_before_placement() {
+    let projection = tarrowyn_protocol::FoundationPropertyProjection {
+        contract: Default::default(),
+        properties: Vec::new(),
+        own_property: None,
+        placement_preview: None,
+    };
+    let choice = super::property::nearby_choice(
+        &projection,
+        &Default::default(),
+        macroquad_toolkit::grid::TilePos::new(3, 8),
+        Some("owner"),
+        Some(&Default::default()),
+        Some(12),
+        true,
+    )
+    .unwrap();
+    assert_eq!(choice.actions[0].label, "Check site");
+    assert_eq!(
+        choice.actions[0].command,
+        "foundation-property:preview:4:8:south"
+    );
+}
+
+#[test]
+fn weathered_owner_property_exposes_touch_first_controls() {
+    let state = tarrowyn_protocol::FoundationPropertyState {
+        property_id: "personal-property-1".to_owned(),
+        owner_account_id: "owner".to_owned(),
+        owner_name: "Owner".to_owned(),
+        stage: tarrowyn_protocol::FoundationPropertyStage::Tent,
+        anchor: Position { x: 4, y: 8 },
+        entrance: tarrowyn_protocol::FoundationPropertyDirection::South,
+        access: tarrowyn_protocol::FoundationPropertyAccess::OwnerOnly,
+        revision: 2,
+        condition: 90,
+        last_maintained_unix_millis: 1,
+        storage: Default::default(),
+        storage_capacity: 8,
+    };
+    let projection = tarrowyn_protocol::FoundationPropertyProjection {
+        contract: Default::default(),
+        properties: vec![tarrowyn_protocol::FoundationPropertySummary {
+            property_id: state.property_id.clone(),
+            owner_account_id: state.owner_account_id.clone(),
+            owner_name: state.owner_name.clone(),
+            stage: state.stage,
+            anchor: state.anchor,
+            entrance: state.entrance,
+            access: state.access,
+            revision: state.revision,
+            condition: state.condition,
+            stored_units: 0,
+            storage_capacity: state.storage_capacity,
+        }],
+        own_property: Some(state),
+        placement_preview: None,
+    };
+    let inventory = tarrowyn_protocol::Inventory {
+        timber: 4,
+        stone: 2,
+        ..Default::default()
+    };
+    let choice = super::property::nearby_choice(
+        &projection,
+        &Default::default(),
+        macroquad_toolkit::grid::TilePos::new(3, 8),
+        Some("owner"),
+        Some(&inventory),
+        Some(12),
+        true,
+    )
+    .unwrap();
+    let labels = choice
+        .actions
+        .iter()
+        .map(|action| action.label.as_str())
+        .collect::<Vec<_>>();
+    assert!(labels.contains(&"Inspect"));
+    assert!(labels.contains(&"Maintain"));
+    assert!(labels.contains(&"Improve"));
+    assert!(labels.contains(&"Access"));
+    assert!(labels.contains(&"Store 1"));
+    assert_eq!(
+        super::property::touch_command(
+            &projection,
+            macroquad_toolkit::grid::TilePos::new(3, 8),
+            macroquad_toolkit::grid::TilePos::new(4, 8),
+        )
+        .as_deref(),
+        Some("foundation-property:inspect:personal-property-1")
+    );
+}
+
+#[test]
 fn journey_guidance_names_the_durable_return_goal() {
     let mut projection = tarrowyn_protocol::FoundationJourneyProjection {
         contract: Default::default(),

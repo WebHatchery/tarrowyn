@@ -40,6 +40,7 @@ impl WorldProjection {
             foundation: FoundationBaseline::default(),
             foundation_activity: FoundationActivityState::default(),
             journey: None,
+            property: property_projection_default(),
         }
     }
 

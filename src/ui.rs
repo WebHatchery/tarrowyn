@@ -54,7 +54,13 @@ pub fn draw_game_ui(ctx: UiContext<'_>) -> Vec<UiAction> {
         && is_mouse_button_down(MouseButton::Left)
     {
         if let Some(tile) = MapView::new(&ctx, map_rect).tile_at(mouse) {
-            actions.push(UiAction::MoveTo(tile));
+            if let Some(command) =
+                ui_foundation::property_touch_command(ctx.property, ctx.player_position, tile)
+            {
+                actions.push(UiAction::Interact(command));
+            } else {
+                actions.push(UiAction::MoveTo(tile));
+            }
         }
     }
 
