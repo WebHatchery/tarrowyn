@@ -113,3 +113,35 @@ fn shared_cache_commands_keep_resource_selectors_typed() {
     assert!(encoded.contains("\"action\":\"deposit\""));
     assert!(encoded.contains("\"resource\":\"timber\""));
 }
+
+#[test]
+fn forge_recipe_round_trips_typed_costs_and_tool_result() {
+    let recipe = FoundationForgeRecipe {
+        action: FoundationForgeAction::ForgeFieldTool,
+        label: "Forge iron field tool".to_owned(),
+        costs: vec![
+            FoundationForgeMaterialAmount {
+                kind: FoundationForgeMaterialKind::IronOre,
+                amount: 2,
+            },
+            FoundationForgeMaterialAmount {
+                kind: FoundationForgeMaterialKind::Charcoal,
+                amount: 1,
+            },
+            FoundationForgeMaterialAmount {
+                kind: FoundationForgeMaterialKind::ToolHandle,
+                amount: 1,
+            },
+        ],
+        produces: Vec::new(),
+        tool: Some(FoundationFieldToolKind::Iron),
+    };
+
+    let encoded = serde_json::to_string(&recipe).unwrap();
+    let decoded: FoundationForgeRecipe = serde_json::from_str(&encoded).unwrap();
+
+    assert_eq!(decoded, recipe);
+    assert!(encoded.contains("iron_ore"));
+    assert!(encoded.contains("tool_handle"));
+    assert!(encoded.contains("\"tool\":\"iron\""));
+}

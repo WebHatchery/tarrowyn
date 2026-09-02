@@ -16,6 +16,7 @@ mod core_replay_integrity;
 mod core_session_integrity;
 mod events;
 mod farm_migration;
+mod forge_contract;
 mod foundation_baseline;
 mod foundation_interactions;
 mod identity_integrity;

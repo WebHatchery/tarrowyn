@@ -11,6 +11,15 @@ fn identity_ok(identity: &Identity) -> bool {
         && cache_ok(&identity.trade_results, |response| &response.request_id)
         && cache_ok(&identity.movement_results, |response| &response.request_id)
         && cache_ok(&identity.chat_results, |response| &response.request_id)
+        && cache_ok(&identity.foundation_resource_results, |response| {
+            &response.request_id
+        })
+        && cache_ok(&identity.foundation_cache_results, |response| {
+            &response.request_id
+        })
+        && cache_ok(&identity.foundation_forge_results, |response| {
+            &response.request_id
+        })
 }
 
 fn cache_ok<T>(

@@ -161,5 +161,88 @@ pub struct FoundationResourceResponse {
     pub reason: Option<String>,
 }
 
+#[derive(Debug, Clone, Copy, Default, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum FoundationFieldToolKind {
+    #[default]
+    Crude,
+    Iron,
+}
+
+impl FoundationFieldToolKind {
+    pub const fn max_condition(self) -> u8 {
+        match self {
+            Self::Crude => 3,
+            Self::Iron => 6,
+        }
+    }
+
+    pub const fn label(self) -> &'static str {
+        match self {
+            Self::Crude => "crude field tool",
+            Self::Iron => "iron field tool",
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum FoundationForgeAction {
+    Inspect,
+    BurnCharcoal,
+    ShapeHandle,
+    ForgeFieldTool,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum FoundationForgeMaterialKind {
+    Timber,
+    IronOre,
+    Charcoal,
+    ToolHandle,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+pub struct FoundationForgeMaterialAmount {
+    pub kind: FoundationForgeMaterialKind,
+    pub amount: u32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct FoundationForgeRecipe {
+    pub action: FoundationForgeAction,
+    pub label: String,
+    pub costs: Vec<FoundationForgeMaterialAmount>,
+    pub produces: Vec<FoundationForgeMaterialAmount>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub tool: Option<FoundationFieldToolKind>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct FoundationForgeState {
+    pub landmark_id: String,
+    pub recipes: Vec<FoundationForgeRecipe>,
+    pub crude_tool_action_capacity: u8,
+    pub improved_tool_action_capacity: u8,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct FoundationForgeRequest {
+    pub request_id: String,
+    pub action: FoundationForgeAction,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct FoundationForgeResponse {
+    pub request_id: String,
+    pub action: FoundationForgeAction,
+    pub accepted: bool,
+    pub forge: FoundationForgeState,
+    pub player: PlayerProjection,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reason: Option<String>,
+}
+
 #[cfg(test)]
 mod tests;

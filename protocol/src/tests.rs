@@ -120,9 +120,39 @@ fn inventory_total_saturates_malformed_quantities() {
         timber: u32::MAX,
         stone: u32::MAX,
         iron_ore: u32::MAX,
+        charcoal: u32::MAX,
+        tool_handles: u32::MAX,
     };
 
     assert_eq!(inventory.total_items(), u32::MAX);
+}
+
+#[test]
+fn older_inventory_defaults_processed_forge_materials() {
+    let inventory: Inventory = serde_json::from_str(
+        r#"{"wheat":0,"turnips":0,"moonberries":0,"seeds":2,"bandages":1,"timber":3,"stone":2,"iron_ore":1}"#,
+    )
+    .unwrap();
+
+    assert_eq!(inventory.charcoal, 0);
+    assert_eq!(inventory.tool_handles, 0);
+    assert_eq!(inventory.total_items(), 9);
+}
+
+#[test]
+fn rough_forge_contract_keeps_actions_materials_and_tool_capacity_typed() {
+    let request = FoundationForgeRequest {
+        request_id: "forge-1".to_owned(),
+        action: FoundationForgeAction::ForgeFieldTool,
+    };
+    let encoded = serde_json::to_string(&request).unwrap();
+    let decoded: FoundationForgeRequest = serde_json::from_str(&encoded).unwrap();
+
+    assert_eq!(decoded, request);
+    assert!(encoded.contains("forge_field_tool"));
+    assert_eq!(FoundationFieldToolKind::Crude.max_condition(), 3);
+    assert_eq!(FoundationFieldToolKind::Iron.max_condition(), 6);
+    assert_eq!(FoundationFieldToolKind::Iron.label(), "iron field tool");
 }
 
 #[test]

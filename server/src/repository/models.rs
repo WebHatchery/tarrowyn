@@ -35,6 +35,8 @@ pub(crate) struct Identity {
     pub(super) gold: u32,
     #[serde(default = "default_field_tool_condition")]
     pub(super) field_tool_condition: u8,
+    #[serde(default)]
+    pub(super) field_tool_kind: FoundationFieldToolKind,
     pub(super) skill: u32,
     pub(super) reputation: u32,
     pub(super) inventory: Inventory,
@@ -55,6 +57,8 @@ pub(crate) struct Identity {
     pub(super) foundation_resource_results: HashMap<String, FoundationResourceResponse>,
     #[serde(default)]
     pub(super) foundation_cache_results: HashMap<String, FoundationCacheResponse>,
+    #[serde(default)]
+    pub(super) foundation_forge_results: HashMap<String, FoundationForgeResponse>,
     #[serde(default = "default_weapon")]
     pub(super) weapon: WeaponKind,
     #[serde(default)]
@@ -188,6 +192,7 @@ impl RepositoryState {
             trim_replay_cache(&mut identity.trade_results);
             trim_replay_cache(&mut identity.movement_results);
             trim_replay_cache(&mut identity.chat_results);
+            trim_replay_cache(&mut identity.foundation_forge_results);
             trim_replay_cache(&mut identity.foundation_resource_results);
             trim_replay_cache(&mut identity.foundation_cache_results);
         }

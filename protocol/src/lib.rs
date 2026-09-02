@@ -297,6 +297,10 @@ pub struct Inventory {
     pub stone: u32,
     #[serde(default)]
     pub iron_ore: u32,
+    #[serde(default)]
+    pub charcoal: u32,
+    #[serde(default)]
+    pub tool_handles: u32,
 }
 
 impl Inventory {
@@ -309,6 +313,8 @@ impl Inventory {
             .saturating_add(self.timber)
             .saturating_add(self.stone)
             .saturating_add(self.iron_ore)
+            .saturating_add(self.charcoal)
+            .saturating_add(self.tool_handles)
     }
 }
 
@@ -374,6 +380,8 @@ pub struct PlayerProjection {
     pub gold: u32,
     #[serde(default = "default_field_tool_condition")]
     pub field_tool_condition: u8,
+    #[serde(default)]
+    pub field_tool_kind: FoundationFieldToolKind,
     #[serde(default)]
     pub field_weather: FieldWeather,
     #[serde(default)]

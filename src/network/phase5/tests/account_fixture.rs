@@ -35,6 +35,7 @@ pub(super) fn account_response(guest_fixture: bool) -> tarrowyn_protocol::Accoun
             position: tarrowyn_protocol::Position { x: 8, y: 6 },
             gold: 10,
             field_tool_condition: 20,
+            field_tool_kind: tarrowyn_protocol::FoundationFieldToolKind::Crude,
             field_weather: tarrowyn_protocol::FieldWeather::Clear,
             field_pest_pressure: 0,
             animal_condition: 10,

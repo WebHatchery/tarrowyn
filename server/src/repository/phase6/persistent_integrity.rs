@@ -39,7 +39,7 @@ fn core_ok(state: &RepositoryState, config: &ServerConfig, account_ids: &HashSet
             && bounded_text(&identity.character_id, MAX_ACCOUNT_ID_CHARS)
             && bounded_text(&identity.display_name, MAX_DISPLAY_NAME_CHARS)
             && position_in_world(identity.position, config)
-            && identity.field_tool_condition <= super::super::FIELD_TOOL_MAX_CONDITION
+            && identity.field_tool_condition <= identity.field_tool_kind.max_condition()
             && identity.injuries <= 3
             && (!identity.knocked_out || identity.injuries > 0)
             && identity.last_seen_tick <= state.tick

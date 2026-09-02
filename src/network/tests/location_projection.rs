@@ -37,6 +37,7 @@ fn authoritative_presence_keeps_player_projection_location_in_sync() {
         position: Position { x: 8, y: 6 },
         gold: 12,
         field_tool_condition: 3,
+        field_tool_kind: tarrowyn_protocol::FoundationFieldToolKind::Crude,
         field_weather: tarrowyn_protocol::FieldWeather::Clear,
         field_pest_pressure: 0,
         animal_condition: 10,

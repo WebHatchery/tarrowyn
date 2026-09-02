@@ -3,16 +3,16 @@ use std::collections::{HashMap, VecDeque};
 use std::sync::Mutex;
 use tarrowyn_protocol::{
     ApiMeta, ApiResponse, ChatMessage, ChatRequest, ChatResponse, EventRecord, EventsResponse,
-    FarmingRequest, FarmingResponse, FoundationCacheResponse, FoundationInteractionRequest,
-    FoundationInteractionResponse, FoundationResourceResponse, GuestSessionRequest,
-    GuestSessionResponse, HealthResponse, Inventory, MovementIntent, MovementResponse,
-    PlayerPresence, PlayerProjection, Position, StateSnapshot, TavernFeedResponse, TavernNotice,
-    TradeAction, TradeBundle, TradeOffer, TradeRequest, TradeResponse, TradeStatus, TradesResponse,
-    WeaponKind, WorldClock, WorldEvent, WorldSnapshot, MAX_CHAT_MESSAGE_LENGTH, MAX_TRADE_ITEMS,
-    PROTOCOL_VERSION,
+    FarmingRequest, FarmingResponse, FoundationCacheResponse, FoundationFieldToolKind,
+    FoundationForgeResponse, FoundationInteractionRequest, FoundationInteractionResponse,
+    FoundationResourceResponse, GuestSessionRequest, GuestSessionResponse, HealthResponse,
+    Inventory, MovementIntent, MovementResponse, PlayerPresence, PlayerProjection, Position,
+    StateSnapshot, TavernFeedResponse, TavernNotice, TradeAction, TradeBundle, TradeOffer,
+    TradeRequest, TradeResponse, TradeStatus, TradesResponse, WeaponKind, WorldClock, WorldEvent,
+    WorldSnapshot, MAX_CHAT_MESSAGE_LENGTH, MAX_TRADE_ITEMS, PROTOCOL_VERSION,
 };
 
-pub(super) const STORAGE_VERSION: u32 = 22;
+pub(super) const STORAGE_VERSION: u32 = 23;
 const MAX_EVENTS: usize = 2048;
 const MAX_CHAT_HISTORY: usize = 64;
 const MAX_NOTICES: usize = 32;
@@ -177,6 +177,7 @@ impl WorldRepository {
                     position: crate::content::region_location_profile("hearth").position,
                     gold: self.config.starting_gold,
                     field_tool_condition: FIELD_TOOL_MAX_CONDITION,
+                    field_tool_kind: FoundationFieldToolKind::Crude,
                     skill: crate::content::starting_skill(),
                     reputation: 0,
                     inventory: Inventory {
@@ -193,6 +194,7 @@ impl WorldRepository {
                     chat_results: HashMap::new(),
                     foundation_resource_results: HashMap::new(),
                     foundation_cache_results: HashMap::new(),
+                    foundation_forge_results: HashMap::new(),
                     weapon: WeaponKind::IronSword,
                     knocked_out: false,
                     injuries: 0,
@@ -562,6 +564,7 @@ pub(super) fn player_projection(state: &RepositoryState, key: &str) -> PlayerPro
         position: identity.position,
         gold: identity.gold,
         field_tool_condition: identity.field_tool_condition,
+        field_tool_kind: identity.field_tool_kind,
         field_weather: world::field_weather_for_day(state.clock.day),
         field_pest_pressure: world::field_pest_pressure_for_day(state.clock.day),
         animal_condition: state

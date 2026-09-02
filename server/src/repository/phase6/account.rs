@@ -192,6 +192,30 @@ fn migrate_identity_replay_caches(
                 migrate_chat(message, old_account_id, new_account_id, new_display_name);
             }
         }
+        for response in identity.foundation_resource_results.values_mut() {
+            migrate_player(
+                &mut response.player,
+                old_account_id,
+                new_account_id,
+                new_display_name,
+            );
+        }
+        for response in identity.foundation_cache_results.values_mut() {
+            migrate_player(
+                &mut response.player,
+                old_account_id,
+                new_account_id,
+                new_display_name,
+            );
+        }
+        for response in identity.foundation_forge_results.values_mut() {
+            migrate_player(
+                &mut response.player,
+                old_account_id,
+                new_account_id,
+                new_display_name,
+            );
+        }
     }
     for identity in state.identities.values_mut() {
         for response in identity.trade_results.values_mut() {
