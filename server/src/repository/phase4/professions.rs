@@ -258,11 +258,17 @@ impl super::super::WorldRepository {
                         if let Some(requester_key) =
                             super::key_for_account(&state, &completed_order.requester_account_id)
                         {
+                            let max_condition = state
+                                .identities
+                                .get(&requester_key)
+                                .expect("requester identity exists")
+                                .field_tool_kind
+                                .max_condition();
                             state
                                 .identities
                                 .get_mut(&requester_key)
                                 .expect("requester identity exists")
-                                .field_tool_condition = super::super::FIELD_TOOL_MAX_CONDITION;
+                                .field_tool_condition = max_condition;
                         }
                     }
                     let credentials = state.phase4.credentials.entry(key.clone()).or_default();

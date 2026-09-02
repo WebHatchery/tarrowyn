@@ -9,6 +9,8 @@ use tarrowyn_protocol::{
     FoundationSharedCache, FoundationToolAccess, Inventory,
 };
 
+mod forge;
+
 const RESOURCE_RECOVERY_INTERVAL_TICKS: u64 = 6;
 
 pub(super) fn fresh() -> FoundationActivityState {
