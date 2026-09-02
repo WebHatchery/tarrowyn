@@ -234,6 +234,8 @@ pub struct WorldSnapshot {
     pub expedition_requirements: ExpeditionRequirements,
     #[serde(default)]
     pub foundation: FoundationBaseline,
+    #[serde(default)]
+    pub foundation_activity: FoundationActivityState,
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
@@ -289,6 +291,12 @@ pub struct Inventory {
     pub seeds: u32,
     #[serde(default)]
     pub bandages: u32,
+    #[serde(default)]
+    pub timber: u32,
+    #[serde(default)]
+    pub stone: u32,
+    #[serde(default)]
+    pub iron_ore: u32,
 }
 
 impl Inventory {
@@ -298,6 +306,9 @@ impl Inventory {
             .saturating_add(self.moonberries)
             .saturating_add(self.seeds)
             .saturating_add(self.bandages)
+            .saturating_add(self.timber)
+            .saturating_add(self.stone)
+            .saturating_add(self.iron_ore)
     }
 }
 

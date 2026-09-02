@@ -117,6 +117,9 @@ fn inventory_total_saturates_malformed_quantities() {
         moonberries: u32::MAX,
         seeds: u32::MAX,
         bandages: u32::MAX,
+        timber: u32::MAX,
+        stone: u32::MAX,
+        iron_ore: u32::MAX,
     };
 
     assert_eq!(inventory.total_items(), u32::MAX);

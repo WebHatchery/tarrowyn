@@ -50,3 +50,41 @@ fn foundation_interaction_response_round_trips() {
 
     assert_eq!(decoded, response);
 }
+
+#[test]
+fn foundation_resource_contract_round_trips_depletion_and_crude_access() {
+    let activity = FoundationActivityState {
+        resource_nodes: vec![FoundationResourceNode {
+            node_id: "whisperwood-edge-node".to_owned(),
+            landmark_id: "whisperwood-edge".to_owned(),
+            deposits: vec![FoundationResourceDeposit {
+                kind: FoundationResourceKind::Timber,
+                remaining: 7,
+                capacity: 12,
+            }],
+            recovery_interval_ticks: 6,
+            last_recovered_tick: 18,
+        }],
+        crude_tool_access: vec![FoundationToolAccess {
+            landmark_id: "first-beacon-tool-rack".to_owned(),
+            tools: vec![
+                FoundationCrudeToolKind::HandAxe,
+                FoundationCrudeToolKind::StonePick,
+            ],
+            available_to_all: true,
+        }],
+    };
+    let request = FoundationResourceRequest {
+        request_id: "gather-1".to_owned(),
+        node_id: "whisperwood-edge-node".to_owned(),
+        action: FoundationResourceAction::Log,
+    };
+
+    let encoded = serde_json::to_string(&(activity.clone(), request.clone())).unwrap();
+    let decoded: (FoundationActivityState, FoundationResourceRequest) =
+        serde_json::from_str(&encoded).unwrap();
+
+    assert_eq!(decoded, (activity, request));
+    assert!(encoded.contains("\"kind\":\"timber\""));
+    assert!(encoded.contains("\"action\":\"log\""));
+}

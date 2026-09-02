@@ -32,6 +32,7 @@ pub(super) fn snapshot(
             safety: config.expedition_min_safety,
         },
         foundation: crate::content::foundation_baseline(),
+        foundation_activity: state.foundation_activity.clone(),
     }
 }
 

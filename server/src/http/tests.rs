@@ -102,7 +102,7 @@ fn degraded_readiness_returns_maintenance_without_exposing_integrity_details() {
         data: OpsHealthResponse {
             status: "degraded".to_owned(),
             ready: false,
-            storage_version: 20,
+            storage_version: 21,
             protocol_version: "7".to_owned(),
             last_backup_tick: None,
             last_backup_path: None,

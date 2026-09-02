@@ -37,6 +37,7 @@ impl WorldRepository {
             phase4::day_rollover(&mut state, advanced_days);
         }
         world::grow_plots(&mut state, &self.config);
+        foundation::recover_resource_nodes(&mut state);
         trades::expire_trades(&mut state);
         phase3::tick(&mut state, &self.config);
         phase4::phase4_tick(&mut state, &self.config);

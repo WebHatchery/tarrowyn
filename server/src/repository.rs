@@ -11,7 +11,7 @@ use tarrowyn_protocol::{
     MAX_CHAT_MESSAGE_LENGTH, MAX_TRADE_ITEMS, PROTOCOL_VERSION,
 };
 
-pub(super) const STORAGE_VERSION: u32 = 20;
+pub(super) const STORAGE_VERSION: u32 = 21;
 const MAX_EVENTS: usize = 2048;
 const MAX_CHAT_HISTORY: usize = 64;
 const MAX_NOTICES: usize = 32;
@@ -30,6 +30,7 @@ mod adventurer;
 mod chat;
 mod errors;
 mod farming;
+mod foundation;
 mod models;
 mod mysql;
 mod observability;

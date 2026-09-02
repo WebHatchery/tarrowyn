@@ -204,6 +204,7 @@ fn oversized_state_snapshot_is_rejected_before_grid_allocation() {
             expedition: None,
             expedition_requirements: ExpeditionRequirements::default(),
             foundation: tarrowyn_protocol::FoundationBaseline::default(),
+            foundation_activity: tarrowyn_protocol::FoundationActivityState::default(),
         },
         player: PlayerProjection {
             account_id: "account".to_owned(),
@@ -275,6 +276,7 @@ fn small_state_snapshot(tiles: Vec<WorldTile>) -> StateSnapshot {
             expedition: None,
             expedition_requirements: ExpeditionRequirements::default(),
             foundation: tarrowyn_protocol::FoundationBaseline::default(),
+            foundation_activity: tarrowyn_protocol::FoundationActivityState::default(),
         },
         player: PlayerProjection {
             account_id: "account".to_owned(),

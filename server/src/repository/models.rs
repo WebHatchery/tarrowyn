@@ -3,7 +3,7 @@ use super::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::hash::Hash;
-use tarrowyn_protocol::{FarmPlot, FrontierEvent};
+use tarrowyn_protocol::{FarmPlot, FoundationActivityState, FrontierEvent};
 
 pub(super) const MAX_REPLAY_CACHE: usize = 512;
 
@@ -93,6 +93,8 @@ pub(crate) struct StoredState {
     pub(super) chat_history: VecDeque<ChatMessage>,
     pub(super) notices: VecDeque<TavernNotice>,
     pub(super) trades: HashMap<String, TradeOffer>,
+    #[serde(default = "super::foundation::fresh")]
+    pub(super) foundation_activity: FoundationActivityState,
     #[serde(default)]
     pub(super) phase3: Phase3State,
     #[serde(default)]
@@ -120,6 +122,7 @@ pub(crate) struct RepositoryState {
     pub(super) chat_history: VecDeque<ChatMessage>,
     pub(super) notices: VecDeque<TavernNotice>,
     pub(super) trades: HashMap<String, TradeOffer>,
+    pub(super) foundation_activity: FoundationActivityState,
     pub(super) phase3: Phase3State,
     pub(super) phase4: super::phase4::Phase4State,
     pub(super) phase5: super::phase5::Phase5State,
@@ -148,6 +151,7 @@ impl RepositoryState {
             chat_history: VecDeque::new(),
             notices: VecDeque::new(),
             trades: HashMap::new(),
+            foundation_activity: super::foundation::fresh(),
             phase3: super::phase3::fresh(),
             phase4: super::phase4::fresh(config),
             phase5: super::phase5::fresh(config),
@@ -294,6 +298,7 @@ impl RepositoryState {
             chat_history: trim_queue(stored.chat_history, MAX_CHAT_HISTORY),
             notices: trim_queue(stored.notices, MAX_NOTICES),
             trades,
+            foundation_activity: stored.foundation_activity,
             phase3,
             phase4,
             phase5,
@@ -320,6 +325,7 @@ impl RepositoryState {
             chat_history: self.chat_history.clone(),
             notices: self.notices.clone(),
             trades: self.trades.clone(),
+            foundation_activity: self.foundation_activity.clone(),
             phase3: self.phase3.clone(),
             phase4: self.phase4.clone(),
             phase5: self.phase5.clone(),
