@@ -84,6 +84,8 @@ impl OnlineClient {
                         .set_authoritative_player_position(TilePos::new(position.x, position.y));
                 }
                 if !response.data.accepted {
+                    self.movement_queue.clear();
+                    self.movement_correction = Some(TilePos::new(position.x, position.y));
                     notices.push(NetworkNotice::Warning(
                         response
                             .data

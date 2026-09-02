@@ -40,7 +40,8 @@ pub struct Game {
     menu_open: bool,
     art_catalog_open: bool,
     art_catalog_page: usize,
-    movement_repeat_timer: f32,
+    movement_frame_seconds: f32,
+    movement_advanced_this_frame: bool,
     rendered_player_position: Vec2,
 }
 
@@ -95,20 +96,22 @@ impl Game {
             menu_open: false,
             art_catalog_open: false,
             art_catalog_page: 0,
-            movement_repeat_timer: 0.0,
+            movement_frame_seconds: 0.0,
+            movement_advanced_this_frame: false,
             rendered_player_position: vec2(player_position.x as f32, player_position.y as f32),
         }
     }
 
     pub fn update(&mut self, dt: f32) {
         self.notifications.update(dt);
-        self.movement_repeat_timer = (self.movement_repeat_timer - dt.max(0.0)).max(0.0);
+        self.movement_frame_seconds = dt.max(0.0);
+        self.movement_advanced_this_frame = false;
         for notice in self.mode.update(dt) {
             self.show_network_notice(notice);
         }
-        self.update_rendered_player_position(dt);
+        self.apply_movement_correction();
 
-        self.read_keyboard_input();
+        self.read_keyboard_input(dt);
         let actions: Vec<UiAction> = self.events.drain().collect();
         for action in actions {
             self.apply_action(action);
@@ -322,23 +325,33 @@ impl Game {
     }
 
     fn move_toward(&mut self, target: TilePos) {
-        if self.movement_repeat_timer > 0.0 {
+        if self.movement_advanced_this_frame {
             return;
         }
-        self.mode.queue_move_toward(target);
-        self.movement_repeat_timer = input::MOVEMENT_REPEAT_SECONDS;
+        let target = vec2(target.x as f32, target.y as f32);
+        let offset = target - self.rendered_player_position;
+        if offset.length_squared() <= f32::EPSILON {
+            return;
+        }
+        let maximum_travel = offset.length();
+        self.advance_player_movement(
+            offset,
+            self.movement_frame_seconds
+                .min(maximum_travel / input::PLAYER_MOVEMENT_SPEED),
+        );
     }
 
-    fn update_rendered_player_position(&mut self, dt: f32) {
-        let position = self.mode.projection.player_position;
-        let target = vec2(position.x as f32, position.y as f32);
-        let offset = target - self.rendered_player_position;
-        let distance = offset.length();
-        let travel = input::RENDERED_MOVEMENT_SPEED * dt.max(0.0);
-        if distance > input::TELEPORT_SNAP_DISTANCE || distance <= travel {
+    fn apply_movement_correction(&mut self) {
+        if let Some(position) = self.mode.take_movement_correction() {
+            self.rendered_player_position = vec2(position.x as f32, position.y as f32);
+            return;
+        }
+        let authoritative = self.mode.projection.player_position;
+        let target = vec2(authoritative.x as f32, authoritative.y as f32);
+        if !self.mode.movement_prediction_active()
+            && target.distance(self.rendered_player_position) > input::TELEPORT_SNAP_DISTANCE
+        {
             self.rendered_player_position = target;
-        } else if distance > f32::EPSILON {
-            self.rendered_player_position += offset / distance * travel;
         }
     }
 

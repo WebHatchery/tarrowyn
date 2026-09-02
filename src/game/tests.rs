@@ -1,17 +1,29 @@
 use super::{
     actions::apply_chronicle_key,
-    input::{keyboard_direction, keyboard_gameplay_blocked},
+    input::{
+        keyboard_gameplay_blocked, keyboard_movement_direction, normalized_movement_direction,
+        rendered_tile,
+    },
     online_crafting_view, online_gameplay_modal_visible,
 };
 use crate::network::{ConnectionState, CraftingView};
-use macroquad::prelude::KeyCode;
+use macroquad::prelude::{vec2, KeyCode};
+use macroquad_toolkit::grid::TilePos;
 
 #[test]
-fn arrow_keys_map_to_one_step_directions() {
-    assert_eq!(keyboard_direction(KeyCode::Up), Some((0, -1)));
-    assert_eq!(keyboard_direction(KeyCode::Down), Some((0, 1)));
-    assert_eq!(keyboard_direction(KeyCode::Left), Some((-1, 0)));
-    assert_eq!(keyboard_direction(KeyCode::Right), Some((1, 0)));
+fn held_arrow_keys_form_a_free_two_dimensional_direction() {
+    let direction = keyboard_movement_direction(|key| matches!(key, KeyCode::Up | KeyCode::Right));
+    let normalized = normalized_movement_direction(direction);
+
+    assert_eq!(direction, vec2(1.0, -1.0));
+    assert!((normalized.length() - 1.0).abs() < 0.0001);
+    assert!((normalized.x + normalized.y).abs() < 0.0001);
+}
+
+#[test]
+fn freeform_position_changes_tile_only_after_crossing_its_boundary() {
+    assert_eq!(rendered_tile(vec2(8.49, 6.49)), TilePos::new(8, 6));
+    assert_eq!(rendered_tile(vec2(8.51, 6.51)), TilePos::new(9, 7));
 }
 
 #[test]

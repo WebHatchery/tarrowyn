@@ -1,9 +1,9 @@
 use super::*;
 
 impl OnlineClient {
-    pub fn queue_movement(&mut self, dx: i32, dy: i32) {
+    pub fn queue_movement(&mut self, dx: i32, dy: i32) -> bool {
         if !self.mutations_ready() {
-            return;
+            return false;
         }
         if self
             .projection
@@ -12,40 +12,37 @@ impl OnlineClient {
             .is_some_and(|player| player.knocked_out)
         {
             self.status_message = "Choose a recovery prompt before walking.".to_owned();
-            return;
+            return false;
         }
         if self.projection.authoritative_player_position().is_none() {
             self.status_message =
                 "Your position is still loading; wait for the shared road snapshot.".to_owned();
-            return;
+            return false;
         }
         if self.phase4.regional_movement_locked() {
             self.status_message =
                 "Your regional journey is underway; tap Travel or Recover before walking."
                     .to_owned();
-            return;
+            return false;
+        }
+        if dx.unsigned_abs().saturating_add(dy.unsigned_abs()) != 1 {
+            return false;
         }
         let request_id = self.next_request_id("move");
         // Held movement produces a stream of samples. Dropping a sample while the
         // network catches up is expected and avoids adding more stale movement.
-        let _queued = queue::try_push(
+        queue::try_push(
             &mut self.movement_queue,
             MovementIntent { request_id, dx, dy },
-        );
+        )
     }
 
-    pub fn queue_move_toward(&mut self, target: TilePos) {
-        let Some(dx) = target.x.checked_sub(self.projection.player_position.x) else {
-            return;
-        };
-        let Some(dy) = target.y.checked_sub(self.projection.player_position.y) else {
-            return;
-        };
-        if dx.unsigned_abs() >= dy.unsigned_abs() && dx != 0 {
-            self.queue_movement(dx.signum(), 0);
-        } else if dy != 0 {
-            self.queue_movement(0, dy.signum());
-        }
+    pub(crate) fn take_movement_correction(&mut self) -> Option<TilePos> {
+        self.movement_correction.take()
+    }
+
+    pub(crate) fn movement_prediction_active(&self) -> bool {
+        self.pending_movement.is_some() || !self.movement_queue.is_empty()
     }
 
     pub fn queue_chat(&mut self, text: &str) -> bool {

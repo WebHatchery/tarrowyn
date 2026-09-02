@@ -100,6 +100,7 @@ pub struct OnlineClient {
     pending_trades: Option<Pending<ApiResponse<TradesResponse>>>,
     pending_trade: Option<PendingTrade>,
     movement_queue: VecDeque<MovementIntent>,
+    movement_correction: Option<TilePos>,
     chat_queue: VecDeque<ChatRequest>,
     farming_queue: VecDeque<FarmingRequest>,
     trade_queue: VecDeque<TradeRequest>,
@@ -143,6 +144,7 @@ impl OnlineClient {
             pending_trades: None,
             pending_trade: None,
             movement_queue: VecDeque::new(),
+            movement_correction: None,
             chat_queue: VecDeque::new(),
             farming_queue: VecDeque::new(),
             trade_queue: VecDeque::new(),
@@ -255,6 +257,7 @@ impl OnlineClient {
         self.pending_farming = None;
         self.pending_trades = None;
         self.pending_trade = None;
+        self.movement_correction = self.projection.authoritative_player_position();
         self.movement_queue.clear();
         self.chat_queue.clear();
         self.farming_queue.clear();
@@ -516,6 +519,7 @@ impl OnlineClient {
         self.pending_farming = None;
         self.pending_trades = None;
         self.pending_trade = None;
+        self.movement_correction = self.projection.authoritative_player_position();
         self.movement_queue.clear();
         self.chat_queue.clear();
         self.farming_queue.clear();

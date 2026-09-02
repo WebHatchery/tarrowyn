@@ -384,7 +384,6 @@ impl WorldRepository {
                     .movement_results
                     .insert(intent.request_id.clone(), response.clone());
                 record_command_outcome(&mut state, response.accepted);
-                self.persist(&mut state)?;
                 return Ok(ApiResponse {
                     meta: meta(state.tick, Some(intent.request_id), Some(cursor)),
                     data: response,
@@ -400,7 +399,6 @@ impl WorldRepository {
             .movement_results
             .insert(intent.request_id.clone(), response.clone());
         record_command_outcome(&mut state, response.accepted);
-        self.persist(&mut state)?;
         Ok(ApiResponse {
             meta: meta(state.tick, Some(intent.request_id), Some(state.cursor)),
             data: response,

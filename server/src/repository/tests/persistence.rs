@@ -413,3 +413,60 @@ fn chat_and_movement_replays_survive_repository_restart() {
     );
     let _ = std::fs::remove_file(path);
 }
+
+#[test]
+fn movement_acknowledgement_does_not_wait_for_snapshot_persistence() {
+    let path = std::env::temp_dir().join(format!(
+        "tarrowyn-movement-write-behind-{}.json",
+        std::process::id()
+    ));
+    let config = ServerConfig {
+        persistence_path: Some(path.to_string_lossy().into_owned()),
+        backup_path: None,
+        ..ServerConfig::default()
+    };
+    let repository = WorldRepository::new(config);
+    let session = repository
+        .guest_session(GuestSessionRequest {
+            client_key: Some("movement-write-behind".to_owned()),
+            reset: false,
+        })
+        .unwrap()
+        .data;
+
+    let response = repository
+        .movement(
+            &session.account_token,
+            MovementIntent {
+                request_id: "movement-write-behind-request".to_owned(),
+                dx: 0,
+                dy: 1,
+            },
+        )
+        .unwrap()
+        .data;
+    assert!(response.accepted);
+    assert_eq!(response.position, Position { x: 8, y: 7 });
+
+    let before_tick: serde_json::Value =
+        serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
+    let persisted_positions = before_tick["identities"]
+        .as_object()
+        .unwrap()
+        .values()
+        .map(|identity| identity["position"].clone())
+        .collect::<Vec<_>>();
+    assert!(persisted_positions.contains(&serde_json::json!({ "x": 8, "y": 6 })));
+
+    repository.tick();
+    let after_tick: serde_json::Value =
+        serde_json::from_slice(&std::fs::read(&path).unwrap()).unwrap();
+    let persisted_positions = after_tick["identities"]
+        .as_object()
+        .unwrap()
+        .values()
+        .map(|identity| identity["position"].clone())
+        .collect::<Vec<_>>();
+    assert!(persisted_positions.contains(&serde_json::json!({ "x": 8, "y": 7 })));
+    let _ = std::fs::remove_file(path);
+}
