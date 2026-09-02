@@ -24,6 +24,7 @@ mod integrity;
 mod market_integrity;
 mod movement_validation;
 mod numeric_boundaries;
+mod offline_crop_growth;
 mod persistence;
 mod phase3;
 mod phase3_replay_integrity;

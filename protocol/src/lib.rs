@@ -318,6 +318,8 @@ pub struct CropState {
     pub stage: u8,
     pub quality: u8,
     pub planted_tick: u64,
+    #[serde(default)]
+    pub growth_ticks: u64,
     pub last_tended_tick: Option<u64>,
 }
 

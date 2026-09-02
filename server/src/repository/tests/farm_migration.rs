@@ -37,7 +37,7 @@ fn empty_legacy_farm_layout_upgrades_without_moving_crop_state() {
         })
         .collect();
 
-    let restored = super::super::world::restore_plots(legacy);
+    let restored = super::super::world::restore_plots(legacy, 0, true);
 
     assert_eq!(
         restored
@@ -61,10 +61,14 @@ fn populated_legacy_farm_layout_remains_unchanged() {
                 stage: 1,
                 quality: 2,
                 planted_tick: 4,
+                growth_ticks: 0,
                 last_tended_tick: None,
             }),
         })
         .collect::<Vec<_>>();
 
-    assert_eq!(super::super::world::restore_plots(stored.clone()), stored);
+    assert_eq!(
+        super::super::world::restore_plots(stored.clone(), 5, false),
+        stored
+    );
 }

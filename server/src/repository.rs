@@ -12,7 +12,7 @@ use tarrowyn_protocol::{
     PROTOCOL_VERSION,
 };
 
-pub(super) const STORAGE_VERSION: u32 = 21;
+pub(super) const STORAGE_VERSION: u32 = 22;
 const MAX_EVENTS: usize = 2048;
 const MAX_CHAT_HISTORY: usize = 64;
 const MAX_NOTICES: usize = 32;

@@ -126,6 +126,17 @@ fn inventory_total_saturates_malformed_quantities() {
 }
 
 #[test]
+fn older_crop_payloads_default_elapsed_growth_tracking() {
+    let crop: CropState = serde_json::from_str(
+        r#"{"kind":"wheat","stage":1,"quality":2,"planted_tick":4,"last_tended_tick":null}"#,
+    )
+    .unwrap();
+
+    assert_eq!(crop.growth_ticks, 0);
+    assert_eq!(crop.stage, 1);
+}
+
+#[test]
 fn chat_contract_preserves_bounded_message_fields() {
     let request = ChatRequest {
         request_id: "chat-1".to_owned(),

@@ -22,6 +22,7 @@ fn farming_rewards_saturate_player_counters_at_the_numeric_ceiling() {
             stage: CropState::MATURE_STAGE,
             quality: 1,
             planted_tick: 0,
+            growth_ticks: 0,
             last_tended_tick: None,
         });
     }
@@ -118,6 +119,7 @@ fn crop_tending_rejects_a_same_beat_burst_without_spending_tool_condition() {
             stage: 0,
             quality: 1,
             planted_tick: 0,
+            growth_ticks: 0,
             last_tended_tick: None,
         });
     }

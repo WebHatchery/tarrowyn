@@ -169,6 +169,7 @@ impl WorldRepository {
             stage: 0,
             quality: 1,
             planted_tick: state.tick,
+            growth_ticks: 0,
             last_tended_tick: None,
         });
         (true, None)

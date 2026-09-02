@@ -83,6 +83,8 @@ pub(super) struct Session {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub(crate) struct StoredState {
     pub(crate) storage_version: u32,
+    #[serde(default)]
+    pub(crate) persisted_at_unix_millis: u64,
     pub(crate) tick: u64,
     pub(super) clock: WorldClock,
     pub(crate) cursor: u64,
@@ -164,6 +166,16 @@ impl RepositoryState {
     }
 
     pub(crate) fn from_stored(stored: StoredState, config: &ServerConfig) -> Self {
+        Self::from_stored_at(stored, config, unix_time_millis())
+    }
+
+    pub(crate) fn from_stored_at(
+        stored: StoredState,
+        config: &ServerConfig,
+        now_unix_millis: u64,
+    ) -> Self {
+        let persisted_at_unix_millis = stored.persisted_at_unix_millis;
+        let migrate_legacy_crop_growth = stored.storage_version < 22;
         let day_length_seconds = config.day_length_seconds.max(1.0);
         let clock_seconds = if stored.clock.seconds.is_finite() {
             stored.clock.seconds.max(0.0) % day_length_seconds
@@ -301,7 +313,11 @@ impl RepositoryState {
             next_notice: stored.next_notice.max(1),
             identities,
             sessions,
-            plots: super::world::restore_plots(stored.plots),
+            plots: super::world::restore_plots(
+                stored.plots,
+                stored.tick,
+                migrate_legacy_crop_growth,
+            ),
             events,
             chat_history: trim_queue(stored.chat_history, MAX_CHAT_HISTORY),
             notices: trim_queue(stored.notices, MAX_NOTICES),
@@ -312,6 +328,12 @@ impl RepositoryState {
             phase5,
             phase6,
         };
+        super::world::apply_offline_crop_growth(
+            &mut state,
+            config,
+            persisted_at_unix_millis,
+            now_unix_millis,
+        );
         super::reset::anonymize_orphaned_public_history(&mut state);
         state
     }
@@ -319,6 +341,7 @@ impl RepositoryState {
     pub(crate) fn to_stored(&self) -> StoredState {
         let mut stored = StoredState {
             storage_version: STORAGE_VERSION,
+            persisted_at_unix_millis: unix_time_millis(),
             tick: self.tick,
             clock: self.clock.clone(),
             cursor: self.cursor,
@@ -342,6 +365,13 @@ impl RepositoryState {
         super::phase5::refresh_stored_settlement_facilities(&mut stored);
         stored
     }
+}
+
+fn unix_time_millis() -> u64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|duration| duration.as_millis().min(u128::from(u64::MAX)) as u64)
+        .unwrap_or(0)
 }
 
 fn default_weapon() -> WeaponKind {

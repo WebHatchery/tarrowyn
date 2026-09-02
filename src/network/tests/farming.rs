@@ -73,6 +73,7 @@ fn farming_success_notice_names_crop_and_plot() {
             stage: 2,
             quality: 2,
             planted_tick: 4,
+            growth_ticks: 1,
             last_tended_tick: Some(5),
         }),
     };

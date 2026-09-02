@@ -505,6 +505,7 @@ fn invalid_saved_crop_state_degrades_readiness() {
             stage: 4,
             quality: 80,
             planted_tick: 0,
+            growth_ticks: 0,
             last_tended_tick: None,
         });
     }
