@@ -23,7 +23,9 @@ pub(super) fn ok(state: &RepositoryState, config: &ServerConfig) -> bool {
         .values()
         .map(|identity| identity.account_id.as_str())
         .collect();
-    core_ok(state, config, &account_ids) && phase3_ok(state, config, &account_ids)
+    core_ok(state, config, &account_ids)
+        && super::super::foundation::property::integrity_ok(state, config, &account_ids)
+        && phase3_ok(state, config, &account_ids)
 }
 
 fn core_ok(state: &RepositoryState, config: &ServerConfig, account_ids: &HashSet<&str>) -> bool {

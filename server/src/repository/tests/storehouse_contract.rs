@@ -25,7 +25,7 @@ fn storage_version_twenty_five_defaults_the_first_storehouse_contract() {
     assert_eq!(storehouse.project_id, "first-beacon-storehouse");
     assert_eq!(storehouse.requirements.len(), 2);
     assert_eq!(storehouse.stages.len(), 4);
-    assert_eq!(restored.to_stored().storage_version, 27);
+    assert_eq!(restored.to_stored().storage_version, 28);
 }
 
 #[test]

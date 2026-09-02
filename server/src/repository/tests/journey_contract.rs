@@ -29,7 +29,7 @@ fn storage_version_twenty_six_defaults_personal_journey_progress() {
     let progress = &restored.identities["journey-legacy"].foundation_journey;
 
     assert_eq!(progress, &Default::default());
-    assert_eq!(restored.to_stored().storage_version, 27);
+    assert_eq!(restored.to_stored().storage_version, 28);
 }
 
 #[test]

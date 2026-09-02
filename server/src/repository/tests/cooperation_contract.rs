@@ -25,7 +25,7 @@ fn storage_version_twenty_three_defaults_the_fixed_cooperation_goal() {
         restored.foundation_activity.cooperation,
         FoundationCooperationState::default()
     );
-    assert_eq!(restored.to_stored().storage_version, 27);
+    assert_eq!(restored.to_stored().storage_version, 28);
 }
 
 #[test]
@@ -53,7 +53,7 @@ fn storage_version_twenty_four_defaults_cooperation_work_tracking() {
         .cooperation
         .active_attempts
         .is_empty());
-    assert_eq!(restored.to_stored().storage_version, 27);
+    assert_eq!(restored.to_stored().storage_version, 28);
 }
 
 #[test]

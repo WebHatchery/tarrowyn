@@ -12,6 +12,7 @@ use tarrowyn_protocol::{
 pub(super) mod cooperation;
 mod forge;
 pub(super) mod journey;
+pub(super) mod property;
 pub(super) mod storehouse;
 
 const RESOURCE_RECOVERY_INTERVAL_TICKS: u64 = 6;

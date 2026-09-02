@@ -13,7 +13,7 @@ use tarrowyn_protocol::{
     PROTOCOL_VERSION,
 };
 
-pub(super) const STORAGE_VERSION: u32 = 27;
+pub(super) const STORAGE_VERSION: u32 = 28;
 const MAX_EVENTS: usize = 2048;
 const MAX_CHAT_HISTORY: usize = 64;
 const MAX_NOTICES: usize = 32;
@@ -197,6 +197,7 @@ impl WorldRepository {
                     foundation_cache_results: HashMap::new(),
                     foundation_forge_results: HashMap::new(),
                     foundation_storehouse_results: HashMap::new(),
+                    foundation_property_results: HashMap::new(),
                     foundation_journey: FoundationJourneyProgress::default(),
                     weapon: WeaponKind::IronSword,
                     knocked_out: false,
@@ -439,6 +440,9 @@ impl WorldRepository {
                     "The Brambleback has closed the north road; the tavern has posted a contract."
                         .to_owned(),
                 );
+            } else if foundation::property::movement_blocked(&state, next) {
+                response.reason =
+                    Some("A personal shelter blocks that step; use its clear entrance.".to_owned());
             } else if !world::tile_at(next, self.config.world_width, self.config.world_height)
                 .is_walkable()
             {

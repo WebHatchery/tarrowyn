@@ -112,6 +112,7 @@ fn erase_account(state: &mut RepositoryState, request: &PendingAccountDeletion) 
     });
     super::super::foundation::cooperation::remove_account(state, &request.account_id);
     super::super::foundation::storehouse::remove_account(state, &request.account_id);
+    super::super::foundation::property::remove_account(state, &request.account_id);
     super::super::phase5::close_deleted_account_orders(state, &request.account_id);
     anonymize_phase5_replay_orders(state, &request.account_id);
 

@@ -10,12 +10,12 @@ use tarrowyn_protocol::{
     AccountDeletionRequest, ApiErrorResponse, ApiMeta, ApiResponse, AuthLinkRequest,
     AuthRefreshRequest, AuthRevokeRequest, ChatRequest, ClaimLifecycleRequest, ClaimRequest,
     CombatRequest, ContractRequest, ExpeditionRequest, FarmingRequest, FoundationCacheRequest,
-    FoundationForgeRequest, FoundationInteractionRequest, FoundationResourceRequest,
-    FoundationStorehouseRequest, GovernanceAction, GovernanceRequest, KnowledgeAction,
-    KnowledgeRequest, LocalCombatRequest, MarketOrderRequest, ModerationReportRequest,
-    MovementIntent, OpsHealthResponse, ProfessionRequest, RecoveryRequest, RegionalEventRequest,
-    RouteRequest, SkillRequest, SupportRepairRequest, TradeRequest, TravelRequest,
-    PROTOCOL_VERSION,
+    FoundationForgeRequest, FoundationInteractionRequest, FoundationPropertyRequest,
+    FoundationResourceRequest, FoundationStorehouseRequest, GovernanceAction, GovernanceRequest,
+    KnowledgeAction, KnowledgeRequest, LocalCombatRequest, MarketOrderRequest,
+    ModerationReportRequest, MovementIntent, OpsHealthResponse, ProfessionRequest, RecoveryRequest,
+    RegionalEventRequest, RouteRequest, SkillRequest, SupportRepairRequest, TradeRequest,
+    TravelRequest, PROTOCOL_VERSION,
 };
 use tiny_http::{Header, Method, Request, Response, Server, StatusCode};
 
@@ -315,6 +315,19 @@ fn handle_request(
         (Method::Get, "/v1/foundation/journey") => authenticated(&request, &repository, |token| {
             repository.foundation_journey(token)
         }),
+        (Method::Get, "/v1/foundation/properties") => {
+            authenticated(&request, &repository, |token| {
+                repository.foundation_properties(token)
+            })
+        }
+        (Method::Post, "/v1/foundation/properties") => {
+            match read_json::<FoundationPropertyRequest>(&mut request) {
+                Ok(body) => authenticated(&request, &repository, |token| {
+                    repository.foundation_property(token, body)
+                }),
+                Err(error) => error_response(400, "invalid_json", error, repository.health().meta),
+            }
+        }
         (Method::Get, "/v1/skills") => {
             authenticated(&request, &repository, |token| repository.skills(token))
         }

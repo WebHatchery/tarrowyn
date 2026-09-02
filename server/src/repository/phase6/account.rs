@@ -19,6 +19,12 @@ pub(super) fn migrate_guest_account_references(
 
     super::super::foundation::cooperation::migrate_account(state, old_account_id, new_account_id);
     super::super::foundation::storehouse::migrate_account(state, old_account_id, new_account_id);
+    super::super::foundation::property::migrate_account(
+        state,
+        old_account_id,
+        new_account_id,
+        new_display_name,
+    );
 
     migrate_identity_replay_caches(state, old_account_id, new_account_id, new_display_name);
     migrate_phase4_replay_caches(state, old_account_id, new_account_id, new_display_name);
@@ -220,6 +226,14 @@ fn migrate_identity_replay_caches(
             );
         }
         for response in identity.foundation_storehouse_results.values_mut() {
+            migrate_player(
+                &mut response.player,
+                old_account_id,
+                new_account_id,
+                new_display_name,
+            );
+        }
+        for response in identity.foundation_property_results.values_mut() {
             migrate_player(
                 &mut response.player,
                 old_account_id,

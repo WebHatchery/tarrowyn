@@ -158,6 +158,7 @@ pub(super) fn reset_guest(state: &mut RepositoryState, identity_key: &str) {
     });
     super::foundation::cooperation::remove_account(state, &old_account_id);
     super::foundation::storehouse::remove_account(state, &old_account_id);
+    super::foundation::property::remove_account(state, &old_account_id);
     super::phase5::close_deleted_account_orders(state, &old_account_id);
     anonymize_phase5_replay_orders(state, &old_account_id);
     reset_phase3_public_ownership(state, &old_account_id);

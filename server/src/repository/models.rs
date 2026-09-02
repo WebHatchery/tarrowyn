@@ -4,8 +4,8 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::hash::Hash;
 use tarrowyn_protocol::{
-    FarmPlot, FoundationActivityState, FoundationJourneyProgress, FoundationStorehouseResponse,
-    FrontierEvent,
+    FarmPlot, FoundationActivityState, FoundationJourneyProgress, FoundationPropertyResponse,
+    FoundationPropertyState, FoundationStorehouseResponse, FrontierEvent,
 };
 
 pub(super) const MAX_REPLAY_CACHE: usize = 512;
@@ -65,6 +65,8 @@ pub(crate) struct Identity {
     #[serde(default)]
     pub(super) foundation_storehouse_results: HashMap<String, FoundationStorehouseResponse>,
     #[serde(default)]
+    pub(super) foundation_property_results: HashMap<String, FoundationPropertyResponse>,
+    #[serde(default)]
     pub(super) foundation_journey: FoundationJourneyProgress,
     #[serde(default = "default_weapon")]
     pub(super) weapon: WeaponKind,
@@ -104,6 +106,8 @@ pub(crate) struct StoredState {
     pub(super) next_token: u64,
     pub(super) next_trade: u64,
     pub(super) next_notice: u64,
+    #[serde(default = "default_next_property")]
+    pub(super) next_property: u64,
     pub(super) identities: HashMap<String, Identity>,
     pub(super) plots: Vec<FarmPlot>,
     pub(super) events: VecDeque<EventRecord>,
@@ -112,6 +116,8 @@ pub(crate) struct StoredState {
     pub(super) trades: HashMap<String, TradeOffer>,
     #[serde(default = "super::foundation::fresh")]
     pub(super) foundation_activity: FoundationActivityState,
+    #[serde(default)]
+    pub(super) foundation_properties: Vec<FoundationPropertyState>,
     #[serde(default)]
     pub(super) phase3: Phase3State,
     #[serde(default)]
@@ -132,6 +138,7 @@ pub(crate) struct RepositoryState {
     pub(super) next_token: u64,
     pub(super) next_trade: u64,
     pub(super) next_notice: u64,
+    pub(super) next_property: u64,
     pub(crate) identities: HashMap<String, Identity>,
     pub(super) sessions: HashMap<String, Session>,
     pub(super) plots: Vec<FarmPlot>,
@@ -140,6 +147,7 @@ pub(crate) struct RepositoryState {
     pub(super) notices: VecDeque<TavernNotice>,
     pub(super) trades: HashMap<String, TradeOffer>,
     pub(super) foundation_activity: FoundationActivityState,
+    pub(super) foundation_properties: Vec<FoundationPropertyState>,
     pub(super) phase3: Phase3State,
     pub(super) phase4: super::phase4::Phase4State,
     pub(super) phase5: super::phase5::Phase5State,
@@ -161,6 +169,7 @@ impl RepositoryState {
             next_token: 1,
             next_trade: 1,
             next_notice: 1,
+            next_property: 1,
             identities: HashMap::new(),
             sessions: HashMap::new(),
             plots: super::world::farm_plots(),
@@ -169,6 +178,7 @@ impl RepositoryState {
             notices: VecDeque::new(),
             trades: HashMap::new(),
             foundation_activity: super::foundation::fresh(),
+            foundation_properties: Vec::new(),
             phase3: super::phase3::fresh(),
             phase4: super::phase4::fresh(config),
             phase5: super::phase5::fresh(config),
@@ -203,6 +213,7 @@ impl RepositoryState {
             trim_replay_cache(&mut identity.foundation_resource_results);
             trim_replay_cache(&mut identity.foundation_cache_results);
             trim_replay_cache(&mut identity.foundation_storehouse_results);
+            trim_replay_cache(&mut identity.foundation_property_results);
             super::foundation::journey::restore_progress(&mut identity.foundation_journey);
         }
         let mut foundation_activity = stored.foundation_activity;
@@ -325,6 +336,7 @@ impl RepositoryState {
             next_token: stored.next_token.max(1),
             next_trade: stored.next_trade.max(1),
             next_notice: stored.next_notice.max(1),
+            next_property: stored.next_property.max(1),
             identities,
             sessions,
             plots: super::world::restore_plots(
@@ -337,6 +349,9 @@ impl RepositoryState {
             notices: trim_queue(stored.notices, MAX_NOTICES),
             trades,
             foundation_activity,
+            foundation_properties: super::foundation::property::restore_properties(
+                stored.foundation_properties,
+            ),
             phase3,
             phase4,
             phase5,
@@ -364,6 +379,7 @@ impl RepositoryState {
             next_token: self.next_token,
             next_trade: self.next_trade,
             next_notice: self.next_notice,
+            next_property: self.next_property,
             identities: self.identities.clone(),
             plots: self.plots.clone(),
             events: self.events.clone(),
@@ -371,6 +387,7 @@ impl RepositoryState {
             notices: self.notices.clone(),
             trades: self.trades.clone(),
             foundation_activity: self.foundation_activity.clone(),
+            foundation_properties: self.foundation_properties.clone(),
             phase3: self.phase3.clone(),
             phase4: self.phase4.clone(),
             phase5: self.phase5.clone(),
@@ -381,11 +398,15 @@ impl RepositoryState {
     }
 }
 
-fn unix_time_millis() -> u64 {
+pub(super) fn unix_time_millis() -> u64 {
     std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .map(|duration| duration.as_millis().min(u128::from(u64::MAX)) as u64)
         .unwrap_or(0)
+}
+
+fn default_next_property() -> u64 {
+    1
 }
 
 fn default_weapon() -> WeaponKind {
