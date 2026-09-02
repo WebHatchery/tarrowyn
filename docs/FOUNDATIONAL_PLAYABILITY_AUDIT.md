@@ -1,8 +1,8 @@
 # Foundational playability audit
 
-Status: project-27 F6 connected storehouse construction implemented and
-accepted on 2026-09-02; subjective enjoyment, first-hour cohesion, and personal
-tent placement remain explicitly unproven or missing.
+Status: project-27 F7 connected first-hour journey implemented and accepted on
+2026-09-02; subjective enjoyment, personal preference, and personal tent
+placement remain explicitly unproven or missing.
 
 This audit treats the attached **Tarrowyn Foundational Game Design Brief** as
 the design authority and uses the GDD plus the historical Phase 0–6 records as
@@ -13,8 +13,9 @@ not enough by itself.
 
 ## Readiness assessment
 
-The release candidate is technically deep but not yet a cohesive foundational
-settlement experience. Its connected client now opens on an undeveloped tent
+The release candidate now has a deterministic cohesive foundational journey,
+but it is not yet the complete foundational settlement target. Its connected
+client opens on an undeveloped tent
 camp with a visible First Beacon, Mara's builder introduction, a world
 noticeboard, and touch-first nearby context. Nearby woodland and mine actions
 now produce persistent timber, stone, and iron ore through shared crude tools;
@@ -53,13 +54,22 @@ projects it; and the client retains it for F1 presentation. The fixture is a
 contract for later phases, not evidence that its currently non-rendered
 interactions are usable.
 
+The personal journey now orders arrival, local need, farming, exploration,
+logging, mining, smithing, barter, communal construction, harvest, and replant
+without gating any activity. The nearby deck shows one numbered next step,
+keeps advanced tools secondary, and turns completion into a persistent return
+harvest. A connected harness compares the two-action useful short visit with
+the complete multi-system path and proves replay, reconnect, restart, and the
+future-session goal. Human claims about enjoyment, preference, and memorability
+remain deliberately conservative.
+
 Status totals below are generated from the 132 requirements in this matrix:
 
 | Status | Count |
 |---|---:|
-| usable | 49 |
-| partial | 40 |
-| missing | 29 |
+| usable | 60 |
+| partial | 31 |
+| missing | 27 |
 | conflicting | 1 |
 | deliberately deferred | 13 |
 
@@ -77,6 +87,10 @@ Status totals below are generated from the 132 requirements in this matrix:
   `server/src/repository/foundation/tests.rs`,
   `scripts/verify_foundation_resources.ps1`, and
   `FOUNDATIONAL_PLAYABILITY_F2_RUNBOOK.md`.
+- **F7 journey:** `protocol/src/foundation/journey.rs`,
+  `server/src/repository/foundation/journey.rs`, `src/network/foundation.rs`,
+  `src/ui_foundation.rs`, `scripts/verify_foundation_journey.ps1`, and
+  `FOUNDATIONAL_PLAYABILITY_F7_RUNBOOK.md`.
 - **F3 farming:** `server/src/repository/world.rs`,
   `server/src/repository/tests/offline_crop_growth.rs`,
   `src/ui_foundation.rs`, `scripts/verify_foundation_farming.ps1`, and
@@ -115,12 +129,12 @@ boundary, status, owner and risk.
 | FP-02 | One permanent starting beacon shared by all first arrivals. | usable | Baseline `first-beacon`, permanent at `(8,6)`; guest spawn and context use the same record. | The named beacon is rendered at every fresh arrival. | F1 regression | Later beacon lifecycle work must preserve its permanence. |
 | FP-03 | Early arrivals may take desirable nearby land; later players seek farther opportunity. | partial | Claims, three starting registry plots, regional vacancies and frontier travel. | Claim and regional opportunity summaries exist. | F8/F9 | Registry abstractions do not yet express physical nearby scarcity. |
 | FP-04 | No permanent class or profession selection. | usable | Skill catalogue and profession capabilities have no character class field. | No class-selection screen; visible Practice and profession actions exist. | F7 regression | Later onboarding must not add a disguised class choice. |
-| FP-05 | A newcomer can try farming, logging, mining, exploration and smithing before specialising. | partial | Farming, exploration, persistent logging/mining and unrestricted forge work exist. | Each activity is independently playable without a class; the cohesive first-hour sequence remains unproven. | F7 | Preserve broad access while integrating the first-hour path. |
+| FP-05 | A newcomer can try farming, logging, mining, exploration and smithing before specialising. | usable | The authoritative journey credits each canonical activity without a class or prerequisite gate. | One numbered nearby path takes a fresh player through all five activities while **All tools** remains available. | F7 accepted | Preserve broad access and the guided-not-gated policy. |
 | FP-06 | A sufficiently committed player may eventually participate in every activity. | partial | Root skills have direct practice paths and no exclusive class gates. | Player can practise roots, but several foundational activities have no loop. | F7 | Preserve broad access while adding efficiency differences. |
-| FP-07 | Interdependence comes from limited time and inconvenient self-supply, not arbitrary lockouts. | partial | Trade, orders, regional scarcity and material escrow create demand. | Trade/order controls exist; no fixed time-saving foundational comparison. | F5/F7 | Current credentials can feel like gating unless crude fallbacks are clear. |
-| FP-08 | Specialists gain value from knowledge, tools, facilities, efficiency, quality and supply relationships. | partial | Skills, knowledge, tool condition, service quality, market and orders exist. | Several values are visible, but foundational activities do not connect them. | F4/F5/F7 | Advanced surfaces currently precede a legible basic chain. |
-| FP-09 | Foundational activities are simple to begin; optional depth improves rather than invalidates the base action. | partial | Plant/tend/harvest, shared crude gathering, and unrestricted forge work; weather, pests, and improved tools add depth. | Nearby controls lead each base action and the crude tool remains viable; the broader first-hour hierarchy remains. | F7 | Avoid exposing advanced complexity before its purpose is felt. |
-| FP-10 | Add deeper layers only after players experience the problem they solve. | partial | Phase 4–6 systems remain intact behind **All tools**. | Arrival now promotes one nearby world action; broader first-hour sequencing remains. | F7 | Preserve recovery access while reducing later-system prominence. |
+| FP-07 | Interdependence comes from limited time and inconvenient self-supply, not arbitrary lockouts. | usable | Crude self-supply completes the tool in six actions while voluntary Mining plus barter completes it in five; the journey accepts either. | The barter milestone follows resource work, names the solo fallback, and never blocks later milestones. | F7 accepted | Preserve the measured saving and unrestricted fallback. |
+| FP-08 | Specialists gain value from knowledge, tools, facilities, efficiency, quality and supply relationships. | usable | Voluntary mastery changes yield, barter saves work, and the resulting iron tool doubles useful capacity in the connected chain. | Journey guidance connects the visible specialist benefit, trade, forge, fields, and storehouse without assigning a class. | F7 accepted | Later tuning must keep benefits measurable and optional. |
+| FP-09 | Foundational activities are simple to begin; optional depth improves rather than invalidates the base action. | usable | Canonical base actions remain proximity-checked and unrestricted; maintenance, tools, and skills improve them. | One nearby action is primary at a time, journey guidance supplies direction, and advanced depth remains secondary. | F7 accepted | Preserve fallback guidance when the journey read is unavailable. |
+| FP-10 | Add deeper layers only after players experience the problem they solve. | usable | The ordered journey introduces needs before production and production before barter/contribution while retaining every advanced system. | **All tools** stays available but visually secondary to the current world action and next milestone. | F7 accepted | Do not make advanced ledgers prerequisites for the journey. |
 | FP-11 | Progress is visible through tools, fields, shelter, storage, knowledge, trade, reputation, contributions, beacons and history rather than a global level. | partial | Tool condition, crops, cache contents, skills, trades, reputation, claims, outpost and chronicle persist. | Nearby cache choices expose storage progress; personal shelter, building stages and player beacons remain absent. | F6–F9 | Existing generic skill number may read like a level. |
 | FP-12 | An ordinary session can feel worthwhile without a level or major unlock. | partial | Farming, trade, contract and travel produce small outcomes. | Automated role loop exists; human evidence is explicitly still desired. | F3/F7 | Product enjoyment cannot be inferred from deterministic endpoints. |
 
@@ -135,11 +149,11 @@ boundary, status, owner and risk.
 | IH-05 | Try basic farming. | usable | `/v1/farming/actions`, persistent plots, deterministic tests and the connected F3 harness. | Nearby **Plant crop**, **Tend / water**, and **Harvest crop** controls follow the crop state. | F3 regression | Current fields are shared and server-authoritative. |
 | IH-06 | Try logging and mining. | usable | Persistent timber/stone/ore nodes, shared crude tools, proximity checks and replay-safe resource commands. | Nearby **Gather timber** and **Mine stone** controls grant authoritative inventory yields. | F2 regression | Keep both actions touch-first and readable when a node is depleted. |
 | IH-07 | Try exploration and observe/use the rough forge. | usable | Movement, regional travel/map, rendered forge, and authoritative typed forge recipes. | The local world path reaches a touch-first rough forge that exposes and executes its production chain. | F4 regression | Travel UI must not substitute for local discovery. |
-| IH-08 | See cross-activity support and leave with a modest future-session goal. | missing | Server systems contain material/order connections. | No first-hour chain or journal goal makes the connection legible. | F7 | Requires earlier activity proofs and a visible non-class goal surface. |
+| IH-08 | See cross-activity support and leave with a modest future-session goal. | usable | A per-identity authoritative ledger orders all foundational systems and activates `harvest-return-crop` after replanting. | The nearby deck shows numbered progress, concrete directions, and then **RETURN GOAL: Return for the next harvest**. | F7 accepted | Keep the goal durable and non-exclusive rather than adding a class journal. |
 | SS-01 | In about 15 minutes, inspect offline-grown crops, harvest, tend/water and replant. | usable | The connected F3 harness models a 15-minute absence, proves untended maturity, and completes harvest, replant, optional tending, replay and restart. | The nearby deck exposes crop stage and the matching touch action at every shared plot. | F3 regression | Human pacing observation remains desirable but is not required for the deterministic action proof. |
 | SS-02 | In a short visit, check tools, fencing or storage. | partial | Field-tool condition and authoritative shared-cache contents are visible and restart-safe. | Crop outlook names tool condition; nearby storage can be checked, but physical fencing is absent. | F8 | Keep maintenance useful rather than mandatory busywork. |
 | LS-01 | In 60–90 minutes, discover/barter seeds, gather fencing timber, commission a tool, reorganise land, trade harvest and contribute surplus. | partial | Crops, logging, direct trade, service orders, claims and projects exist separately. | Timber gathering now works, but fences, physical construction and the complete chain do not. | F7/F8 | Cross-system sequence is unproven by a human session. |
-| LS-02 | Short sessions maintain a life; longer sessions create new possibilities. | missing | No acceptance fixture compares these rhythms. | No connected journal/life presentation demonstrates the distinction. | F3/F7 | Requires pacing evidence, not additional breadth. |
+| LS-02 | Short sessions maintain a life; longer sessions create new possibilities. | usable | The contract defines a 15-minute consult/plant outcome and a 60-minute twelve-milestone outcome; the connected harness proves both and the later harvest. | A short visitor leaves a crop growing; the complete path makes a tool, trade, contribution, and durable return goal visible. | F7 accepted | Human enjoyment remains separate from this deterministic rhythm proof. |
 
 ### Foundational activities and economic connections
 
@@ -183,7 +197,7 @@ boundary, status, owner and risk.
 | BP-03 | Builder builds or assists communal structures. | usable | Completion creates exactly one durable public storehouse tied to Mara's project. | The construction site changes through foundation and frame into an operational building. | F6 accepted | Reuse the staged transformation contract for later communal structures. |
 | BP-04 | Builder may be hired for personal construction. | missing | Service orders exist but not builder housing. | No personal construction path. | F8 | Depends on tent/property placement and staged housing. |
 | BP-05 | Builder is a dependable low-population fallback. | usable | Permanent Mara accepts either self-gathered materials or gold without specialist or population gates. | A solo player always retains visible contribution actions beside Mara or the site. | F6 accepted | F8 must keep builder help useful without replacing player-made property. |
-| BP-06 | Builder gives logging, mining, smithing and trade immediate purposes without replacing player builders. | partial | Storehouse demand consumes gathered timber/stone or traded wealth; iron tools improve the connected production path. | Logging and mining feed the project directly, but the cohesive first hour has not yet shown smithing and trade as one legible builder chain. | F7 | Prove the complete journey without inventing a class gate. |
+| BP-06 | Builder gives logging, mining, smithing and trade immediate purposes without replacing player builders. | usable | The journey records gathered inputs, an improved tool, accepted barter, and an attributed storehouse contribution through canonical authorities. | Mara's need begins the path and later guidance returns the player to the site with eligible goods or exact gold options. | F7 accepted | Future builders must reuse attributed, player-accessible work. |
 
 ### Housing and beacon network
 
@@ -236,7 +250,7 @@ boundary, status, owner and risk.
 | UI-03 | Woodland and mine contexts expose logging/mining. | usable | Nearest-landmark context selects typed resource commands against authoritative node records. | **Gather timber** and **Mine stone** appear beside their sites and report accepted yields or depletion. | F2 regression | Do not duplicate these actions in a permanent command row. |
 | UI-04 | Forge, NPC and construction-site contexts expose work, talk/trade/help and needs/contribution. | usable | Shared landmark context drives Mara, board, dynamic forge work, and typed storehouse contribution commands. | Nearby touch controls expose talk, need, eligible goods/gold, progress, and completed storehouse use. | F6 accepted | Keep later construction choices in the same context hierarchy. |
 | UI-05 | Journal carries ambitions/discoveries/work; noticeboard carries local needs/opportunities/projects. | partial | Chronicle, knowledge, notices, demands, contracts and world noticeboard context exist. | The board carries the first local need; a cohesive personal journal remains absent. | F7 | Avoid duplicating authoritative data in local saves. |
-| UI-06 | Only relevant contextual actions are prominent; every required action has a visible tap/click path. | partial | The F1–F5 nearby deck selects physical work plus eligible barter while **All tools** remains available. | Gathering, farming, forge preparation, ore offer/acceptance and recovery are touch-capable without a permanent command wall; construction and the cohesive first hour remain incomplete. | F6/F7 | Apply the same hierarchy to construction and the complete journey. |
+| UI-06 | Only relevant contextual actions are prominent; every required action has a visible tap/click path. | usable | The nearby deck covers every journey interaction through typed canonical commands, polls the authoritative progress, and rejects stale revisions. | One contextual action remains primary, one next-step line supplies direction/progress, and **All tools** remains secondary and recovery-safe. | F7 accepted | Preserve no-guidance fallback and account/cursor reset boundaries. |
 | AG-01 | Narrowly protect beacons, commons, routes, entrances, claims, shared resources and escape paths. | partial | Authority validates bounds/collision/claims and no-PvP ownership; baseline supplies stable spaces. | No construction placement exists to exercise most guards. | F2/F8/F9 | Spatial rules must be automated before player placement ships. |
 | AG-02 | Protections prevent critical-space grief without erasing early land advantage. | missing | No physical placement/commons acceptance fixture. | No player evidence. | F8 | Avoid global no-build buffers that sterilise settlement growth. |
 | AG-03 | PvP, theft and destructive crime do not threaten foundational property. | usable | `/v1/law` disables PvP/theft; support mutations are audited. | Client displays protected-law boundary. | F8–F10 regression | Future law work must be opt-in and separately designed. |
@@ -252,10 +266,10 @@ boundary, status, owner and risk.
 | IS-05 | A few crops, trees and minerals. | usable | Three crops plus bounded timber, stone and iron-ore deposits are authoritative resource state. | Crops, woodland timber and shallow-seam minerals are productively reachable. | F2/F3 regression | Avoid content breadth beyond the fixed proof. |
 | IS-06 | Basic barter/direct trade. | usable | Atomic direct trade now carries all fixed foundation materials and anchors the durable cooperation result. | Exact ore offer/accept quick actions plus visible general review/accept/cancel. | F5 regression | Keep trade canonical and replay-safe. |
 | IS-07 | One communal construction project. | usable | The First Beacon storehouse has exact requirements, attributed contributions, deterministic stages, and one durable completion. | Connected players can supply goods or gold and watch the public structure appear. | F6 accepted | Human F7 evidence must assess its pacing inside the full journey. |
-| IS-08 | Contextual world interactions. | partial | Server checks stable interaction IDs and authoritative distance; client selects the nearest landmark. | F1 interactions are contextual; later activities still need migration. | F2/F4/F6/F7 | Reuse the shared architecture. |
+| IS-08 | Contextual world interactions. | usable | Stable proximity authority and typed requests cover conversations, fields, resources, forge work, barter, and construction. | The complete guided journey is playable through map movement and nearby touch/click controls. | F7 accepted | Keep broad tools as recovery and inspection, not the primary path. |
 | IS-09 | Persistent resources, property and world changes. | partial | Inventory/crops/claims/civic/region state persist. | Resources and abstract claims persist; foundational physical property does not. | F2/F6/F8 | Avoid local client truth. |
 | IS-10 | Two players can save each other meaningful time through economic connection. | usable | The connected F5 harness records two contributors completing the iron-tool goal in five accepted actions versus the six-action solo baseline. | Nearby status reports `5/6 accepted actions` and `1 saved through barter`. | F5 regression | Human preference remains separate evidence; preserve the measurable saving. |
-| SC-01 | New player tries several activities without a class. | partial | No classes; farming, exploration, logging, mining, smithing, and root practice work. | All selected activities are independently available without selection; one cohesive first-hour pass remains unproven. | F7 | Integrate rather than add a class gate. |
+| SC-01 | New player tries several activities without a class. | usable | The twelve-milestone contract and connected harness cover farming, exploration, logging, mining, smithing, barter, and construction with guided-not-gated access. | A fresh player receives one sequenced next step without ever selecting or being assigned a class. | F7 accepted | Later personalisation must not turn guidance into exclusivity. |
 | SC-02 | Different players naturally prefer different activities. | missing | Automated role labels do not establish preference. | No human observational evidence. | F7 | Requires playtest, not telemetry alone. |
 | SC-03 | Players trade because cooperation saves time. | usable | The fixed two-ore trade is the causal bridge between one-action specialist extraction and the five-action shared result. | Both clients see five together versus six solo before offering/accepting and one saved afterward. | F5/F7 regression | Automation proves the incentive and path, not subjective preference. |
 | SC-04 | A 15-minute visit feels useful. | partial | The connected F3 scenario fits inspect, offline growth, harvest, replant and optional upkeep into one modeled 15-minute return. | The fixed useful actions are visible, but subjective value has not been observed with a human player. | F7 | Tune cadence from observed play; automation cannot establish enjoyment. |
@@ -444,14 +458,37 @@ first-hour chain and broader camp development remain unproven. Personal
 property and subjective experience stay conservative. The matrix remains
 exactly 132 rows.
 
-## Risks after the F6 construction boundary
+The project-27 F7 journey proof is documented in
+[`FOUNDATIONAL_PLAYABILITY_F7_RUNBOOK.md`](FOUNDATIONAL_PLAYABILITY_F7_RUNBOOK.md)
+and can be repeated with:
+
+```powershell
+.\scripts\verify_foundation_journey.ps1
+```
+
+On 2026-09-02 it passed focused journey guidance and authority tests plus a
+live connected scenario covering the useful consult/plant short visit, all
+twelve ordered first-hour milestones, touch-path recovery, atomic barter,
+communal contribution, same-request replay, two authority restarts, durable
+progress, and the future return harvest. The full tree passed 847 tests,
+clippy, formatting, diff and source-size checks, followed by Windows/WebGL
+preview publication.
+
+F7 promotes `FP-05`, `FP-07`, `FP-08`, `FP-09`, `FP-10`, `BP-06`, `UI-06`,
+`IS-08`, and `SC-01` from `partial` to `usable`. It promotes `IH-08` and
+`LS-02` from `missing` to `usable`. Subjective `FP-12`, `SC-02`, `SC-04`,
+`SC-05`, and `SC-11` remain conservative pending human observation; the
+housing-specific and beacon-network rows remain owned by F8/F9. The matrix
+remains exactly 132 rows.
+
+## Risks after the F7 journey boundary
 
 1. **Placement safety:** personal tents still need visible touch placement plus
    collision, commons, route, entrance and escape-path rejection without
    prematurely implementing F8's permanent enclosures.
-2. **Journey cohesion:** gathering, farming, smithing, barter, and construction
-   are individually connected, but F7 must prove they read as one first-hour
-   journey with a modest reason to return.
+2. **Human experience:** deterministic evidence proves ordering, outcomes, and
+   recovery but cannot establish enjoyment, natural preference, or memorability;
+   those claims stay partial until observed play is recorded.
 3. **Mature-state compatibility:** foundational nodes and cache state must
    continue to coexist with Phase 4–6 regional stock and claims without
    becoming a second source of truth.
