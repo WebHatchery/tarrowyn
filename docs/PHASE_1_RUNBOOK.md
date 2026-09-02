@@ -68,7 +68,7 @@ Invoke-RestMethod -Method Post -Uri http://127.0.0.1:8787/v1/session/guest `
 ```
 
 The first Phase 1 wire contract used version `1`; the current compatible
-release contract in `protocol/src/lib.rs` has `PROTOCOL_VERSION` set to `6`.
+release contract in `protocol/src/lib.rs` has `PROTOCOL_VERSION` set to `7`.
 Update that value and the client/server contract together when a breaking
 response or request shape is introduced. All responses include `meta` with
 protocol version and server tick. Movement and chat responses also echo the

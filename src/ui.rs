@@ -9,6 +9,8 @@ use macroquad_toolkit::prelude::*;
 mod ui_art;
 #[path = "ui_crafting.rs"]
 mod ui_crafting;
+#[path = "ui_foundation.rs"]
+mod ui_foundation;
 #[path = "ui_hud.rs"]
 mod ui_hud;
 #[path = "ui_map.rs"]

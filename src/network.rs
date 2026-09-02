@@ -8,10 +8,11 @@ use std::collections::VecDeque;
 use tarrowyn_protocol::{
     ApiResponse, ChatMessage, ChatRequest, ChronicleEntry, ChronicleSummary, EventsResponse,
     Expedition, ExpeditionRequirements, FarmAnimal, FarmingAction, FarmingRequest,
-    FoundationBaseline, FrontierEvent, GuestSessionRequest, GuestSessionResponse, LandClaim,
-    MovementIntent, OpportunitySignal, OpsHealthResponse, PlayerPresence, PlayerProjection,
-    StateSnapshot, TavernFeedResponse, TimeOfDay, TradeAction, TradeOffer, TradeRequest,
-    TradesResponse, WildernessZone, WorldClock, WorldEvent, WorldSnapshot, MAX_CHAT_MESSAGE_LENGTH,
+    FoundationBaseline, FoundationInteractionRequest, FoundationInteractionResponse, FrontierEvent,
+    GuestSessionRequest, GuestSessionResponse, LandClaim, MovementIntent, OpportunitySignal,
+    OpsHealthResponse, PlayerPresence, PlayerProjection, StateSnapshot, TavernFeedResponse,
+    TimeOfDay, TradeAction, TradeOffer, TradeRequest, TradesResponse, WildernessZone, WorldClock,
+    WorldEvent, WorldSnapshot, MAX_CHAT_MESSAGE_LENGTH,
 };
 
 const REQUEST_TIMEOUT_SECONDS: f32 = 6.0;
@@ -33,6 +34,7 @@ pub(super) fn is_transient_transport_error(error: &str) -> bool {
 mod chronicle;
 mod commands;
 mod cursor;
+mod foundation;
 mod frontier;
 mod input;
 mod maintenance;
@@ -98,6 +100,7 @@ pub struct OnlineClient {
     pending_movement: Option<PendingMovement>,
     pending_chat: Option<PendingChat>,
     pending_farming: Option<PendingFarming>,
+    pending_foundation: Option<Pending<ApiResponse<FoundationInteractionResponse>>>,
     pending_trades: Option<Pending<ApiResponse<TradesResponse>>>,
     pending_trade: Option<PendingTrade>,
     movement_queue: VecDeque<MovementIntent>,
@@ -142,6 +145,7 @@ impl OnlineClient {
             pending_movement: None,
             pending_chat: None,
             pending_farming: None,
+            pending_foundation: None,
             pending_trades: None,
             pending_trade: None,
             movement_queue: VecDeque::new(),
@@ -179,6 +183,7 @@ impl OnlineClient {
         self.poll_movement(dt, &mut notices);
         self.poll_chat(dt, &mut notices);
         self.poll_farming(dt, &mut notices);
+        self.poll_foundation(dt, &mut notices);
         self.poll_trade_requests(dt, &mut notices);
         let mutations_ready = self.mutations_ready();
         let frontier_cursor_boundary =
@@ -256,6 +261,7 @@ impl OnlineClient {
         self.pending_movement = None;
         self.pending_chat = None;
         self.pending_farming = None;
+        self.pending_foundation = None;
         self.pending_trades = None;
         self.pending_trade = None;
         self.movement_correction = self.projection.authoritative_player_position();
@@ -353,6 +359,7 @@ impl OnlineClient {
         self.pending_movement = None;
         self.pending_chat = None;
         self.pending_farming = None;
+        self.pending_foundation = None;
         self.pending_trades = None;
         self.pending_trade = None;
         self.frontier.clear();
@@ -518,6 +525,7 @@ impl OnlineClient {
         self.pending_movement = None;
         self.pending_chat = None;
         self.pending_farming = None;
+        self.pending_foundation = None;
         self.pending_trades = None;
         self.pending_trade = None;
         self.movement_correction = self.projection.authoritative_player_position();

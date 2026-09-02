@@ -213,11 +213,11 @@ try {
             $lastReady = $ready
             if ($health.data.service -eq 'tarrowyn-server' -and
                 $health.data.status -eq 'ok' -and
-                $health.data.protocol_version -eq '6' -and
-                $health.meta.protocol_version -eq '6' -and
+                $health.data.protocol_version -eq '7' -and
+                $health.meta.protocol_version -eq '7' -and
                 $ready.data.status -eq 'ok' -and
-                $ready.data.protocol_version -eq '6' -and
-                $ready.meta.protocol_version -eq '6' -and
+                $ready.data.protocol_version -eq '7' -and
+                $ready.meta.protocol_version -eq '7' -and
                 $ready.data.ready -eq $true -and
                 $ready.data.integrity_ok -eq $true) {
                 $contractReady = $true

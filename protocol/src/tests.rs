@@ -47,7 +47,7 @@ fn operations_health_defaults_new_integrity_details_for_older_payloads() {
         "status": "ok",
         "ready": true,
         "storage_version": 6,
-        "protocol_version": "6",
+        "protocol_version": "7",
         "last_backup_tick": null,
         "last_backup_path": null,
         "integrity_ok": true,
@@ -162,7 +162,7 @@ fn phase_two_farming_and_trade_requests_round_trip_with_stable_tags() {
         .unwrap()
         .contains("tend_animal"));
     assert!(encoded.contains("\"action\":\"create\""));
-    assert_eq!(PROTOCOL_VERSION, "6");
+    assert_eq!(PROTOCOL_VERSION, "7");
 }
 
 #[test]

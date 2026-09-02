@@ -97,33 +97,7 @@ fn draw_command_deck(ctx: &UiContext<'_>, mouse: Vec2, actions: &mut Vec<UiActio
         2.0,
         Color::new(0.50, 0.82, 0.68, 0.70),
     );
-    draw_ui_text_ex(
-        "ROAD",
-        18.0,
-        dock.y + 14.0,
-        TextStyle::new(8.0, MINT).params(),
-    );
-
-    let content = Rect::new(18.0, dock.y + 24.0, 1244.0, 28.0);
-    super::ui_online::draw_button_row(
-        content,
-        content.y,
-        content.h,
-        mouse,
-        &[
-            ("plant", "Plant", true, ButtonTone::Positive),
-            ("tend", "Tend", true, ButtonTone::Positive),
-            ("harvest", "Harvest", true, ButtonTone::Positive),
-            ("animal", "Care", true, ButtonTone::Positive),
-            ("trade", "Trade", true, ButtonTone::Primary),
-            ("say-hello", "Meet", true, ButtonTone::Secondary),
-            ("practice", "Practice", true, ButtonTone::Primary),
-            ("art-catalog", "Art atlas", true, ButtonTone::Secondary),
-            ("menu-toggle", "All tools", true, ButtonTone::Secondary),
-        ],
-        ctx,
-        actions,
-    );
+    super::ui_foundation::draw_context_deck(ctx, dock, mouse, actions);
 }
 
 fn draw_tools_overlay(ctx: &UiContext<'_>, mouse: Vec2, actions: &mut Vec<UiAction>) {

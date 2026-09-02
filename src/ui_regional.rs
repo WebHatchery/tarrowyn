@@ -3,6 +3,10 @@ use crate::sprites::SpriteAssets;
 use tarrowyn_protocol::{LocationKind, RouteStatus};
 
 pub(super) fn draw_map_overlay(ctx: &UiContext<'_>, view: &MapView, rect: Rect) {
+    if !ctx.foundation.landmarks.is_empty() {
+        draw_expedition_outpost(ctx, view, rect);
+        return;
+    }
     let Some(region) = ctx.regional_region else {
         draw_local_landmarks(ctx.sprites, view);
         draw_expedition_outpost(ctx, view, rect);

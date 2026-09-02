@@ -3,11 +3,12 @@ use std::collections::{HashMap, VecDeque};
 use std::sync::Mutex;
 use tarrowyn_protocol::{
     ApiMeta, ApiResponse, ChatMessage, ChatRequest, ChatResponse, EventRecord, EventsResponse,
-    FarmingRequest, FarmingResponse, GuestSessionRequest, GuestSessionResponse, HealthResponse,
-    Inventory, MovementIntent, MovementResponse, PlayerPresence, PlayerProjection, Position,
-    StateSnapshot, TavernFeedResponse, TavernNotice, TradeAction, TradeBundle, TradeOffer,
-    TradeRequest, TradeResponse, TradeStatus, TradesResponse, WeaponKind, WorldClock, WorldEvent,
-    WorldSnapshot, MAX_CHAT_MESSAGE_LENGTH, MAX_TRADE_ITEMS, PROTOCOL_VERSION,
+    FarmingRequest, FarmingResponse, FoundationInteractionRequest, FoundationInteractionResponse,
+    GuestSessionRequest, GuestSessionResponse, HealthResponse, Inventory, MovementIntent,
+    MovementResponse, PlayerPresence, PlayerProjection, Position, StateSnapshot,
+    TavernFeedResponse, TavernNotice, TradeAction, TradeBundle, TradeOffer, TradeRequest,
+    TradeResponse, TradeStatus, TradesResponse, WeaponKind, WorldClock, WorldEvent, WorldSnapshot,
+    MAX_CHAT_MESSAGE_LENGTH, MAX_TRADE_ITEMS, PROTOCOL_VERSION,
 };
 
 pub(super) const STORAGE_VERSION: u32 = 20;
@@ -286,6 +287,71 @@ impl WorldRepository {
         })
     }
 
+    pub fn foundation_interaction(
+        &self,
+        token: &str,
+        request: FoundationInteractionRequest,
+    ) -> Result<ApiResponse<FoundationInteractionResponse>, RepositoryError> {
+        let mut state = self.state.lock().expect("world repository lock poisoned");
+        self.expire_and_persist_sessions(&mut state)?;
+        let key = authenticate(&mut state, token, &self.config)?;
+        validate_request_id(&request.request_id)?;
+        let interaction_id = validate_bounded_text(
+            &request.interaction_id,
+            160,
+            "invalid_foundation_interaction",
+            "The First Beacon interaction ID must contain 1 to 160 characters and no control characters.",
+        )?;
+
+        let baseline = crate::content::foundation_baseline();
+        let interaction = baseline
+            .interactions
+            .iter()
+            .find(|interaction| interaction.id == interaction_id)
+            .ok_or_else(|| {
+                RepositoryError::new(
+                    404,
+                    "foundation_interaction_not_found",
+                    "That First Beacon interaction is not part of the authoritative fixture.",
+                )
+            })?;
+        let landmark = baseline
+            .landmarks
+            .iter()
+            .find(|landmark| landmark.id == interaction.landmark_id)
+            .expect("validated foundation interaction references a landmark");
+        let position = state
+            .identities
+            .get(&key)
+            .expect("identity exists")
+            .position;
+        let nearby = position.manhattan_distance(landmark.position) <= 1;
+        let (supported, title, message) =
+            foundation_interaction_copy(&interaction.id, &landmark.name);
+        let accepted = nearby && supported;
+        let message = if !nearby {
+            format!("Walk beside {} before using this action.", landmark.name)
+        } else {
+            message
+        };
+
+        Ok(ApiResponse {
+            meta: meta(
+                state.tick,
+                Some(request.request_id.clone()),
+                Some(state.cursor),
+            ),
+            data: FoundationInteractionResponse {
+                request_id: request.request_id,
+                interaction_id,
+                landmark_id: landmark.id.clone(),
+                accepted,
+                title,
+                message,
+            },
+        })
+    }
+
     pub fn movement(
         &self,
         token: &str,
@@ -454,6 +520,22 @@ impl WorldRepository {
                 )
             })
     }
+}
+
+fn foundation_interaction_copy(
+    interaction_id: &str,
+    landmark_name: &str,
+) -> (bool, String, String) {
+    let title = landmark_name.to_owned();
+    let message = match interaction_id {
+        "arrive-first-beacon" => "The First Beacon is the permanent heart of arrival. Every newcomer begins here, and its light will not fail.".to_owned(),
+        "inspect-tent-settlement" => "Canvas shelters ring the beacon. The camp is young, shared, and waiting for players to shape what comes next.".to_owned(),
+        "gather-at-beacon-fire" => "The communal fire is open to everyone. Travellers meet here before choosing work of their own.".to_owned(),
+        "speak-with-builder" => "Mara: Welcome to the First Beacon. I am setting out the camp's first storehouse. Read the noticeboard beside me to see what the settlement needs.".to_owned(),
+        "read-local-needs" => "LOCAL NEED — First storehouse: timber for the frame and stone for a dry foundation. Mara can explain what this shared shelter will become.".to_owned(),
+        _ => return (false, title, "That place can be inspected, but its work belongs to a later foundational milestone.".to_owned()),
+    };
+    (true, title, message)
 }
 
 pub(super) fn record_command_outcome(state: &mut RepositoryState, accepted: bool) {

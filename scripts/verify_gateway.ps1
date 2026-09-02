@@ -55,7 +55,7 @@ try {
     $server = Get-Json $checks[1]
     if ($server.data.status -ne 'ok' -or $server.data.service -ne 'tarrowyn-server') {
         $failures.Add('Tarrowyn proxy health returned an unexpected response')
-    } elseif ($server.meta.protocol_version -ne '6' -or $server.data.protocol_version -ne '6') {
+    } elseif ($server.meta.protocol_version -ne '7' -or $server.data.protocol_version -ne '7') {
         $failures.Add('Tarrowyn proxy health returned the wrong protocol version')
     }
 } catch {

@@ -30,5 +30,21 @@ pub struct FoundationInteraction {
     pub note: String,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct FoundationInteractionRequest {
+    pub request_id: String,
+    pub interaction_id: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct FoundationInteractionResponse {
+    pub request_id: String,
+    pub interaction_id: String,
+    pub landmark_id: String,
+    pub accepted: bool,
+    pub title: String,
+    pub message: String,
+}
+
 #[cfg(test)]
 mod tests;

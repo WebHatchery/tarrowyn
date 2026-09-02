@@ -32,3 +32,21 @@ fn foundation_baseline_round_trips_with_stable_records() {
     assert_eq!(decoded.landmarks[0].id, "first-beacon");
     assert_eq!(decoded.interactions[0].landmark_id, "first-beacon");
 }
+
+#[test]
+fn foundation_interaction_response_round_trips() {
+    let response = FoundationInteractionResponse {
+        request_id: "foundation-1".to_owned(),
+        interaction_id: "speak-with-builder".to_owned(),
+        landmark_id: "builder-mara".to_owned(),
+        accepted: true,
+        title: "Mara the Builder".to_owned(),
+        message: "The camp needs a storehouse.".to_owned(),
+    };
+
+    let encoded = serde_json::to_string(&response).expect("response should serialize");
+    let decoded: FoundationInteractionResponse =
+        serde_json::from_str(&encoded).expect("response should deserialize");
+
+    assert_eq!(decoded, response);
+}

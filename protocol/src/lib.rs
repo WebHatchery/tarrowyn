@@ -15,7 +15,7 @@ pub use phase6::*;
 mod skills;
 pub use skills::*;
 
-pub const PROTOCOL_VERSION: &str = "6";
+pub const PROTOCOL_VERSION: &str = "7";
 pub const MAX_CHAT_MESSAGE_LENGTH: usize = 160;
 pub const MAX_TRADE_ITEMS: u32 = 99;
 

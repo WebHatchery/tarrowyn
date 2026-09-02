@@ -9,11 +9,12 @@ use std::time::{Duration, Instant};
 use tarrowyn_protocol::{
     AccountDeletionRequest, ApiErrorResponse, ApiMeta, ApiResponse, AuthLinkRequest,
     AuthRefreshRequest, AuthRevokeRequest, ChatRequest, ClaimLifecycleRequest, ClaimRequest,
-    CombatRequest, ContractRequest, ExpeditionRequest, FarmingRequest, GovernanceAction,
-    GovernanceRequest, KnowledgeAction, KnowledgeRequest, LocalCombatRequest, MarketOrderRequest,
-    ModerationReportRequest, MovementIntent, OpsHealthResponse, ProfessionRequest, RecoveryRequest,
-    RegionalEventRequest, RouteRequest, SkillRequest, SupportRepairRequest, TradeRequest,
-    TravelRequest, PROTOCOL_VERSION,
+    CombatRequest, ContractRequest, ExpeditionRequest, FarmingRequest,
+    FoundationInteractionRequest, GovernanceAction, GovernanceRequest, KnowledgeAction,
+    KnowledgeRequest, LocalCombatRequest, MarketOrderRequest, ModerationReportRequest,
+    MovementIntent, OpsHealthResponse, ProfessionRequest, RecoveryRequest, RegionalEventRequest,
+    RouteRequest, SkillRequest, SupportRepairRequest, TradeRequest, TravelRequest,
+    PROTOCOL_VERSION,
 };
 use tiny_http::{Header, Method, Request, Response, Server, StatusCode};
 
@@ -269,6 +270,14 @@ fn handle_request(
         }
         (Method::Get, "/v1/inventory") => {
             authenticated(&request, &repository, |token| repository.inventory(token))
+        }
+        (Method::Post, "/v1/foundation/interactions") => {
+            match read_json::<FoundationInteractionRequest>(&mut request) {
+                Ok(body) => authenticated(&request, &repository, |token| {
+                    repository.foundation_interaction(token, body)
+                }),
+                Err(error) => error_response(400, "invalid_json", error, repository.health().meta),
+            }
         }
         (Method::Get, "/v1/skills") => {
             authenticated(&request, &repository, |token| repository.skills(token))

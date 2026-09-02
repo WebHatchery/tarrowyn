@@ -215,6 +215,8 @@ impl Game {
                 trades: &client.projection.trades,
                 trade_pending: client.trade_pending(),
                 farming_pending: client.farming_pending(),
+                foundation: &client.projection.foundation,
+                foundation_interaction_pending: client.foundation_interaction_pending(),
                 server_tick: client.projection.server_tick,
                 connection: client.state,
                 status_message: &client.status_message,

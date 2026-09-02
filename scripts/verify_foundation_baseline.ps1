@@ -9,7 +9,7 @@ function Wait-ForHealth([string]$baseUrl, [System.Diagnostics.Process]$process) 
         if ($process.HasExited) { throw "The authoritative server exited before becoming healthy." }
         try {
             $health = Invoke-RestMethod -Method Get -Uri "$baseUrl/health" -TimeoutSec 2
-            if ($health.data.status -eq "ok" -and $health.data.protocol_version -eq "6") { return }
+            if ($health.data.status -eq "ok" -and $health.data.protocol_version -eq "7") { return }
         } catch {
             Start-Sleep -Milliseconds 250
         }

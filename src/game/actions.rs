@@ -126,6 +126,10 @@ impl Game {
             self.account_open = false;
         }
         let client = &mut self.mode;
+        if let Some(interaction_id) = id.strip_prefix("foundation:") {
+            client.queue_foundation_interaction(interaction_id);
+            return;
+        }
         match id {
             "plant" => client.queue_farming(FarmingAction::Plant),
             "tend" => client.queue_farming(FarmingAction::Tend),

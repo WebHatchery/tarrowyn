@@ -1,6 +1,6 @@
 # Foundational playability audit
 
-Status: F0 baseline established on 2026-09-02.
+Status: F1 connected arrival implemented and accepted on 2026-09-02.
 
 This audit treats the attached **Tarrowyn Foundational Game Design Brief** as
 the design authority and uses the GDD plus the historical Phase 0–6 records as
@@ -12,13 +12,12 @@ not enough by itself.
 ## Readiness assessment
 
 The release candidate is technically deep but not yet a cohesive foundational
-settlement experience. Its connected client already proves shared authority,
-movement, farming, direct trade, persistence, touch controls, exploration and
-several advanced systems. It does not yet present the new player with an
-undeveloped tent camp, a visible First Beacon, a builder-led local need, basic
-logging/mining/smithing, physical storage or construction, or contextual
-world-first interactions. Some existing mature-town, registry-lease and
-permanent-command assumptions actively conflict with the brief and must be
+settlement experience. Its connected client now opens on an undeveloped tent
+camp with a visible First Beacon, Mara's builder introduction, a world
+noticeboard, and touch-first nearby context. It also proves shared authority,
+movement, farming, direct trade, persistence, exploration and several advanced
+systems. Basic logging/mining/smithing, physical storage and construction are
+still absent. Mature registry-lease and property assumptions must be
 reconciled without removing the advanced systems.
 
 F0 adds no onboarding or gameplay. It establishes
@@ -33,10 +32,10 @@ Status totals below are generated from the 132 requirements in this matrix:
 
 | Status | Count |
 |---|---:|
-| usable | 8 |
-| partial | 51 |
-| missing | 52 |
-| conflicting | 8 |
+| usable | 21 |
+| partial | 47 |
+| missing | 50 |
+| conflicting | 1 |
 | deliberately deferred | 13 |
 
 ## Evidence keys
@@ -66,7 +65,7 @@ boundary, status, owner and risk.
 | ID | Brief requirement | Status | Existing implementation evidence | Current player-facing evidence | Remaining owner | Dependency or risk |
 |---|---|---|---|---|---|---|
 | FP-01 | One persistent shared world. | usable | Authority; JSON/MySQL repository boundary; `/v1/state`. | Connected clients share server-owned state and cursors. | F1 regression | Deployment origin remains an external gate. |
-| FP-02 | One permanent starting beacon shared by all first arrivals. | partial | Baseline `first-beacon`, permanent at `(8,6)`; guest spawn uses Hearth position. | Players spawn together, but no beacon is rendered or named. | F1 | Do not mistake a projected record for an arrival experience. |
+| FP-02 | One permanent starting beacon shared by all first arrivals. | usable | Baseline `first-beacon`, permanent at `(8,6)`; guest spawn and context use the same record. | The named beacon is rendered at every fresh arrival. | F1 regression | Later beacon lifecycle work must preserve its permanence. |
 | FP-03 | Early arrivals may take desirable nearby land; later players seek farther opportunity. | partial | Claims, three starting registry plots, regional vacancies and frontier travel. | Claim and regional opportunity summaries exist. | F8/F9 | Registry abstractions do not yet express physical nearby scarcity. |
 | FP-04 | No permanent class or profession selection. | usable | Skill catalogue and profession capabilities have no character class field. | No class-selection screen; visible Practice and profession actions exist. | F7 regression | Later onboarding must not add a disguised class choice. |
 | FP-05 | A newcomer can try farming, logging, mining, exploration and smithing before specialising. | partial | Farming and exploration work; skill roots exist; baseline identifies woodland, mine and forge. | Farming/exploration are playable; logging, mining and forge work are not. | F2/F4/F7 | Practice-menu entries are not world activity proofs. |
@@ -74,7 +73,7 @@ boundary, status, owner and risk.
 | FP-07 | Interdependence comes from limited time and inconvenient self-supply, not arbitrary lockouts. | partial | Trade, orders, regional scarcity and material escrow create demand. | Trade/order controls exist; no fixed time-saving foundational comparison. | F5/F7 | Current credentials can feel like gating unless crude fallbacks are clear. |
 | FP-08 | Specialists gain value from knowledge, tools, facilities, efficiency, quality and supply relationships. | partial | Skills, knowledge, tool condition, service quality, market and orders exist. | Several values are visible, but foundational activities do not connect them. | F4/F5/F7 | Advanced surfaces currently precede a legible basic chain. |
 | FP-09 | Foundational activities are simple to begin; optional depth improves rather than invalidates the base action. | partial | Plant/tend/harvest and crude fallback concepts exist; weather/pests add depth. | Simple farming remains playable; other activities lack base actions. | F2–F4 | Avoid exposing advanced complexity before its purpose is felt. |
-| FP-10 | Add deeper layers only after players experience the problem they solve. | conflicting | Phase 4–6 systems implement governance, schools, regional markets and operations. | Dense permanent controls expose advanced systems before the First Beacon loop. | F1/F7 | Re-sequence presentation without deleting advanced systems. |
+| FP-10 | Add deeper layers only after players experience the problem they solve. | partial | Phase 4–6 systems remain intact behind **All tools**. | Arrival now promotes one nearby world action; broader first-hour sequencing remains. | F7 | Preserve recovery access while reducing later-system prominence. |
 | FP-11 | Progress is visible through tools, fields, shelter, storage, knowledge, trade, reputation, contributions, beacons and history rather than a global level. | partial | Tool condition, crops, skills, trades, reputation, claims, outpost and chronicle persist. | Many ledger values are visible; shelter/storage/building/beacons are not world-visible. | F2–F9 | Existing generic skill number may read like a level. |
 | FP-12 | An ordinary session can feel worthwhile without a level or major unlock. | partial | Farming, trade, contract and travel produce small outcomes. | Automated role loop exists; human evidence is explicitly still desired. | F3/F7 | Product enjoyment cannot be inferred from deterministic endpoints. |
 
@@ -82,10 +81,10 @@ boundary, status, owner and risk.
 
 | ID | Brief requirement | Status | Existing implementation evidence | Current player-facing evidence | Remaining owner | Dependency or risk |
 |---|---|---|---|---|---|---|
-| IH-01 | Arrive at the First Beacon in a settlement primarily made of tents. | conflicting | Baseline has beacon/tent records; current Hearth content has population 36, town hall, services and mature infrastructure. | Spawn is at Hearth; neither beacon nor tent camp is shown. | F1 | Preserve mature systems while presenting an authored baseline state. |
-| IH-02 | Meet the builder as the first foundational NPC. | partial | Baseline has stable `builder-mara`; fixed NPC household infrastructure exists. | Mara is not rendered, approachable or conversational. | F1 | Fixed-NPC identity must remain stable through persistence. |
-| IH-03 | Learn what the settlement currently needs. | partial | Notice feed, settlement demand, vacancies and `read-local-needs` record. | Tavern/region text shows notices, but no visible world noticeboard at arrival. | F1 | Competing sources may obscure the one next need. |
-| IH-04 | Walk through the surrounding world rather than operate through a command menu. | conflicting | Server movement, collision and map exist. | Movement is world-based, but foundational actions live in a large permanent command surface. | F1/F2 | Context selection must remain touch-first. |
+| IH-01 | Arrive at the First Beacon in a settlement primarily made of tents. | usable | The stable beacon/tent fixture is projected while mature regional overlays are presentation-suppressed at arrival. | The connected client opens on the rendered tent camp. | F1 regression | Advanced state must remain available without replacing the arrival view. |
+| IH-02 | Meet the builder as the first foundational NPC. | usable | Stable `builder-mara` landmark plus proximity-checked interaction endpoint. | Mara is rendered, labelled and reachable through **Talk to Mara**. | F6 extension | Construction contributions remain deliberately later. |
+| IH-03 | Learn what the settlement currently needs. | usable | Stable board record and authoritative `read-local-needs` response. | **Read local need** names timber and stone for the first storehouse. | F6 regression | Keep one clear initial need as project systems expand. |
+| IH-04 | Walk through the surrounding world rather than operate through a command menu. | usable | Server movement, collision and reusable nearest-landmark context selection. | Press-and-hold map movement and one nearby action form the primary path; **All tools** is secondary. | F2 regression | New gathering contexts must reuse this touch-first surface. |
 | IH-05 | Try basic farming. | usable | `/v1/farming/actions`, persistent plots, deterministic tests. | Visible Plant, Tend, Harvest and Care controls. | F3 polish | Current fields are shared and server-authoritative. |
 | IH-06 | Try logging and mining. | missing | Forestry/mining skills and baseline resource landmarks only. | No connected logging or mining action or yield. | F2 | Needs authoritative nodes, tools, depletion/recovery and inventory goods. |
 | IH-07 | Try exploration and observe/use the rough forge. | partial | Movement, regional travel/map and baseline forge record. | Exploration/travel work; forge is neither rendered nor usable. | F2/F4 | Travel UI must not substitute for local discovery. |
@@ -118,11 +117,11 @@ boundary, status, owner and risk.
 
 | ID | Brief requirement | Status | Existing implementation evidence | Current player-facing evidence | Remaining owner | Dependency or risk |
 |---|---|---|---|---|---|---|
-| FS-01 | Permanent First Beacon. | partial | Stable validated baseline record; arrival shares `(8,6)`. | Not rendered or interactable. | F1 | Must never degrade in later beacon lifecycle work. |
-| FS-02 | Tent settlement. | partial | Stable baseline record. | Current map does not show a tent camp. | F1/F2 | Mature Hearth projections conflict with visual starting state. |
-| FS-03 | Communal fire/gathering place. | partial | Stable `first-beacon-fire` record; tavern chat/social feed exists. | Social text exists, but no world fire or gather interaction. | F1 | Keep social value soft rather than mandatory. |
-| FS-04 | Builder NPC. | partial | Stable `builder-mara` record. | No visible NPC. | F1 | Builder dialogue/service must be fixed and durable. |
-| FS-05 | Noticeboard or visible local-needs source. | partial | Stable board record plus notice/demand endpoints. | Notices are readable in sidebar/feed, not at a world board. | F1 | F1 should select a clear initial need. |
+| FS-01 | Permanent First Beacon. | usable | Stable validated baseline record and permanent arrival at `(8,6)`. | Rendered beacon exposes **Inspect beacon**. | F1 regression | Must never degrade in later beacon lifecycle work. |
+| FS-02 | Tent settlement. | usable | Stable tent-camp record owns the foundational presentation. | Canvas shelters are visible west of the beacon. | F2 regression | Player tents must remain visually distinct. |
+| FS-03 | Communal fire/gathering place. | usable | Stable fire record and authoritative gather inspection. | Visible fire exposes **Warm by fire** without making it mandatory. | F1 regression | Keep its social value soft. |
+| FS-04 | Builder NPC. | usable | Stable Mara record and proximity-checked dialogue. | **MARA** is a visible spatial anchor with a touch action. | F6 extension | Her construction service remains later. |
+| FS-05 | Noticeboard or visible local-needs source. | usable | Stable board record and authoritative local-need copy. | **NEEDS** is visible in the world and readable nearby. | F6 regression | Project expansion must preserve a clear first need. |
 | FS-06 | Basic shared storage or collection point. | partial | Stable cache record; regional stock and escrow systems exist. | No player-facing shared container. | F2 | Authority, capacity, access and replay rules are needed. |
 | FS-07 | Crude-tool access. | partial | Stable rack; default field tool/weapon. | No visible rack, borrow or choose action. | F2 | Tool identity is currently too coarse for all activities. |
 | FS-08 | Nearby farmland. | usable | Manifest farm plots, map field tiles and farming endpoints. | Fields and crop interactions are visible. | F3 polish | Ensure First Beacon presentation points players there. |
@@ -132,7 +131,7 @@ boundary, status, owner and risk.
 | FS-12 | Visible space for future construction. | partial | Stable `storehouse-site` record. | Site is not rendered. | F6 | F1 may render it without enabling contribution early. |
 | FS-13 | Early projects include storehouse, well, fenced growing area, smithing shelter, carpenter yard and first homes. | partial | Civic project types and infrastructure framework exist. | Named foundational projects are not visible construction choices. | F6/F8 | Keep initial scope to the storehouse before expanding. |
 | FS-14 | The first communal project visibly shows what contributed materials will create. | missing | Baseline storehouse site and project ledgers are separate. | No unfinished structure or contribution forecast. | F6 | Needs staged authoritative state and replay-safe contribution. |
-| BP-01 | Builder introduces construction and settlement development. | missing | Stable builder record only. | No dialogue or service. | F1/F6 | F1 introduction must not prematurely implement F6 contribution. |
+| BP-01 | Builder introduces construction and settlement development. | usable | Mara's authoritative dialogue introduces the first storehouse and points to its need. | Players meet her through the nearby context action. | F6 extension | Introduction must lead into, not duplicate, the later contribution loop. |
 | BP-02 | Builder accepts appropriate money/resources. | missing | Generic escrow/project cost systems exist. | No builder request. | F6 | Reuse existing transaction/idempotency infrastructure. |
 | BP-03 | Builder builds or assists communal structures. | missing | Civic public actions exist. | No construction transformation. | F6 | Must produce visible persistent world change. |
 | BP-04 | Builder may be hired for personal construction. | missing | Service orders exist but not builder housing. | No personal construction path. | F8 | Depends on tent/property placement and staged housing. |
@@ -146,7 +145,7 @@ boundary, status, owner and risk.
 | HB-01 | Permanent home is a major long-term goal following tent → camp → house → additions. | missing | Claims and infrastructure records exist. | No personal tent/home construction stages. | F8 | Avoid presenting a registry row as a home. |
 | HB-02 | House construction requires suitable location, money, materials, transport, builder/skilled help and time/stages. | missing | Individual subsystems exist for claims, currency, stock, travel and orders. | No integrated housing project. | F8 | Cross-system scope is large; keep stages deterministic. |
 | HB-03 | Stored items remain physically where stored; beacon travel does not teleport remote storage. | missing | Character inventory and regional stock are separate. | No personal world storage or beacon travel exists. | F2/F9 | Storage location identifiers must remain stable. |
-| BN-01 | First Beacon always exists and never degrades. | partial | Permanent baseline record. | Not shown; no degradation rule currently exercises it. | F1/F9 | F9 lifecycle must explicitly exclude this ID. |
+| BN-01 | First Beacon always exists and never degrades. | usable | Permanent validated baseline record is excluded from mutable beacon state. | It is rendered as the shared arrival anchor. | F9 regression | F9 lifecycle must explicitly continue excluding this ID. |
 | BN-02 | First Beacon always remains a valid arrival and travel location. | partial | Arrival position is stable; Hearth route access exists. | Arrival works, but no beacon travel surface. | F1/F9 | Preserve rescue spawn under all state transitions. |
 | BN-03 | Players can construct additional high-cost frontier beacons; solo is possible, cooperation easier. | partial | Pioneer expedition/outpost systems exist. | Pioneer control can create an outpost, not a beacon project. | F9 | Reuse expedition logistics without equating outpost to beacon. |
 | BN-04 | A player-built beacon can become a new settlement centre. | partial | Whisperwood outpost and multi-settlement region exist. | Regional settlement exists, but no player-built beacon caused it. | F9 | Must use the First Beacon systems rather than bespoke regional data. |
@@ -185,12 +184,12 @@ boundary, status, owner and risk.
 
 | ID | Brief requirement | Status | Existing implementation evidence | Current player-facing evidence | Remaining owner | Dependency or risk |
 |---|---|---|---|---|---|---|
-| UI-01 | Interactions primarily arise by approaching world objects/people/sites. | conflicting | Position validation exists for many actions. | A broad permanent sidebar remains the main action surface. | F1/F2/F4/F6 | Preserve visible recovery controls while contextualising actions. |
+| UI-01 | Interactions primarily arise by approaching world objects/people/sites. | partial | Reusable nearest-landmark selection and authoritative proximity validation now cover F1. | Arrival promotes one nearby world action; later activities still use broader tools. | F2/F4/F6 | Extend the same context boundary rather than adding new permanent rows. |
 | UI-02 | Farm context exposes inspect/plant/water/tend/harvest. | partial | Position-bound farming endpoints and visible actions. | Plant/tend/harvest are visible; inspect/context and watering vocabulary are incomplete. | F3 | Do not add redundant watering if tending remains the chosen simple action. |
 | UI-03 | Woodland and mine contexts expose logging/mining. | missing | Baseline resource records only. | No controls or results. | F2 | Requires foundational node mechanics. |
-| UI-04 | Forge, NPC and construction-site contexts expose work, talk/trade/help and needs/contribution. | missing | Baseline records plus separate trade/project endpoints. | None are connected to world proximity. | F1/F4/F6 | Multiple phases must share one context-selection model. |
-| UI-05 | Journal carries ambitions/discoveries/work; noticeboard carries local needs/opportunities/projects. | partial | Chronicle, knowledge, notices, demands and contracts exist. | Panels contain information, but no personal journal or world board. | F1/F7 | Avoid duplicating authoritative data in local saves. |
-| UI-06 | Only relevant contextual actions are prominent; every required action has a visible tap/click path. | conflicting | Existing controls satisfy touch access for implemented systems. | Too many permanent controls are simultaneously prominent. | F1/F7 | Contextualisation must not remove touch recovery paths. |
+| UI-04 | Forge, NPC and construction-site contexts expose work, talk/trade/help and needs/contribution. | partial | Shared landmark context exists; Mara and board interactions are authoritative. | NPC talk works; forge and contribution work remain explicit later milestones. | F4/F6 | Extend the existing context model. |
+| UI-05 | Journal carries ambitions/discoveries/work; noticeboard carries local needs/opportunities/projects. | partial | Chronicle, knowledge, notices, demands, contracts and world noticeboard context exist. | The board carries the first local need; a cohesive personal journal remains absent. | F7 | Avoid duplicating authoritative data in local saves. |
+| UI-06 | Only relevant contextual actions are prominent; every required action has a visible tap/click path. | partial | F1 bottom deck contains the nearest action and **All tools**. | Arrival and recovery remain touch-capable without a permanent command wall. | F7 | Apply the hierarchy across the cohesive first hour. |
 | AG-01 | Narrowly protect beacons, commons, routes, entrances, claims, shared resources and escape paths. | partial | Authority validates bounds/collision/claims and no-PvP ownership; baseline supplies stable spaces. | No construction placement exists to exercise most guards. | F2/F8/F9 | Spatial rules must be automated before player placement ships. |
 | AG-02 | Protections prevent critical-space grief without erasing early land advantage. | missing | No physical placement/commons acceptance fixture. | No player evidence. | F8 | Avoid global no-build buffers that sterilise settlement growth. |
 | AG-03 | PvP, theft and destructive crime do not threaten foundational property. | usable | `/v1/law` disables PvP/theft; support mutations are audited. | Client displays protected-law boundary. | F8–F10 regression | Future law work must be opt-in and separately designed. |
@@ -199,14 +198,14 @@ boundary, status, owner and risk.
 
 | ID | Brief requirement | Status | Existing implementation evidence | Current player-facing evidence | Remaining owner | Dependency or risk |
 |---|---|---|---|---|---|---|
-| IS-01 | Persistent world, permanent beacon, tent settlement and builder NPC. | partial | World persistence plus F0 baseline records. | Only persistence is currently usable. | F1 | This is the immediate track dependency. |
+| IS-01 | Persistent world, permanent beacon, tent settlement and builder NPC. | usable | Persistent world plus stable rendered records and authoritative Mara interaction. | The complete F1 arrival slice is connected and restartable. | F1 regression | Preserve it as later systems grow. |
 | IS-02 | Personal tents and basic world storage. | missing | Claims/inventories exist. | No placeable shelter or physical storage. | F2 | Storage must remain server-authoritative and location-bound. |
 | IS-03 | Farming, logging, mining and exploration. | partial | Farming/exploration usable; F0 resource records. | Logging/mining absent. | F2/F3 | Keep each first loop small. |
 | IS-04 | Rough forge, basic smithing, crude and improved tools. | missing | Skills/default equipment/F0 records only. | No connected production or comparison. | F4 | Depends on F2 resources. |
 | IS-05 | A few crops, trees and minerals. | partial | Three crops and forest/stone tiles. | Crops work; trees/minerals are not resource entities. | F2/F3 | Avoid content breadth beyond the fixed proof. |
 | IS-06 | Basic barter/direct trade. | usable | Atomic direct trade. | Visible trade review/accept/cancel. | F5 | Add specialisation proof, not a second trade system. |
 | IS-07 | One communal construction project. | partial | Generic civic projects and storehouse-site baseline. | No visible contribution/transformation. | F6 | Storehouse is the selected first proof. |
-| IS-08 | Contextual world interactions. | conflicting | Server checks positions. | Permanent command presentation dominates. | F1/F7 | Shared context architecture should span later activities. |
+| IS-08 | Contextual world interactions. | partial | Server checks stable interaction IDs and authoritative distance; client selects the nearest landmark. | F1 interactions are contextual; later activities still need migration. | F2/F4/F6/F7 | Reuse the shared architecture. |
 | IS-09 | Persistent resources, property and world changes. | partial | Inventory/crops/claims/civic/region state persist. | Resources and abstract claims persist; foundational physical property does not. | F2/F6/F8 | Avoid local client truth. |
 | IS-10 | Two players can save each other meaningful time through economic connection. | missing | Trade and orders exist. | No fixed comparative production goal demonstrates the saving. | F5 | Must measure actions or world time. |
 | SC-01 | New player tries several activities without a class. | partial | No classes; farming/exploration/root practice. | Logging/mining/smithing absent. | F7 | Depends on F2–F4. |
@@ -219,7 +218,7 @@ boundary, status, owner and risk.
 | SC-08 | A home feels achievable but genuinely long-term. | missing | 90-day claim and service concepts only. | No house path. | F8 | Do not block F7 on post-foundation housing proof. |
 | SC-09 | Nearby scarcity encourages frontier expansion. | partial | Regional scarcity, travel and pioneer expedition exist. | Expansion is a command-driven outpost flow, not First Beacon scarcity. | F9 | Needs F2 resources and physical property pressure. |
 | SC-10 | A new beacon creates credible settlement opportunity. | missing | Multi-settlement region exists without player beacon causation. | No beacon project/lifecycle. | F9 | Reuse F1–F6 systems at the second site. |
-| SC-11 | The world feels inhabited rather than like a command menu. | conflicting | Persistent players, NPC projections, world history and map exist. | Dense sidebar commands and abstract ledgers dominate. | F7 | Central product risk for the entire track. |
+| SC-11 | The world feels inhabited rather than like a command menu. | partial | Persistent players and the authored camp now lead the arrival presentation. | Mara, the board, tents and nearby sites occupy the world; advanced ledgers remain secondary. | F7 | The full first hour still needs the same treatment. |
 
 ### Explicit foundational deferrals
 
@@ -296,24 +295,20 @@ The publisher built and packaged the Windows and WebGL clients, included the
 registered assets and catalogue thumbnail, and deployed the preview artifact
 successfully.
 
-## Risks entering F1
+## Risks entering F2
 
-1. **Presentation conflict:** the authoritative regional fixture describes a
-   mature Hearth while the foundational arrival must feel like an undeveloped
-   tent settlement. F1 needs a clear projection/presentation rule rather than
-   deleting Phase 4–6 state.
-2. **Menu-first interaction:** current touch controls are available but dense
-   and permanent. F1 must establish a reusable proximity/context surface while
-   preserving visible recovery actions and browser touch access.
-3. **Records without art or behavior:** F0 landmark records are intentionally
-   not rendered. Their `partial` statuses must not be promoted until players
-   can see and use them through the connected client.
-4. **Builder identity:** Mara is now a stable authored identifier, but dialogue,
-   service inventory, construction authority and persistence policy must be
-   added without colliding with the existing Bellweather household model.
-5. **Property semantics:** the brief's three-month inactivity protection and
-   physical fence/tent claims differ from the existing renewable registry
-   lease. F8/F10 need an explicit reconciliation and migration decision.
-6. **Deployment evidence:** browser API origin, target MySQL and human regional
-   play remain open Phase 6 gates. They do not block deterministic F0, but F1's
-   connected acceptance must run against an available authority.
+1. **Context extension:** logging, mining, crude tools, storage and tent
+   placement must extend F1's nearest-landmark surface instead of restoring a
+   permanent command row.
+2. **Shared-node authority:** woodland and mineral yields need persistent
+   depletion/recovery, bounded range, and replay safety before their visible
+   context actions can become productive.
+3. **Placement safety:** personal tents need visible touch placement plus
+   collision, commons, route, entrance and escape-path rejection without
+   prematurely implementing F8's permanent enclosures.
+4. **Mature-state compatibility:** new foundational resource records must
+   coexist with Phase 4–6 regional stock and claims without becoming a second
+   source of truth.
+5. **Deployment evidence:** browser API origin, target MySQL and human regional
+   play remain open Phase 6 gates. They do not block the isolated F1 acceptance
+   fixture but still require target-environment proof.

@@ -17,6 +17,7 @@ mod core_session_integrity;
 mod events;
 mod farm_migration;
 mod foundation_baseline;
+mod foundation_interactions;
 mod identity_integrity;
 mod input_bounds;
 mod integrity;

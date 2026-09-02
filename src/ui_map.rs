@@ -67,9 +67,15 @@ pub(crate) fn draw_map(ctx: &UiContext<'_>, rect: Rect) {
     }
 
     ui_regional::draw_map_overlay(ctx, &view, rect);
-    draw_map_item_markers(ctx, &view, rect);
-    draw_fixed_npcs(ctx, &view, rect);
-    draw_wilderness_monster(ctx, &view, rect);
+    if ctx.foundation.landmarks.is_empty() {
+        draw_map_item_markers(ctx, &view, rect);
+        draw_fixed_npcs(ctx, &view, rect);
+    } else {
+        draw_foundation_landmarks(ctx, &view, rect);
+    }
+    if ctx.foundation.landmarks.is_empty() {
+        draw_wilderness_monster(ctx, &view, rect);
+    }
     if should_draw_player_marker(ctx.player_position_authoritative) {
         draw_character_at_position(
             ctx.sprites,
@@ -84,6 +90,208 @@ pub(crate) fn draw_map(ctx: &UiContext<'_>, rect: Rect) {
             continue;
         }
         draw_remote_character(ctx.sprites, &view, player, index, ctx.server_tick);
+    }
+}
+
+fn draw_foundation_landmarks(ctx: &UiContext<'_>, view: &MapView, rect: Rect) {
+    let context_id = super::ui_foundation::nearby_context(ctx.foundation, ctx.player_position)
+        .map(|context| context.landmark.id.as_str());
+    for landmark in ctx
+        .foundation
+        .landmarks
+        .iter()
+        .filter(|landmark| landmark.visible)
+    {
+        let tile = TilePos::new(landmark.position.x, landmark.position.y);
+        let tile_rect = view.tile_rect(tile);
+        if !rect.overlaps(&tile_rect) {
+            continue;
+        }
+        let center = tile_rect.center();
+        draw_ellipse(
+            center.x,
+            tile_rect.bottom() - 2.0,
+            tile_rect.w * 0.34,
+            tile_rect.h * 0.11,
+            0.0,
+            Color::new(0.01, 0.02, 0.02, 0.48),
+        );
+        draw_foundation_icon(ctx, landmark.kind.as_str(), center, tile_rect);
+        let contextual = context_id == Some(landmark.id.as_str());
+        let anchor_label = match landmark.kind.as_str() {
+            "npc" => Some("MARA"),
+            "noticeboard" => Some("NEEDS"),
+            _ => None,
+        };
+        if contextual || anchor_label.is_some() {
+            let label = anchor_label.unwrap_or(&landmark.name);
+            draw_text_centered_in_box(
+                &label.to_ascii_uppercase(),
+                center.x - tile_rect.w * 1.35,
+                center.y - tile_rect.h * 1.0,
+                tile_rect.w * 2.7,
+                12.0,
+                8.0,
+                if contextual { GOLD } else { CREAM },
+            );
+        }
+    }
+}
+
+fn draw_foundation_icon(ctx: &UiContext<'_>, kind: &str, center: Vec2, rect: Rect) {
+    let scale = rect.w.max(18.0);
+    match kind {
+        "npc" => {
+            if !ctx.sprites.draw_npc(
+                NpcSprite::Iven,
+                center + vec2(0.0, -rect.h * 0.22),
+                vec2(scale * 0.9, scale * 1.25),
+            ) {
+                draw_circle_at(center + vec2(0.0, -5.0), scale * 0.18, MINT);
+                draw_rectangle(
+                    center.x - scale * 0.16,
+                    center.y,
+                    scale * 0.32,
+                    scale * 0.38,
+                    MINT,
+                );
+            }
+        }
+        "beacon" => {
+            draw_circle_at(center + vec2(0.0, -scale * 0.28), scale * 0.22, GOLD);
+            draw_circle_lines(center.x, center.y - scale * 0.28, scale * 0.34, 2.0, CREAM);
+            draw_rectangle(center.x - 3.0, center.y - 2.0, 6.0, scale * 0.42, CREAM);
+        }
+        "tent_settlement" => {
+            for offset in [-0.24, 0.18] {
+                let x = center.x + scale * offset;
+                draw_triangle(
+                    vec2(x - scale * 0.25, center.y + scale * 0.22),
+                    vec2(x + scale * 0.25, center.y + scale * 0.22),
+                    vec2(x, center.y - scale * 0.32),
+                    Color::new(0.82, 0.70, 0.49, 1.0),
+                );
+            }
+        }
+        "gathering_place" => {
+            draw_triangle(
+                center + vec2(-scale * 0.22, scale * 0.2),
+                center + vec2(scale * 0.22, scale * 0.2),
+                center + vec2(0.0, -scale * 0.34),
+                Color::new(0.96, 0.43, 0.16, 1.0),
+            );
+            draw_circle_at(center + vec2(0.0, -scale * 0.05), scale * 0.12, GOLD);
+        }
+        "noticeboard" => {
+            draw_rectangle(
+                center.x - scale * 0.3,
+                center.y - scale * 0.32,
+                scale * 0.6,
+                scale * 0.46,
+                Color::new(0.45, 0.28, 0.14, 1.0),
+            );
+            draw_rectangle(
+                center.x - 2.0,
+                center.y + scale * 0.1,
+                4.0,
+                scale * 0.38,
+                Color::new(0.35, 0.22, 0.12, 1.0),
+            );
+            draw_rectangle(
+                center.x - scale * 0.2,
+                center.y - scale * 0.23,
+                scale * 0.4,
+                scale * 0.22,
+                CREAM,
+            );
+        }
+        "rough_forge" => {
+            draw_rectangle(
+                center.x - scale * 0.32,
+                center.y - scale * 0.05,
+                scale * 0.64,
+                scale * 0.32,
+                Color::new(0.18, 0.20, 0.21, 1.0),
+            );
+            draw_circle_at(
+                center + vec2(scale * 0.13, -scale * 0.1),
+                scale * 0.13,
+                Color::new(0.94, 0.34, 0.12, 1.0),
+            );
+        }
+        "construction_space" => {
+            draw_rectangle_lines(
+                center.x - scale * 0.36,
+                center.y - scale * 0.25,
+                scale * 0.72,
+                scale * 0.55,
+                2.0,
+                GOLD,
+            );
+            draw_line(
+                center.x - scale * 0.3,
+                center.y + scale * 0.2,
+                center.x + scale * 0.3,
+                center.y - scale * 0.18,
+                2.0,
+                GOLD,
+            );
+        }
+        "shared_storage" | "crude_tools" => {
+            draw_rectangle(
+                center.x - scale * 0.3,
+                center.y - scale * 0.18,
+                scale * 0.6,
+                scale * 0.42,
+                Color::new(0.46, 0.31, 0.16, 1.0),
+            );
+            draw_rectangle_lines(
+                center.x - scale * 0.3,
+                center.y - scale * 0.18,
+                scale * 0.6,
+                scale * 0.42,
+                2.0,
+                CREAM,
+            );
+        }
+        "farmland" => {
+            draw_rectangle(
+                center.x - scale * 0.4,
+                center.y - scale * 0.25,
+                scale * 0.8,
+                scale * 0.5,
+                Color::new(0.55, 0.38, 0.16, 1.0),
+            );
+            for offset in [-0.2, 0.0, 0.2] {
+                draw_line(
+                    center.x + scale * offset,
+                    center.y - scale * 0.2,
+                    center.x + scale * offset,
+                    center.y + scale * 0.2,
+                    1.0,
+                    GOLD,
+                );
+            }
+        }
+        "woodland" => {
+            draw_circle_at(center + vec2(0.0, -scale * 0.12), scale * 0.34, MINT);
+            draw_rectangle(
+                center.x - 3.0,
+                center.y + scale * 0.05,
+                6.0,
+                scale * 0.34,
+                Color::new(0.38, 0.24, 0.12, 1.0),
+            );
+        }
+        "mineable_ground" => {
+            draw_triangle(
+                center + vec2(-scale * 0.38, scale * 0.24),
+                center + vec2(scale * 0.38, scale * 0.24),
+                center + vec2(0.0, -scale * 0.34),
+                Color::new(0.46, 0.49, 0.50, 1.0),
+            );
+        }
+        _ => draw_circle_at(center, scale * 0.24, MINT),
     }
 }
 
