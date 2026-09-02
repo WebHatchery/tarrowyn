@@ -1,8 +1,9 @@
 # The Years of Tarrowyn — Development Roadmap
 
 This folder is the working roadmap for the game. The GDD describes the long
-term design direction; these phase documents describe the smallest buildable
-steps toward it.
+term design direction; the numbered phases record the technical path to the
+current release candidate, while the foundational playability track defines
+the player-facing proof still required for a cohesive first settlement.
 
 ## Phase map
 
@@ -15,6 +16,61 @@ steps toward it.
 | [4](PHASE_4.md) | The Enduring Society | One settlement has durable institutions, deeper professions, accountable land, and households that can sustain community life. |
 | [5](PHASE_5.md) | The Roads Between | Several settlements are connected by travel, trade, migration, infrastructure, and world events that cross regional boundaries. |
 | [6](PHASE_6.md) | The Lasting Realm | The game is production-ready, operationally recoverable, secure for real accounts, and able to support long-term world history. |
+
+The numbered phases are an implementation and architecture record. They must
+not be renumbered or reopened merely because a later player-experience review
+finds that their systems need a clearer presentation or a stronger human
+playtest. The separate `F0`–`F10` track below owns that work.
+
+## Foundational playability track
+
+The foundational playability track turns the existing server-authoritative
+systems into the slow, world-first experience described in the Tarrowyn
+Foundational Game Design Brief. A system's presence in the client, protocol,
+or server does not by itself complete an `F` phase. Each phase ends in a
+player-observable acceptance test that exercises the connected experience.
+
+| Phase | Name | Testable completion goal | Existing foundation |
+|---|---|---|---|
+| F0 | Foundation baseline | A reproducible First Beacon fixture exists, and a requirements matrix identifies every foundational feature as usable, missing, conflicting, or deliberately deferred. | Phases 0–6 |
+| F1 | Arriving at the First Beacon | Three touch-controlled clients can arrive, move through the same tent settlement, meet the builder, read the local need, disconnect, and return to the correct shared state. | Phases 0–1 |
+| F2 | Living off the land | A player can explore, gather timber and minerals, use crude tools, place a valid personal tent, reject obstructive placement, store goods, and recover it all after restart. | Phases 2–4 |
+| F3 | The useful short session | A returning player can plant, tend, advance through offline world time, harvest, and replant during a useful 15-minute farming session using visible controls alone. | Phases 2 and 4 |
+| F4 | Connected production | Ore, fuel, and a timber-derived component can become an improved tool at the rough forge, and a fixed comparison proves that the tool saves actions, time, or materials over the crude fallback. | Phases 2 and 4 |
+| F5 | Player interdependence | Two players can complete an atomic barter and finish a fixed production goal in fewer actions or less world time by specialising and trading than by self-supplying. | Phases 2 and 5 |
+| F6 | Building the first storehouse | Players can see an unfinished storehouse, understand its needs, contribute goods from several activities, and permanently transform it into an operational settlement structure. | Phases 3–5 |
+| F7 | The cohesive first hour | A fresh player can try farming, logging, mining, exploration, smithing, trade, and settlement contribution without choosing a class, then leave with a visible future-session goal. | Cross-phase integration |
+| F8 | Permanent property | A player can construct a staged home and register a bounded gated enclosure while automated guards preserve beacon commons, public routes, entrances, existing property, and escape paths. | Phase 4 |
+| F9 | The second beacon | Players can build and support a frontier beacon, travel with carried inventory but not remote storage, offer it as an arrival point, let it become dormant, and restore it. | Phases 3 and 5 |
+| F10 | Abandonment and restoration | Boundary tests prove three months of inactivity protection followed by visible gradual abandonment, reclamation, salvage, and restoration that survive restart. | Phases 4–6 |
+
+`F7` is the foundational release boundary. The project may be technically
+Phase 6 complete while foundational playability remains in progress. `F8`–
+`F10` are post-foundation proofs of long-term property, expansion, and world
+stewardship rather than prerequisites for the first cohesive release.
+
+### Foundational acceptance rules
+
+Every `F` phase must leave a playable, restartable build and meet all of these
+rules before it is marked complete:
+
+- `publish.ps1` passes from the project root.
+- Relevant deterministic, protocol, and server tests pass.
+- Every required interaction has a visible tap or click path; keyboard input
+  is optional assistance only.
+- Shared resources, property, and world changes remain server-authoritative
+  and survive a restart whenever the phase changes persistent state.
+- Replayed or retried commands cannot duplicate items, currency, project
+  contributions, or rewards.
+- The phase's human acceptance scenario is recorded, with current verification
+  screenshots stored directly in `docs/verification/`.
+- Every Rust source and test file remains at or below 800 physical lines.
+
+Complex soil simulation, advanced animal husbandry, large profession trees,
+player government, bulk-freight restrictions, advanced beacon
+specialisations, dynamic NPC populations, large regional economies, PvP, and
+extensive combat progression remain outside this track until its simple
+activities and economic connections are enjoyable.
 
 ## Phase boundaries
 
