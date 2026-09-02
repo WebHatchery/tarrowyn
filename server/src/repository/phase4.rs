@@ -186,7 +186,7 @@ fn infrastructure_from_profile(
 }
 
 #[allow(clippy::too_many_arguments)]
-fn infrastructure(
+pub(super) fn infrastructure(
     id: &str,
     name: &str,
     kind: tarrowyn_protocol::InfrastructureKind,

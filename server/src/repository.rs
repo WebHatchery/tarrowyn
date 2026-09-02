@@ -195,6 +195,7 @@ impl WorldRepository {
                     foundation_resource_results: HashMap::new(),
                     foundation_cache_results: HashMap::new(),
                     foundation_forge_results: HashMap::new(),
+                    foundation_storehouse_results: HashMap::new(),
                     weapon: WeaponKind::IronSword,
                     knocked_out: false,
                     injuries: 0,
@@ -332,8 +333,11 @@ impl WorldRepository {
             .expect("identity exists")
             .position;
         let nearby = position.manhattan_distance(landmark.position) <= 1;
-        let (supported, title, message) =
-            foundation_interaction_copy(&interaction.id, &landmark.name);
+        let (supported, title, message) = foundation_interaction_copy(
+            &interaction.id,
+            &landmark.name,
+            &state.foundation_activity.storehouse,
+        );
         let accepted = nearby && supported;
         let message = if !nearby {
             format!("Walk beside {} before using this action.", landmark.name)
@@ -531,14 +535,16 @@ impl WorldRepository {
 fn foundation_interaction_copy(
     interaction_id: &str,
     landmark_name: &str,
+    storehouse: &tarrowyn_protocol::FoundationStorehouseState,
 ) -> (bool, String, String) {
     let title = landmark_name.to_owned();
+    if let Some(message) = foundation::storehouse::interaction_message(storehouse, interaction_id) {
+        return (true, title, message);
+    }
     let message = match interaction_id {
         "arrive-first-beacon" => "The First Beacon is the permanent heart of arrival. Every newcomer begins here, and its light will not fail.".to_owned(),
         "inspect-tent-settlement" => "Canvas shelters ring the beacon. The camp is young, shared, and waiting for players to shape what comes next.".to_owned(),
         "gather-at-beacon-fire" => "The communal fire is open to everyone. Travellers meet here before choosing work of their own.".to_owned(),
-        "speak-with-builder" => "Mara: Welcome to the First Beacon. I am setting out the camp's first storehouse. Read the noticeboard beside me to see what the settlement needs.".to_owned(),
-        "read-local-needs" => "LOCAL NEED — First storehouse: timber for the frame and stone for a dry foundation. Mara can explain what this shared shelter will become.".to_owned(),
         "borrow-crude-tools" => "The shared rack holds a hand axe and stone pick. Every traveller may use these crude tools for nearby logging and mining without choosing a profession.".to_owned(),
         _ => return (false, title, "That place can be inspected, but its work belongs to a later foundational milestone.".to_owned()),
     };

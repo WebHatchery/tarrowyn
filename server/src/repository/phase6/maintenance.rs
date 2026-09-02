@@ -34,6 +34,7 @@ pub(super) fn run(state: &mut RepositoryState) {
         trim_replay_cache(&mut identity.foundation_resource_results);
         trim_replay_cache(&mut identity.foundation_cache_results);
         trim_replay_cache(&mut identity.foundation_forge_results);
+        trim_replay_cache(&mut identity.foundation_storehouse_results);
     }
     trim_audits(&mut state.phase6.audits);
 }

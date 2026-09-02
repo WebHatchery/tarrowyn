@@ -1,7 +1,11 @@
 use super::super::models::RepositoryState;
 use crate::config::ServerConfig;
 use std::collections::HashSet;
-use tarrowyn_protocol::{ClaimStatus, ContractStatus, ExpeditionStatus, TradeStatus};
+use tarrowyn_protocol::{
+    ClaimStatus, ContractStatus, ExpeditionStatus, FoundationResourceKind,
+    FoundationStorehouseContributionInput, FoundationStorehouseStage, FoundationStorehouseState,
+    TradeStatus,
+};
 
 const DELETED_ACCOUNT: &str = "former-resident";
 const MAX_EXPEDITION_SUPPLY: u32 = 99;
@@ -194,6 +198,7 @@ fn core_ok(state: &RepositoryState, config: &ServerConfig, account_ids: &HashSet
                         .saturating_sub(result.work_actions)
                 && result.completed_tick <= state.tick
         });
+    let storehouse_ok = storehouse_ok(state, account_ids);
 
     sequence_ok
         && clock_ok
@@ -204,6 +209,108 @@ fn core_ok(state: &RepositoryState, config: &ServerConfig, account_ids: &HashSet
         && notices_ok
         && trades_ok
         && cooperation_ok
+        && storehouse_ok
+}
+
+fn storehouse_ok(state: &RepositoryState, account_ids: &HashSet<&str>) -> bool {
+    let project = &state.foundation_activity.storehouse;
+    let expected = FoundationStorehouseState::default();
+    let fixed_contract_ok = project.project_id == expected.project_id
+        && project.title == expected.title
+        && project.builder_landmark_id == expected.builder_landmark_id
+        && project.noticeboard_landmark_id == expected.noticeboard_landmark_id
+        && project.site_landmark_id == expected.site_landmark_id
+        && project.operational_infrastructure_id == expected.operational_infrastructure_id
+        && project.requirements == expected.requirements
+        && project.stages == expected.stages
+        && project.revision > 0;
+    let contributions_ok = project.contributions.len()
+        <= super::super::foundation::storehouse::MAX_CONTRIBUTIONS
+        && unique_non_empty(
+            project
+                .contributions
+                .iter()
+                .map(|contribution| contribution.contribution_id.as_str()),
+        )
+        && project.contributions.iter().all(|contribution| {
+            account_reference_ok(&contribution.account_id, account_ids)
+                && contribution.credited_units > 0
+                && contribution.contributed_tick <= state.tick
+                && match contribution.input {
+                    FoundationStorehouseContributionInput::Material { kind, amount } => {
+                        kind == contribution.credited_kind
+                            && amount == contribution.credited_units
+                            && matches!(
+                                kind,
+                                FoundationResourceKind::Timber | FoundationResourceKind::Stone
+                            )
+                    }
+                    FoundationStorehouseContributionInput::Gold { toward, amount } => project
+                        .requirements
+                        .iter()
+                        .find(|requirement| requirement.kind == toward)
+                        .is_some_and(|requirement| {
+                            toward == contribution.credited_kind
+                                && contribution
+                                    .credited_units
+                                    .checked_mul(requirement.gold_per_unit)
+                                    == Some(amount)
+                        }),
+                }
+        });
+    let totals_ok = project
+        .requirements
+        .iter()
+        .all(|requirement| credited_units(project, requirement.kind) <= requirement.units_required);
+    let stage_ok =
+        project.current_stage == super::super::foundation::storehouse::stage_for(project);
+    let infrastructure_count = state
+        .phase4
+        .infrastructure
+        .iter()
+        .filter(|record| record.infrastructure_id == project.operational_infrastructure_id)
+        .count();
+    let completion_ok = match project.completion.as_ref() {
+        None => {
+            project.current_stage != FoundationStorehouseStage::Operational
+                && infrastructure_count == 0
+        }
+        Some(completion) => {
+            let mut contributors = Vec::new();
+            for contribution in &project.contributions {
+                if !contributors.contains(&contribution.account_id) {
+                    contributors.push(contribution.account_id.clone());
+                }
+            }
+            project.current_stage == FoundationStorehouseStage::Operational
+                && completion.completed_tick <= state.tick
+                && completion.operational_infrastructure_id == project.operational_infrastructure_id
+                && !completion.contributor_account_ids.is_empty()
+                && completion.contributor_account_ids == contributors
+                && unique_non_empty(
+                    completion
+                        .contributor_account_ids
+                        .iter()
+                        .map(String::as_str),
+                )
+                && completion
+                    .contributor_account_ids
+                    .iter()
+                    .all(|account_id| account_reference_ok(account_id, account_ids))
+                && infrastructure_count == 1
+        }
+    };
+    fixed_contract_ok && contributions_ok && totals_ok && stage_ok && completion_ok
+}
+
+fn credited_units(project: &FoundationStorehouseState, kind: FoundationResourceKind) -> u32 {
+    project
+        .contributions
+        .iter()
+        .filter(|contribution| contribution.credited_kind == kind)
+        .fold(0_u32, |total, contribution| {
+            total.saturating_add(contribution.credited_units)
+        })
 }
 
 fn phase3_ok(state: &RepositoryState, config: &ServerConfig, account_ids: &HashSet<&str>) -> bool {

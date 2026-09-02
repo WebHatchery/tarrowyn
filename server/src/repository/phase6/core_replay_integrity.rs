@@ -20,6 +20,9 @@ fn identity_ok(identity: &Identity) -> bool {
         && cache_ok(&identity.foundation_forge_results, |response| {
             &response.request_id
         })
+        && cache_ok(&identity.foundation_storehouse_results, |response| {
+            &response.request_id
+        })
 }
 
 fn cache_ok<T>(

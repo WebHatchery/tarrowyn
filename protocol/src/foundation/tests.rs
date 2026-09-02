@@ -180,6 +180,7 @@ fn storehouse_contract_has_exact_substitutable_needs_and_bounded_visible_stages(
     let request = FoundationStorehouseRequest {
         request_id: "storehouse-gold-1".to_owned(),
         action: FoundationStorehouseAction::Contribute,
+        landmark_id: "builder-mara".to_owned(),
         contribution: Some(FoundationStorehouseContributionInput::Gold {
             toward: FoundationResourceKind::Stone,
             amount: 6,

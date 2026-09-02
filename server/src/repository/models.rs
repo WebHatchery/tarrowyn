@@ -3,7 +3,9 @@ use super::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::hash::Hash;
-use tarrowyn_protocol::{FarmPlot, FoundationActivityState, FrontierEvent};
+use tarrowyn_protocol::{
+    FarmPlot, FoundationActivityState, FoundationStorehouseResponse, FrontierEvent,
+};
 
 pub(super) const MAX_REPLAY_CACHE: usize = 512;
 
@@ -59,6 +61,8 @@ pub(crate) struct Identity {
     pub(super) foundation_cache_results: HashMap<String, FoundationCacheResponse>,
     #[serde(default)]
     pub(super) foundation_forge_results: HashMap<String, FoundationForgeResponse>,
+    #[serde(default)]
+    pub(super) foundation_storehouse_results: HashMap<String, FoundationStorehouseResponse>,
     #[serde(default = "default_weapon")]
     pub(super) weapon: WeaponKind,
     #[serde(default)]
@@ -195,6 +199,7 @@ impl RepositoryState {
             trim_replay_cache(&mut identity.foundation_forge_results);
             trim_replay_cache(&mut identity.foundation_resource_results);
             trim_replay_cache(&mut identity.foundation_cache_results);
+            trim_replay_cache(&mut identity.foundation_storehouse_results);
         }
         let mut foundation_activity = stored.foundation_activity;
         super::foundation::restore(&mut foundation_activity);

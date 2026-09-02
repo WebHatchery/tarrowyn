@@ -11,10 +11,11 @@ use tarrowyn_protocol::{
     AuthRefreshRequest, AuthRevokeRequest, ChatRequest, ClaimLifecycleRequest, ClaimRequest,
     CombatRequest, ContractRequest, ExpeditionRequest, FarmingRequest, FoundationCacheRequest,
     FoundationForgeRequest, FoundationInteractionRequest, FoundationResourceRequest,
-    GovernanceAction, GovernanceRequest, KnowledgeAction, KnowledgeRequest, LocalCombatRequest,
-    MarketOrderRequest, ModerationReportRequest, MovementIntent, OpsHealthResponse,
-    ProfessionRequest, RecoveryRequest, RegionalEventRequest, RouteRequest, SkillRequest,
-    SupportRepairRequest, TradeRequest, TravelRequest, PROTOCOL_VERSION,
+    FoundationStorehouseRequest, GovernanceAction, GovernanceRequest, KnowledgeAction,
+    KnowledgeRequest, LocalCombatRequest, MarketOrderRequest, ModerationReportRequest,
+    MovementIntent, OpsHealthResponse, ProfessionRequest, RecoveryRequest, RegionalEventRequest,
+    RouteRequest, SkillRequest, SupportRepairRequest, TradeRequest, TravelRequest,
+    PROTOCOL_VERSION,
 };
 use tiny_http::{Header, Method, Request, Response, Server, StatusCode};
 
@@ -299,6 +300,14 @@ fn handle_request(
             match read_json::<FoundationForgeRequest>(&mut request) {
                 Ok(body) => authenticated(&request, &repository, |token| {
                     repository.foundation_forge(token, body)
+                }),
+                Err(error) => error_response(400, "invalid_json", error, repository.health().meta),
+            }
+        }
+        (Method::Post, "/v1/foundation/storehouse") => {
+            match read_json::<FoundationStorehouseRequest>(&mut request) {
+                Ok(body) => authenticated(&request, &repository, |token| {
+                    repository.foundation_storehouse(token, body)
                 }),
                 Err(error) => error_response(400, "invalid_json", error, repository.health().meta),
             }
