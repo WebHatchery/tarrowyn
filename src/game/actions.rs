@@ -38,6 +38,32 @@ pub(super) fn parse_foundation_forge_command(value: &str) -> Option<FoundationFo
     }
 }
 
+pub(super) fn parse_cooperation_trade_command(value: &str) -> Option<TradeRequest> {
+    let (action, selector) = if let Some(account_id) = value.strip_prefix("cooperation-offer-ore:")
+    {
+        (TradeAction::Create, account_id)
+    } else if let Some(trade_id) = value.strip_prefix("cooperation-accept-ore:") {
+        (TradeAction::Accept, trade_id)
+    } else {
+        let trade_id = value.strip_prefix("cooperation-review-ore:")?;
+        (TradeAction::Review, trade_id)
+    };
+    if selector.is_empty() || selector.len() > 160 || selector.chars().any(char::is_control) {
+        return None;
+    }
+    Some(TradeRequest {
+        request_id: String::new(),
+        action,
+        trade_id: (action != TradeAction::Create).then(|| selector.to_owned()),
+        recipient_account_id: (action == TradeAction::Create).then(|| selector.to_owned()),
+        offer: (action == TradeAction::Create).then_some(TradeBundle {
+            iron_ore: 2,
+            ..TradeBundle::default()
+        }),
+        request: (action == TradeAction::Create).then_some(TradeBundle::default()),
+    })
+}
+
 pub(super) fn apply_chronicle_key(query: &mut String, key: &str) {
     match key {
         "space" if query.chars().count() < 80 => query.push(' '),
@@ -170,6 +196,10 @@ impl Game {
         }
         if let Some(action) = parse_foundation_forge_command(id) {
             client.queue_foundation_forge(action);
+            return;
+        }
+        if let Some(request) = parse_cooperation_trade_command(id) {
+            client.queue_trade(request);
             return;
         }
         if let Some(interaction_id) = id.strip_prefix("foundation:") {

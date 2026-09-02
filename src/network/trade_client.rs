@@ -8,7 +8,12 @@ pub(super) fn trade_success_message(
     let Some(trade) = trade else {
         return trade_action_success_message(action).to_owned();
     };
+    let beacon_ore = trade.offer.iron_ore >= 2;
     match action {
+        Some(TradeAction::Create) if beacon_ore => format!(
+            "First Beacon ore offered to {}; once accepted, the goal is 5 actions together vs 6 solo.",
+            trade.recipient_name
+        ),
         Some(TradeAction::Create) => format!(
             "Offer sent to {}; give {}, receive {}.",
             trade.recipient_name,
@@ -20,6 +25,10 @@ pub(super) fn trade_success_message(
             trade.recipient_name,
             trade_bundle_summary(trade.offer),
             trade_bundle_summary(trade.request)
+        ),
+        Some(TradeAction::Accept) if beacon_ore => format!(
+            "First Beacon ore received from {}; make charcoal, a handle, then forge the tool (5 actions together vs 6 solo).",
+            trade.creator_name
         ),
         Some(TradeAction::Accept) => format!(
             "Trade completed with {}; exchanged {} for {}.",
@@ -213,6 +222,7 @@ impl OnlineClient {
                             .unwrap_or_else(|| "The trade was rejected.".to_owned()),
                     ));
                 }
+                self.state_refresh = 0.0;
                 self.pending_trades = Some(self.api.get("/v1/trades"));
             }
             Err(error)

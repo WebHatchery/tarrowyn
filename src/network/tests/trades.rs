@@ -226,3 +226,29 @@ fn trade_success_notice_explains_the_accepted_exchange() {
         "Trade completed with Mara; exchanged 1 moonberry, 3 gold for 2 wheat, 1 seed."
     );
 }
+
+#[test]
+fn beacon_ore_trade_feedback_names_the_measured_next_work() {
+    let trade = tarrowyn_protocol::TradeOffer {
+        trade_id: "trade-beacon".to_owned(),
+        creator_account_id: "miner".to_owned(),
+        creator_name: "Miner".to_owned(),
+        recipient_account_id: "smith".to_owned(),
+        recipient_name: "Smith".to_owned(),
+        offer: tarrowyn_protocol::TradeBundle {
+            iron_ore: 2,
+            ..Default::default()
+        },
+        request: tarrowyn_protocol::TradeBundle::default(),
+        status: tarrowyn_protocol::TradeStatus::Accepted,
+        created_tick: 1,
+        expires_tick: 10,
+    };
+
+    let detail = super::super::trade_client::trade_success_message(
+        Some(tarrowyn_protocol::TradeAction::Accept),
+        Some(&trade),
+    );
+    assert!(detail.contains("make charcoal, a handle, then forge"));
+    assert!(detail.contains("5 actions together vs 6 solo"));
+}

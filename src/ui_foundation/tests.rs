@@ -2,10 +2,140 @@ use super::*;
 use crate::state::{CropKind, CropState, TileKind, WorldState};
 use macroquad_toolkit::grid::FlatGrid;
 use tarrowyn_protocol::{
-    FieldWeather, FoundationActivityState, FoundationFieldToolKind, FoundationForgeAction,
-    FoundationInteraction, FoundationResourceDeposit, FoundationResourceKind,
-    FoundationResourceNode, Position,
+    FieldWeather, FoundationActivityState, FoundationCooperationWorkCredit,
+    FoundationCooperationWorkKind, FoundationFieldToolKind, FoundationForgeAction,
+    FoundationForgeMaterialAmount, FoundationForgeMaterialKind, FoundationInteraction,
+    FoundationResourceDeposit, FoundationResourceKind, FoundationResourceNode, Position,
+    TradeBundle, TradeOffer, TradeStatus,
 };
+
+fn work_credit(
+    account_id: &str,
+    kind: FoundationCooperationWorkKind,
+    material_kind: FoundationForgeMaterialKind,
+    amount: u32,
+) -> FoundationCooperationWorkCredit {
+    FoundationCooperationWorkCredit {
+        account_id: account_id.to_owned(),
+        kind,
+        materials: vec![FoundationForgeMaterialAmount {
+            kind: material_kind,
+            amount,
+        }],
+        tick: 1,
+    }
+}
+
+fn remote(account_id: &str, name: &str) -> crate::network::RemotePlayer {
+    crate::network::RemotePlayer {
+        account_id: account_id.to_owned(),
+        character_id: format!("character-{account_id}"),
+        display_name: name.to_owned(),
+        position: TilePos::new(8, 6),
+        last_seen_tick: 1,
+        online: true,
+    }
+}
+
+#[test]
+fn credited_miner_gets_a_touch_first_two_ore_offer() {
+    let mut activity = FoundationActivityState::default();
+    activity.cooperation.recent_work.push(work_credit(
+        "miner",
+        FoundationCooperationWorkKind::Mine,
+        FoundationForgeMaterialKind::IronOre,
+        2,
+    ));
+    let inventory = tarrowyn_protocol::Inventory {
+        iron_ore: 2,
+        ..Default::default()
+    };
+    let choice = nearby_cooperation_choice(
+        &activity,
+        Some(&inventory),
+        Some("miner"),
+        &[remote("miner", "Miner"), remote("smith", "Smith")],
+        &[],
+        1,
+    )
+    .expect("eligible offer");
+
+    assert_eq!(choice.label, "Offer 2 ore");
+    assert_eq!(choice.command, "cooperation-offer-ore:smith");
+    assert!(choice.detail.contains("5 actions together vs 6 solo"));
+}
+
+#[test]
+fn credited_logger_gets_the_exact_incoming_ore_acceptance() {
+    let mut activity = FoundationActivityState::default();
+    activity.cooperation.recent_work.extend([
+        work_credit(
+            "miner",
+            FoundationCooperationWorkKind::Mine,
+            FoundationForgeMaterialKind::IronOre,
+            2,
+        ),
+        work_credit(
+            "smith",
+            FoundationCooperationWorkKind::Log,
+            FoundationForgeMaterialKind::Timber,
+            2,
+        ),
+    ]);
+    let inventory = tarrowyn_protocol::Inventory {
+        timber: 2,
+        ..Default::default()
+    };
+    let trade = TradeOffer {
+        trade_id: "trade-7".to_owned(),
+        creator_account_id: "miner".to_owned(),
+        creator_name: "Miner".to_owned(),
+        recipient_account_id: "smith".to_owned(),
+        recipient_name: "Smith".to_owned(),
+        offer: TradeBundle {
+            iron_ore: 2,
+            ..Default::default()
+        },
+        request: TradeBundle::default(),
+        status: TradeStatus::Pending,
+        created_tick: 1,
+        expires_tick: 20,
+    };
+    let choice = nearby_cooperation_choice(
+        &activity,
+        Some(&inventory),
+        Some("smith"),
+        &[remote("miner", "Miner"), remote("smith", "Smith")],
+        &[trade],
+        1,
+    )
+    .expect("eligible acceptance");
+
+    assert_eq!(choice.label, "Accept 2 ore");
+    assert_eq!(choice.command, "cooperation-accept-ore:trade-7");
+    assert!(choice.detail.contains("charcoal, a handle, and the tool"));
+}
+
+#[test]
+fn uncredited_goods_do_not_claim_the_measured_cooperation_shortcut() {
+    let inventory = tarrowyn_protocol::Inventory {
+        iron_ore: 2,
+        ..Default::default()
+    };
+    assert!(nearby_cooperation_choice(
+        &FoundationActivityState::default(),
+        Some(&inventory),
+        Some("miner"),
+        &[remote("smith", "Smith")],
+        &[],
+        1,
+    )
+    .is_none());
+    assert!(
+        cooperation_detail(&FoundationActivityState::default(), Some("miner"))
+            .contains("Solo fallback open")
+    );
+}
 
 fn farm_world(crop: Option<CropState>) -> WorldState {
     let mut tiles = FlatGrid::new(4, 4, TileKind::Meadow);

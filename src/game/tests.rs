@@ -1,6 +1,7 @@
 use super::{
     actions::{
-        apply_chronicle_key, parse_foundation_cache_command, parse_foundation_forge_command,
+        apply_chronicle_key, parse_cooperation_trade_command, parse_foundation_cache_command,
+        parse_foundation_forge_command,
     },
     input::{
         keyboard_gameplay_blocked, keyboard_movement_direction, normalized_movement_direction,
@@ -77,6 +78,20 @@ fn shared_cache_touch_commands_route_to_typed_actions() {
         parse_foundation_cache_command("foundation-cache:deposit:none"),
         None
     );
+}
+
+#[test]
+fn cooperation_touch_commands_build_exact_atomic_trade_requests() {
+    let offer = parse_cooperation_trade_command("cooperation-offer-ore:account-2").unwrap();
+    assert_eq!(offer.action, tarrowyn_protocol::TradeAction::Create);
+    assert_eq!(offer.recipient_account_id.as_deref(), Some("account-2"));
+    assert_eq!(offer.offer.unwrap().iron_ore, 2);
+    assert!(offer.request.unwrap().is_empty());
+
+    let accept = parse_cooperation_trade_command("cooperation-accept-ore:trade-4").unwrap();
+    assert_eq!(accept.action, tarrowyn_protocol::TradeAction::Accept);
+    assert_eq!(accept.trade_id.as_deref(), Some("trade-4"));
+    assert!(parse_cooperation_trade_command("cooperation-offer-ore:").is_none());
 }
 
 #[test]

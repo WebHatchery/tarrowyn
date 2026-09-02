@@ -3,7 +3,7 @@ use macroquad_toolkit::ui::draw_ui_text_ex;
 use tarrowyn_protocol::{
     FarmingAction, FieldWeather, FoundationActivityState, FoundationBaseline,
     FoundationCacheAction, FoundationFieldToolKind, FoundationForgeAction, FoundationLandmark,
-    FoundationResourceAction, FoundationResourceKind, Inventory,
+    FoundationResourceAction, FoundationResourceKind, Inventory, TradeOffer, TradeStatus,
 };
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -82,6 +82,148 @@ struct NearbyForgeChoice {
     action: FoundationForgeAction,
     label: &'static str,
     detail: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct NearbyCooperationChoice {
+    label: &'static str,
+    detail: String,
+    command: String,
+}
+
+fn nearby_cooperation_choice(
+    activity: &FoundationActivityState,
+    inventory: Option<&Inventory>,
+    own_account_id: Option<&str>,
+    players: &[crate::network::RemotePlayer],
+    trades: &[TradeOffer],
+    server_tick: u64,
+) -> Option<NearbyCooperationChoice> {
+    let own_account_id = own_account_id?;
+    let inventory = inventory?;
+    let goal = &activity.cooperation.goal;
+    let required_ore = goal
+        .required_inputs
+        .iter()
+        .find(|material| material.kind == tarrowyn_protocol::FoundationForgeMaterialKind::IronOre)
+        .map_or(0, |material| material.amount);
+    let required_timber = goal
+        .required_inputs
+        .iter()
+        .find(|material| material.kind == tarrowyn_protocol::FoundationForgeMaterialKind::Timber)
+        .map_or(0, |material| material.amount);
+    let credited = |account_id: &str,
+                    kind: tarrowyn_protocol::FoundationCooperationWorkKind,
+                    material_kind: tarrowyn_protocol::FoundationForgeMaterialKind,
+                    amount: u32| {
+        activity.cooperation.recent_work.iter().any(|credit| {
+            credit.account_id == account_id
+                && credit.kind == kind
+                && credit
+                    .materials
+                    .iter()
+                    .any(|material| material.kind == material_kind && material.amount >= amount)
+        })
+    };
+    let timber_credited = credited(
+        own_account_id,
+        tarrowyn_protocol::FoundationCooperationWorkKind::Log,
+        tarrowyn_protocol::FoundationForgeMaterialKind::Timber,
+        required_timber,
+    );
+    if inventory.timber >= required_timber && timber_credited {
+        if let Some(trade) = trades.iter().find(|trade| {
+            trade.status == TradeStatus::Pending
+                && trade.recipient_account_id == own_account_id
+                && trade.offer.iron_ore >= required_ore
+                && credited(
+                    &trade.creator_account_id,
+                    tarrowyn_protocol::FoundationCooperationWorkKind::Mine,
+                    tarrowyn_protocol::FoundationForgeMaterialKind::IronOre,
+                    required_ore,
+                )
+        }) {
+            return Some(NearbyCooperationChoice {
+                label: "Accept 2 ore",
+                detail: format!(
+                    "Accept {}'s ore, then make charcoal, a handle, and the tool: {} actions together vs {} solo.",
+                    trade.creator_name,
+                    goal.cooperative_target_work_actions,
+                    goal.solo_work_actions
+                ),
+                command: format!("cooperation-accept-ore:{}", trade.trade_id),
+            });
+        }
+    }
+    if let Some(trade) = trades.iter().find(|trade| {
+        trade.status == TradeStatus::Pending
+            && trade.creator_account_id == own_account_id
+            && trade.offer.iron_ore >= required_ore
+    }) {
+        return Some(NearbyCooperationChoice {
+            label: "Review ore offer",
+            detail: format!(
+                "{} has your {}-ore offer. The measured target is {} actions together vs {} solo.",
+                trade.recipient_name,
+                required_ore,
+                goal.cooperative_target_work_actions,
+                goal.solo_work_actions
+            ),
+            command: format!("cooperation-review-ore:{}", trade.trade_id),
+        });
+    }
+    if inventory.iron_ore < required_ore
+        || required_ore == 0
+        || !credited(
+            own_account_id,
+            tarrowyn_protocol::FoundationCooperationWorkKind::Mine,
+            tarrowyn_protocol::FoundationForgeMaterialKind::IronOre,
+            required_ore,
+        )
+    {
+        return None;
+    }
+    let target = players
+        .iter()
+        .find(|player| player.account_id != own_account_id && !player.stale(server_tick))?;
+    Some(NearbyCooperationChoice {
+        label: "Offer 2 ore",
+        detail: format!(
+            "Send {} ore to {} for the First Beacon tool: {} actions together vs {} solo.",
+            required_ore,
+            target.display_name,
+            goal.cooperative_target_work_actions,
+            goal.solo_work_actions
+        ),
+        command: format!("cooperation-offer-ore:{}", target.account_id),
+    })
+}
+
+fn cooperation_detail(activity: &FoundationActivityState, own_account_id: Option<&str>) -> String {
+    let cooperation = &activity.cooperation;
+    if let Some(result) = cooperation.latest_result.as_ref() {
+        return format!(
+            "First Beacon tool: {}/{} accepted actions; {} saved through barter.",
+            result.work_actions, cooperation.goal.solo_work_actions, result.saved_work_actions
+        );
+    }
+    if let Some(attempt) = own_account_id.and_then(|account_id| {
+        cooperation
+            .active_attempts
+            .iter()
+            .find(|attempt| attempt.coordinator_account_id == account_id)
+    }) {
+        return format!(
+            "Ore received: {}/{} actions. Make charcoal, handle, then iron tool; solo needs {}.",
+            attempt.work_actions,
+            cooperation.goal.cooperative_target_work_actions,
+            cooperation.goal.solo_work_actions
+        );
+    }
+    format!(
+        "Goal: 2 timber + 2 ore -> iron tool. Solo {} actions; practiced-miner partnership {}. Solo fallback open.",
+        cooperation.goal.solo_work_actions, cooperation.goal.cooperative_target_work_actions
+    )
 }
 
 fn nearby_forge_choice(
@@ -306,6 +448,14 @@ pub(super) fn draw_context_deck(
                 ctx.field_tool_condition,
             )
         });
+    let cooperation_choice = nearby_cooperation_choice(
+        ctx.foundation_activity,
+        ctx.player_inventory,
+        ctx.own_account_id,
+        ctx.remote_players,
+        ctx.trades,
+        ctx.server_tick,
+    );
     draw_ui_text_ex(
         "NEARBY",
         18.0,
@@ -313,14 +463,30 @@ pub(super) fn draw_context_deck(
         TextStyle::new(8.0, MINT).params(),
     );
 
-    let name = match (context.as_ref(), farm_choice.as_ref()) {
-        (Some(context), _) => context.landmark.name.as_str(),
-        (None, Some(_)) => "Shared fields",
-        (None, None) => "First Beacon camp",
+    let name = match (
+        cooperation_choice.as_ref(),
+        context.as_ref(),
+        farm_choice.as_ref(),
+    ) {
+        (Some(_), _, _) => ctx.foundation_activity.cooperation.goal.title.as_str(),
+        (None, Some(context), _) => context.landmark.name.as_str(),
+        (None, None, Some(_)) => "Shared fields",
+        (None, None, None) => "First Beacon camp",
     };
-    let detail = farm_choice
+    let cooperation_relevant = cooperation_choice.is_some()
+        || context.as_ref().is_some_and(|context| {
+            matches!(
+                context.interaction_action,
+                "arrive_or_travel" | "borrow_crude_tool" | "log" | "mine" | "smith"
+            )
+        });
+    let cooperation_status = cooperation_relevant
+        .then(|| cooperation_detail(ctx.foundation_activity, ctx.own_account_id));
+    let detail = cooperation_choice
         .as_ref()
         .map(|choice| choice.detail.as_str())
+        .or(cooperation_status.as_deref())
+        .or_else(|| farm_choice.as_ref().map(|choice| choice.detail.as_str()))
         .or_else(|| forge_choice.as_ref().map(|choice| choice.detail.as_str()))
         .unwrap_or_else(|| {
             context.as_ref().map_or(
@@ -339,10 +505,11 @@ pub(super) fn draw_context_deck(
         TextStyle::new(10.0, CREAM).params(),
     );
 
-    if context.is_some() || farm_choice.is_some() {
-        let label = farm_choice
+    if cooperation_choice.is_some() || context.is_some() || farm_choice.is_some() {
+        let label = cooperation_choice
             .as_ref()
             .map(|choice| choice.label)
+            .or_else(|| farm_choice.as_ref().map(|choice| choice.label))
             .or_else(|| forge_choice.as_ref().map(|choice| choice.label))
             .unwrap_or_else(|| {
                 context
@@ -353,7 +520,9 @@ pub(super) fn draw_context_deck(
             });
         let enabled = ctx.connection == ConnectionState::Online
             && ctx.player_position_authoritative
-            && if farm_choice.is_some() {
+            && if cooperation_choice.is_some() {
+                !ctx.trade_pending
+            } else if farm_choice.is_some() {
                 !ctx.farming_pending
             } else {
                 !ctx.foundation_interaction_pending
@@ -365,7 +534,9 @@ pub(super) fn draw_context_deck(
             ButtonTone::Positive,
             mouse,
         ) {
-            let command = if let Some(choice) = farm_choice.as_ref() {
+            let command = if let Some(choice) = cooperation_choice.as_ref() {
+                choice.command.clone()
+            } else if let Some(choice) = farm_choice.as_ref() {
                 match choice.action {
                     FarmingAction::Plant => "plant".to_owned(),
                     FarmingAction::Tend => "tend".to_owned(),
