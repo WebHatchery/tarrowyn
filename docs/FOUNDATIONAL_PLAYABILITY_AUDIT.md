@@ -1,6 +1,6 @@
 # Foundational playability audit
 
-Status: project-27 F4 connected production implemented and accepted on
+Status: project-27 F5 connected cooperation implemented and accepted on
 2026-09-02; subjective enjoyment and personal tent placement remain explicitly
 unproven or missing.
 
@@ -32,6 +32,15 @@ growth, untended maturity, harvest, replant, useful maintenance, replay, and
 persistence. This proves the fixed short visit works; it does not substitute
 for human evidence that the visit feels enjoyable.
 
+The fixed First Beacon iron-tool goal now proves local interdependence without
+a class gate. An uncommitted player can self-supply in six accepted
+gather/forge actions. A player who voluntarily practises Mining to mastery two
+extracts both required ore in one action, trades them atomically to a
+logger/smith, and the two players complete the same tool in five actions. The
+durable result records both contributions, the accepted trade, and one saved
+action; touch-first nearby controls expose offer, acceptance, next forge work,
+the measured result, and the unchanged solo fallback.
+
 F0 adds no onboarding or gameplay. It establishes
 `first-beacon-baseline-v1` in `assets/data/region.json`: 12 stable, visible
 landmark records and 12 server-authoritative interaction records. The existing
@@ -44,9 +53,9 @@ Status totals below are generated from the 132 requirements in this matrix:
 
 | Status | Count |
 |---|---:|
-| usable | 37 |
+| usable | 39 |
 | partial | 43 |
-| missing | 38 |
+| missing | 36 |
 | conflicting | 1 |
 | deliberately deferred | 13 |
 
@@ -72,6 +81,10 @@ Status totals below are generated from the 132 requirements in this matrix:
   `src/network/foundation.rs`, `src/ui_foundation.rs`,
   `scripts/verify_foundation_forge.ps1`, and
   `FOUNDATIONAL_PLAYABILITY_F4_RUNBOOK.md`.
+- **F5 cooperation:** `server/src/repository/foundation/cooperation.rs`,
+  `server/src/repository/trades.rs`, `src/ui_foundation.rs`,
+  `scripts/verify_foundation_cooperation.ps1`, and
+  `FOUNDATIONAL_PLAYABILITY_F5_RUNBOOK.md`.
 - **Civic/region:** `server/src/repository/phase4.rs`,
   `server/src/repository/phase5.rs`, `assets/data/infrastructure.json`,
   `assets/data/settlements.json`.
@@ -128,7 +141,7 @@ boundary, status, owner and risk.
 | FA-03 | Mining produces stone, clay, coal and metal ore. | partial | Authoritative mining produces persistent stone and iron ore from bounded deposits, and the forge consumes that ore. | **Mine stone** supplies the iron-tool recipe; clay and coal remain absent. | F6 | Keep the mineral set small until construction requires more. |
 | FA-04 | Exploration discovers deposits, seeds, routes and settlement sites. | partial | Movement/travel, routes, regional sites and event projections exist. | Routes and locations are visible; discoveries are prelisted rather than found. | F2/F9 | Avoid turning exploration into a menu reveal. |
 | FA-05 | Basic smithing combines ore, fuel and components into useful tools. | usable | Proximity-checked forge atomically combines two ore, charcoal, and a timber handle into a typed iron tool. | The nearby deck exposes every preparation and crafting step plus the resulting `6/6` tool. | F4 regression | Preserve exact recipe accounting and replay safety. |
-| FA-06 | Barter/direct trade is basic and atomic. | usable | `/v1/trades`, escrow validation, replay-safe acceptance. | Visible review/accept/cancel path. | F5 | Fixed proof must show cooperation saves time. |
+| FA-06 | Barter/direct trade is basic and atomic. | usable | `/v1/trades` atomically moves the fixed two-ore offer and returns stable retry/restart responses. | Nearby **Offer 2 ore** and **Accept 2 ore** actions share the existing review/accept/cancel ledger. | F5 regression | Preserve the canonical trade authority; do not add a cooperation inventory. |
 | FA-07 | Construction works through the builder NPC. | missing | Baseline builder/site records; civic projects exist. | No player-builder interaction or material contribution loop. | F6 | Reuse authoritative project ledgers; do not add parallel persistence. |
 | EC-01 | Farmers produce food, seeds and useful plant material. | partial | Crops and seeds exist and trade. | Food crops/seeds are visible; other plant materials are absent. | F3/F7 | Minimal additions should serve a real production chain. |
 | EC-02 | Loggers support fuel, fencing and tool components. | partial | Connected timber supplies forge charcoal and handles through atomic recipes. | A logger can supply both forge derivatives; fencing remains absent. | F6 | Reuse timber for only the selected construction proof. |
@@ -136,7 +149,7 @@ boundary, status, owner and risk.
 | EC-04 | Blacksmiths make useful tools from ore, fuel and other components. | usable | The unrestricted forge consumes gathered ore, prepared fuel, and a handle for an iron field tool. | Touch controls complete the whole recipe and show the resulting capacity. | F4 regression | Later specialisation may improve efficiency, not gate the base loop. |
 | EC-05 | Explorers reveal resources, routes and settlement opportunities. | partial | Regional map, events, locations and pioneer outpost exist. | Players can inspect known routes/sites; revealing them is absent. | F2/F9 | Stable discovery state must remain server-owned. |
 | EC-06 | Builders consume money/materials and create visible structures. | partial | Governance/public projects consume treasury; baseline builder/site records. | Public actions are ledgers, not builder-led structures appearing in the world. | F6 | Project completion must transform authoritative map state. |
-| EC-07 | Crude tools always provide fallback; improved tools measurably save time/actions/materials. | usable | Every identity defaults to a three-action crude field tool; the forge makes a six-action iron tool without a class gate. | Connected acceptance measures exactly three versus six useful tends, while fresh players retain the crude fallback. | F4 regression | Later balance changes must retain a measured benefit and non-blocking fallback. |
+| EC-07 | Crude tools always provide fallback; improved tools measurably save time/actions/materials. | usable | Every identity defaults to crude access; iron tools double useful field actions, and voluntary Mining practice reduces the iron-tool production path from six to five actions through barter. | Connected acceptance measures both benefits while fresh solo players retain the complete crude self-supply path. | F4/F5 regression | Later balance changes must retain measured benefits and non-blocking fallback. |
 
 ### First settlement and builder
 
@@ -214,7 +227,7 @@ boundary, status, owner and risk.
 | UI-03 | Woodland and mine contexts expose logging/mining. | usable | Nearest-landmark context selects typed resource commands against authoritative node records. | **Gather timber** and **Mine stone** appear beside their sites and report accepted yields or depletion. | F2 regression | Do not duplicate these actions in a permanent command row. |
 | UI-04 | Forge, NPC and construction-site contexts expose work, talk/trade/help and needs/contribution. | partial | Shared landmark context drives Mara, board, and dynamic forge work. | NPC talk and forge work are touch-first; construction needs/contribution remain absent. | F6 | Extend the same context model for contribution. |
 | UI-05 | Journal carries ambitions/discoveries/work; noticeboard carries local needs/opportunities/projects. | partial | Chronicle, knowledge, notices, demands, contracts and world noticeboard context exist. | The board carries the first local need; a cohesive personal journal remains absent. | F7 | Avoid duplicating authoritative data in local saves. |
-| UI-06 | Only relevant contextual actions are prominent; every required action has a visible tap/click path. | partial | F1 bottom deck contains the nearest action and **All tools**. | Arrival and recovery remain touch-capable without a permanent command wall. | F7 | Apply the hierarchy across the cohesive first hour. |
+| UI-06 | Only relevant contextual actions are prominent; every required action has a visible tap/click path. | partial | The F1–F5 nearby deck selects physical work plus eligible barter while **All tools** remains available. | Gathering, farming, forge preparation, ore offer/acceptance and recovery are touch-capable without a permanent command wall; construction and the cohesive first hour remain incomplete. | F6/F7 | Apply the same hierarchy to construction and the complete journey. |
 | AG-01 | Narrowly protect beacons, commons, routes, entrances, claims, shared resources and escape paths. | partial | Authority validates bounds/collision/claims and no-PvP ownership; baseline supplies stable spaces. | No construction placement exists to exercise most guards. | F2/F8/F9 | Spatial rules must be automated before player placement ships. |
 | AG-02 | Protections prevent critical-space grief without erasing early land advantage. | missing | No physical placement/commons acceptance fixture. | No player evidence. | F8 | Avoid global no-build buffers that sterilise settlement growth. |
 | AG-03 | PvP, theft and destructive crime do not threaten foundational property. | usable | `/v1/law` disables PvP/theft; support mutations are audited. | Client displays protected-law boundary. | F8–F10 regression | Future law work must be opt-in and separately designed. |
@@ -228,14 +241,14 @@ boundary, status, owner and risk.
 | IS-03 | Farming, logging, mining and exploration. | usable | Farming/exploration plus persistent logging and mining use server-owned actions and state. | Each activity has a connected, visible client path. | F2/F3 regression | Keep each first loop small and spatial. |
 | IS-04 | Rough forge, basic smithing, crude and improved tools. | usable | Physical forge recipes consume F2 materials; typed crude and iron tools have three- and six-action capacities. | The connected touch path prepares inputs, forges iron, measures its benefit, and preserves crude access. | F4 regression | Keep condition and recipe state durable. |
 | IS-05 | A few crops, trees and minerals. | usable | Three crops plus bounded timber, stone and iron-ore deposits are authoritative resource state. | Crops, woodland timber and shallow-seam minerals are productively reachable. | F2/F3 regression | Avoid content breadth beyond the fixed proof. |
-| IS-06 | Basic barter/direct trade. | usable | Atomic direct trade. | Visible trade review/accept/cancel. | F5 | Add specialisation proof, not a second trade system. |
+| IS-06 | Basic barter/direct trade. | usable | Atomic direct trade now carries all fixed foundation materials and anchors the durable cooperation result. | Exact ore offer/accept quick actions plus visible general review/accept/cancel. | F5 regression | Keep trade canonical and replay-safe. |
 | IS-07 | One communal construction project. | partial | Generic civic projects and storehouse-site baseline. | No visible contribution/transformation. | F6 | Storehouse is the selected first proof. |
 | IS-08 | Contextual world interactions. | partial | Server checks stable interaction IDs and authoritative distance; client selects the nearest landmark. | F1 interactions are contextual; later activities still need migration. | F2/F4/F6/F7 | Reuse the shared architecture. |
 | IS-09 | Persistent resources, property and world changes. | partial | Inventory/crops/claims/civic/region state persist. | Resources and abstract claims persist; foundational physical property does not. | F2/F6/F8 | Avoid local client truth. |
-| IS-10 | Two players can save each other meaningful time through economic connection. | missing | Trade and orders exist. | No fixed comparative production goal demonstrates the saving. | F5 | Must measure actions or world time. |
+| IS-10 | Two players can save each other meaningful time through economic connection. | usable | The connected F5 harness records two contributors completing the iron-tool goal in five accepted actions versus the six-action solo baseline. | Nearby status reports `5/6 accepted actions` and `1 saved through barter`. | F5 regression | Human preference remains separate evidence; preserve the measurable saving. |
 | SC-01 | New player tries several activities without a class. | partial | No classes; farming, exploration, logging, mining, smithing, and root practice work. | All selected activities are independently available without selection; one cohesive first-hour pass remains unproven. | F7 | Integrate rather than add a class gate. |
 | SC-02 | Different players naturally prefer different activities. | missing | Automated role labels do not establish preference. | No human observational evidence. | F7 | Requires playtest, not telemetry alone. |
-| SC-03 | Players trade because cooperation saves time. | missing | Atomic trade exists. | Time-saving motivation is unproven. | F5/F7 | Fixed comparison precedes human evidence. |
+| SC-03 | Players trade because cooperation saves time. | usable | The fixed two-ore trade is the causal bridge between one-action specialist extraction and the five-action shared result. | Both clients see five together versus six solo before offering/accepting and one saved afterward. | F5/F7 regression | Automation proves the incentive and path, not subjective preference. |
 | SC-04 | A 15-minute visit feels useful. | partial | The connected F3 scenario fits inspect, offline growth, harvest, replant and optional upkeep into one modeled 15-minute return. | The fixed useful actions are visible, but subjective value has not been observed with a human player. | F7 | Tune cadence from observed play; automation cannot establish enjoyment. |
 | SC-05 | A longer session creates memorable improvement or discovery. | partial | Knowledge, projects, combat, travel and chronicle changes exist. | Automated playthroughs record outcomes; human evidence remains desired. | F7 | Player meaning cannot be claimed from server state. |
 | SC-06 | Collected resources have visible purposes. | partial | Noticeboard needs, cache storage, and forge recipes use the same gathered inventory. | Timber and ore now expose a physical production purpose; settlement contribution remains absent. | F6/F7 | World sites should show needs before collection. |
@@ -379,14 +392,35 @@ and `IS-04` were `missing`. Broader rows remain conservative where fencing,
 construction, first-hour cohesion, or human experience is still absent. The
 matrix remains exactly 132 rows.
 
-## Risks after the F4 production boundary
+The project-27 F5 cooperation proof is documented in
+[`FOUNDATIONAL_PLAYABILITY_F5_RUNBOOK.md`](FOUNDATIONAL_PLAYABILITY_F5_RUNBOOK.md)
+and can be repeated with:
+
+```powershell
+.\scripts\verify_foundation_cooperation.ps1
+```
+
+On 2026-09-02 it passed focused touch and authority tests plus a live
+three-identity HTTP scenario covering voluntary practice, specialist yield,
+exact atomic barter, contribution attribution, five-versus-six work, retries,
+restart persistence, integrity, and unrestricted solo completion. The full
+tree passed 823 tests before the documentation-only reconciliation, clippy,
+formatting, diff and source-size checks, followed by Windows/WebGL preview
+publication.
+
+F5 promotes `IS-10` and `SC-03` from `missing` to `usable`. `FA-06`, `EC-07`,
+`UI-06`, and `IS-06` gain stronger implementation/player evidence without
+changing status. Construction, first-hour cohesion, and subjective player
+preference remain conservative. The matrix remains exactly 132 rows.
+
+## Risks after the F5 cooperation boundary
 
 1. **Placement safety:** personal tents still need visible touch placement plus
    collision, commons, route, entrance and escape-path rejection without
    prematurely implementing F8's permanent enclosures.
-2. **Construction connection:** timber, stone and iron ore now feed storage and
-   the rough forge, but F6 must connect the same inventory to the storehouse
-   without a parallel material source.
+2. **Construction connection:** timber, stone and iron ore now feed storage,
+   barter and the rough forge, but F6 must connect the same inventory to the
+   storehouse without a parallel material source.
 3. **Mature-state compatibility:** foundational nodes and cache state must
    continue to coexist with Phase 4–6 regional stock and claims without
    becoming a second source of truth.
